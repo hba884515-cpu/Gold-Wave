@@ -1903,16 +1903,16 @@ const server = http.createServer(async (req, res) => {
     const body = await parseRequestBody(req);
     const email = (body.email || '').toLowerCase();
     const name = body.name || email.split('@')[0];
-    const transactionCode = body.transactionCode || '';
-    const note = body.note || '';
+    const phone = body.phone || '';
+    const note = body.note || (phone ? `SĐT: ${phone}` : '');
     const amount = body.amount || paymentConfig.monthlyFee;
 
     const requestItem = {
       id: `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       email,
       name,
+      phone,
       amount,
-      transactionCode,
       note,
       status: 'PENDING',
       createdAt: new Date().toISOString()
@@ -1922,12 +1922,12 @@ const server = http.createServer(async (req, res) => {
     if (paymentRequestsDB.length > 200) paymentRequestsDB = paymentRequestsDB.slice(0, 200);
     saveJSON(PAYMENT_REQUESTS_FILE, paymentRequestsDB);
 
-    addNotification('SYSTEM', '💳 YÊU CẦU THANH TOÁN GÓI 1 THÁNG', `Người dùng ${name} (${email}) vừa gửi thông báo chuyển khoản ${amount}. Mã GD: ${transactionCode || 'Chưa cung cấp'}.`);
+    addNotification('SYSTEM', '💳 XÁC NHẬN CHUYỂN KHOẢN GÓI 1 THÁNG', `Khách hàng: ${name} (SĐT: ${phone || 'N/A'}) - Email: ${email} đã hoàn tất thanh toán.`);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
       status: 'SUCCESS', 
-      message: 'Yêu cầu kích hoạt của bạn đã được gửi thành công! Admin sẽ đối soát và kích hoạt trong 1-3 phút.',
+      message: 'Yêu cầu kích hoạt của bạn đã được gửi thành công! Admin sẽ duyệt và mở khóa tài khoản trong 1-3 phút.',
       request: requestItem
     }));
   }

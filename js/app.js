@@ -4536,13 +4536,11 @@ window.openPaywallScreen = function(user, sub, payment) {
   if (amountEl && cfg.monthlyFee) amountEl.textContent = cfg.monthlyFee;
   if (feeDisplayEl && cfg.monthlyFee) feeDisplayEl.textContent = cfg.monthlyFee;
   
-  const transferNote = `${cfg.transferPrefix || 'GOLDWAVE'} ${uEmail}`;
-  if (memoEl) memoEl.textContent = transferNote;
+  if (memoEl) memoEl.textContent = 'Tùy ý (Tên hoặc SĐT của bạn)';
   if (zaloEl && cfg.supportZalo) zaloEl.href = cfg.supportZalo;
 
   // Build Bank QR Image
   if (qrImgEl) {
-    const amountNum = cfg.monthlyFeeNumber || 390000;
     if (cfg.qrImage) {
       qrImgEl.src = cfg.qrImage;
       qrImgEl.onerror = function() {
@@ -4551,16 +4549,14 @@ window.openPaywallScreen = function(user, sub, payment) {
           const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
           const cleanBank = encodeURIComponent(cfg.bankId);
           const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
-          const cleanMemo = encodeURIComponent(transferNote);
-          this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?amount=${amountNum}&addInfo=${cleanMemo}&accountName=${cleanName}`;
+          this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
         }
       };
     } else if (cfg.bankId && cfg.accountNumber) {
       const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
       const cleanBank = encodeURIComponent(cfg.bankId);
       const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
-      const cleanMemo = encodeURIComponent(transferNote);
-      qrImgEl.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?amount=${amountNum}&addInfo=${cleanMemo}&accountName=${cleanName}`;
+      qrImgEl.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
       qrImgEl.onerror = function() {
         this.onerror = null;
         this.src = 'assets/payment-qr.png';
@@ -4571,12 +4567,11 @@ window.openPaywallScreen = function(user, sub, payment) {
 
 window.copyPaywallInfo = function(type) {
   const cfg = window.cachedPaymentConfig || {};
-  const email = document.getElementById('paywall-user-email')?.textContent || '';
   let textToCopy = '';
   if (type === 'accountNumber') {
-    textToCopy = cfg.accountNumber || document.getElementById('paywall-acc-number')?.textContent || '';
+    textToCopy = cfg.accountNumber || document.getElementById('paywall-acc-number')?.textContent || '68686866899';
   } else if (type === 'memo') {
-    textToCopy = document.getElementById('paywall-memo')?.textContent || `GOLDWAVE ${email}`;
+    textToCopy = document.getElementById('pay-confirm-name')?.value || document.getElementById('pay-confirm-phone')?.value || 'Techcombank';
   }
   if (navigator.clipboard && textToCopy) {
     navigator.clipboard.writeText(textToCopy);
@@ -4590,16 +4585,25 @@ window.togglePaymentConfirmForm = function() {
   const box = document.getElementById('paywall-confirm-form-box');
   if (box) {
     box.classList.toggle('hidden');
+    if (!box.classList.contains('hidden')) {
+      const nameInput = document.getElementById('pay-confirm-name');
+      if (nameInput) nameInput.focus();
+    }
   }
 };
 
 window.submitPaymentActivationRequest = async function() {
   const email = document.getElementById('paywall-user-email')?.textContent || '';
-  const txcode = document.getElementById('pay-confirm-txcode')?.value.trim();
-  const note = document.getElementById('pay-confirm-note')?.value.trim();
+  const name = document.getElementById('pay-confirm-name')?.value.trim();
+  const phone = document.getElementById('pay-confirm-phone')?.value.trim();
 
   if (!email) {
     alert('Không tìm thấy email tài khoản.');
+    return;
+  }
+
+  if (!name || !phone) {
+    alert('⚠️ Vui lòng điền đầy đủ Họ Tên và Số Điện Thoại (Zalo) để Admin nhận diện và kích hoạt tài khoản cho bạn.');
     return;
   }
 
@@ -4607,13 +4611,16 @@ window.submitPaymentActivationRequest = async function() {
     const res = await fetch('/api/subscription/request-activation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, transactionCode: txcode, note })
+      body: JSON.stringify({ email, name, phone, note: `SĐT: ${phone}` })
     });
     const data = await res.json();
     if (res.ok && data.status === 'SUCCESS') {
-      alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nHệ thống đã gửi thông báo đến Admin. Tài khoản ${email} của bạn sẽ được kích hoạt gói 1 tháng trong vòng 1-3 phút.\n\nBạn cũng có thể nhắn tin trực tiếp qua Zalo để được duyệt ngay lập tức!`);
+      alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\nAdmin đã nhận được thông tin và sẽ kiểm tra, kích hoạt tài khoản cho bạn trong vòng 1-3 phút!`);
       const box = document.getElementById('paywall-confirm-form-box');
       if (box) box.classList.add('hidden');
+      if (typeof showToast === 'function') {
+        showToast('✅ Đã gửi thông tin cho Admin thành công!', 'success');
+      }
     } else {
       alert('Gửi yêu cầu thất bại: ' + (data.error || 'Vui lòng thử lại'));
     }

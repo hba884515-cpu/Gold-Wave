@@ -7,10 +7,10 @@
   "monthlyFee": "390.000 VNĐ / Tháng",
   "monthlyFeeNumber": 390000,
   "qrImage": "assets/payment-qr.png",
-  "transferPrefix": "GOLDWAVE",
+  "transferPrefix": "",
   "supportZalo": "https://zalo.me",
   "supportPhone": "0988.xxx.xxx",
   "supportTelegram": "https://t.me",
   "trialDays": 14,
-  "note": "Sau khi chuyển khoản 390.000 VNĐ, tài khoản sẽ được tự động kích hoạt gia hạn 30 ngày. Hoặc bạn có thể gửi yêu cầu xác nhận bên dưới để Admin duyệt ngay."
+  "note": "Sau khi chuyển khoản, bạn chỉ cần điền Tên và SĐT bên dưới, Admin sẽ kích hoạt tài khoản trong vòng 1-3 phút."
 }
