@@ -4639,31 +4639,40 @@ window.updateSubscriptionBadgeUI = function() {
 
   if (isAdmin) {
     badgeEl.classList.remove('hidden');
-    badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-300 cursor-pointer hover:bg-emerald-500/20 transition';
+    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[10px] sm:text-[11px] font-bold text-emerald-300 cursor-pointer hover:bg-emerald-500/20 transition shadow-sm';
     if (iconEl) iconEl.textContent = '👑';
-    if (textEl) textEl.textContent = 'ADMIN VIP (Vĩnh viễn)';
+    if (textEl) textEl.textContent = 'ADMIN VIP';
     return;
   }
 
-  const sub = user.subscription;
-  if (!sub) {
-    badgeEl.classList.remove('hidden');
-    if (iconEl) iconEl.textContent = '⏱️';
-    if (textEl) textEl.textContent = 'Dùng thử: Còn 14 ngày';
-    return;
+  let sub = user.subscription;
+  const now = Date.now();
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+  if (!sub || sub.daysRemaining == null) {
+    const createdMs = user.createdAt ? new Date(user.createdAt).getTime() : now;
+    const trialDays = user.trialDays || 14;
+    const trialExpiresMs = user.trialExpiresAt ? new Date(user.trialExpiresAt).getTime() : (createdMs + trialDays * ONE_DAY_MS);
+    const daysRemaining = Math.max(0, Math.ceil((trialExpiresMs - now) / ONE_DAY_MS));
+    sub = {
+      status: daysRemaining > 0 ? 'TRIAL' : 'EXPIRED',
+      isExpired: daysRemaining <= 0,
+      daysRemaining,
+      expiresAt: new Date(trialExpiresMs).toISOString()
+    };
   }
 
   badgeEl.classList.remove('hidden');
   if (sub.isExpired) {
-    badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-[11px] font-bold text-rose-300 cursor-pointer hover:bg-rose-500/20 transition animate-pulse';
+    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-[10px] sm:text-[11px] font-bold text-rose-300 cursor-pointer hover:bg-rose-500/20 transition animate-pulse shadow-sm';
     if (iconEl) iconEl.textContent = '🔒';
     if (textEl) textEl.textContent = 'Hết hạn dùng thử';
   } else if (sub.status === 'ACTIVE') {
-    badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition';
+    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[10px] sm:text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition shadow-sm';
     if (iconEl) iconEl.textContent = '✨';
     if (textEl) textEl.textContent = `VIP: Còn ${sub.daysRemaining} ngày`;
   } else {
-    badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[11px] font-bold text-sky-300 cursor-pointer hover:bg-sky-500/20 transition';
+    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[10px] sm:text-[11px] font-bold text-sky-300 cursor-pointer hover:bg-sky-500/20 transition shadow-sm';
     if (iconEl) iconEl.textContent = '⏱️';
     if (textEl) textEl.textContent = `Dùng thử: Còn ${sub.daysRemaining} ngày`;
   }
@@ -5339,23 +5348,229 @@ function updateUserUI() {
   const emailEl = document.getElementById('user-display-email');
   const dateEl = document.getElementById('user-display-date');
   const badgeEl = document.getElementById('user-verified-badge');
+  const subStatusEl = document.getElementById('user-display-sub-status');
+
+  const trialBanner = document.getElementById('user-trial-banner');
+  const trialIconBox = document.getElementById('user-trial-icon-box');
+  const trialTitle = document.getElementById('user-trial-title');
+  const trialDaysBadge = document.getElementById('user-trial-days-badge');
+  const trialDesc = document.getElementById('user-trial-desc');
+  const trialExpireDate = document.getElementById('user-trial-expire-date');
+  const trialProgressContainer = document.getElementById('user-trial-progress-container');
+  const trialProgressText = document.getElementById('user-trial-progress-text');
+  const trialProgressBar = document.getElementById('user-trial-progress-bar');
+  const trialActionBtn = document.getElementById('user-trial-action-btn');
+  const trialBtnText = document.getElementById('user-trial-btn-text');
 
   if (headerAvatar) headerAvatar.textContent = (user.name || 'T')[0].toUpperCase();
   if (headerName) headerName.textContent = user.name || 'Trader';
   if (nameEl) nameEl.textContent = user.name || 'Trader';
   if (emailEl) emailEl.textContent = user.email || 'trader@goldwave.com';
-  if (dateEl) dateEl.textContent = user.createdAt || '20/09/2026';
+
+  if (dateEl) {
+    if (user.createdAt) {
+      try {
+        const d = new Date(user.createdAt);
+        dateEl.textContent = isNaN(d.getTime()) ? user.createdAt : d.toLocaleDateString('vi-VN');
+      } catch (e) {
+        dateEl.textContent = user.createdAt;
+      }
+    } else {
+      dateEl.textContent = 'Mới tham gia';
+    }
+  }
+
   if (badgeEl) {
     if (isAdmin) {
       badgeEl.className = 'px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold';
       badgeEl.textContent = '👑 Admin Quản Trị';
-    } else if (user.verified) {
+    } else if (user.verified || user.emailVerified) {
       badgeEl.className = 'px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold';
       badgeEl.textContent = 'Đã xác minh ✅';
     } else {
       badgeEl.className = 'px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold';
       badgeEl.textContent = 'Chưa xác minh ⚠️';
     }
+  }
+
+  // 1. Tính toán subscription info cho người dùng
+  let sub = user.subscription;
+  const now = Date.now();
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+  if (isAdmin || user.subscriptionStatus === 'LIFETIME') {
+    sub = {
+      status: 'LIFETIME',
+      isAdmin: true,
+      isExpired: false,
+      badgeText: 'ADMIN VIP 👑',
+      daysRemaining: 9999,
+      expiresAt: null,
+      message: 'Tài khoản Quản Trị Viên (Vĩnh viễn)'
+    };
+  } else if (!sub || sub.daysRemaining == null) {
+    if (user.subscriptionStatus === 'ACTIVE' && user.subscriptionExpiresAt) {
+      const expiresMs = new Date(user.subscriptionExpiresAt).getTime();
+      const daysRemaining = Math.max(0, Math.ceil((expiresMs - now) / ONE_DAY_MS));
+      sub = {
+        status: daysRemaining > 0 ? 'ACTIVE' : 'EXPIRED',
+        isAdmin: false,
+        isExpired: daysRemaining <= 0,
+        badgeText: daysRemaining > 0 ? `VIP: CÒN ${daysRemaining} NGÀY ✨` : 'HẾT HẠN VIP ⚠️',
+        daysRemaining,
+        expiresAt: user.subscriptionExpiresAt
+      };
+    } else {
+      const createdMs = user.createdAt ? new Date(user.createdAt).getTime() : now;
+      const trialDays = user.trialDays || 14;
+      const trialExpiresMs = user.trialExpiresAt ? new Date(user.trialExpiresAt).getTime() : (createdMs + trialDays * ONE_DAY_MS);
+      const daysRemaining = Math.max(0, Math.ceil((trialExpiresMs - now) / ONE_DAY_MS));
+      sub = {
+        status: daysRemaining > 0 ? 'TRIAL' : 'EXPIRED',
+        isAdmin: false,
+        isExpired: daysRemaining <= 0,
+        badgeText: daysRemaining > 0 ? `DÙNG THỬ: CÒN ${daysRemaining} NGÀY ⏱️` : 'HẾT HẠN DÙNG THỬ 🔒',
+        daysRemaining,
+        expiresAt: new Date(trialExpiresMs).toISOString()
+      };
+    }
+  }
+
+  let formattedExpire = 'Không giới hạn';
+  if (sub.expiresAt) {
+    try {
+      const d = new Date(sub.expiresAt);
+      formattedExpire = isNaN(d.getTime()) ? sub.expiresAt : d.toLocaleDateString('vi-VN');
+    } catch (e) {
+      formattedExpire = sub.expiresAt;
+    }
+  }
+
+  // 2. Cập nhật thẻ ô thông tin GÓI & THỜI HẠN
+  if (subStatusEl) {
+    if (isAdmin || sub.status === 'LIFETIME') {
+      subStatusEl.innerHTML = '<span class="text-emerald-400 font-bold flex items-center gap-1.5 font-sans">👑 VIP Vĩnh Viễn</span>';
+    } else if (sub.isExpired) {
+      subStatusEl.innerHTML = '<span class="text-rose-400 font-bold flex items-center gap-1.5 font-sans">🔒 Đã Hết Hạn Dùng Thử</span>';
+    } else if (sub.status === 'ACTIVE') {
+      subStatusEl.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1.5 font-sans">✨ VIP: Còn ${sub.daysRemaining} ngày</span>`;
+    } else {
+      subStatusEl.innerHTML = `<span class="text-sky-300 font-bold flex items-center gap-1.5 font-sans">⏱️ Dùng thử: Còn ${sub.daysRemaining} ngày</span>`;
+    }
+  }
+
+  // 3. Cập nhật Banner trực quan nổi bật
+  if (trialBanner) {
+    if (isAdmin) {
+      trialBanner.className = 'p-4 sm:p-5 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-slate-900/90 to-emerald-950/20 shadow-xl space-y-3';
+      if (trialIconBox) {
+        trialIconBox.className = 'w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl font-black shadow-inner shrink-0';
+        trialIconBox.textContent = '👑';
+      }
+      if (trialTitle) {
+        trialTitle.textContent = 'TÀI KHOẢN ADMIN QUẢN TRỊ VIÊN';
+        trialTitle.className = 'text-xs sm:text-sm font-black uppercase text-emerald-300';
+      }
+      if (trialDaysBadge) {
+        trialDaysBadge.textContent = 'VIP VĨNH VIỄN';
+        trialDaysBadge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 font-black text-[11px] shadow';
+      }
+      if (trialDesc) {
+        trialDesc.innerHTML = 'Bạn có toàn quyền Quản trị viên cao nhất: duyệt chuyển khoản, quản lý thời hạn thành viên và sử dụng mọi tính năng không giới hạn.';
+      }
+      if (trialProgressContainer) trialProgressContainer.classList.add('hidden');
+      if (trialActionBtn) trialActionBtn.classList.add('hidden');
+    } else if (sub.isExpired) {
+      trialBanner.className = 'p-4 sm:p-5 rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-950/40 via-slate-900/90 to-rose-950/20 shadow-xl space-y-3';
+      if (trialIconBox) {
+        trialIconBox.className = 'w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-2xl font-black shadow-inner shrink-0';
+        trialIconBox.textContent = '🔒';
+      }
+      if (trialTitle) {
+        trialTitle.textContent = 'ĐÃ HẾT HẠN DÙNG THỬ 14 NGÀY';
+        trialTitle.className = 'text-xs sm:text-sm font-black uppercase text-rose-400';
+      }
+      if (trialDaysBadge) {
+        trialDaysBadge.textContent = 'HẾT HẠN';
+        trialDaysBadge.className = 'px-2.5 py-0.5 rounded-full bg-rose-500 text-white font-black text-[11px] shadow animate-pulse';
+      }
+      if (trialDesc) {
+        trialDesc.innerHTML = `Thời gian trải nghiệm miễn phí của bạn đã kết thúc vào ngày <strong class="text-white">${formattedExpire}</strong>. Vui lòng thanh toán gia hạn <strong>390.000đ/tháng</strong> để tiếp tục sử dụng.`;
+      }
+      if (trialProgressContainer) trialProgressContainer.classList.add('hidden');
+      if (trialActionBtn) {
+        trialActionBtn.classList.remove('hidden');
+        if (trialBtnText) trialBtnText.textContent = '💳 Thanh Toán Kích Hoạt Ngay';
+      }
+    } else if (sub.status === 'ACTIVE') {
+      trialBanner.className = 'p-4 sm:p-5 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/40 via-slate-900/90 to-amber-950/20 shadow-xl space-y-3';
+      if (trialIconBox) {
+        trialIconBox.className = 'w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl font-black shadow-inner shrink-0';
+        trialIconBox.textContent = '✨';
+      }
+      if (trialTitle) {
+        trialTitle.textContent = 'GÓI VIP THÀNH VIÊN CHÍNH THỨC';
+        trialTitle.className = 'text-xs sm:text-sm font-black uppercase text-amber-300';
+      }
+      if (trialDaysBadge) {
+        trialDaysBadge.textContent = `CÒN ${sub.daysRemaining} NGÀY`;
+        trialDaysBadge.className = 'px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] shadow';
+      }
+      if (trialDesc) {
+        trialDesc.innerHTML = `Tài khoản VIP đang hoạt động. Hết hạn vào ngày: <strong class="text-white font-mono">${formattedExpire}</strong>.`;
+      }
+      if (trialProgressContainer) {
+        trialProgressContainer.classList.remove('hidden');
+        const pct = Math.min(100, Math.max(5, Math.round((sub.daysRemaining / 30) * 100)));
+        if (trialProgressText) trialProgressText.textContent = `${sub.daysRemaining} / 30 ngày còn lại`;
+        if (trialProgressBar) {
+          trialProgressBar.style.width = `${pct}%`;
+          trialProgressBar.className = 'bg-gradient-to-r from-amber-500 to-emerald-400 h-1.5 rounded-full transition-all duration-500';
+        }
+      }
+      if (trialActionBtn) {
+        trialActionBtn.classList.remove('hidden');
+        if (trialBtnText) trialBtnText.textContent = '⚡ Gia Hạn Thêm Tháng';
+      }
+    } else {
+      // TRIAL: Dùng thử 14 ngày
+      trialBanner.className = 'p-4 sm:p-5 rounded-2xl border border-sky-500/40 bg-gradient-to-r from-sky-950/40 via-slate-900/90 to-sky-950/20 shadow-xl space-y-3';
+      if (trialIconBox) {
+        trialIconBox.className = 'w-12 h-12 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center text-2xl font-black shadow-inner shrink-0';
+        trialIconBox.textContent = '⏱️';
+      }
+      if (trialTitle) {
+        trialTitle.textContent = 'GÓI DÙNG THỬ MIỄN PHÍ 14 NGÀY';
+        trialTitle.className = 'text-xs sm:text-sm font-black uppercase text-sky-300';
+      }
+      if (trialDaysBadge) {
+        trialDaysBadge.textContent = `CÒN ${sub.daysRemaining} NGÀY`;
+        trialDaysBadge.className = 'px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] shadow';
+      }
+      if (trialDesc) {
+        trialDesc.innerHTML = `Bạn đang trải nghiệm đầy đủ 100% tính năng VIP (Tín hiệu AI, Quản lý rủi ro & Thông báo tức thì). Hết hạn vào ngày: <strong class="text-white font-mono">${formattedExpire}</strong>.`;
+      }
+      if (trialProgressContainer) {
+        trialProgressContainer.classList.remove('hidden');
+        const pct = Math.min(100, Math.max(5, Math.round((sub.daysRemaining / 14) * 100)));
+        if (trialProgressText) trialProgressText.textContent = `${sub.daysRemaining} / 14 ngày còn lại`;
+        if (trialProgressBar) {
+          trialProgressBar.style.width = `${pct}%`;
+          trialProgressBar.className = sub.daysRemaining <= 3 
+            ? 'bg-gradient-to-r from-rose-500 to-amber-400 h-1.5 rounded-full transition-all duration-500'
+            : 'bg-gradient-to-r from-sky-400 via-amber-400 to-emerald-400 h-1.5 rounded-full transition-all duration-500';
+        }
+      }
+      if (trialActionBtn) {
+        trialActionBtn.classList.remove('hidden');
+        if (trialBtnText) trialBtnText.textContent = '⚡ Gia Hạn Trước (390k/Tháng)';
+      }
+    }
+  }
+
+  // Luôn đồng bộ lại Top Header Badge
+  if (typeof updateSubscriptionBadgeUI === 'function') {
+    updateSubscriptionBadgeUI();
   }
 
   const headerBtn = document.getElementById('header-user-btn');

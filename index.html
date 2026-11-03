@@ -895,7 +895,7 @@
       </div>
 
       <!-- User Subscription Status Badge -->
-      <div id="top-bar-sub-badge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition" onclick="handleSubBadgeClick()" title="Thông tin gói cước & hạn sử dụng">
+      <div id="top-bar-sub-badge" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[10px] sm:text-[11px] font-bold text-sky-300 cursor-pointer hover:bg-sky-500/20 transition shadow-sm" onclick="handleSubBadgeClick()" title="Thông tin gói cước & hạn sử dụng">
         <span id="top-sub-icon">⏱️</span>
         <span id="top-sub-text">Dùng thử: Còn 14 ngày</span>
       </div>
@@ -1767,7 +1767,7 @@
           <span id="user-verified-badge" class="px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold">Đã xác minh ✅</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs font-mono">
           <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
             <span class="text-[10px] text-slate-500 font-sans block mb-1">TÊN HIỂN THỊ</span>
             <strong id="user-display-name" class="text-sm text-white font-sans">Hoàng Gold Wave</strong>
@@ -1777,8 +1777,53 @@
             <strong id="user-display-email" class="text-sm text-amber-300">user@goldwave.com</strong>
           </div>
           <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+            <span class="text-[10px] text-slate-500 font-sans block mb-1">GÓI & THỜI HẠN DÙNG THỬ</span>
+            <strong id="user-display-sub-status" class="text-sm text-amber-300 flex items-center gap-1.5 font-sans">⏱️ Dùng thử: Còn 14 ngày</strong>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
             <span class="text-[10px] text-slate-500 font-sans block mb-1">NGÀY THAM GIA</span>
             <strong id="user-display-date" class="text-sm text-slate-300">20/09/2026</strong>
+          </div>
+        </div>
+
+        <!-- BANNER THỜI HẠN DÙNG THỬ DÀNH CHO TÀI KHOẢN THƯỜNG -->
+        <div id="user-trial-banner" class="p-4 sm:p-5 rounded-2xl border border-sky-500/30 bg-gradient-to-r from-sky-950/40 via-slate-900/90 to-sky-950/20 shadow-xl space-y-3">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3.5">
+              <div id="user-trial-icon-box" class="w-12 h-12 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center text-2xl font-black shadow-inner shrink-0">
+                ⏱️
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 id="user-trial-title" class="text-xs sm:text-sm font-black uppercase text-sky-300">
+                    GÓI DÙNG THỬ MIỄN PHÍ 14 NGÀY
+                  </h4>
+                  <span id="user-trial-days-badge" class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] shadow">
+                    CÒN 14 NGÀY
+                  </span>
+                </div>
+                <p id="user-trial-desc" class="text-xs text-slate-300 mt-1">
+                  Bạn đang trải nghiệm đầy đủ 100% tính năng VIP (Tín hiệu AI, Quản lý rủi ro & Thông báo tức thì). Hết hạn vào ngày: <strong id="user-trial-expire-date" class="text-white font-mono">--/--/----</strong>
+                </p>
+              </div>
+            </div>
+            <button id="user-trial-action-btn" onclick="handleSubBadgeClick()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-amber-500/20 shrink-0">
+              <span>⚡</span> <span id="user-trial-btn-text">Gia Hạn / Nâng Cấp Gói (390k/Tháng)</span>
+            </button>
+          </div>
+
+          <!-- Progress Bar 14 ngày -->
+          <div id="user-trial-progress-container" class="pt-2 border-t border-slate-800/80">
+            <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1.5 font-mono">
+              <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                Thời gian trải nghiệm miễn phí:
+              </span>
+              <span id="user-trial-progress-text" class="text-amber-300 font-bold">14 / 14 ngày còn lại</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/50 p-0.5">
+              <div id="user-trial-progress-bar" class="bg-gradient-to-r from-sky-400 via-amber-400 to-emerald-400 h-1.5 rounded-full transition-all duration-500" style="width: 100%"></div>
+            </div>
           </div>
         </div>
 
