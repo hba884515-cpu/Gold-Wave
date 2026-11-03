@@ -568,6 +568,103 @@
           </form>
         </div>
 
+        <!-- ── FORM 6: SUBSCRIPTION PAYWALL (HẾT HẠN DÙNG THỬ 14 NGÀY) ── -->
+        <div id="auth-form-paywall" class="space-y-4 hidden">
+          <div class="text-center space-y-1">
+            <div class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 font-black text-[10px] uppercase tracking-wider mb-1">
+              🔒 HẾT HẠN DÙNG THỬ 14 NGÀY
+            </div>
+            <h2 class="text-xl font-black text-white">Thanh Toán Phí Duy Trì</h2>
+            <p class="text-xs text-slate-300">
+              Tài khoản <span id="paywall-user-email" class="text-amber-400 font-semibold font-mono">user@gmail.com</span> đã hoàn thành 2 tuần trải nghiệm miễn phí. Vui lòng thanh toán gói 1 tháng để tiếp tục sử dụng.
+            </p>
+          </div>
+
+          <!-- Khung Gói Cước & Mã QR Chuyển Khoản -->
+          <div class="p-4 rounded-2xl bg-[#0b0f19] border border-amber-500/40 shadow-xl shadow-amber-500/5 space-y-3.5">
+            <!-- Gói Cước -->
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+              <div>
+                <span class="text-xs font-bold text-white block">Gói Truy Cập 1 Tháng</span>
+                <span class="text-[10px] text-emerald-400 font-semibold">Tín hiệu MA Wave V8 Pro + Bot Auto 24/7</span>
+              </div>
+              <div class="text-right">
+                <span id="paywall-fee-display" class="text-sm font-black text-amber-400">299.000 VNĐ</span>
+                <span class="text-[9px] text-slate-400 block font-medium">/ 30 ngày sử dụng</span>
+              </div>
+            </div>
+
+            <!-- MÃ QR CODE NGÂN HÀNG -->
+            <div class="text-center space-y-2">
+              <div class="relative inline-block p-2 bg-white rounded-2xl shadow-xl shadow-amber-500/20 border-2 border-amber-400/80 mx-auto group">
+                <img id="paywall-qr-img" src="assets/payment-qr.svg" alt="Mã QR Chuyển Khoản Ngân Hàng" 
+                     class="w-48 h-48 sm:w-52 sm:h-52 object-contain mx-auto rounded-xl transition duration-300 group-hover:scale-[1.02]">
+                <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-black text-[9px] px-2.5 py-0.5 rounded-full shadow tracking-wider uppercase whitespace-nowrap">
+                  Quét Mã Qua App Ngân Hàng
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 pt-1">
+                Mở ứng dụng Ngân hàng bất kỳ (MB, VCB, Techcombank, MoMo...) và quét mã QR trên
+              </p>
+            </div>
+
+            <!-- THÔNG TIN CHUYỂN KHOẢN CHI TIẾT -->
+            <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs space-y-2 font-sans">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 text-[11px]">Ngân hàng:</span>
+                <span id="paywall-bank-name" class="font-bold text-white text-[11px] text-right">MB Bank</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 text-[11px]">Số tài khoản:</span>
+                <div class="flex items-center gap-1.5">
+                  <span id="paywall-acc-number" class="font-mono font-black text-amber-400 text-sm">0988888888</span>
+                  <button type="button" onclick="copyPaywallInfo('accountNumber')" class="text-[10px] text-slate-400 hover:text-white bg-slate-800 px-1.5 py-0.5 rounded cursor-pointer" title="Sao chép">📋</button>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 text-[11px]">Chủ tài khoản:</span>
+                <span id="paywall-acc-name" class="font-bold text-white text-[11px] uppercase">HOÀNG BÁ</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 text-[11px]">Số tiền:</span>
+                <span id="paywall-amount" class="font-black text-emerald-400 text-xs">299,000 VNĐ</span>
+              </div>
+              <div class="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                <span class="text-slate-400 text-[11px]">Nội dung CK:</span>
+                <div class="flex items-center gap-1.5">
+                  <span id="paywall-memo" class="font-mono font-black text-amber-300 text-[11px]">GOLDWAVE user@gmail.com</span>
+                  <button type="button" onclick="copyPaywallInfo('memo')" class="text-[10px] text-slate-400 hover:text-white bg-slate-800 px-1.5 py-0.5 rounded cursor-pointer" title="Sao chép">📋</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- NÚT GỬI XÁC NHẬN ĐÃ CHUYỂN KHOẢN -->
+            <button type="button" onclick="togglePaymentConfirmForm()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer">
+              <span>✅ TÔI ĐÃ CHUYỂN KHOẢN THÀNH CÔNG</span>
+            </button>
+
+            <!-- FORM NHẬP XÁC NHẬN (ẨN MẶC ĐỊNH) -->
+            <div id="paywall-confirm-form-box" class="hidden p-3 rounded-xl bg-slate-900 border border-slate-700/80 space-y-2.5">
+              <span class="text-xs font-bold text-amber-300 block">Gửi thông tin để Admin kích hoạt ngay:</span>
+              <input type="text" id="pay-confirm-txcode" placeholder="Mã giao dịch / Số tham chiếu (nếu có)" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs">
+              <input type="text" id="pay-confirm-note" placeholder="Tên người chuyển khoản hoặc SĐT Zalo" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs">
+              <button type="button" onclick="submitPaymentActivationRequest()" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-lg transition cursor-pointer">
+                XÁC NHẬN ĐÃ CHUYỂN & GỬI YÊU CẦU DUYỆT
+              </button>
+            </div>
+          </div>
+
+          <!-- LIÊN HỆ TRỰC TIẾP ADMIN ĐỂ KÍCH HOẠT NHANH -->
+          <div class="flex items-center justify-between text-xs pt-1 px-1">
+            <a id="paywall-support-zalo" href="https://zalo.me" target="_blank" rel="noopener" class="text-amber-400 hover:underline font-bold flex items-center gap-1">
+              <span>💬</span> Chat Zalo Kích Hoạt Nhanh
+            </a>
+            <button type="button" onclick="showAuthView('login')" class="text-slate-400 hover:text-white transition cursor-pointer">
+              ← Đăng nhập tài khoản khác
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -794,6 +891,17 @@
         <span id="feed-status-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
         <span id="feed-status-text" class="text-[11px] font-bold text-amber-400">Thị trường đóng cửa (Nghỉ cuối tuần)</span>
       </div>
+
+      <!-- User Subscription Status Badge -->
+      <div id="top-bar-sub-badge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition" onclick="handleSubBadgeClick()" title="Thông tin gói cước & hạn sử dụng">
+        <span id="top-sub-icon">⏱️</span>
+        <span id="top-sub-text">Dùng thử: Còn 14 ngày</span>
+      </div>
+
+      <!-- Quick Admin Management Button for Admin -->
+      <button id="top-bar-admin-quick-btn" onclick="openPineAdminTab()" class="hidden px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Mở trang Quản Lý Thành Viên & Duyệt Chuyển Khoản">
+        <span>👑</span> <span>QUẢN LÝ TV</span>
+      </button>
 
 
 
@@ -1912,13 +2020,45 @@
         </div>
       </div>
 
-      <!-- SECTION 2: DANH SÁCH & ĐO LƯỜNG NGƯỜI DÙNG -->
+      <!-- SECTION 2.1: YÊU CẦU THANH TOÁN CHỜ DUYỆT -->
+      <div id="admin-pending-payments-card" class="bg-panel border border-amber-500/30 rounded-2xl p-5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
+          <h3 class="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+            💳 YÊU CẦU CHUYỂN KHOẢN GIA HẠN CHỜ DUYỆT
+            <span id="admin-pending-badge" class="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black">0</span>
+          </h3>
+          <span class="text-xs text-slate-400">Khách hàng nhấn "Tôi đã chuyển khoản" sẽ hiển thị ở đây để Admin duyệt nhanh</span>
+        </div>
+
+        <div class="overflow-x-auto sig-scroll">
+          <table class="w-full text-left text-xs font-mono border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+                <th class="py-2.5 px-3">Thời Gian</th>
+                <th class="py-2.5 px-3">Khách Hàng</th>
+                <th class="py-2.5 px-3">Email</th>
+                <th class="py-2.5 px-3">Số Tiền</th>
+                <th class="py-2.5 px-3">Mã GD / Ghi Chú</th>
+                <th class="py-2.5 px-3">Trạng Thái</th>
+                <th class="py-2.5 px-3 text-right">Thao Tác Duyệt</th>
+              </tr>
+            </thead>
+            <tbody id="admin-payments-table-body" class="divide-y divide-slate-800/60">
+              <tr>
+                <td colspan="7" class="py-4 text-center text-slate-500">Chưa có yêu cầu thanh toán nào.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION 2.2: DANH SÁCH & ĐO LƯỜNG NGƯỜI DÙNG -->
       <div class="bg-panel border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
           <h3 class="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
-            📊 ĐO LƯỜNG & PHÂN QUYỀN TÀI KHOẢN NGƯỜI DÙNG
+            👥 QUẢN LÝ THÀNH VIÊN, GÓI DÙNG THỬ 14 NGÀY & GIA HẠN
           </h3>
-          <span class="text-xs text-slate-400">Admin có thể phân quyền Admin / User hoặc quản lý tài khoản</span>
+          <span class="text-xs text-slate-400">Kiểm tra thời hạn dùng thử 14 ngày & gia hạn gói 1 tháng (+30 ngày) cho từng người dùng</span>
         </div>
 
         <div class="overflow-x-auto sig-scroll">
@@ -1929,9 +2069,9 @@
                 <th class="py-2.5 px-3">Tên Người Dùng</th>
                 <th class="py-2.5 px-3">Email</th>
                 <th class="py-2.5 px-3">Quyền Hạn</th>
-                <th class="py-2.5 px-3">Xác Minh</th>
-                <th class="py-2.5 px-3">Ngày Đăng Ký</th>
-                <th class="py-2.5 px-3 text-right">Thao Tác Admin</th>
+                <th class="py-2.5 px-3">Gói Cước & Trạng Thái</th>
+                <th class="py-2.5 px-3">Hạn Sử Dụng</th>
+                <th class="py-2.5 px-3 text-right">Gia Hạn & Thao Tác</th>
               </tr>
             </thead>
             <tbody id="admin-users-table-body" class="divide-y divide-slate-800/60">
@@ -1941,6 +2081,52 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- SECTION 2.3: CẤU HÌNH TÀI KHOẢN NGÂN HÀNG & MÃ QR -->
+      <div class="bg-panel border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
+          <h3 class="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+            ⚙️ CÀI ĐẶT TÀI KHOẢN NGÂN HÀNG & MÃ QR CHUYỂN KHOẢN
+          </h3>
+          <span class="text-xs text-slate-400">Admin có thể thay đổi số tài khoản, mã QR và mức phí 1 tháng tại đây</span>
+        </div>
+
+        <form onsubmit="handleSavePaymentConfig(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans">
+          <div>
+            <label class="text-slate-400 font-bold block mb-1">Tên Ngân Hàng (hoặc Ví MoMo):</label>
+            <input type="text" id="admin-cfg-bank-name" placeholder="MB Bank (Ngân hàng Quân Đội)" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-bold">
+          </div>
+          <div>
+            <label class="text-slate-400 font-bold block mb-1">Mã Ngân Hàng (VietQR ID: MB, VCB, TCB, ACB...):</label>
+            <input type="text" id="admin-cfg-bank-id" placeholder="MB" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-300 font-bold font-mono">
+          </div>
+          <div>
+            <label class="text-slate-400 font-bold block mb-1">Số Tài Khoản Ngân Hàng:</label>
+            <input type="text" id="admin-cfg-acc-number" placeholder="0988888888" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-400 font-black font-mono text-sm">
+          </div>
+          <div>
+            <label class="text-slate-400 font-bold block mb-1">Tên Chủ Tài Khoản:</label>
+            <input type="text" id="admin-cfg-acc-name" placeholder="HOÀNG BÁ" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-bold uppercase">
+          </div>
+          <div>
+            <label class="text-slate-400 font-bold block mb-1">Mức Phí Gói 1 Tháng (Hiển thị):</label>
+            <input type="text" id="admin-cfg-fee-display" placeholder="299.000 VNĐ / Tháng" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-emerald-400 font-bold">
+          </div>
+          <div>
+            <label class="text-slate-400 font-bold block mb-1">Link Chat Zalo Hỗ Trợ Kích Hoạt:</label>
+            <input type="text" id="admin-cfg-zalo" placeholder="https://zalo.me/..." class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sky-400 font-bold">
+          </div>
+          <div class="md:col-span-2">
+            <label class="text-slate-400 font-bold block mb-1">Đường dẫn Ảnh Mã QR (mặc định: VietQR tự động hoặc assets/payment-qr.png):</label>
+            <input type="text" id="admin-cfg-qr-image" placeholder="assets/payment-qr.svg" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 font-mono">
+          </div>
+          <div class="md:col-span-2 flex justify-end">
+            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 cursor-pointer">
+              💾 Lưu Cấu Hình Thanh Toán
+            </button>
+          </div>
+        </form>
       </div>
 
       <!-- SECTION 3: MÃ NGUỒN PINE SCRIPT V5 ENGINE (ADMIN EXCLUSIVE) -->
@@ -4521,6 +4707,8 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
     const adminCountEl = document.getElementById('admin-stat-admin-count');
     const devicesCountEl = document.getElementById('admin-stat-devices-count');
     const tbody = document.getElementById('admin-users-table-body');
+    const paymentsTbody = document.getElementById('admin-payments-table-body');
+    const pendingBadge = document.getElementById('admin-pending-badge');
     const textarea = document.getElementById('admin-pine-code-text');
 
     if (textarea && typeof PINE_SCRIPT_SOURCE !== 'undefined') {
@@ -4534,27 +4722,100 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       const resDevices = await fetch('/api/admin/devices');
       const dataDevices = await resDevices.json();
 
+      let requests = [];
+      try {
+        const resReqs = await fetch('/api/admin/payment-requests');
+        const dataReqs = await resReqs.json();
+        requests = (dataReqs && dataReqs.requests) ? dataReqs.requests : [];
+      } catch(e) {}
+
       const users = (dataUsers && dataUsers.users) ? dataUsers.users : [];
       const devices = (dataDevices && dataDevices.devices) ? dataDevices.devices : [];
+      const cfg = (dataUsers && dataUsers.payment) ? dataUsers.payment : null;
 
       if (totalUsersEl) totalUsersEl.textContent = users.length;
       const adminCount = users.filter(u => u.role === 'ADMIN').length;
       if (adminCountEl) adminCountEl.textContent = adminCount;
       if (devicesCountEl) devicesCountEl.textContent = devices.length;
 
+      // Populate Payment Config Inputs
+      if (cfg) {
+        if (document.getElementById('admin-cfg-bank-name')) document.getElementById('admin-cfg-bank-name').value = cfg.bankName || '';
+        if (document.getElementById('admin-cfg-bank-id')) document.getElementById('admin-cfg-bank-id').value = cfg.bankId || '';
+        if (document.getElementById('admin-cfg-acc-number')) document.getElementById('admin-cfg-acc-number').value = cfg.accountNumber || '';
+        if (document.getElementById('admin-cfg-acc-name')) document.getElementById('admin-cfg-acc-name').value = cfg.accountName || '';
+        if (document.getElementById('admin-cfg-fee-display')) document.getElementById('admin-cfg-fee-display').value = cfg.monthlyFee || '';
+        if (document.getElementById('admin-cfg-zalo')) document.getElementById('admin-cfg-zalo').value = cfg.supportZalo || '';
+        if (document.getElementById('admin-cfg-qr-image')) document.getElementById('admin-cfg-qr-image').value = cfg.qrImage || '';
+      }
+
+      // Populate Pending Payment Requests
+      const pendingCount = requests.filter(r => r.status === 'PENDING').length;
+      if (pendingBadge) pendingBadge.textContent = pendingCount;
+
+      if (paymentsTbody) {
+        if (requests.length === 0) {
+          paymentsTbody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-slate-500">Chưa có yêu cầu thanh toán nào.</td></tr>';
+        } else {
+          paymentsTbody.innerHTML = requests.map(r => {
+            const isPending = r.status === 'PENDING';
+            const statusBadge = isPending 
+              ? '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30">⏳ CHỜ DUYỆT</span>'
+              : '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">✅ ĐÃ DUYỆT</span>';
+            const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
+
+            return `
+              <tr class="hover:bg-slate-900/50 transition">
+                <td class="py-2 px-3 text-slate-400">${dateStr}</td>
+                <td class="py-2 px-3 font-bold text-white">${r.name || 'Khách'}</td>
+                <td class="py-2 px-3 text-amber-300">${r.email}</td>
+                <td class="py-2 px-3 text-emerald-400 font-bold">${r.amount || '299.000 VNĐ'}</td>
+                <td class="py-2 px-3 text-slate-300 font-mono text-[11px]">${r.transactionCode ? 'Mã: ' + r.transactionCode : ''} ${r.note || ''}</td>
+                <td class="py-2 px-3">${statusBadge}</td>
+                <td class="py-2 px-3 text-right">
+                  ${isPending ? `
+                    <button onclick="adminExtendUser('${r.email}', 30)" class="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] transition cursor-pointer shadow">
+                      ✅ Duyệt (+30 Ngày)
+                    </button>
+                  ` : '<span class="text-slate-500 text-[11px]">Đã duyệt</span>'}
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // Populate Upgraded Users Table
       if (tbody) {
         if (users.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-slate-500">Chưa có người dùng nào đăng ký.</td></tr>';
         } else {
           tbody.innerHTML = users.map((u, i) => {
             const isAdmin = u.role === 'ADMIN';
+            const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false, badgeText: 'DÙNG THỬ 14 NGÀY' };
             const roleBadge = isAdmin 
               ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">👑 ADMIN</span>' 
               : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">USER</span>';
-            const verifiedBadge = u.emailVerified 
-              ? '<span class="text-emerald-400 font-bold">Đã xác minh ✅</span>' 
-              : '<span class="text-amber-400">Chưa ⚠️</span>';
-            const dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '20/09/2026';
+
+            let subBadge = '';
+            if (sub.status === 'LIFETIME' || isAdmin) {
+              subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 VĨNH VIỄN</span>';
+            } else if (sub.isExpired) {
+              subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px]">🔒 HẾT HẠN</span>';
+            } else if (sub.status === 'ACTIVE') {
+              subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px]">✨ GÓI VIP</span>';
+            } else {
+              subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px]">⏱️ DÙNG THỬ 14N</span>';
+            }
+
+            let remainStr = '';
+            if (sub.status === 'LIFETIME' || isAdmin) {
+              remainStr = '<span class="text-emerald-400 font-bold">Không giới hạn</span>';
+            } else if (sub.isExpired) {
+              remainStr = '<span class="text-rose-400 font-bold">Đã hết hạn!</span>';
+            } else {
+              remainStr = `<span class="text-amber-300 font-bold">Còn ${sub.daysRemaining} ngày</span>`;
+            }
 
             return `
               <tr class="hover:bg-slate-900/50 transition">
@@ -4562,14 +4823,23 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
                 <td class="py-2.5 px-3 font-bold text-white">${u.name || 'Trader'}</td>
                 <td class="py-2.5 px-3 text-amber-300">${u.email}</td>
                 <td class="py-2.5 px-3">${roleBadge}</td>
-                <td class="py-2.5 px-3">${verifiedBadge}</td>
-                <td class="py-2.5 px-3 text-slate-400">${dateStr}</td>
-                <td class="py-2.5 px-3 text-right space-x-1.5">
-                  <button onclick="adminToggleUserRole('${u.email}')" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[10px] transition cursor-pointer">
-                    ${isAdmin ? '⬇️ Đổi thành USER' : '👑 Cấp ADMIN'}
+                <td class="py-2.5 px-3">${subBadge}</td>
+                <td class="py-2.5 px-3">${remainStr}</td>
+                <td class="py-2.5 px-3 text-right space-x-1.5 whitespace-nowrap">
+                  <button onclick="adminExtendUser('${u.email}', 30)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 30 ngày (1 tháng)">
+                    +30 Ngày
+                  </button>
+                  <button onclick="adminExtendUser('${u.email}', 60)" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 60 ngày">
+                    +60 Ngày
+                  </button>
+                  <button onclick="adminExtendUser('${u.email}', 0, true)" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-bold text-[10px] transition cursor-pointer" title="Cấp quyền vĩnh viễn">
+                    Vĩnh Viễn
+                  </button>
+                  <button onclick="adminToggleUserRole('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer">
+                    ${isAdmin ? '⬇️ USER' : '👑 ADMIN'}
                   </button>
                   <button onclick="adminDeleteUser('${u.email}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition cursor-pointer">
-                    🗑️ Xóa
+                    🗑️
                   </button>
                 </td>
               </tr>
@@ -4579,6 +4849,58 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       }
     } catch (e) {
       console.warn('Load Admin Dashboard Error:', e);
+    }
+  }
+
+  async function adminExtendUser(targetEmail, daysToAdd, setLifetime = false) {
+    const confirmMsg = setLifetime 
+      ? `Xác nhận cấp quyền VĨNH VIỄN cho tài khoản ${targetEmail}?`
+      : `Xác nhận gia hạn thêm +${daysToAdd} ngày (1 tháng) cho tài khoản ${targetEmail}?`;
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch('/api/admin/extend-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetEmail, daysToAdd, setLifetime })
+      });
+      const data = await res.json();
+      if (res.ok && data.status === 'SUCCESS') {
+        if (typeof showToast === 'function') showToast(`🎉 ${data.message}`, 'success');
+        loadAdminDashboardData();
+      } else {
+        if (typeof showToast === 'function') showToast(`❌ ${data.error || 'Lỗi gia hạn'}`, 'error');
+      }
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('❌ Lỗi kết nối máy chủ Admin', 'error');
+    }
+  }
+
+  async function handleSavePaymentConfig(e) {
+    if (e) e.preventDefault();
+    const bankName = document.getElementById('admin-cfg-bank-name')?.value.trim();
+    const bankId = document.getElementById('admin-cfg-bank-id')?.value.trim();
+    const accountNumber = document.getElementById('admin-cfg-acc-number')?.value.trim();
+    const accountName = document.getElementById('admin-cfg-acc-name')?.value.trim();
+    const monthlyFee = document.getElementById('admin-cfg-fee-display')?.value.trim();
+    const supportZalo = document.getElementById('admin-cfg-zalo')?.value.trim();
+    const qrImage = document.getElementById('admin-cfg-qr-image')?.value.trim();
+
+    try {
+      const res = await fetch('/api/admin/config-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bankName, bankId, accountNumber, accountName, monthlyFee, supportZalo, qrImage })
+      });
+      const data = await res.json();
+      if (res.ok && data.status === 'SUCCESS') {
+        if (typeof showToast === 'function') showToast('✅ Đã lưu cấu hình tài khoản & mã QR thanh toán!', 'success');
+        loadAdminDashboardData();
+      } else {
+        if (typeof showToast === 'function') showToast(`❌ ${data.error || 'Lỗi lưu cấu hình'}`, 'error');
+      }
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('❌ Lỗi kết nối máy chủ', 'error');
     }
   }
 

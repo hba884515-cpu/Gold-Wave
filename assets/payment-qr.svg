@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0f1d"/>
+      <stop offset="100%" stop-color="#040711"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="50%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="24" fill="url(#bgGrad)" stroke="#f59e0b" stroke-width="3" stroke-opacity="0.4"/>
+  
+  <!-- Outer Corner Positioning Squares -->
+  <rect x="40" y="40" width="80" height="80" rx="12" fill="none" stroke="url(#goldGrad)" stroke-width="10"/>
+  <rect x="58" y="58" width="44" height="44" rx="6" fill="#fbbf24"/>
+
+  <rect x="280" y="40" width="80" height="80" rx="12" fill="none" stroke="url(#goldGrad)" stroke-width="10"/>
+  <rect x="298" y="58" width="44" height="44" rx="6" fill="#fbbf24"/>
+
+  <rect x="40" y="280" width="80" height="80" rx="12" fill="none" stroke="url(#goldGrad)" stroke-width="10"/>
+  <rect x="58" y="298" width="44" height="44" rx="6" fill="#fbbf24"/>
+
+  <!-- QR Pattern Blocks -->
+  <rect x="150" y="45" width="22" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="190" y="45" width="42" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="150" y="80" width="42" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="210" y="80" width="22" height="42" rx="4" fill="#fbbf24"/>
+
+  <rect x="45" y="150" width="22" height="42" rx="4" fill="#fbbf24"/>
+  <rect x="80" y="150" width="42" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="45" y="210" width="42" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="100" y="190" width="22" height="42" rx="4" fill="#fbbf24"/>
+
+  <rect x="280" y="150" width="42" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="340" y="150" width="20" height="42" rx="4" fill="#fbbf24"/>
+  <rect x="300" y="190" width="42" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="280" y="230" width="22" height="22" rx="4" fill="#fbbf24"/>
+
+  <rect x="150" y="280" width="22" height="42" rx="4" fill="#fbbf24"/>
+  <rect x="190" y="280" width="42" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="150" y="340" width="42" height="20" rx="4" fill="#fbbf24"/>
+  <rect x="210" y="320" width="22" height="40" rx="4" fill="#fbbf24"/>
+
+  <rect x="280" y="280" width="42" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="340" y="280" width="20" height="22" rx="4" fill="#fbbf24"/>
+  <rect x="280" y="320" width="22" height="40" rx="4" fill="#fbbf24"/>
+  <rect x="320" y="320" width="40" height="40" rx="4" fill="#fbbf24"/>
+
+  <!-- Center Gold Wave Badge -->
+  <circle cx="200" cy="200" r="44" fill="#0b0f19" stroke="url(#goldGrad)" stroke-width="4"/>
+  <circle cx="200" cy="200" r="36" fill="#1e1b4b"/>
+  <text x="200" y="196" font-family="Arial, sans-serif" font-weight="900" font-size="14" fill="#fbbf24" text-anchor="middle">VIETQR</text>
+  <text x="200" y="214" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#ffffff" text-anchor="middle">PAYMENT</text>
+
+  <!-- Bottom Scan Hint -->
+  <text x="200" y="385" font-family="Arial, sans-serif" font-weight="bold" font-size="12" fill="#94a3b8" text-anchor="middle">QUÉT MÃ BẰNG APP NGÂN HÀNG HOẶC MOMO</text>
+</svg>

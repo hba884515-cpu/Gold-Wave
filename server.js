@@ -33,7 +33,7 @@ function saveJSON(filePath, data) {
   } catch (e) {}
 }
 
-// User DB Schema (Only hba4515@gmail.com is ADMIN, all other accounts are USER)
+// User DB Schema (hba4515@gmail.com and hba884515@gmail.com are ADMIN with LIFETIME access)
 let usersDB = loadJSON(USERS_FILE, [
   {
     id: 'USR-ADMIN-01',
@@ -43,9 +43,140 @@ let usersDB = loadJSON(USERS_FILE, [
     authProvider: 'email',
     emailVerified: true,
     role: 'ADMIN',
+    subscriptionStatus: 'LIFETIME',
     createdAt: new Date().toISOString()
   }
 ]);
+
+// Payment & Subscription Config & DB
+const PAYMENT_CONFIG_FILE = path.join(__dirname, 'payment_config.json');
+const PAYMENT_REQUESTS_FILE = path.join(__dirname, 'payment_requests.json');
+
+let paymentConfig = loadJSON(PAYMENT_CONFIG_FILE, {
+  bankName: "MB Bank (Ngân hàng TMCP Quân Đội)",
+  bankId: "MB",
+  accountNumber: "0988888888",
+  accountName: "HOÀNG BÁ",
+  monthlyFee: "299.000 VNĐ / Tháng",
+  monthlyFeeNumber: 299000,
+  qrImage: "assets/payment-qr.svg",
+  transferPrefix: "GOLDWAVE",
+  supportZalo: "https://zalo.me",
+  supportPhone: "0988.xxx.xxx",
+  supportTelegram: "https://t.me",
+  trialDays: 14,
+  note: "Sau khi chuyển khoản, hệ thống sẽ kích hoạt tài khoản trong vòng 1-3 phút. Bạn cũng có thể liên hệ Zalo để được kích hoạt ngay lập tức."
+});
+
+let paymentRequestsDB = loadJSON(PAYMENT_REQUESTS_FILE, []);
+
+// Helper: Calculate user subscription & 14-day trial status
+function getUserSubscriptionInfo(user) {
+  if (!user) {
+    return { status: 'EXPIRED', isAdmin: false, isExpired: true, daysRemaining: 0 };
+  }
+
+  const emailLower = (user.email || '').toLowerCase();
+  const isAdmin = user.role === 'ADMIN' || 
+                  emailLower === 'hba4515@gmail.com' || 
+                  emailLower === 'hba884515@gmail.com' || 
+                  emailLower.includes('admin');
+
+  if (isAdmin || user.subscriptionStatus === 'LIFETIME') {
+    return {
+      status: 'LIFETIME',
+      isAdmin: true,
+      isExpired: false,
+      badgeText: 'ADMIN VIP 👑',
+      badgeColor: 'emerald',
+      daysRemaining: 9999,
+      expiresAt: null,
+      message: 'Tài khoản Quản Trị Viên (Vĩnh viễn)'
+    };
+  }
+
+  const now = Date.now();
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+  // 1. Nếu tài khoản đã thanh toán gói (ACTIVE)
+  if (user.subscriptionStatus === 'ACTIVE' && user.subscriptionExpiresAt) {
+    const expiresAtMs = new Date(user.subscriptionExpiresAt).getTime();
+    const msRemaining = expiresAtMs - now;
+    const daysRemaining = Math.max(0, Math.ceil(msRemaining / ONE_DAY_MS));
+
+    if (msRemaining > 0) {
+      return {
+        status: 'ACTIVE',
+        isAdmin: false,
+        isExpired: false,
+        badgeText: `GÓI VIP: CÒN ${daysRemaining} NGÀY ✨`,
+        badgeColor: 'amber',
+        daysRemaining,
+        expiresAt: user.subscriptionExpiresAt,
+        message: `Tài khoản đã kích hoạt gói VIP. Còn ${daysRemaining} ngày sử dụng.`
+      };
+    } else {
+      return {
+        status: 'EXPIRED',
+        isAdmin: false,
+        isExpired: true,
+        badgeText: 'HẾT HẠN VIP ⚠️',
+        badgeColor: 'rose',
+        daysRemaining: 0,
+        expiresAt: user.subscriptionExpiresAt,
+        message: 'Gói dịch vụ 1 tháng của bạn đã hết hạn. Vui lòng thanh toán gia hạn để tiếp tục sử dụng.'
+      };
+    }
+  }
+
+  // 2. Tài khoản dùng thử 14 ngày (TRIAL)
+  const createdMs = user.createdAt ? new Date(user.createdAt).getTime() : now;
+  const trialDays = user.trialDays || paymentConfig.trialDays || 14;
+  const trialExpiresAtMs = user.trialExpiresAt ? new Date(user.trialExpiresAt).getTime() : (createdMs + trialDays * ONE_DAY_MS);
+  const msRemaining = trialExpiresAtMs - now;
+  const daysRemaining = Math.max(0, Math.ceil(msRemaining / ONE_DAY_MS));
+
+  if (msRemaining > 0) {
+    return {
+      status: 'TRIAL',
+      isAdmin: false,
+      isExpired: false,
+      badgeText: `DÙNG THỬ: CÒN ${daysRemaining} NGÀY ⏱️`,
+      badgeColor: daysRemaining <= 3 ? 'orange' : 'blue',
+      daysRemaining,
+      expiresAt: new Date(trialExpiresAtMs).toISOString(),
+      message: `Bạn đang trong thời gian 14 ngày dùng thử miễn phí. Còn ${daysRemaining} ngày.`
+    };
+  } else {
+    return {
+      status: 'EXPIRED',
+      isAdmin: false,
+      isExpired: true,
+      badgeText: 'HẾT HẠN DÙNG THỬ 🔒',
+      badgeColor: 'rose',
+      daysRemaining: 0,
+      expiresAt: new Date(trialExpiresAtMs).toISOString(),
+      message: 'Thời gian dùng thử 14 ngày đã kết thúc. Vui lòng thanh toán phí duy trì để tiếp tục truy cập.'
+    };
+  }
+}
+
+// Normalize and save users on startup
+usersDB = usersDB.map(u => {
+  const emailLower = (u.email || '').toLowerCase();
+  const isAdmin = emailLower === 'hba4515@gmail.com' || emailLower === 'hba884515@gmail.com' || (u.role === 'ADMIN');
+  if (isAdmin) {
+    u.role = 'ADMIN';
+    u.subscriptionStatus = 'LIFETIME';
+  } else if (!u.subscriptionStatus) {
+    u.trialDays = u.trialDays || 14;
+    const createdMs = u.createdAt ? new Date(u.createdAt).getTime() : Date.now();
+    u.trialExpiresAt = u.trialExpiresAt || new Date(createdMs + 14 * 24 * 60 * 60 * 1000).toISOString();
+    u.subscriptionStatus = 'TRIAL';
+  }
+  return u;
+});
+saveJSON(USERS_FILE, usersDB);
 
 // Notifications DB Schema & SSE Live Stream Clients
 const NOTIFICATIONS_FILE = path.join(__dirname, 'notifications_db.json');
@@ -1565,26 +1696,45 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ error: 'Email này đã được đăng ký tài khoản!' }));
     }
 
-    const userRole = (email.toLowerCase() === 'hba4515@gmail.com' || email.toLowerCase() === 'hba884515@gmail.com' || email.toLowerCase().includes('admin')) ? 'ADMIN' : 'USER';
+    const emailLower = email.toLowerCase();
+    const userRole = (emailLower === 'hba4515@gmail.com' || emailLower === 'hba884515@gmail.com' || emailLower.includes('admin')) ? 'ADMIN' : 'USER';
+    const trialDays = 14;
+    const nowIso = new Date().toISOString();
+    const trialExpiresIso = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString();
+
     const newUser = {
       id: `USR-${Date.now().toString().slice(-4)}`,
       name,
-      email: email.toLowerCase(),
+      email: emailLower,
       passwordHash: hashPassword(password),
       authProvider: 'email',
       emailVerified: true,
       role: userRole,
-      createdAt: new Date().toISOString()
+      trialDays: trialDays,
+      trialExpiresAt: trialExpiresIso,
+      subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : 'TRIAL',
+      subscriptionExpiresAt: userRole === 'ADMIN' ? null : trialExpiresIso,
+      createdAt: nowIso
     };
 
     usersDB.push(newUser);
     saveJSON(USERS_FILE, usersDB);
 
+    const subInfo = getUserSubscriptionInfo(newUser);
+
     res.writeHead(200);
     res.end(JSON.stringify({
       status: 'SUCCESS',
-      message: 'Đăng ký tài khoản thành công!',
-      user: { id: newUser.id, name: newUser.name, email: newUser.email, emailVerified: true, role: userRole }
+      message: 'Đăng ký tài khoản thành công! Bạn nhận được 14 ngày dùng thử miễn phí.',
+      user: { 
+        id: newUser.id, 
+        name: newUser.name, 
+        email: newUser.email, 
+        emailVerified: true, 
+        role: userRole,
+        subscription: subInfo
+      },
+      payment: paymentConfig
     }));
   }
   else if (urlPath === '/api/auth/login' && req.method === 'POST') {
@@ -1597,11 +1747,42 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ error: 'Email hoặc mật khẩu không chính xác.' }));
     }
 
+    const subInfo = getUserSubscriptionInfo(user);
+
+    if (subInfo.isExpired) {
+      res.writeHead(200);
+      return res.end(JSON.stringify({
+        status: 'EXPIRED',
+        isExpired: true,
+        message: subInfo.message,
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          email: user.email, 
+          emailVerified: user.emailVerified, 
+          role: user.role || 'USER', 
+          createdAt: user.createdAt,
+          subscription: subInfo
+        },
+        payment: paymentConfig
+      }));
+    }
+
     res.writeHead(200);
     res.end(JSON.stringify({
       status: 'SUCCESS',
+      isExpired: false,
       token: `JWT-SIM-${Date.now()}`,
-      user: { id: user.id, name: user.name, email: user.email, emailVerified: user.emailVerified, role: user.role || 'USER', createdAt: user.createdAt }
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        emailVerified: user.emailVerified, 
+        role: user.role || 'USER', 
+        createdAt: user.createdAt,
+        subscription: subInfo
+      },
+      payment: paymentConfig
     }));
   }
   else if (urlPath === '/api/auth/google' && req.method === 'POST') {
@@ -1610,6 +1791,9 @@ const server = http.createServer(async (req, res) => {
     const name = body.name || 'Google Trader';
     const pwd = body.password || '123456';
     const userRole = (email.includes('hba4515') || email.includes('hba884515') || email.includes('admin')) ? 'ADMIN' : 'USER';
+    const trialDays = 14;
+    const nowIso = new Date().toISOString();
+    const trialExpiresIso = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString();
 
     let user = usersDB.find(u => u.email.toLowerCase() === email);
     if (!user) {
@@ -1621,21 +1805,57 @@ const server = http.createServer(async (req, res) => {
         authProvider: 'google',
         emailVerified: true,
         role: userRole,
-        createdAt: new Date().toISOString()
+        trialDays: trialDays,
+        trialExpiresAt: trialExpiresIso,
+        subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : 'TRIAL',
+        subscriptionExpiresAt: userRole === 'ADMIN' ? null : trialExpiresIso,
+        createdAt: nowIso
       };
       usersDB.push(user);
       saveJSON(USERS_FILE, usersDB);
     } else {
       user.passwordHash = hashPassword(pwd);
       user.role = userRole;
+      if (userRole === 'ADMIN') user.subscriptionStatus = 'LIFETIME';
       saveJSON(USERS_FILE, usersDB);
+    }
+
+    const subInfo = getUserSubscriptionInfo(user);
+
+    if (subInfo.isExpired) {
+      res.writeHead(200);
+      return res.end(JSON.stringify({
+        status: 'EXPIRED',
+        isExpired: true,
+        message: subInfo.message,
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          email: user.email, 
+          emailVerified: true, 
+          role: user.role || 'USER', 
+          createdAt: user.createdAt,
+          subscription: subInfo
+        },
+        payment: paymentConfig
+      }));
     }
 
     res.writeHead(200);
     res.end(JSON.stringify({
       status: 'SUCCESS',
+      isExpired: false,
       token: `GOOGLE-OAUTH-SIM-${Date.now()}`,
-      user: { id: user.id, name: user.name, email: user.email, emailVerified: true, role: user.role || 'USER', createdAt: user.createdAt }
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        emailVerified: true, 
+        role: user.role || 'USER', 
+        createdAt: user.createdAt,
+        subscription: subInfo
+      },
+      payment: paymentConfig
     }));
   }
   else if (urlPath === '/api/auth/resend-verification' && req.method === 'POST') {
@@ -1659,6 +1879,58 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200);
     res.end(JSON.stringify({ status: 'SUCCESS', message: 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay.' }));
   }
+  // Public Subscription Config Endpoint
+  else if (urlPath === '/api/subscription/config') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'SUCCESS', payment: paymentConfig }));
+  }
+  // Check User Subscription Status Endpoint
+  else if (urlPath === '/api/subscription/status' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const email = (body.email || '').toLowerCase();
+    const user = usersDB.find(u => u.email.toLowerCase() === email);
+    if (!user) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ status: 'ERROR', error: 'Không tìm thấy người dùng' }));
+    }
+    const subInfo = getUserSubscriptionInfo(user);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'SUCCESS', user: { id: user.id, email: user.email, name: user.name }, subscription: subInfo, payment: paymentConfig }));
+  }
+  // User Payment Notification Request Endpoint
+  else if (urlPath === '/api/subscription/request-activation' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const email = (body.email || '').toLowerCase();
+    const name = body.name || email.split('@')[0];
+    const transactionCode = body.transactionCode || '';
+    const note = body.note || '';
+    const amount = body.amount || paymentConfig.monthlyFee;
+
+    const requestItem = {
+      id: `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      email,
+      name,
+      amount,
+      transactionCode,
+      note,
+      status: 'PENDING',
+      createdAt: new Date().toISOString()
+    };
+
+    paymentRequestsDB.unshift(requestItem);
+    if (paymentRequestsDB.length > 200) paymentRequestsDB = paymentRequestsDB.slice(0, 200);
+    saveJSON(PAYMENT_REQUESTS_FILE, paymentRequestsDB);
+
+    addNotification('SYSTEM', '💳 YÊU CẦU THANH TOÁN GÓI 1 THÁNG', `Người dùng ${name} (${email}) vừa gửi thông báo chuyển khoản ${amount}. Mã GD: ${transactionCode || 'Chưa cung cấp'}.`);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      status: 'SUCCESS', 
+      message: 'Yêu cầu kích hoạt của bạn đã được gửi thành công! Admin sẽ đối soát và kích hoạt trong 1-3 phút.',
+      request: requestItem
+    }));
+  }
+  // Admin Endpoints
   else if (urlPath === '/api/admin/dashboard') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -1666,6 +1938,7 @@ const server = http.createServer(async (req, res) => {
       adminData: {
         totalUsers: usersDB.length,
         activeDevices: devicesDB.length,
+        pendingPayments: paymentRequestsDB.filter(r => r.status === 'PENDING').length,
         serverTime: new Date().toISOString(),
         systemHealth: '100% OPERATIONAL'
       }
@@ -1679,9 +1952,77 @@ const server = http.createServer(async (req, res) => {
       email: u.email,
       role: u.role || 'USER',
       emailVerified: u.emailVerified || false,
+      subscription: getUserSubscriptionInfo(u),
       createdAt: u.createdAt || new Date().toISOString()
     }));
-    res.end(JSON.stringify({ status: 'SUCCESS', users: cleanUsers }));
+    res.end(JSON.stringify({ status: 'SUCCESS', users: cleanUsers, payment: paymentConfig }));
+  }
+  else if (urlPath === '/api/admin/payment-requests') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'SUCCESS', requests: paymentRequestsDB }));
+  }
+  else if (urlPath === '/api/admin/extend-user' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const targetEmail = (body.targetEmail || '').toLowerCase();
+    const daysToAdd = parseInt(body.daysToAdd, 10) || 30; // Mặc định gia hạn 30 ngày (1 tháng)
+    const setLifetime = !!body.setLifetime;
+
+    const user = usersDB.find(u => u.email.toLowerCase() === targetEmail || u.id === body.userId);
+    if (!user) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ status: 'ERROR', error: 'Không tìm thấy người dùng' }));
+    }
+
+    if (setLifetime) {
+      user.subscriptionStatus = 'LIFETIME';
+      user.subscriptionExpiresAt = null;
+    } else {
+      user.subscriptionStatus = 'ACTIVE';
+      const now = Date.now();
+      const currentExpireMs = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).getTime() : now;
+      const baseMs = Math.max(now, currentExpireMs);
+      user.subscriptionExpiresAt = new Date(baseMs + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+    }
+
+    saveJSON(USERS_FILE, usersDB);
+
+    // Cập nhật trạng thái các yêu cầu thanh toán chờ duyệt của user này thành APPROVED
+    paymentRequestsDB.forEach(r => {
+      if (r.email.toLowerCase() === user.email.toLowerCase() && r.status === 'PENDING') {
+        r.status = 'APPROVED';
+        r.approvedAt = new Date().toISOString();
+      }
+    });
+    saveJSON(PAYMENT_REQUESTS_FILE, paymentRequestsDB);
+
+    const updatedSub = getUserSubscriptionInfo(user);
+    addNotification('SYSTEM', '✅ ĐÃ GIA HẠN GÓI THÀNH CÔNG', `Admin đã gia hạn gói cước cho ${user.name} (${user.email}). ${updatedSub.badgeText}`);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      status: 'SUCCESS', 
+      message: `Đã gia hạn thành công cho ${user.email}!`, 
+      user: { id: user.id, email: user.email, name: user.name, subscription: updatedSub }
+    }));
+  }
+  else if (urlPath === '/api/admin/config-payment' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    if (body.bankName) paymentConfig.bankName = body.bankName;
+    if (body.bankId) paymentConfig.bankId = body.bankId;
+    if (body.accountNumber) paymentConfig.accountNumber = body.accountNumber;
+    if (body.accountName) paymentConfig.accountName = body.accountName;
+    if (body.monthlyFee) paymentConfig.monthlyFee = body.monthlyFee;
+    if (body.monthlyFeeNumber) paymentConfig.monthlyFeeNumber = parseInt(body.monthlyFeeNumber, 10);
+    if (body.qrImage) paymentConfig.qrImage = body.qrImage;
+    if (body.supportZalo) paymentConfig.supportZalo = body.supportZalo;
+    if (body.supportPhone) paymentConfig.supportPhone = body.supportPhone;
+    if (body.supportTelegram) paymentConfig.supportTelegram = body.supportTelegram;
+    if (body.note) paymentConfig.note = body.note;
+
+    saveJSON(PAYMENT_CONFIG_FILE, paymentConfig);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'SUCCESS', message: 'Cập nhật cấu hình thanh toán thành công!', payment: paymentConfig }));
   }
   else if (urlPath === '/api/admin/devices') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -1692,6 +2033,7 @@ const server = http.createServer(async (req, res) => {
     const target = usersDB.find(u => u.email.toLowerCase() === (body.email || '').toLowerCase() || u.id === body.userId);
     if (target) {
       target.role = target.role === 'ADMIN' ? 'USER' : 'ADMIN';
+      if (target.role === 'ADMIN') target.subscriptionStatus = 'LIFETIME';
       saveJSON(USERS_FILE, usersDB);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'SUCCESS', message: `Đã thay đổi quyền hạn của ${target.email} thành ${target.role}` }));

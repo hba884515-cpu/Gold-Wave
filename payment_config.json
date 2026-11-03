@@ -1,0 +1,15 @@
+{
+  "bankName": "MB Bank (Ngân hàng TMCP Quân Đội)",
+  "bankId": "MB",
+  "accountNumber": "0988888888",
+  "accountName": "HOÀNG BÁ",
+  "monthlyFee": "299.000 VNĐ / Tháng",
+  "monthlyFeeNumber": 299000,
+  "qrImage": "assets/payment-qr.svg",
+  "transferPrefix": "GOLDWAVE",
+  "supportZalo": "https://zalo.me",
+  "supportPhone": "0988.xxx.xxx",
+  "supportTelegram": "https://t.me",
+  "trialDays": 14,
+  "note": "Sau khi chuyển khoản, hệ thống sẽ kích hoạt tài khoản trong vòng 1-3 phút. Bạn cũng có thể liên hệ Zalo để được kích hoạt ngay lập tức."
+}

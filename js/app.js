@@ -4487,7 +4487,7 @@ window.openAuthModal = function(initialTab = 'login') {
 
 // ── AUTH & FULLSCREEN AUTHENTICATION PAGE MANAGER ──
 window.showAuthView = function(viewName) {
-  const views = ['login', 'register', 'forgot', 'verify', 'reset'];
+  const views = ['login', 'register', 'forgot', 'verify', 'reset', 'paywall'];
   views.forEach(v => {
     const el = document.getElementById(`auth-form-${v}`);
     if (el) el.classList.add('hidden');
@@ -4495,6 +4495,189 @@ window.showAuthView = function(viewName) {
 
   const target = document.getElementById(`auth-form-${viewName}`);
   if (target) target.classList.remove('hidden');
+};
+
+// ── Paywall & Subscription Manager ──
+window.cachedPaymentConfig = null;
+
+window.openPaywallScreen = function(user, sub, payment) {
+  const authPage = document.getElementById('auth-fullscreen-page');
+  const appShell = document.getElementById('app-shell');
+  if (appShell) {
+    appShell.classList.add('hidden');
+    appShell.style.display = 'none';
+  }
+  if (authPage) {
+    authPage.classList.remove('hidden');
+    authPage.style.display = 'flex';
+  }
+
+  showAuthView('paywall');
+
+  const uEmail = user ? user.email : (document.getElementById('login-email')?.value || 'trader@gmail.com');
+  const emailEl = document.getElementById('paywall-user-email');
+  if (emailEl) emailEl.textContent = uEmail;
+
+  const cfg = payment || window.cachedPaymentConfig || {};
+  window.cachedPaymentConfig = cfg;
+
+  const bankNameEl = document.getElementById('paywall-bank-name');
+  const accNumEl = document.getElementById('paywall-acc-number');
+  const accNameEl = document.getElementById('paywall-acc-name');
+  const amountEl = document.getElementById('paywall-amount');
+  const feeDisplayEl = document.getElementById('paywall-fee-display');
+  const memoEl = document.getElementById('paywall-memo');
+  const zaloEl = document.getElementById('paywall-support-zalo');
+  const qrImgEl = document.getElementById('paywall-qr-img');
+
+  if (bankNameEl && cfg.bankName) bankNameEl.textContent = cfg.bankName;
+  if (accNumEl && cfg.accountNumber) accNumEl.textContent = cfg.accountNumber;
+  if (accNameEl && cfg.accountName) accNameEl.textContent = cfg.accountName;
+  if (amountEl && cfg.monthlyFee) amountEl.textContent = cfg.monthlyFee;
+  if (feeDisplayEl && cfg.monthlyFee) feeDisplayEl.textContent = cfg.monthlyFee;
+  
+  const transferNote = `${cfg.transferPrefix || 'GOLDWAVE'} ${uEmail}`;
+  if (memoEl) memoEl.textContent = transferNote;
+  if (zaloEl && cfg.supportZalo) zaloEl.href = cfg.supportZalo;
+
+  // Build Dynamic Bank QR Image
+  if (qrImgEl) {
+    if (cfg.qrImage && cfg.qrImage !== 'assets/payment-qr.svg' && !cfg.qrImage.includes('payment-qr.svg')) {
+      qrImgEl.src = cfg.qrImage;
+    } else if (cfg.bankId && cfg.accountNumber) {
+      const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
+      const cleanBank = encodeURIComponent(cfg.bankId);
+      const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
+      const cleanMemo = encodeURIComponent(transferNote);
+      const amountNum = cfg.monthlyFeeNumber || 299000;
+      qrImgEl.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?amount=${amountNum}&addInfo=${cleanMemo}&accountName=${cleanName}`;
+      qrImgEl.onerror = function() {
+        this.onerror = null;
+        this.src = 'assets/payment-qr.svg';
+      };
+    }
+  }
+};
+
+window.copyPaywallInfo = function(type) {
+  const cfg = window.cachedPaymentConfig || {};
+  const email = document.getElementById('paywall-user-email')?.textContent || '';
+  let textToCopy = '';
+  if (type === 'accountNumber') {
+    textToCopy = cfg.accountNumber || document.getElementById('paywall-acc-number')?.textContent || '';
+  } else if (type === 'memo') {
+    textToCopy = document.getElementById('paywall-memo')?.textContent || `GOLDWAVE ${email}`;
+  }
+  if (navigator.clipboard && textToCopy) {
+    navigator.clipboard.writeText(textToCopy);
+    if (typeof showToast === 'function') showToast(`📋 Đã sao chép: "${textToCopy}"`, 'success');
+  } else {
+    alert(`Đã sao chép: ${textToCopy}`);
+  }
+};
+
+window.togglePaymentConfirmForm = function() {
+  const box = document.getElementById('paywall-confirm-form-box');
+  if (box) {
+    box.classList.toggle('hidden');
+  }
+};
+
+window.submitPaymentActivationRequest = async function() {
+  const email = document.getElementById('paywall-user-email')?.textContent || '';
+  const txcode = document.getElementById('pay-confirm-txcode')?.value.trim();
+  const note = document.getElementById('pay-confirm-note')?.value.trim();
+
+  if (!email) {
+    alert('Không tìm thấy email tài khoản.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/subscription/request-activation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, transactionCode: txcode, note })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'SUCCESS') {
+      alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nHệ thống đã gửi thông báo đến Admin. Tài khoản ${email} của bạn sẽ được kích hoạt gói 1 tháng trong vòng 1-3 phút.\n\nBạn cũng có thể nhắn tin trực tiếp qua Zalo để được duyệt ngay lập tức!`);
+      const box = document.getElementById('paywall-confirm-form-box');
+      if (box) box.classList.add('hidden');
+    } else {
+      alert('Gửi yêu cầu thất bại: ' + (data.error || 'Vui lòng thử lại'));
+    }
+  } catch (err) {
+    alert('Lỗi gửi yêu cầu kích hoạt. Vui lòng liên hệ trực tiếp qua Zalo hỗ trợ.');
+  }
+};
+
+window.updateSubscriptionBadgeUI = function() {
+  const badgeEl = document.getElementById('top-bar-sub-badge');
+  const iconEl = document.getElementById('top-sub-icon');
+  const textEl = document.getElementById('top-sub-text');
+  const adminBtn = document.getElementById('top-bar-admin-quick-btn');
+  const pineAdminNav = document.getElementById('nav-pine-admin');
+
+  if (!badgeEl || !window.currentUser) {
+    if (badgeEl) badgeEl.classList.add('hidden');
+    if (adminBtn) adminBtn.classList.add('hidden');
+    if (pineAdminNav) pineAdminNav.classList.add('hidden');
+    return;
+  }
+
+  const user = window.currentUser;
+  const isAdmin = user.role === 'ADMIN' || (user.email && (user.email.includes('hba4515') || user.email.includes('hba884515')));
+
+  if (isAdmin) {
+    badgeEl.classList.remove('hidden');
+    badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-300 cursor-pointer hover:bg-emerald-500/20 transition';
+    if (iconEl) iconEl.textContent = '👑';
+    if (textEl) textEl.textContent = 'ADMIN VIP (Vĩnh viễn)';
+    if (adminBtn) adminBtn.classList.remove('hidden');
+    if (pineAdminNav) pineAdminNav.classList.remove('hidden');
+    return;
+  }
+
+  if (adminBtn) adminBtn.classList.add('hidden');
+  if (pineAdminNav) pineAdminNav.classList.add('hidden');
+
+  const sub = user.subscription;
+  if (!sub) {
+    badgeEl.classList.remove('hidden');
+    if (iconEl) iconEl.textContent = '⏱️';
+    if (textEl) textEl.textContent = 'Dùng thử: Còn 14 ngày';
+    return;
+  }
+
+  badgeEl.classList.remove('hidden');
+  if (sub.isExpired) {
+    badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-[11px] font-bold text-rose-300 cursor-pointer hover:bg-rose-500/20 transition animate-pulse';
+    if (iconEl) iconEl.textContent = '🔒';
+    if (textEl) textEl.textContent = 'Hết hạn dùng thử';
+  } else if (sub.status === 'ACTIVE') {
+    badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition';
+    if (iconEl) iconEl.textContent = '✨';
+    if (textEl) textEl.textContent = `VIP: Còn ${sub.daysRemaining} ngày`;
+  } else {
+    badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[11px] font-bold text-sky-300 cursor-pointer hover:bg-sky-500/20 transition';
+    if (iconEl) iconEl.textContent = '⏱️';
+    if (textEl) textEl.textContent = `Dùng thử: Còn ${sub.daysRemaining} ngày`;
+  }
+};
+
+window.handleSubBadgeClick = function() {
+  if (!window.currentUser) {
+    openAuthModal();
+    return;
+  }
+  const user = window.currentUser;
+  const isAdmin = user.role === 'ADMIN' || (user.email && (user.email.includes('hba4515') || user.email.includes('hba884515')));
+  if (isAdmin) {
+    openPineAdminTab();
+  } else {
+    openPaywallScreen(user, user.subscription, window.cachedPaymentConfig);
+  }
 };
 
 window.togglePasswordVisibility = function(inputId, eyeBtnId) {
@@ -4564,7 +4747,7 @@ window.closeAuthModal = function() {
   }
 };
 
-window.checkAuthOnLoad = function() {
+window.checkAuthOnLoad = async function() {
   const sessionData = JSON.parse(localStorage.getItem('goldwave_session') || 'null') ||
                       JSON.parse(localStorage.getItem('goldwave_user') || 'null');
   
@@ -4586,6 +4769,37 @@ window.checkAuthOnLoad = function() {
     return;
   }
 
+  // Check subscription status with server
+  try {
+    const res = await fetch('/api/subscription/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: userObj.email })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.subscription) {
+        userObj.subscription = data.subscription;
+        if (data.payment) window.cachedPaymentConfig = data.payment;
+        if (data.subscription.isExpired) {
+          localStorage.removeItem('goldwave_session');
+          localStorage.removeItem('goldwave_user');
+          window.currentUser = null;
+          openPaywallScreen(userObj, data.subscription, data.payment);
+          return;
+        }
+      }
+    }
+  } catch (e) {
+    // Client-side fallback check
+    if (userObj.role !== 'ADMIN' && userObj.trialExpiresAt) {
+      if (new Date(userObj.trialExpiresAt).getTime() <= Date.now()) {
+        openPaywallScreen(userObj, { isExpired: true }, null);
+        return;
+      }
+    }
+  }
+
   window.currentUser = userObj;
   if (authPage) {
     authPage.classList.add('hidden');
@@ -4597,6 +4811,7 @@ window.checkAuthOnLoad = function() {
   }
   updateUserUI();
   updatePushNotificationUI();
+  updateSubscriptionBadgeUI();
 };
 
 window.handleLogout = function() {
@@ -4778,29 +4993,67 @@ window.handleAuthLoginSubmit = async function(e) {
     });
     const data = await res.json();
 
-    if (res.ok && data.status === 'SUCCESS' && data.user) {
+    // 1. Kiểm tra tài khoản đã hết hạn 14 ngày dùng thử hoặc hết hạn VIP
+    if (data.status === 'EXPIRED' || data.isExpired === true) {
+      if (btn) btn.disabled = false;
+      if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
+      if (typeof showToast === 'function') {
+        showToast('🔒 Tài khoản đã hết 14 ngày dùng thử. Vui lòng thanh toán để tiếp tục sử dụng!', 'warning');
+      }
+      if (typeof openPaywallScreen === 'function') {
+        openPaywallScreen(
+          data.user || { email, name: email.split('@')[0] },
+          data.subscription || data.user?.subscription || { isExpired: true, daysRemaining: 0, status: 'EXPIRED' },
+          data.payment
+        );
+      }
+      return;
+    }
+
+    // 2. Kiểm tra sai mật khẩu hoặc lỗi xác thực từ server
+    if (!res.ok || data.status !== 'SUCCESS') {
+      if (btn) btn.disabled = false;
+      if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
+      if (typeof showToast === 'function') {
+        showToast(`❌ ${data.error || 'Email hoặc mật khẩu không chính xác'}`, 'error');
+      }
+      return;
+    }
+
+    // 3. Đăng nhập thành công từ server
+    if (data.user) {
+      if (data.user.subscription && data.user.subscription.isExpired) {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
+        if (typeof openPaywallScreen === 'function') {
+          openPaywallScreen(data.user, data.user.subscription, data.payment);
+        }
+        return;
+      }
       window.currentUser = data.user;
-    } else {
-      const isObjAdmin = (email.toLowerCase().includes('hba4515') || email.toLowerCase().includes('hba884515') || email.toLowerCase().includes('admin'));
+    }
+  } catch (err) {
+    console.warn('Network or login error:', err);
+    // Chỉ cho phép admin bypass khi offline / mất mạng cục bộ
+    const isObjAdmin = (email.toLowerCase().includes('hba4515') || email.toLowerCase().includes('hba884515') || email.toLowerCase().includes('admin'));
+    if (isObjAdmin) {
       window.currentUser = {
         id: 'USR-' + Date.now(),
         name: email.split('@')[0],
         email: email,
         emailVerified: true,
-        role: isObjAdmin ? 'ADMIN' : 'USER',
+        role: 'ADMIN',
+        subscription: { status: 'LIFETIME', isAdmin: true, isExpired: false, badgeText: 'ADMIN VIP 👑' },
         createdAt: new Date().toISOString()
       };
+    } else {
+      if (btn) btn.disabled = false;
+      if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
+      if (typeof showToast === 'function') {
+        showToast('⚠️ Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng!', 'warning');
+      }
+      return;
     }
-  } catch (err) {
-    const isObjAdmin = (email.toLowerCase().includes('hba4515') || email.toLowerCase().includes('hba884515') || email.toLowerCase().includes('admin'));
-    window.currentUser = {
-      id: 'USR-' + Date.now(),
-      name: email.split('@')[0],
-      email: email,
-      emailVerified: true,
-      role: isObjAdmin ? 'ADMIN' : 'USER',
-      createdAt: new Date().toISOString()
-    };
   } finally {
     if (window.currentUser) {
       localStorage.setItem('goldwave_session', JSON.stringify({ token: 'sim_token', user: window.currentUser }));
@@ -4818,6 +5071,9 @@ window.handleAuthLoginSubmit = async function(e) {
       }
 
       updateUserUI();
+      if (typeof updateSubscriptionBadgeUI === 'function') {
+        updateSubscriptionBadgeUI(window.currentUser.subscription);
+      }
       if (typeof showToast === 'function') showToast(`🎉 Đăng nhập thành công! Chào mừng ${window.currentUser.name} truy cập Gold Wave`, 'success');
     }
     if (btn) btn.disabled = false;
