@@ -4625,28 +4625,25 @@ window.updateSubscriptionBadgeUI = function() {
   const adminBtn = document.getElementById('top-bar-admin-quick-btn');
   const pineAdminNav = document.getElementById('nav-pine-admin');
 
+  if (adminBtn) { adminBtn.classList.add('hidden'); adminBtn.style.display = 'none'; }
+  if (pineAdminNav) { pineAdminNav.classList.add('hidden'); pineAdminNav.style.display = 'none'; }
+
   if (!badgeEl || !window.currentUser) {
     if (badgeEl) badgeEl.classList.add('hidden');
-    if (adminBtn) adminBtn.classList.add('hidden');
-    if (pineAdminNav) pineAdminNav.classList.add('hidden');
     return;
   }
 
   const user = window.currentUser;
-  const isAdmin = user.role === 'ADMIN' || (user.email && (user.email.includes('hba4515') || user.email.includes('hba884515')));
+  const emailLower = (user && user.email ? user.email : '').toLowerCase().trim();
+  const isAdmin = user && (user.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin'));
 
   if (isAdmin) {
     badgeEl.classList.remove('hidden');
     badgeEl.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-300 cursor-pointer hover:bg-emerald-500/20 transition';
     if (iconEl) iconEl.textContent = '👑';
     if (textEl) textEl.textContent = 'ADMIN VIP (Vĩnh viễn)';
-    if (adminBtn) adminBtn.classList.remove('hidden');
-    if (pineAdminNav) pineAdminNav.classList.remove('hidden');
     return;
   }
-
-  if (adminBtn) adminBtn.classList.add('hidden');
-  if (pineAdminNav) pineAdminNav.classList.add('hidden');
 
   const sub = user.subscription;
   if (!sub) {
@@ -4678,11 +4675,16 @@ window.handleSubBadgeClick = function() {
     return;
   }
   const user = window.currentUser;
-  const isAdmin = user.role === 'ADMIN' || (user.email && (user.email.includes('hba4515') || user.email.includes('hba884515')));
+  const emailLower = (user && user.email ? user.email : '').toLowerCase().trim();
+  const isAdmin = user && (user.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin'));
   if (isAdmin) {
-    openPineAdminTab();
+    if (typeof window.switchView === 'function') window.switchView('account');
   } else {
-    openPaywallScreen(user, user.subscription, window.cachedPaymentConfig);
+    if (user.subscription && user.subscription.isExpired) {
+      openPaywallScreen(user, user.subscription, window.cachedPaymentConfig);
+    } else {
+      if (typeof window.switchView === 'function') window.switchView('account');
+    }
   }
 };
 
@@ -5302,16 +5304,13 @@ function updateUserUI() {
 
   const pineAdminBtn = document.getElementById('nav-pine-admin');
   if (pineAdminBtn) {
-    if (isAdmin) {
-      pineAdminBtn.classList.remove('hidden');
-      pineAdminBtn.style.display = 'flex';
-    } else {
-      pineAdminBtn.classList.add('hidden');
-      pineAdminBtn.style.display = 'none';
-    }
+    pineAdminBtn.classList.add('hidden');
+    pineAdminBtn.style.display = 'none';
   }
 
-  // Account tab Admin Panel (Bảng duyệt kích hoạt chuyển khoản cho Admin)
+  // 👑 BẢNG QUẢN TRỊ DUYỆT TÀI KHOẢN TRONG TAB TÀI KHOẢN:
+  // - Admin (hba884515@gmail.com): Hiển thị đầy đủ bảng duyệt chuyển khoản và quản lý thành viên.
+  // - Tài khoản thường (Non-Admin): ẨN TUYỆT ĐỐI, chỉ hiển thị thông tin tài khoản thông thường.
   const accountAdminPanel = document.getElementById('account-admin-panel');
   if (accountAdminPanel) {
     if (isAdmin) {
@@ -5326,7 +5325,13 @@ function updateUserUI() {
     }
   }
 
-  if (!user) return;
+  if (!user) {
+    if (accountAdminPanel) {
+      accountAdminPanel.classList.add('hidden');
+      accountAdminPanel.style.display = 'none';
+    }
+    return;
+  }
 
   const headerAvatar = document.getElementById('header-user-avatar');
   const headerName = document.getElementById('header-user-name');
@@ -5401,8 +5406,21 @@ window.handleUserDeleteAccount = function() {
 
 // ── Account Tab Admin Panel Logic (Duyệt Chuyển Khoản & Quản Lý Thành Viên) ──
 window.loadAccountAdminData = async function() {
+  const user = window.currentUser;
+  const emailLower = (user && user.email ? user.email : '').toLowerCase().trim();
+  const isAdmin = user && (user.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin'));
+
   const panel = document.getElementById('account-admin-panel');
-  if (!panel || panel.classList.contains('hidden') || panel.style.display === 'none') return;
+  if (!panel) return;
+
+  // CHẶN TUYỆT ĐỐI: Tài khoản thường không được xem hoặc tải dữ liệu Admin
+  if (!isAdmin) {
+    panel.classList.add('hidden');
+    panel.style.display = 'none';
+    return;
+  }
+
+  if (panel.classList.contains('hidden') || panel.style.display === 'none') return;
 
   const pendingBadge = document.getElementById('acc-pending-count-badge');
   const paymentsTbody = document.getElementById('acc-admin-payments-tbody');

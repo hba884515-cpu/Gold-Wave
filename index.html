@@ -780,15 +780,10 @@
       📊 Lịch Sử
     </button>
 
-    <!-- 👤 TÀI KHOẢN NGƯỜI DÙNG TAB -->
-    <button class="nav-item text-amber-300 font-bold" id="nav-account" onclick="switchView('account')" title="Tài Khoản Người Dùng">
+    <!-- 👤 TÀI KHOẢN DUY NHẤT -->
+    <button class="nav-item text-amber-300 font-bold" id="nav-account" onclick="switchView('account')" title="Tài Khoản">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>👤 Tài Khoản</span>
-    </button>
-
-    <button class="nav-item text-amber-400 font-bold hidden" id="nav-pine-admin" onclick="openPineAdminTab()" title="Quản Lý Tài Khoản & Quản Trị Admin">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span class="flex items-center gap-1">👥 QUẢN LÝ TK <span id="pine-admin-badge" class="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">ADMIN</span></span>
     </button>
 
     <!-- Spacer -->
@@ -904,11 +899,6 @@
         <span id="top-sub-icon">⏱️</span>
         <span id="top-sub-text">Dùng thử: Còn 14 ngày</span>
       </div>
-
-      <!-- Quick Admin Management Button for Admin -->
-      <button id="top-bar-admin-quick-btn" onclick="openPineAdminTab()" class="hidden px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Mở trang Quản Lý Thành Viên & Duyệt Chuyển Khoản">
-        <span>👑</span> <span>QUẢN LÝ TV</span>
-      </button>
 
 
 
@@ -4803,12 +4793,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   }
 
   function openPineAdminTab() {
-    if (!window.currentUser || window.currentUser.role !== 'ADMIN') {
-      if (typeof showToast === 'function') showToast('⚠️ TRUY CẬP BỊ TỪ CHỐI: Bảng "⚡ PINE Control" chỉ dành riêng cho tài khoản ADMIN!', 'error');
-      if (typeof openAuthModal === 'function') openAuthModal();
-      return;
-    }
-    switchView('pine-admin');
+    switchView('account');
   }
 
   async function loadAdminDashboardData() {
