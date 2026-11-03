@@ -1,0 +1,14 @@
+{
+  "name": "gold-trading-app",
+  "version": "1.0.0",
+  "description": "Gold Trend Analysis Terminal (MA Wave V8 Pro)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["gold", "trading", "analysis"],
+  "license": "ISC"
+}

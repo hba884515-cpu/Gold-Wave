@@ -1,0 +1,375 @@
+/* Gold Trading Platform - Custom Styles (Image 3 Deep Forest Pine Green Theme) */
+:root {
+  --bg-main: #081410;
+  --bg-card: #0e241c;
+  --bg-card-hover: #143227;
+  --border-color: #1a3d30;
+  --gold-primary: #f59e0b;
+  --gold-secondary: #fbbf24;
+  --gold-glow: rgba(245, 158, 11, 0.3);
+  --bull-green: #10b981;
+  --bear-red: #ef4444;
+  --pine-forest: #0d211a;
+  --pine-deep: #07120e;
+  --emerald-glow: rgba(52, 211, 153, 0.25);
+}
+
+body {
+  background: radial-gradient(ellipse at 50% 0%, #153327 0%, #0d221a 45%, #07120e 100%);
+  background-color: #081410;
+  color: #f1f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #081410;
+}
+::-webkit-scrollbar-thumb {
+  background: #1b3d30;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #275644;
+}
+
+/* Glowing text and borders */
+.glow-gold {
+  box-shadow: 0 0 15px var(--gold-glow);
+}
+.glow-buy {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+  animation: pulse-buy 2s infinite;
+}
+.glow-sell {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);
+  animation: pulse-sell 2s infinite;
+}
+
+@keyframes pulse-buy {
+  0% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.75); }
+  100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+}
+
+@keyframes pulse-sell {
+  0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.75); }
+  100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+}
+
+/* Glassmorphism panel */
+.glass-panel, .bg-panel {
+  background: rgba(13, 31, 24, 0.88) !important;
+  backdrop-filter: blur(14px) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIQUID FROSTED GLASSMORPHISM DESIGN SYSTEM (IMAGE 3 PINE GREEN)
+   FOR GOLD (XAU), BITCOIN (BTC), SILVER (XAG)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Liquid Glass Cards */
+.liquid-glass {
+  background: linear-gradient(135deg, rgba(20, 48, 38, 0.75) 0%, rgba(10, 24, 19, 0.88) 100%) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(52, 211, 153, 0.22) !important;
+  border-radius: 24px;
+  box-shadow: 0 14px 40px 0 rgba(3, 12, 9, 0.65), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.liquid-glass:hover {
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 18px 48px 0 rgba(2, 10, 7, 0.8), inset 0 1px 2px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Asset-Specific Glowing Borders */
+.glass-gold {
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.14) 0%, rgba(13, 33, 26, 0.92) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 14px 40px 0 rgba(3, 12, 9, 0.7), 0 0 28px -6px rgba(245, 158, 11, 0.3), inset 0 1px 1px 0 rgba(255, 215, 0, 0.35) !important;
+}
+
+.glass-gold:hover {
+  border-color: rgba(251, 191, 36, 0.7) !important;
+  box-shadow: 0 18px 52px 0 rgba(3, 12, 9, 0.8), 0 0 36px -4px rgba(245, 158, 11, 0.5), inset 0 1px 2px 0 rgba(255, 255, 255, 0.45) !important;
+}
+
+.glass-btc {
+  background: linear-gradient(145deg, rgba(247, 147, 26, 0.14) 0%, rgba(13, 33, 26, 0.92) 100%) !important;
+  border: 1px solid rgba(247, 147, 26, 0.42) !important;
+  box-shadow: 0 14px 40px 0 rgba(3, 12, 9, 0.7), 0 0 28px -6px rgba(247, 147, 26, 0.3), inset 0 1px 1px 0 rgba(255, 180, 71, 0.35) !important;
+}
+
+.glass-btc:hover {
+  border-color: rgba(247, 147, 26, 0.75) !important;
+  box-shadow: 0 18px 52px 0 rgba(3, 12, 9, 0.8), 0 0 36px -4px rgba(247, 147, 26, 0.5) !important;
+}
+
+.glass-silver {
+  background: linear-gradient(145deg, rgba(203, 213, 225, 0.14) 0%, rgba(13, 33, 26, 0.92) 100%) !important;
+  border: 1px solid rgba(148, 163, 184, 0.4) !important;
+  box-shadow: 0 14px 40px 0 rgba(3, 12, 9, 0.7), 0 0 28px -6px rgba(148, 163, 184, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+.glass-silver:hover {
+  border-color: rgba(241, 245, 249, 0.75) !important;
+  box-shadow: 0 18px 52px 0 rgba(3, 12, 9, 0.8), 0 0 36px -4px rgba(203, 213, 225, 0.45) !important;
+}
+
+/* Category Circular Pills (Leafora Icon Button Style) */
+.pill-category-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pill-category-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(24, 56, 44, 0.75) 0%, rgba(12, 28, 22, 0.85) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 22px;
+}
+
+.pill-category-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease;
+}
+
+.pill-category-btn:hover .pill-category-icon {
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 24px rgba(245, 158, 11, 0.25);
+}
+
+.pill-category-btn:hover .pill-category-label {
+  color: #f1f5f9;
+}
+
+.pill-category-btn.active .pill-category-icon {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.35) 0%, rgba(217, 119, 6, 0.2) 100%);
+  border-color: #f59e0b;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4), inset 0 1px 2px rgba(255, 215, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.pill-category-btn.active .pill-category-label {
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+/* Floating Glass Bottom Nav Dock (Leafora Floating Pill Dock) */
+.floating-glass-dock {
+  background: linear-gradient(180deg, rgba(15, 22, 35, 0.94) 0%, rgba(10, 14, 23, 0.98) 100%);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 20px -5px rgba(245, 158, 11, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.dock-item-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5px;
+  padding: 4px 6px;
+  border-radius: 14px;
+  color: #94a3b8;
+  font-size: 8.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 44px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  user-select: none;
+}
+
+.dock-item-btn:hover {
+  color: #f1f5f9;
+}
+
+.dock-item-btn.active {
+  color: #fbbf24;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3), inset 0 1px 1px rgba(255, 215, 0, 0.35);
+}
+
+.dock-item-btn.active svg,
+.dock-item-btn.active span:first-child {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.7));
+}
+
+/* 3D Asset Emblems */
+.asset-badge-gold {
+  background: linear-gradient(135deg, #ffd700 0%, #f59e0b 50%, #b45309 100%);
+  color: #000;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+}
+
+.asset-badge-btc {
+  background: linear-gradient(135deg, #ffb347 0%, #f7931a 60%, #c85a04 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(247, 147, 26, 0.45);
+}
+
+.asset-badge-silver {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #64748b 100%);
+  color: #0f172a;
+  box-shadow: 0 4px 14px rgba(203, 213, 225, 0.35);
+}
+
+/* Subtle Shimmer & Pulse Animation */
+@keyframes gold-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-gold {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 215, 0, 0.25) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: gold-shimmer 3.5s infinite;
+}
+
+/* Modal Bottom Sheet */
+.glass-bottom-sheet {
+  background: linear-gradient(180deg, rgba(16, 23, 38, 0.95) 0%, rgba(9, 13, 22, 0.98) 100%);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border-top: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.75), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+/* Price Flash Animations */
+.flash-up {
+  animation: flash-green 0.6s ease-out;
+}
+.flash-down {
+  animation: flash-red 0.6s ease-out;
+}
+
+@keyframes flash-green {
+  0% { color: #34d399; text-shadow: 0 0 10px rgba(52, 211, 153, 0.8); }
+  100% { color: inherit; text-shadow: none; }
+}
+
+@keyframes flash-red {
+  0% { color: #f87171; text-shadow: 0 0 10px rgba(248, 113, 113, 0.8); }
+  100% { color: inherit; text-shadow: none; }
+}
+
+/* Notification Toast Animation */
+.toast-enter {
+  animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.toast-exit {
+  animation: toast-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+/* Active tab styling */
+.tab-active {
+  border-bottom: 2px solid var(--gold-primary);
+  color: var(--gold-primary);
+  font-weight: 600;
+}
+
+/* Monospace font for price values */
+.price-font {
+  font-family: "JetBrains Mono", "SF Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+}
+
+/* Floating MTF Table on Chart */
+#chart-floating-table {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#chart-floating-table td, #chart-floating-table th {
+  letter-spacing: 0.02em;
+}
+
+#chart-svg-overlay {
+  pointer-events: none;
+}
+
+/* Core Structural Fallback Utility Classes */
+.hidden { display: none !important; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.flex-1 { flex: 1 1 0%; }
+.flex-shrink-0 { flex-shrink: 0; }
+.min-h-0 { min-height: 0; }
+.min-w-0 { min-width: 0; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.overflow-hidden { overflow: hidden; }
+.overflow-y-auto { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+
+
+

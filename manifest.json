@@ -1,0 +1,16 @@
+{
+  "short_name": "Gold Wave",
+  "name": "Gold Wave Intelligence Terminal",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#050810",
+  "theme_color": "#0d1117",
+  "display": "standalone",
+  "orientation": "portrait"
+}

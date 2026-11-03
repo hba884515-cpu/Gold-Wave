@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" width="100%" height="100%">
+  <defs>
+    <!-- Gold Metallic Gradients -->
+    <linearGradient id="goldTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff1b0"/>
+      <stop offset="30%" stop-color="#fcd34d"/>
+      <stop offset="70%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="goldFront" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="25%" stop-color="#f59e0b"/>
+      <stop offset="75%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+    <linearGradient id="goldSide" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="50%" stop-color="#78350f"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="goldGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="goldDropShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#000000" flood-opacity="0.6"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#f59e0b" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient Glow -->
+  <ellipse cx="100" cy="135" rx="75" ry="18" fill="rgba(0,0,0,0.55)" filter="blur(6px)"/>
+  <ellipse cx="100" cy="90" rx="60" ry="30" fill="url(#goldGlow)" opacity="0.3" filter="blur(14px)"/>
+
+  <!-- 3D Gold Bar Isometric -->
+  <g filter="url(#goldDropShadow)">
+    <!-- Front Face -->
+    <polygon points="35,75 145,75 130,125 20,125" fill="url(#goldFront)"/>
+
+    <!-- Right Side Face -->
+    <polygon points="145,75 180,50 165,100 130,125" fill="url(#goldSide)"/>
+
+    <!-- Top Beveled Face -->
+    <polygon points="50,45 160,45 180,50 145,75 35,75" fill="url(#goldTop)"/>
+
+    <!-- Chamfer Edge Highlights -->
+    <polyline points="50,45 160,45 180,50" fill="none" stroke="#fffbeb" stroke-width="2" opacity="0.9"/>
+    <line x1="35" y1="75" x2="145" y2="75" stroke="#fffbeb" stroke-width="2" opacity="0.95"/>
+    <line x1="35" y1="75" x2="20" y2="125" stroke="#fef08a" stroke-width="1.5" opacity="0.8"/>
+    <line x1="145" y1="75" x2="130" y2="125" stroke="#b45309" stroke-width="1.5"/>
+
+    <!-- Stamped Hallmark Details -->
+    <g transform="translate(42, 85) rotate(-3)" opacity="0.85">
+      <rect x="0" y="0" width="80" height="24" rx="4" fill="none" stroke="#78350f" stroke-width="1"/>
+      <text x="40" y="11" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="8" font-weight="900" fill="#78350f" text-anchor="middle" letter-spacing="1">999.9 FINE GOLD</text>
+      <text x="40" y="20" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="7" font-weight="800" fill="#92400e" text-anchor="middle">1000g • SWISS BANK</text>
+    </g>
+
+    <!-- Specular Light Reflection Streak -->
+    <polygon points="40,75 70,75 55,125 25,125" fill="#ffffff" opacity="0.18"/>
+    <polygon points="65,45 90,45 80,75 55,75" fill="#ffffff" opacity="0.25"/>
+  </g>
+</svg>

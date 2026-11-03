@@ -1,0 +1,695 @@
+[
+  {
+    "id": "DEV-1789907564246",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-20T12:32:44.246Z"
+  },
+  {
+    "id": "DEV-1789977606651",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-21T08:00:06.651Z"
+  },
+  {
+    "id": "DEV-1790311115756",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-25T04:38:35.756Z"
+  },
+  {
+    "id": "DEV-1790316824518",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-25T06:13:44.518Z"
+  },
+  {
+    "id": "DEV-1790321519037",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-25T07:31:59.038Z"
+  },
+  {
+    "id": "DEV-1790357320564",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-25T17:28:40.564Z"
+  },
+  {
+    "id": "DEV-1790360387526",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-25T18:19:47.526Z"
+  },
+  {
+    "id": "DEV-1790407865656",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-26T07:31:05.656Z"
+  },
+  {
+    "id": "DEV-1790411291124",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-26T08:28:11.124Z"
+  },
+  {
+    "id": "DEV-1790439248247",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-26T16:14:08.247Z"
+  },
+  {
+    "id": "DEV-1790489221116",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-27T06:07:01.116Z"
+  },
+  {
+    "id": "DEV-1790493812139",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-27T07:23:32.139Z"
+  },
+  {
+    "id": "DEV-1790515779065",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-27T13:29:39.065Z"
+  },
+  {
+    "id": "DEV-1790524274482",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-27T15:51:14.482Z"
+  },
+  {
+    "id": "DEV-1790530487857",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-27T17:34:47.857Z"
+  },
+  {
+    "id": "DEV-1790564941789",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-28T03:09:01.789Z"
+  },
+  {
+    "id": "DEV-1790565017202",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-28T03:10:17.202Z"
+  },
+  {
+    "id": "DEV-1790593044977",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-28T10:57:24.977Z"
+  },
+  {
+    "id": "DEV-1790619047768",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-28T18:10:47.768Z"
+  },
+  {
+    "id": "DEV-1790740283853",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-30T03:51:23.853Z"
+  },
+  {
+    "id": "DEV-1790773395045",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-30T13:03:15.045Z"
+  },
+  {
+    "id": "DEV-1790789633453",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-09-30T17:33:53.453Z"
+  },
+  {
+    "id": "DEV-1790814802661",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-01T00:33:22.661Z"
+  },
+  {
+    "id": "DEV-1791037367989",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-03T14:22:47.989Z"
+  },
+  {
+    "id": "DEV-1791076642148",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-04T01:17:22.151Z"
+  },
+  {
+    "id": "DEV-1791123779767",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-04T14:22:59.767Z"
+  },
+  {
+    "id": "DEV-1791174694282",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-05T04:31:34.282Z"
+  },
+  {
+    "id": "DEV-1791187713582",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-05T08:08:33.582Z"
+  },
+  {
+    "id": "DEV-1791214985761",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-05T15:43:05.769Z"
+  },
+  {
+    "id": "DEV-1791219758235",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-05T17:02:38.235Z"
+  },
+  {
+    "id": "DEV-1791229113773",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-05T19:38:33.773Z"
+  },
+  {
+    "id": "DEV-1791231999624",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-05T20:26:39.624Z"
+  },
+  {
+    "id": "DEV-1791269812731",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-06T06:56:52.731Z"
+  },
+  {
+    "id": "DEV-1791271609040",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-06T07:26:49.040Z"
+  },
+  {
+    "id": "DEV-1791292693317",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-06T13:18:13.317Z"
+  },
+  {
+    "id": "DEV-1791302073247",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-06T15:54:33.247Z"
+  },
+  {
+    "id": "DEV-1791310145171",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-06T18:09:05.171Z"
+  },
+  {
+    "id": "DEV-1791349052077",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-07T04:57:32.078Z"
+  },
+  {
+    "id": "DEV-1791388906673",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-07T16:01:46.673Z"
+  },
+  {
+    "id": "DEV-1791392515828",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-07T17:01:55.828Z"
+  },
+  {
+    "id": "DEV-1791393460560",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-07T17:17:40.560Z"
+  },
+  {
+    "id": "DEV-1791393662993",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-07T17:21:02.993Z"
+  },
+  {
+    "id": "DEV-1791397738080",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-07T18:28:58.080Z"
+  },
+  {
+    "id": "DEV-1791399225103",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-07T18:53:45.103Z"
+  },
+  {
+    "id": "DEV-1791399751347",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-07T19:02:31.347Z"
+  },
+  {
+    "id": "DEV-1791442047892",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-08T06:47:27.892Z"
+  },
+  {
+    "id": "DEV-1791474708334",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-08T15:51:48.334Z"
+  },
+  {
+    "id": "DEV-1791475836527",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-08T16:10:36.527Z"
+  },
+  {
+    "id": "DEV-1791484622523",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-08T18:37:02.523Z"
+  },
+  {
+    "id": "DEV-1791486644078",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-08T19:10:44.078Z"
+  },
+  {
+    "id": "DEV-1791551617574",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-09T13:13:37.574Z"
+  },
+  {
+    "id": "DEV-1791779544171",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-12T04:32:24.171Z"
+  },
+  {
+    "id": "DEV-1792562506897",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-21T06:01:46.897Z"
+  },
+  {
+    "id": "DEV-1792562629003",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-21T06:03:49.003Z"
+  },
+  {
+    "id": "DEV-1792594838893",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-21T15:00:38.893Z"
+  },
+  {
+    "id": "DEV-1792650822021",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-22T06:33:42.021Z"
+  },
+  {
+    "id": "DEV-1792914504930",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-25T07:48:24.930Z"
+  },
+  {
+    "id": "DEV-1792957422311",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-25T19:43:42.311Z"
+  },
+  {
+    "id": "DEV-1792986790624",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-26T03:53:10.624Z"
+  },
+  {
+    "id": "DEV-1792995493257",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-26T06:18:13.257Z"
+  },
+  {
+    "id": "DEV-1793030711955",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-26T16:05:11.955Z"
+  },
+  {
+    "id": "DEV-1793107697449",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-27T13:28:17.449Z"
+  },
+  {
+    "id": "DEV-1793126925314",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-27T18:48:45.314Z"
+  },
+  {
+    "id": "DEV-1793160996338",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-28T04:16:36.338Z"
+  },
+  {
+    "id": "DEV-1793213288705",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-28T18:48:08.705Z"
+  },
+  {
+    "id": "DEV-1793464500743",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-31T16:35:00.743Z"
+  },
+  {
+    "id": "DEV-1793470732444",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-10-31T18:18:52.444Z"
+  },
+  {
+    "id": "DEV-1793503879779",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-01T03:31:19.779Z"
+  },
+  {
+    "id": "DEV-1793508054302",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-01T04:40:54.302Z"
+  },
+  {
+    "id": "DEV-1793519219529",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-01T07:46:59.532Z"
+  },
+  {
+    "id": "DEV-1793520413062",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-01T08:06:53.063Z"
+  },
+  {
+    "id": "DEV-1793521854978",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-01T08:30:54.978Z"
+  },
+  {
+    "id": "DEV-1793537908061",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-01T12:58:28.061Z"
+  },
+  {
+    "id": "DEV-1793588532999",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-02T03:02:12.999Z"
+  },
+  {
+    "id": "DEV-1793588694417",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-02T03:04:54.417Z"
+  },
+  {
+    "id": "DEV-1793611456930",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-02T09:24:16.930Z"
+  },
+  {
+    "id": "DEV-1793678319310",
+    "userId": "GUEST",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "pushToken": "push_sub_token_simulated",
+    "notificationPermission": "granted",
+    "lastActive": "2026-11-03T03:58:39.310Z"
+  }
+]

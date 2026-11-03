@@ -1,0 +1,42 @@
+[
+  {
+    "id": "USR-ADMIN-01",
+    "name": "Admin HBA",
+    "email": "hba4515@gmail.com",
+    "passwordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+    "authProvider": "email",
+    "emailVerified": true,
+    "role": "ADMIN",
+    "createdAt": "2026-09-25T11:52:00.000Z"
+  },
+  {
+    "id": "USR-1355",
+    "name": "Hoàng Bá",
+    "email": "hba884515@gmail.com",
+    "passwordHash": "0569b46a734bce54f99a3f57f90749ab683b5bbf9078b4f2a217408c9e0f24cc",
+    "authProvider": "email",
+    "emailVerified": true,
+    "role": "USER",
+    "createdAt": "2026-09-25T06:13:11.356Z"
+  },
+  {
+    "id": "USR-6745",
+    "name": "Phú Thành",
+    "email": "duloxo99@gmail.com",
+    "passwordHash": "345f3f8221e2cafb52f0155d45f7e5e559a0c20e244e3c5fd58635114b243db4",
+    "authProvider": "email",
+    "emailVerified": true,
+    "role": "USER",
+    "createdAt": "2026-11-01T08:00:56.745Z"
+  },
+  {
+    "id": "USR-0953",
+    "name": "Nguyễn thị thuý",
+    "email": "thuynguyen0389.pm@gmail.con",
+    "passwordHash": "4fc68c4b294126cbc3eb2ff1713288342cec26499be78bea4ae839450be83d01",
+    "authProvider": "email",
+    "emailVerified": true,
+    "role": "USER",
+    "createdAt": "2026-11-03T04:10:10.954Z"
+  }
+]
