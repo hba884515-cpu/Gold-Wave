@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 8080;
 // Database files for persistence
 const USERS_FILE = path.join(__dirname, 'users_db.json');
 const DEVICES_FILE = path.join(__dirname, 'devices_db.json');
+const DEVICE_TRIALS_FILE = path.join(__dirname, 'device_trials_db.json');
 const NEWS_DB_FILE = path.join(__dirname, 'news_db.json');
 
 function loadJSON(filePath, defaultData) {
@@ -31,6 +32,29 @@ function saveJSON(filePath, data) {
   try {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
   } catch (e) {}
+}
+
+let deviceTrialsDB = loadJSON(DEVICE_TRIALS_FILE, []);
+
+// Helper: Normalize Email (chặn thủ thuật tạo gmail dấu chấm và dấu + alias để lách dùng thử)
+function normalizeEmail(email) {
+  if (!email) return '';
+  const trimmed = email.toLowerCase().trim();
+  const parts = trimmed.split('@');
+  if (parts.length !== 2) return trimmed;
+  let user = parts[0];
+  const domain = parts[1];
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    user = user.split('+')[0]; // Loại bỏ +alias
+    user = user.replace(/\./g, ''); // Loại bỏ tất cả dấu chấm
+  }
+  return `${user}@${domain}`;
+}
+
+// Helper: Tra cứu hồ sơ dùng thử của thiết bị phần cứng
+function getDeviceTrialRecord(deviceId) {
+  if (!deviceId) return null;
+  return deviceTrialsDB.find(d => d.deviceId === deviceId);
 }
 
 // User DB Schema (hba4515@gmail.com and hba884515@gmail.com are ADMIN with LIFETIME access)
@@ -1688,37 +1712,88 @@ const server = http.createServer(async (req, res) => {
   // Auth Endpoints
   else if (urlPath === '/api/auth/register' && req.method === 'POST') {
     const body = await parseRequestBody(req);
-    const { name, email, password } = body;
+    const { name, email, password, phone, deviceId } = body;
 
     if (!email || !password || !name) {
       res.writeHead(400);
       return res.end(JSON.stringify({ error: 'Vui lòng nhập đầy đủ Họ tên, Email và Mật khẩu' }));
     }
 
-    const existing = usersDB.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const emailLower = email.toLowerCase().trim();
+    const normEmail = normalizeEmail(emailLower);
+    const isAdminAccount = (emailLower === 'hba4515@gmail.com' || emailLower === 'hba884515@gmail.com' || emailLower.includes('admin'));
+
+    // 1. Chặn tạo email trùng hoặc lách bằng dấu chấm, alias Gmail (+tag)
+    const existing = usersDB.find(u => {
+      const uNorm = u.normalizedEmail || normalizeEmail(u.email);
+      return u.email.toLowerCase() === emailLower || uNorm === normEmail;
+    });
     if (existing) {
       res.writeHead(400);
-      return res.end(JSON.stringify({ error: 'Email này đã được đăng ký tài khoản!' }));
+      return res.end(JSON.stringify({ error: 'Email này (hoặc biến thể Gmail này) đã được đăng ký tài khoản!' }));
     }
 
-    const emailLower = email.toLowerCase();
-    const userRole = (emailLower === 'hba4515@gmail.com' || emailLower === 'hba884515@gmail.com' || emailLower.includes('admin')) ? 'ADMIN' : 'USER';
-    const trialDays = 14;
     const nowIso = new Date().toISOString();
-    const trialExpiresIso = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString();
+    const nowMs = Date.now();
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const userRole = isAdminAccount ? 'ADMIN' : 'USER';
+
+    // 2. KHÓA THIẾT BỊ (Device Fingerprint Lock) - 1 thiết bị chỉ được 1 lần dùng thử 14 ngày
+    let trialDays = 14;
+    let trialExpiresIso = new Date(nowMs + trialDays * ONE_DAY_MS).toISOString();
+    let isDeviceLocked = false;
+
+    if (!isAdminAccount && deviceId) {
+      const devRecord = getDeviceTrialRecord(deviceId);
+      if (devRecord) {
+        const devExpiresMs = new Date(devRecord.trialExpiresAt).getTime();
+        const devMsRemaining = devExpiresMs - nowMs;
+
+        if (devMsRemaining <= 0) {
+          // Thiết bị này đã hết sạch 14 ngày dùng thử!
+          isDeviceLocked = true;
+          trialDays = 0;
+          trialExpiresIso = devRecord.trialExpiresAt;
+        } else {
+          // Thiết bị còn hạn dùng thử cũ nhưng không được cấp 14 ngày mới, kế thừa thời gian còn lại
+          trialDays = Math.max(0, Math.ceil(devMsRemaining / ONE_DAY_MS));
+          trialExpiresIso = devRecord.trialExpiresAt;
+        }
+        if (!devRecord.associatedEmails.includes(emailLower)) {
+          devRecord.associatedEmails.push(emailLower);
+        }
+        saveJSON(DEVICE_TRIALS_FILE, deviceTrialsDB);
+      } else {
+        // Thiết bị lần đầu tiên đăng ký: Cấp 14 ngày và khóa mã phần cứng thiết bị vào database
+        deviceTrialsDB.push({
+          deviceId,
+          firstRegisteredEmail: emailLower,
+          firstRegisteredAt: nowIso,
+          trialExpiresAt: trialExpiresIso,
+          associatedEmails: [emailLower],
+          ip: req.socket?.remoteAddress || '',
+          userAgent: req.headers['user-agent'] || ''
+        });
+        saveJSON(DEVICE_TRIALS_FILE, deviceTrialsDB);
+      }
+    }
 
     const newUser = {
       id: `USR-${Date.now().toString().slice(-4)}`,
       name,
       email: emailLower,
+      normalizedEmail: normEmail,
+      phone: phone || '',
+      deviceId: deviceId || '',
       passwordHash: hashPassword(password),
       authProvider: 'email',
       emailVerified: true,
       role: userRole,
       trialDays: trialDays,
-      trialExpiresAt: trialExpiresIso,
-      subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : 'TRIAL',
+      trialExpiresAt: userRole === 'ADMIN' ? null : trialExpiresIso,
+      subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : (isDeviceLocked ? 'EXPIRED' : 'TRIAL'),
       subscriptionExpiresAt: userRole === 'ADMIN' ? null : trialExpiresIso,
+      isDeviceLocked: isDeviceLocked,
       createdAt: nowIso
     };
 
@@ -1726,6 +1801,28 @@ const server = http.createServer(async (req, res) => {
     saveJSON(USERS_FILE, usersDB);
 
     const subInfo = getUserSubscriptionInfo(newUser);
+
+    if (isDeviceLocked) {
+      subInfo.isExpired = true;
+      subInfo.status = 'EXPIRED';
+      subInfo.message = 'Thiết bị này đã từng sử dụng hết 14 ngày dùng thử miễn phí. Mỗi thiết bị chỉ được nhận 1 lượt trải nghiệm. Vui lòng thanh toán gói cước 390.000đ/tháng để tiếp tục sử dụng.';
+      res.writeHead(200);
+      return res.end(JSON.stringify({
+        status: 'EXPIRED',
+        isExpired: true,
+        deviceLocked: true,
+        message: subInfo.message,
+        user: { 
+          id: newUser.id, 
+          name: newUser.name, 
+          email: newUser.email, 
+          emailVerified: true, 
+          role: userRole,
+          subscription: subInfo
+        },
+        payment: paymentConfig
+      }));
+    }
 
     res.writeHead(200);
     res.end(JSON.stringify({
@@ -1744,7 +1841,7 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/auth/login' && req.method === 'POST') {
     const body = await parseRequestBody(req);
-    const { email, password } = body;
+    const { email, password, deviceId } = body;
 
     const emailLower = (email || '').toLowerCase().trim();
     const user = usersDB.find(u => u.email.toLowerCase() === emailLower);
@@ -1763,6 +1860,16 @@ const server = http.createServer(async (req, res) => {
     if (isAdminAccount) {
       user.role = 'ADMIN';
       user.subscriptionStatus = 'LIFETIME';
+    } else if (deviceId) {
+      if (!user.deviceId) user.deviceId = deviceId;
+      // Kiểm tra nếu thiết bị này đã bị khóa hết hạn dùng thử
+      const devRecord = getDeviceTrialRecord(deviceId);
+      if (devRecord && new Date(devRecord.trialExpiresAt).getTime() <= Date.now()) {
+        if (user.subscriptionStatus !== 'ACTIVE' && user.subscriptionStatus !== 'LIFETIME') {
+          user.subscriptionStatus = 'EXPIRED';
+        }
+      }
+      saveJSON(USERS_FILE, usersDB);
     }
 
     const subInfo = getUserSubscriptionInfo(user);
@@ -1805,13 +1912,50 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/auth/google' && req.method === 'POST') {
     const body = await parseRequestBody(req);
-    const email = (body.email || 'google.trader@goldwave.com').toLowerCase();
+    const email = (body.email || 'google.trader@goldwave.com').toLowerCase().trim();
     const name = body.name || 'Google Trader';
     const pwd = body.password || '123456';
+    const deviceId = body.deviceId;
     const userRole = (email.includes('hba4515') || email.includes('hba884515') || email.includes('admin')) ? 'ADMIN' : 'USER';
-    const trialDays = 14;
+    const isAdminAccount = userRole === 'ADMIN';
+
     const nowIso = new Date().toISOString();
-    const trialExpiresIso = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000).toISOString();
+    const nowMs = Date.now();
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+    let trialDays = 14;
+    let trialExpiresIso = new Date(nowMs + trialDays * ONE_DAY_MS).toISOString();
+    let isDeviceLocked = false;
+
+    if (!isAdminAccount && deviceId) {
+      const devRecord = getDeviceTrialRecord(deviceId);
+      if (devRecord) {
+        const devExpiresMs = new Date(devRecord.trialExpiresAt).getTime();
+        if (devExpiresMs <= nowMs) {
+          isDeviceLocked = true;
+          trialDays = 0;
+          trialExpiresIso = devRecord.trialExpiresAt;
+        } else {
+          trialDays = Math.max(0, Math.ceil((devExpiresMs - nowMs) / ONE_DAY_MS));
+          trialExpiresIso = devRecord.trialExpiresAt;
+        }
+        if (!devRecord.associatedEmails.includes(email)) {
+          devRecord.associatedEmails.push(email);
+        }
+        saveJSON(DEVICE_TRIALS_FILE, deviceTrialsDB);
+      } else {
+        deviceTrialsDB.push({
+          deviceId,
+          firstRegisteredEmail: email,
+          firstRegisteredAt: nowIso,
+          trialExpiresAt: trialExpiresIso,
+          associatedEmails: [email],
+          ip: req.socket?.remoteAddress || '',
+          userAgent: req.headers['user-agent'] || ''
+        });
+        saveJSON(DEVICE_TRIALS_FILE, deviceTrialsDB);
+      }
+    }
 
     let user = usersDB.find(u => u.email.toLowerCase() === email);
     if (!user) {
@@ -1819,14 +1963,16 @@ const server = http.createServer(async (req, res) => {
         id: `GGL-${Date.now().toString().slice(-4)}`,
         name,
         email: email,
+        deviceId: deviceId || '',
         passwordHash: hashPassword(pwd),
         authProvider: 'google',
         emailVerified: true,
         role: userRole,
         trialDays: trialDays,
-        trialExpiresAt: trialExpiresIso,
-        subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : 'TRIAL',
-        subscriptionExpiresAt: userRole === 'ADMIN' ? null : trialExpiresIso,
+        trialExpiresAt: isAdminAccount ? null : trialExpiresIso,
+        subscriptionStatus: isAdminAccount ? 'LIFETIME' : (isDeviceLocked ? 'EXPIRED' : 'TRIAL'),
+        subscriptionExpiresAt: isAdminAccount ? null : trialExpiresIso,
+        isDeviceLocked: isDeviceLocked,
         createdAt: nowIso
       };
       usersDB.push(user);
@@ -1834,7 +1980,8 @@ const server = http.createServer(async (req, res) => {
     } else {
       user.passwordHash = hashPassword(pwd);
       user.role = userRole;
-      if (userRole === 'ADMIN') user.subscriptionStatus = 'LIFETIME';
+      if (isAdminAccount) user.subscriptionStatus = 'LIFETIME';
+      if (deviceId && !user.deviceId) user.deviceId = deviceId;
       saveJSON(USERS_FILE, usersDB);
     }
 
@@ -1905,12 +2052,25 @@ const server = http.createServer(async (req, res) => {
   // Check User Subscription Status Endpoint
   else if (urlPath === '/api/subscription/status' && req.method === 'POST') {
     const body = await parseRequestBody(req);
-    const email = (body.email || '').toLowerCase();
+    const email = (body.email || '').toLowerCase().trim();
+    const deviceId = body.deviceId;
     const user = usersDB.find(u => u.email.toLowerCase() === email);
     if (!user) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ status: 'ERROR', error: 'Không tìm thấy người dùng' }));
     }
+
+    const isAdmin = user.role === 'ADMIN' || email === 'hba884515@gmail.com' || email === 'hba4515@gmail.com' || email.includes('admin');
+
+    if (!isAdmin && deviceId) {
+      const devRecord = getDeviceTrialRecord(deviceId);
+      if (devRecord && new Date(devRecord.trialExpiresAt).getTime() <= Date.now()) {
+        if (user.subscriptionStatus !== 'ACTIVE' && user.subscriptionStatus !== 'LIFETIME') {
+          user.subscriptionStatus = 'EXPIRED';
+        }
+      }
+    }
+
     const subInfo = getUserSubscriptionInfo(user);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'SUCCESS', user: { id: user.id, email: user.email, name: user.name }, subscription: subInfo, payment: paymentConfig }));
@@ -2015,12 +2175,14 @@ const server = http.createServer(async (req, res) => {
       id: u.id,
       name: u.name,
       email: u.email,
+      deviceId: u.deviceId || '',
+      isDeviceLocked: !!u.isDeviceLocked,
       role: u.role || 'USER',
       emailVerified: u.emailVerified || false,
       subscription: getUserSubscriptionInfo(u),
       createdAt: u.createdAt || new Date().toISOString()
     }));
-    res.end(JSON.stringify({ status: 'SUCCESS', users: cleanUsers, payment: paymentConfig }));
+    res.end(JSON.stringify({ status: 'SUCCESS', users: cleanUsers, payment: paymentConfig, deviceTrials: deviceTrialsDB }));
   }
   else if (urlPath === '/api/admin/payment-requests') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -2048,8 +2210,18 @@ const server = http.createServer(async (req, res) => {
       const baseMs = Math.max(now, currentExpireMs);
       user.subscriptionExpiresAt = new Date(baseMs + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
     }
+    user.isDeviceLocked = false;
 
     saveJSON(USERS_FILE, usersDB);
+
+    // Mở khóa thiết bị trong sổ deviceTrialsDB nếu có
+    if (user.deviceId) {
+      const devRec = getDeviceTrialRecord(user.deviceId);
+      if (devRec) {
+        devRec.trialExpiresAt = user.subscriptionExpiresAt;
+        saveJSON(DEVICE_TRIALS_FILE, deviceTrialsDB);
+      }
+    }
 
     // Cập nhật trạng thái các yêu cầu thanh toán chờ duyệt của user này thành APPROVED
     paymentRequestsDB.forEach(r => {

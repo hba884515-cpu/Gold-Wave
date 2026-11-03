@@ -4764,6 +4764,81 @@ window.closeAuthModal = function() {
   }
 };
 
+// ── Robust Device Fingerprint Engine (Anti-Trial-Abuse) ──
+window.getOrCreateDeviceId = function() {
+  const STORAGE_KEY = 'goldwave_device_fingerprint';
+  const COOKIE_NAME = 'goldwave_dfp';
+
+  function getCookie(name) {
+    const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? decodeURIComponent(v[2]) : null;
+  }
+  function setCookie(name, val) {
+    try {
+      document.cookie = `${name}=${encodeURIComponent(val)}; max-age=${315360000}; path=/; SameSite=Lax`;
+    } catch (e) {}
+  }
+
+  let deviceId = localStorage.getItem(STORAGE_KEY) || getCookie(COOKIE_NAME);
+
+  function getCanvasFingerprint() {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 240;
+      canvas.height = 60;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return 'nocanvas';
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial, sans-serif';
+      ctx.fillStyle = '#f60';
+      ctx.fillRect(125, 1, 62, 20);
+      ctx.fillStyle = '#069';
+      ctx.fillText('GoldWave-AntiTrialAbuse', 2, 15);
+      ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+      ctx.fillText('GoldWave-AntiTrialAbuse', 4, 17);
+      return canvas.toDataURL();
+    } catch (e) {
+      return 'canvaserr';
+    }
+  }
+
+  function hashString(str) {
+    let hash1 = 5381;
+    let hash2 = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash1 = ((hash1 << 5) + hash1) + char;
+      hash2 = char + (hash2 << 6) + (hash2 << 16) - hash2;
+    }
+    const h1 = (hash1 >>> 0).toString(16).padStart(8, '0');
+    const h2 = (hash2 >>> 0).toString(16).padStart(8, '0');
+    return `${h1}${h2}`;
+  }
+
+  const canvasFp = getCanvasFingerprint();
+  const screenFp = `${window.screen?.width || 0}x${window.screen?.height || 0}x${window.screen?.colorDepth || 0}`;
+  const tzFp = new Date().getTimezoneOffset();
+  const langFp = navigator.language || '';
+  const coresFp = navigator.hardwareConcurrency || 4;
+  const platformFp = navigator.platform || '';
+
+  const rawSeed = `${screenFp}_${tzFp}_${langFp}_${coresFp}_${platformFp}_${canvasFp}`;
+  const hardwareHash = hashString(rawSeed);
+
+  if (!deviceId) {
+    deviceId = `GW-DEV-${hardwareHash}`;
+  } else if (!deviceId.includes(hardwareHash.slice(0, 8))) {
+    deviceId = `GW-DEV-${hardwareHash}`;
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEY, deviceId);
+    setCookie(COOKIE_NAME, deviceId);
+  } catch (e) {}
+
+  return deviceId;
+};
+
 window.checkAuthOnLoad = async function() {
   const sessionData = JSON.parse(localStorage.getItem('goldwave_session') || 'null') ||
                       JSON.parse(localStorage.getItem('goldwave_user') || 'null');
@@ -4786,12 +4861,13 @@ window.checkAuthOnLoad = async function() {
     return;
   }
 
-  // Check subscription status with server
+  // Check subscription status with server (kèm mã định danh thiết bị deviceId)
   try {
+    const deviceId = window.getOrCreateDeviceId();
     const res = await fetch('/api/subscription/status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: userObj.email })
+      body: JSON.stringify({ email: userObj.email, deviceId })
     });
     if (res.ok) {
       const data = await res.json();
@@ -5003,10 +5079,11 @@ window.handleAuthLoginSubmit = async function(e) {
   if (btnText) btnText.textContent = 'ĐANG ĐĂNG NHẬP...';
 
   try {
+    const deviceId = window.getOrCreateDeviceId();
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, deviceId })
     });
     const data = await res.json();
 
@@ -5119,6 +5196,7 @@ window.handleAuthRegisterSubmit = async function(e) {
     return;
   }
 
+  const deviceId = window.getOrCreateDeviceId();
   const btn = document.getElementById('reg-submit-btn');
   const btnText = document.getElementById('reg-btn-text');
   if (btn) btn.disabled = true;
@@ -5128,26 +5206,45 @@ window.handleAuthRegisterSubmit = async function(e) {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
+      body: JSON.stringify({ name, email, password, deviceId })
     });
     const data = await res.json();
-    if (!res.ok || data.status !== 'SUCCESS') {
-      console.warn('Server registration returned non-success:', data);
+
+    // 1. Chặn nếu thiết bị này đã từng sử dụng hết 14 ngày dùng thử (Device Lock)
+    if (data.status === 'EXPIRED' || data.deviceLocked) {
+      if (btn) btn.disabled = false;
+      if (btnText) btnText.textContent = 'TẠO TÀI KHOẢN GOLD WAVE';
+      alert(`🔒 THIẾT BỊ ĐÃ HẾT LƯỢT DÙNG THỬ!\n\n${data.message || 'Thiết bị này đã từng sử dụng hết 14 ngày dùng thử miễn phí. Mỗi thiết bị chỉ được nhận 1 lượt trải nghiệm.'}\n\nVui lòng đăng nhập lại tài khoản cũ hoặc thanh toán gói VIP (390k/Tháng) để tiếp tục sử dụng.`);
+      if (typeof openPaywallScreen === 'function') {
+        openPaywallScreen(data.user || { email, name }, data.subscription || { isExpired: true, daysRemaining: 0, status: 'EXPIRED' }, data.payment);
+      }
+      return;
     }
-  } catch (err) {
-    console.warn('Registration fetch error:', err);
-  } finally {
+
+    // 2. Chặn lỗi đăng ký khác (ví dụ: trùng email hoặc biến thể gmail dấu chấm/+tag)
+    if (!res.ok || data.status !== 'SUCCESS') {
+      if (btn) btn.disabled = false;
+      if (btnText) btnText.textContent = 'TẠO TÀI KHOẢN GOLD WAVE';
+      alert(`⚠️ ĐĂNG KÝ THẤT BẠI:\n\n${data.error || 'Vui lòng kiểm tra lại thông tin đăng ký.'}`);
+      if (typeof showToast === 'function') showToast(`❌ ${data.error || 'Đăng ký thất bại'}`, 'error');
+      return;
+    }
+
+    // 3. Đăng ký thành công hợp lệ
     const loginEmail = document.getElementById('login-email');
     const loginPass = document.getElementById('login-password');
     if (loginEmail) loginEmail.value = email;
     if (loginPass) loginPass.value = password;
 
     showAuthView('login');
-    alert(`🎉 ĐĂNG KÝ TÀI KHOẢN THÀNH CÔNG!\n\nTài khoản Gmail: ${email}\n\nHệ thống đã tự động quay lại màn hình Đăng Nhập. Vui lòng nhấn "ĐĂNG NHẬP" để truy cập vào ứng dụng Gold Wave!`);
+    alert(`🎉 ĐĂNG KÝ TÀI KHOẢN THÀNH CÔNG!\n\nTài khoản Gmail: ${email}\n\nBạn nhận được 14 ngày dùng thử miễn phí. Vui lòng bấm "ĐĂNG NHẬP" để vào ứng dụng!`);
     if (typeof showToast === 'function') {
-      showToast(`✅ Đăng ký tài khoản thành công! Đã chuyển sang trang Đăng Nhập cho bạn. Bấm ĐĂNG NHẬP để vào app.`, 'success');
+      showToast(`✅ Đăng ký tài khoản thành công! Bấm ĐĂNG NHẬP để vào app.`, 'success');
     }
-
+  } catch (err) {
+    console.warn('Registration fetch error:', err);
+    alert('Lỗi kết nối máy chủ khi đăng ký. Vui lòng thử lại sau ít phút.');
+  } finally {
     if (btn) btn.disabled = false;
     if (btnText) btnText.textContent = 'TẠO TÀI KHOẢN GOLD WAVE';
   }
@@ -5192,13 +5289,22 @@ window.confirmGoogleRegistration = async function(e) {
   const name = document.getElementById('google-reg-name')?.value.trim() || 'Google Trader';
   const email = document.getElementById('google-reg-email')?.value.trim() || 'google.trader@gmail.com';
   const password = document.getElementById('google-reg-password')?.value.trim() || '123456';
+  const deviceId = window.getOrCreateDeviceId();
 
   try {
-    await fetch('/api/auth/google', {
+    const res = await fetch('/api/auth/google', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
+      body: JSON.stringify({ name, email, password, deviceId })
     });
+    const data = await res.json();
+    if (data.status === 'EXPIRED' || data.isExpired) {
+      closeGoogleAuthModal();
+      if (typeof openPaywallScreen === 'function') {
+        openPaywallScreen(data.user || { email, name }, data.subscription || { isExpired: true, daysRemaining: 0 }, data.payment);
+      }
+      return;
+    }
   } catch (err) {
     console.warn('Google Auth fetch error:', err);
   }
