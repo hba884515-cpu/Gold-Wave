@@ -53,19 +53,20 @@ const PAYMENT_CONFIG_FILE = path.join(__dirname, 'payment_config.json');
 const PAYMENT_REQUESTS_FILE = path.join(__dirname, 'payment_requests.json');
 
 let paymentConfig = loadJSON(PAYMENT_CONFIG_FILE, {
-  bankName: "MB Bank (Ngân hàng TMCP Quân Đội)",
-  bankId: "MB",
-  accountNumber: "0988888888",
+  bankName: "Techcombank (Ngân hàng TMCP Kỹ Thương Việt Nam)",
+  bankId: "TCB",
+  bankBin: "970407",
+  accountNumber: "68686866899",
   accountName: "HOÀNG BÁ",
-  monthlyFee: "299.000 VNĐ / Tháng",
-  monthlyFeeNumber: 299000,
-  qrImage: "assets/payment-qr.svg",
+  monthlyFee: "390.000 VNĐ / Tháng",
+  monthlyFeeNumber: 390000,
+  qrImage: "assets/payment-qr.png",
   transferPrefix: "GOLDWAVE",
   supportZalo: "https://zalo.me",
   supportPhone: "0988.xxx.xxx",
   supportTelegram: "https://t.me",
   trialDays: 14,
-  note: "Sau khi chuyển khoản, hệ thống sẽ kích hoạt tài khoản trong vòng 1-3 phút. Bạn cũng có thể liên hệ Zalo để được kích hoạt ngay lập tức."
+  note: "Sau khi chuyển khoản 390.000 VNĐ, tài khoản sẽ được tự động kích hoạt gia hạn 30 ngày. Hoặc bạn có thể gửi yêu cầu xác nhận bên dưới để Admin duyệt ngay."
 });
 
 let paymentRequestsDB = loadJSON(PAYMENT_REQUESTS_FILE, []);

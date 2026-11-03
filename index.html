@@ -589,7 +589,7 @@
                 <span class="text-[10px] text-emerald-400 font-semibold">Tín hiệu MA Wave V8 Pro + Bot Auto 24/7</span>
               </div>
               <div class="text-right">
-                <span id="paywall-fee-display" class="text-sm font-black text-amber-400">299.000 VNĐ</span>
+                <span id="paywall-fee-display" class="text-sm font-black text-amber-400">390.000 VNĐ</span>
                 <span class="text-[9px] text-slate-400 block font-medium">/ 30 ngày sử dụng</span>
               </div>
             </div>
@@ -597,14 +597,14 @@
             <!-- MÃ QR CODE NGÂN HÀNG -->
             <div class="text-center space-y-2">
               <div class="relative inline-block p-2 bg-white rounded-2xl shadow-xl shadow-amber-500/20 border-2 border-amber-400/80 mx-auto group">
-                <img id="paywall-qr-img" src="assets/payment-qr.svg" alt="Mã QR Chuyển Khoản Ngân Hàng" 
+                <img id="paywall-qr-img" src="assets/payment-qr.png" alt="Mã QR Chuyển Khoản Ngân Hàng" 
                      class="w-48 h-48 sm:w-52 sm:h-52 object-contain mx-auto rounded-xl transition duration-300 group-hover:scale-[1.02]">
                 <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-black text-[9px] px-2.5 py-0.5 rounded-full shadow tracking-wider uppercase whitespace-nowrap">
                   Quét Mã Qua App Ngân Hàng
                 </div>
               </div>
               <p class="text-[10px] text-slate-400 pt-1">
-                Mở ứng dụng Ngân hàng bất kỳ (MB, VCB, Techcombank, MoMo...) và quét mã QR trên
+                Mở ứng dụng Ngân hàng bất kỳ (Techcombank, MB, VCB, MoMo...) và quét mã QR trên
               </p>
             </div>
 
@@ -612,12 +612,12 @@
             <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs space-y-2 font-sans">
               <div class="flex items-center justify-between">
                 <span class="text-slate-400 text-[11px]">Ngân hàng:</span>
-                <span id="paywall-bank-name" class="font-bold text-white text-[11px] text-right">MB Bank</span>
+                <span id="paywall-bank-name" class="font-bold text-white text-[11px] text-right">Techcombank</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-slate-400 text-[11px]">Số tài khoản:</span>
                 <div class="flex items-center gap-1.5">
-                  <span id="paywall-acc-number" class="font-mono font-black text-amber-400 text-sm">0988888888</span>
+                  <span id="paywall-acc-number" class="font-mono font-black text-amber-400 text-sm">68686866899</span>
                   <button type="button" onclick="copyPaywallInfo('accountNumber')" class="text-[10px] text-slate-400 hover:text-white bg-slate-800 px-1.5 py-0.5 rounded cursor-pointer" title="Sao chép">📋</button>
                 </div>
               </div>
@@ -627,7 +627,7 @@
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-slate-400 text-[11px]">Số tiền:</span>
-                <span id="paywall-amount" class="font-black text-emerald-400 text-xs">299,000 VNĐ</span>
+                <span id="paywall-amount" class="font-black text-emerald-400 text-xs">390,000 VNĐ</span>
               </div>
               <div class="flex items-center justify-between pt-1 border-t border-slate-800/80">
                 <span class="text-slate-400 text-[11px]">Nội dung CK:</span>
@@ -2095,15 +2095,15 @@
         <form onsubmit="handleSavePaymentConfig(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans">
           <div>
             <label class="text-slate-400 font-bold block mb-1">Tên Ngân Hàng (hoặc Ví MoMo):</label>
-            <input type="text" id="admin-cfg-bank-name" placeholder="MB Bank (Ngân hàng Quân Đội)" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-bold">
+            <input type="text" id="admin-cfg-bank-name" placeholder="Techcombank (Ngân hàng TMCP Kỹ Thương Việt Nam)" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-bold">
           </div>
           <div>
-            <label class="text-slate-400 font-bold block mb-1">Mã Ngân Hàng (VietQR ID: MB, VCB, TCB, ACB...):</label>
-            <input type="text" id="admin-cfg-bank-id" placeholder="MB" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-300 font-bold font-mono">
+            <label class="text-slate-400 font-bold block mb-1">Mã Ngân Hàng (VietQR ID: TCB, MB, VCB, ACB...):</label>
+            <input type="text" id="admin-cfg-bank-id" placeholder="TCB" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-300 font-bold font-mono">
           </div>
           <div>
             <label class="text-slate-400 font-bold block mb-1">Số Tài Khoản Ngân Hàng:</label>
-            <input type="text" id="admin-cfg-acc-number" placeholder="0988888888" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-400 font-black font-mono text-sm">
+            <input type="text" id="admin-cfg-acc-number" placeholder="68686866899" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-400 font-black font-mono text-sm">
           </div>
           <div>
             <label class="text-slate-400 font-bold block mb-1">Tên Chủ Tài Khoản:</label>
@@ -2111,7 +2111,7 @@
           </div>
           <div>
             <label class="text-slate-400 font-bold block mb-1">Mức Phí Gói 1 Tháng (Hiển thị):</label>
-            <input type="text" id="admin-cfg-fee-display" placeholder="299.000 VNĐ / Tháng" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-emerald-400 font-bold">
+            <input type="text" id="admin-cfg-fee-display" placeholder="390.000 VNĐ / Tháng" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-emerald-400 font-bold">
           </div>
           <div>
             <label class="text-slate-400 font-bold block mb-1">Link Chat Zalo Hỗ Trợ Kích Hoạt:</label>
@@ -2119,7 +2119,7 @@
           </div>
           <div class="md:col-span-2">
             <label class="text-slate-400 font-bold block mb-1">Đường dẫn Ảnh Mã QR (mặc định: VietQR tự động hoặc assets/payment-qr.png):</label>
-            <input type="text" id="admin-cfg-qr-image" placeholder="assets/payment-qr.svg" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 font-mono">
+            <input type="text" id="admin-cfg-qr-image" placeholder="assets/payment-qr.png" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 font-mono">
           </div>
           <div class="md:col-span-2 flex justify-end">
             <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 cursor-pointer">

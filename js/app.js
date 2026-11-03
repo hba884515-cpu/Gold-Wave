@@ -4540,20 +4540,30 @@ window.openPaywallScreen = function(user, sub, payment) {
   if (memoEl) memoEl.textContent = transferNote;
   if (zaloEl && cfg.supportZalo) zaloEl.href = cfg.supportZalo;
 
-  // Build Dynamic Bank QR Image
+  // Build Bank QR Image
   if (qrImgEl) {
-    if (cfg.qrImage && cfg.qrImage !== 'assets/payment-qr.svg' && !cfg.qrImage.includes('payment-qr.svg')) {
+    const amountNum = cfg.monthlyFeeNumber || 390000;
+    if (cfg.qrImage) {
       qrImgEl.src = cfg.qrImage;
+      qrImgEl.onerror = function() {
+        this.onerror = null;
+        if (cfg.bankId && cfg.accountNumber) {
+          const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
+          const cleanBank = encodeURIComponent(cfg.bankId);
+          const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
+          const cleanMemo = encodeURIComponent(transferNote);
+          this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?amount=${amountNum}&addInfo=${cleanMemo}&accountName=${cleanName}`;
+        }
+      };
     } else if (cfg.bankId && cfg.accountNumber) {
       const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
       const cleanBank = encodeURIComponent(cfg.bankId);
       const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
       const cleanMemo = encodeURIComponent(transferNote);
-      const amountNum = cfg.monthlyFeeNumber || 299000;
       qrImgEl.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?amount=${amountNum}&addInfo=${cleanMemo}&accountName=${cleanName}`;
       qrImgEl.onerror = function() {
         this.onerror = null;
-        this.src = 'assets/payment-qr.svg';
+        this.src = 'assets/payment-qr.png';
       };
     }
   }
