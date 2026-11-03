@@ -4541,27 +4541,16 @@ window.openPaywallScreen = function(user, sub, payment) {
 
   // Build Bank QR Image
   if (qrImgEl) {
-    if (cfg.qrImage) {
-      qrImgEl.src = cfg.qrImage;
-      qrImgEl.onerror = function() {
-        this.onerror = null;
-        if (cfg.bankId && cfg.accountNumber) {
-          const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
-          const cleanBank = encodeURIComponent(cfg.bankId);
-          const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
-          this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
-        }
-      };
-    } else if (cfg.bankId && cfg.accountNumber) {
-      const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
-      const cleanBank = encodeURIComponent(cfg.bankId);
-      const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
-      qrImgEl.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
-      qrImgEl.onerror = function() {
-        this.onerror = null;
-        this.src = 'assets/payment-qr.png';
-      };
-    }
+    qrImgEl.src = (cfg.qrImage || 'assets/payment-qr.png');
+    qrImgEl.onerror = function() {
+      this.onerror = null;
+      if (cfg.bankId && cfg.accountNumber) {
+        const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
+        const cleanBank = encodeURIComponent(cfg.bankId);
+        const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
+        this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
+      }
+    };
   }
 };
 
