@@ -1792,6 +1792,9 @@
           <button onclick="handleUserLogoutAll()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
             📱 Đăng Xuất Tất Cả Thiết Bị
           </button>
+          <button onclick="scrollToFeedbackSection()" class="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+            ⭐ Đánh Giá & Góp Ý App
+          </button>
           <button onclick="handleUserDeleteAccount()" class="px-3.5 py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ml-auto">
             🗑️ Xóa Tài Khoản
           </button>
@@ -1895,9 +1898,149 @@
           </div>
         </div>
 
+        <!-- BẢNG 3: Ý KIẾN ĐÁNH GIÁ & GÓP Ý NÂNG CẤP TỪ NGƯỜI DÙNG (DÀNH CHO ADMIN) -->
+        <div class="bg-panel border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">⭐</span>
+              <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                Ý KIẾN ĐÁNH GIÁ & GÓP Ý NÂNG CẤP CỦA KHÁCH HÀNG
+                <span id="acc-total-feedbacks-badge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/40">0 Đánh giá</span>
+              </h4>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span id="acc-avg-rating-badge" class="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-300 font-bold border border-amber-500/30 flex items-center gap-1">
+                ⭐ 5.0 / 5.0 (Xuất sắc)
+              </span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto sig-scroll">
+            <table class="w-full text-left text-xs font-mono border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+                  <th class="py-2.5 px-3">Thời Gian</th>
+                  <th class="py-2.5 px-3">Người Đánh Giá</th>
+                  <th class="py-2.5 px-3">Số Sao</th>
+                  <th class="py-2.5 px-3">Khía Cạnh / Tags</th>
+                  <th class="py-2.5 px-3">Nội Dung Nhận Xét & Góp Ý</th>
+                  <th class="py-2.5 px-3 text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="acc-admin-feedbacks-tbody" class="divide-y divide-slate-800/60">
+                <tr>
+                  <td colspan="6" class="py-6 text-center text-slate-500">
+                    Đang tải danh sách đánh giá...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      <!-- SECTION 2: TRUNG TÂM CÀI ĐẶT THÔNG BÁO -->
+      <!-- SECTION 2: ⭐ KHỐI ĐÁNH GIÁ TRẢI NGHIỆM & GÓP Ý NÂNG CẤP GOLD WAVE (HIỂN THỊ CHO TẤT CẢ NGƯỜI DÙNG) -->
+      <div id="user-feedback-section" class="bg-gradient-to-br from-[#0c1310] via-[#09110d] to-[#141208] border border-amber-500/30 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-5">
+        <div class="flex items-start justify-between flex-wrap gap-4 border-b border-slate-800/80 pb-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">⭐</span>
+              <h3 class="text-base font-black text-amber-400 uppercase tracking-wide flex items-center gap-2">
+                ĐÁNH GIÁ TRẢI NGHIỆM & GÓP Ý NÂNG CẤP
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold uppercase">Feedback</span>
+              </h3>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed max-w-2xl">
+              Cảm ơn bạn đã trải nghiệm <strong>Gold Wave Terminal</strong>! Hãy cho chúng tôi biết mức độ hài lòng của bạn và đóng góp ý kiến để đội ngũ nâng cấp thêm các tính năng thông minh hơn.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-xl text-xs text-slate-400">
+            <span>📩 Hòm thư tiếp nhận:</span>
+            <span class="text-amber-300 font-bold font-mono">hba884515@gmail.com</span>
+          </div>
+        </div>
+
+        <!-- Khung Chọn Số Sao Đánh Giá (Interactive 5 Stars) -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+            1. Bạn chấm bao nhiêu sao cho app Gold Wave?
+          </label>
+          <div class="flex items-center gap-3 flex-wrap">
+            <div id="star-rating-container" class="flex items-center gap-1.5 text-3xl sm:text-4xl cursor-pointer select-none">
+              <span class="star-item transition-transform hover:scale-125 text-amber-400" data-value="1" onclick="setStarRating(1)">★</span>
+              <span class="star-item transition-transform hover:scale-125 text-amber-400" data-value="2" onclick="setStarRating(2)">★</span>
+              <span class="star-item transition-transform hover:scale-125 text-amber-400" data-value="3" onclick="setStarRating(3)">★</span>
+              <span class="star-item transition-transform hover:scale-125 text-amber-400" data-value="4" onclick="setStarRating(4)">★</span>
+              <span class="star-item transition-transform hover:scale-125 text-amber-400" data-value="5" onclick="setStarRating(5)">★</span>
+            </div>
+            <div id="star-rating-label" class="px-3 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold text-xs flex items-center gap-1">
+              🌟 5/5 Sao — Xuất sắc! Cực kỳ hài lòng
+            </div>
+            <input type="hidden" id="feedback-star-value" value="5">
+          </div>
+        </div>
+
+        <!-- Khung Chọn Khía Cạnh Đánh Giá (Tags) -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+            2. Điểm bạn ấn tượng nhất hoặc muốn nâng cấp thêm:
+          </label>
+          <div class="flex items-center gap-2 flex-wrap text-xs" id="feedback-tags-container">
+            <button type="button" onclick="toggleFeedbackTag(this)" class="fb-tag px-3 py-1.5 rounded-xl border border-amber-500/40 bg-amber-500/20 text-amber-300 font-bold transition cursor-pointer active-tag">
+              🎯 Tín hiệu Vàng chuẩn
+            </button>
+            <button type="button" onclick="toggleFeedbackTag(this)" class="fb-tag px-3 py-1.5 rounded-xl border border-amber-500/40 bg-amber-500/20 text-amber-300 font-bold transition cursor-pointer active-tag">
+              ⚡ Tốc độ báo lệnh Realtime
+            </button>
+            <button type="button" onclick="toggleFeedbackTag(this)" class="fb-tag px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 font-medium hover:border-slate-600 transition cursor-pointer">
+              📊 Biểu đồ & Chỉ báo
+            </button>
+            <button type="button" onclick="toggleFeedbackTag(this)" class="fb-tag px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 font-medium hover:border-slate-600 transition cursor-pointer">
+              🤖 Bot MT5 tự động
+            </button>
+            <button type="button" onclick="toggleFeedbackTag(this)" class="fb-tag px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 font-medium hover:border-slate-600 transition cursor-pointer">
+              📈 Phân tích xu hướng AI
+            </button>
+            <button type="button" onclick="toggleFeedbackTag(this)" class="fb-tag px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 font-medium hover:border-slate-600 transition cursor-pointer">
+              📰 Tin tức vĩ mô
+            </button>
+            <button type="button" onclick="toggleFeedbackTag(this)" class="fb-tag px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 font-medium hover:border-slate-600 transition cursor-pointer">
+              💡 Đề xuất tính năng mới
+            </button>
+          </div>
+        </div>
+
+        <!-- Khung Nhập Nhận Xét Chi Tiết -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+            3. Ý kiến nhận xét & đề xuất nâng cấp của bạn:
+          </label>
+          <textarea id="feedback-comment-input" rows="3" placeholder="Chia sẻ cảm nhận của bạn sau khi trải nghiệm app, hoặc những tính năng bạn mong muốn nâng cấp thêm (ví dụ: thêm cặp tiền, thêm loại thông báo chuông, cải tiến bot...)" class="w-full px-4 py-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition font-sans resize-y"></textarea>
+        </div>
+
+        <!-- Nút Gửi Đánh Giá -->
+        <div class="flex items-center justify-between flex-wrap gap-3 pt-1">
+          <span class="text-[11px] text-slate-400 flex items-center gap-1">
+            🔒 Ý kiến của bạn sẽ được gửi thẳng đến hòm thư Admin để ghi nhận và nâng cấp.
+          </span>
+          <button id="btn-submit-feedback" onclick="handleSubmitFeedback()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition transform active:scale-95 flex items-center gap-2 cursor-pointer">
+            <span>🚀</span> <span>Gửi Nhận Xét & Đánh Giá</span>
+          </button>
+        </div>
+
+        <!-- Success Toast Alert Box -->
+        <div id="feedback-success-banner" class="hidden p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-medium space-y-1 animate-fade-in">
+          <div class="font-bold flex items-center gap-1.5 text-sm text-emerald-400">
+            <span>🎉</span> CẢM ƠN BẠN ĐÃ GÓP Ý & ĐÁNH GIÁ!
+          </div>
+          <p class="text-slate-300">
+            Ý kiến của bạn đã được chuyển tới Admin qua email <strong class="text-amber-300 font-mono">hba884515@gmail.com</strong>. Đội ngũ Gold Wave sẽ tiếp thu và nâng cấp app ngày một hoàn hảo hơn!
+          </p>
+        </div>
+      </div>
+
+      <!-- SECTION 3: TRUNG TÂM CÀI ĐẶT THÔNG BÁO -->
       <div class="bg-panel border border-slate-800 rounded-2xl p-5 shadow-xl space-y-5">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
           <div class="flex items-center gap-2">

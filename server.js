@@ -71,6 +71,10 @@ let paymentConfig = loadJSON(PAYMENT_CONFIG_FILE, {
 
 let paymentRequestsDB = loadJSON(PAYMENT_REQUESTS_FILE, []);
 
+// User Feedback DB
+const FEEDBACKS_FILE = path.join(__dirname, 'feedbacks_db.json');
+let feedbacksDB = loadJSON(FEEDBACKS_FILE, []);
+
 // Helper: Calculate user subscription & 14-day trial status
 function getUserSubscriptionInfo(user) {
   if (!user) {
@@ -1943,6 +1947,53 @@ const server = http.createServer(async (req, res) => {
       message: 'Yêu cầu kích hoạt của bạn đã được gửi thành công! Admin sẽ duyệt và mở khóa tài khoản trong 1-3 phút.',
       request: requestItem
     }));
+  }
+  // User Feedback Submission Endpoint
+  else if (urlPath === '/api/feedback/submit' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const email = (body.email || '').toLowerCase().trim();
+    const name = body.name || email.split('@')[0] || 'Trader';
+    const rating = Math.min(5, Math.max(1, parseInt(body.rating, 10) || 5));
+    const tags = Array.isArray(body.tags) ? body.tags : [];
+    const comment = (body.comment || '').trim();
+
+    const feedbackItem = {
+      id: `FB-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name,
+      email,
+      rating,
+      tags,
+      comment,
+      createdAt: new Date().toISOString()
+    };
+
+    feedbacksDB.unshift(feedbackItem);
+    if (feedbacksDB.length > 500) feedbacksDB = feedbacksDB.slice(0, 500);
+    saveJSON(FEEDBACKS_FILE, feedbacksDB);
+
+    const starsStr = '⭐'.repeat(rating);
+    addNotification('SYSTEM', `⭐ ĐÁNH GIÁ MỚI: ${starsStr} (${rating}/5)`, `Từ: ${name} (${email})\nNhận xét: "${comment ? comment.slice(0, 100) : 'Rất hài lòng'}"\nĐã chuyển tiếp thông tin tới Admin: hba884515@gmail.com`);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      status: 'SUCCESS', 
+      message: 'Cảm ơn bạn đã gửi đánh giá & ý kiến đóng góp! Ý kiến của bạn đã được gửi trực tiếp tới Admin hba884515@gmail.com.',
+      feedback: feedbackItem
+    }));
+  }
+  // Admin Feedbacks List Endpoint
+  else if (urlPath === '/api/admin/feedbacks') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'SUCCESS', feedbacks: feedbacksDB }));
+  }
+  // Admin Delete Feedback Endpoint
+  else if (urlPath === '/api/admin/delete-feedback' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const id = body.id;
+    feedbacksDB = feedbacksDB.filter(f => f.id !== id);
+    saveJSON(FEEDBACKS_FILE, feedbacksDB);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'SUCCESS', message: 'Đã xóa phản hồi thành công' }));
   }
   // Admin Endpoints
   else if (urlPath === '/api/admin/dashboard') {

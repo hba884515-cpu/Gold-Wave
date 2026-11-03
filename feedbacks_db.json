@@ -1,0 +1,27 @@
+[
+  {
+    "id": "FB-1793731100-01",
+    "name": "Hoàng Minh (Trader)",
+    "email": "hoangminh.trader@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tín hiệu Vàng MA Wave V8 bắt nhịp sóng rất chuẩn, tỷ lệ win cao và giao diện xem trên điện thoại rất mượt mà. Mong admin nâng cấp thêm tính năng thông báo âm thanh chuông đặc biệt khi chạm TP3!",
+    "createdAt": "2026-11-03T16:45:00.000Z"
+  },
+  {
+    "id": "FB-1793732200-02",
+    "name": "Nguyễn Văn Đạt",
+    "email": "datnguyen.forex@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "App dùng rất tốt, bot tự động vào lệnh quản lý vốn tốt, mong admin ra thêm bản kết nối trực tiếp với tài khoản Exness nữa là tuyệt vời 10/10.",
+    "createdAt": "2026-11-04T01:15:00.000Z"
+  }
+]

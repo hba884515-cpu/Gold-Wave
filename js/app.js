@@ -5428,16 +5428,19 @@ window.loadAccountAdminData = async function() {
   const usersTbody = document.getElementById('acc-admin-users-tbody');
 
   try {
-    const [resReqs, resUsers] = await Promise.all([
+    const [resReqs, resUsers, resFbs] = await Promise.all([
       fetch('/api/admin/payment-requests'),
-      fetch('/api/admin/users')
+      fetch('/api/admin/users'),
+      fetch('/api/admin/feedbacks')
     ]);
 
     const dataReqs = await resReqs.json();
     const dataUsers = await resUsers.json();
+    const dataFbs = await resFbs.json();
 
     const requests = (dataReqs && dataReqs.requests) ? dataReqs.requests : [];
     const users = (dataUsers && dataUsers.users) ? dataUsers.users : [];
+    const feedbacks = (dataFbs && dataFbs.feedbacks) ? dataFbs.feedbacks : [];
 
     // 1. Render Danh Sách Yêu Cầu Chuyển Khoản Chờ Kích Hoạt
     const pendingCount = requests.filter(r => r.status === 'PENDING').length;
@@ -5557,6 +5560,60 @@ window.loadAccountAdminData = async function() {
         }).join('');
       }
     }
+
+    // 3. Render Danh Sách Đánh Giá & Góp Ý Nâng Cấp Của Khách Hàng (Bảng 3)
+    const totalFbsBadge = document.getElementById('acc-total-feedbacks-badge');
+    const avgRatingBadge = document.getElementById('acc-avg-rating-badge');
+    const fbsTbody = document.getElementById('acc-admin-feedbacks-tbody');
+
+    if (totalFbsBadge) totalFbsBadge.textContent = `${feedbacks.length} Đánh giá`;
+
+    if (avgRatingBadge) {
+      if (feedbacks.length > 0) {
+        const sum = feedbacks.reduce((acc, f) => acc + (f.rating || 5), 0);
+        const avg = (sum / feedbacks.length).toFixed(1);
+        avgRatingBadge.textContent = `⭐ ${avg} / 5.0 (${feedbacks.length} lượt)`;
+      } else {
+        avgRatingBadge.textContent = `⭐ 5.0 / 5.0 (Chưa có đánh giá)`;
+      }
+    }
+
+    if (fbsTbody) {
+      if (feedbacks.length === 0) {
+        fbsTbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-500 font-sans">Chưa có đánh giá nào từ khách hàng.</td></tr>';
+      } else {
+        fbsTbody.innerHTML = feedbacks.map(f => {
+          const dateStr = f.createdAt ? new Date(f.createdAt).toLocaleString('vi-VN') : 'Vừa xong';
+          const stars = '⭐'.repeat(f.rating || 5);
+          const tagsHtml = (f.tags || []).map(t => `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700 text-[9px] mr-1 mb-1 inline-block">${t}</span>`).join('');
+          
+          return `
+            <tr class="hover:bg-slate-900/60 transition">
+              <td class="py-3 px-3 text-slate-400 text-[11px] whitespace-nowrap">${dateStr}</td>
+              <td class="py-3 px-3">
+                <div class="font-bold text-white text-xs">${f.name || 'Trader'}</div>
+                <div class="text-amber-300/80 text-[11px] font-mono">${f.email}</div>
+              </td>
+              <td class="py-3 px-3 whitespace-nowrap">
+                <span class="text-amber-400 font-bold text-xs">${stars}</span>
+                <span class="text-slate-400 text-[10px] block font-mono">(${f.rating}/5 sao)</span>
+              </td>
+              <td class="py-3 px-3">
+                <div class="flex flex-wrap">${tagsHtml || '<span class="text-slate-500 text-[10px]">Chung</span>'}</div>
+              </td>
+              <td class="py-3 px-3 text-slate-200 text-xs font-sans max-w-xs">
+                ${f.comment ? `<p class="italic text-slate-300 leading-relaxed">"${f.comment}"</p>` : '<span class="text-slate-500 italic">Không có nhận xét thêm</span>'}
+              </td>
+              <td class="py-3 px-3 text-right">
+                <button onclick="accountAdminDeleteFeedback('${f.id}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition cursor-pointer" title="Xóa đánh giá này">
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
   } catch (err) {
     console.warn('Lỗi tải dữ liệu bảng Admin tab tài khoản:', err);
   }
@@ -5659,6 +5716,156 @@ window.accountAdminDeleteUser = async function(email) {
     }
   } catch (e) {
     alert('Lỗi kết nối máy chủ.');
+  }
+};
+
+window.accountAdminDeleteFeedback = async function(id) {
+  if (!confirm('Xác nhận xóa đánh giá này?')) return;
+  try {
+    const res = await fetch('/api/admin/delete-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'SUCCESS') {
+      if (typeof showToast === 'function') showToast('🗑️ Đã xóa đánh giá', 'info');
+      await window.loadAccountAdminData();
+    } else {
+      alert('Lỗi xóa đánh giá: ' + (data.error || 'Vui lòng thử lại'));
+    }
+  } catch (e) {
+    alert('Lỗi kết nối máy chủ.');
+  }
+};
+
+// ── User Feedback & App Rating Engine ──
+window.setStarRating = function(rating) {
+  const container = document.getElementById('star-rating-container');
+  const labelEl = document.getElementById('star-rating-label');
+  const hiddenInput = document.getElementById('feedback-star-value');
+
+  if (hiddenInput) hiddenInput.value = rating;
+
+  if (container) {
+    const stars = container.querySelectorAll('.star-item');
+    stars.forEach((s, idx) => {
+      if (idx < rating) {
+        s.className = 'star-item transition-transform hover:scale-125 text-amber-400 cursor-pointer';
+      } else {
+        s.className = 'star-item transition-transform hover:scale-125 text-slate-700 cursor-pointer';
+      }
+    });
+  }
+
+  if (labelEl) {
+    const labels = {
+      1: '⚠️ 1/5 Sao — Cần cải thiện nhiều',
+      2: '🙁 2/5 Sao — Chưa hài lòng',
+      3: '😐 3/5 Sao — Tạm ổn / Bình thường',
+      4: '😊 4/5 Sao — Rất tốt & Hữu ích',
+      5: '🌟 5/5 Sao — Xuất sắc! Cực kỳ hài lòng'
+    };
+    labelEl.textContent = labels[rating] || `⭐ ${rating}/5 Sao`;
+  }
+};
+
+window.toggleFeedbackTag = function(btn) {
+  if (!btn) return;
+  btn.classList.toggle('active-tag');
+  if (btn.classList.contains('active-tag')) {
+    btn.className = 'fb-tag px-3 py-1.5 rounded-xl border border-amber-500/40 bg-amber-500/20 text-amber-300 font-bold transition cursor-pointer active-tag';
+  } else {
+    btn.className = 'fb-tag px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 font-medium hover:border-slate-600 transition cursor-pointer';
+  }
+};
+
+window.scrollToFeedbackSection = function() {
+  const sec = document.getElementById('user-feedback-section');
+  if (sec) {
+    sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    sec.classList.add('ring-2', 'ring-amber-400/50');
+    setTimeout(() => sec.classList.remove('ring-2', 'ring-amber-400/50'), 2500);
+  }
+};
+
+window.handleSubmitFeedback = async function() {
+  const submitBtn = document.getElementById('btn-submit-feedback');
+  const commentInput = document.getElementById('feedback-comment-input');
+  const starValue = parseInt(document.getElementById('feedback-star-value')?.value, 10) || 5;
+  const successBanner = document.getElementById('feedback-success-banner');
+
+  // Collect selected tags
+  const activeTags = [];
+  document.querySelectorAll('#feedback-tags-container .active-tag').forEach(b => {
+    activeTags.push(b.textContent.trim());
+  });
+
+  const comment = commentInput ? commentInput.value.trim() : '';
+
+  // Get user info if logged in
+  const user = window.currentUser || {};
+  let email = user.email || '';
+  let name = user.name || '';
+
+  if (!email) {
+    email = prompt('Vui lòng nhập Email của bạn để Admin tiếp nhận ý kiến đóng góp:');
+    if (!email || !email.includes('@')) {
+      alert('Vui lòng nhập email hợp lệ để gửi phản hồi.');
+      return;
+    }
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳</span> <span>Đang gửi ý kiến...</span>';
+  }
+
+  try {
+    const res = await fetch('/api/feedback/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name || email.split('@')[0],
+        email,
+        rating: starValue,
+        tags: activeTags,
+        comment
+      })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.status === 'SUCCESS') {
+      if (successBanner) {
+        successBanner.classList.remove('hidden');
+        successBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      if (commentInput) commentInput.value = '';
+      if (typeof showToast === 'function') {
+        showToast('🎉 Đã gửi đánh giá thành công! Cảm ơn bạn rất nhiều.', 'success');
+      }
+      if (submitBtn) {
+        submitBtn.innerHTML = '<span>✅</span> <span>Đã Gửi Thành Công!</span>';
+        submitBtn.className = 'px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs transition cursor-default';
+      }
+      // If user is Admin, reload the feedback table
+      const emailLower = (user.email || '').toLowerCase();
+      if (user.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com') {
+        if (typeof window.loadAccountAdminData === 'function') window.loadAccountAdminData();
+      }
+    } else {
+      alert('Gửi đánh giá không thành công: ' + (data.error || 'Vui lòng thử lại'));
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>🚀</span> <span>Gửi Nhận Xét & Đánh Giá</span>';
+      }
+    }
+  } catch (err) {
+    alert('Lỗi kết nối khi gửi đánh giá. Vui lòng thử lại sau.');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>🚀</span> <span>Gửi Nhận Xét & Đánh Giá</span>';
+    }
   }
 };
 
