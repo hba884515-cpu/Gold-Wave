@@ -1425,10 +1425,15 @@ class GoldTradingApp {
           this.updatePriceHeader();
           if (this.replayMode === 'live') {
             const tf = this.currentTimeframe || '15m';
+            const prevCount = this.bars ? this.bars.length : 0;
             this.bars = window.marketDataStore.getBars(tf);
             const lastBar = (this.bars && this.bars.length) ? this.bars[this.bars.length - 1] : null;
             if (this.candleSeries && lastBar) {
-              this.candleSeries.update(lastBar);
+              if (this.bars && this.bars.length !== prevCount) {
+                this.candleSeries.setData(this.bars);
+              } else {
+                this.candleSeries.update(lastBar);
+              }
             }
             this.renderIndicators();
             this.updateReplayUI();
@@ -1440,8 +1445,9 @@ class GoldTradingApp {
             }
           }
           if (window.signalEngine) {
-            window.signalEngine.evaluateMarket(this.bars);
-            window.signalEngine.updateOpenOrders(payload.price);
+            const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
+            window.signalEngine.evaluateMarket(this.bars, activeAsset);
+            window.signalEngine.updateOpenOrders(payload.price, activeAsset);
           }
         } else if (event === 'timeframeChange') {
           this.currentTimeframe = payload.timeframe;

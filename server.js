@@ -1185,36 +1185,36 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 3875.64,
-    change: -144.92,
-    changePercent: -3.60,
-    high: 4026.55,
-    low: 3870.32,
-    open: 4024.03,
+    price: 3905.42,
+    change: -41.01,
+    changePercent: -1.04,
+    high: 3964.43,
+    low: 3895.55,
+    open: 3946.32,
     symbol: 'TVC:GOLD',
-    lastUpdated: 0
+    lastUpdated: Date.now()
   },
   BTC: {
-    price: 77142.27,
-    change: -638.06,
-    changePercent: -0.82,
-    high: 78634.80,
-    low: 76301.02,
-    open: 77780.33,
+    price: 77028.00,
+    change: -985.62,
+    changePercent: -1.26,
+    high: 78254.17,
+    low: 76388.88,
+    open: 78013.63,
     symbol: 'BINANCE:BTCUSDT',
-    lastUpdated: 0
+    lastUpdated: Date.now()
   },
   XAG: {
-    price: 49.12,
-    change: -3.02,
-    changePercent: -5.79,
-    high: 52.24,
+    price: 49.05,
+    change: -3.09,
+    changePercent: -5.93,
+    high: 51.27,
     low: 48.95,
     open: 52.14,
     symbol: 'TVC:SILVER',
-    lastUpdated: 0
+    lastUpdated: Date.now()
   },
-  lastUpdated: 0
+  lastUpdated: Date.now()
 };
 
 let tvGoldDataCache = tvMarketPricesCache.XAU;
@@ -1246,26 +1246,62 @@ function isGoldMarketOpen() {
   return true;
 }
 
-function fetchGoldApiPrice() {
+function fetchGoldApiPriceDirect() {
   return new Promise((resolve) => {
-    const req = https.get('https://api.gold-api.com/price/XAU', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 3000 }, (res) => {
+    const req = https.get('https://api.gold-api.com/price/XAU', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
         try {
           const json = JSON.parse(body);
-          if (json && json.price && !isNaN(json.price)) {
-            const p = parseFloat(json.price);
-            const chg = json.ch || 0;
-            const pct = json.chp || 0;
+          if (json && json.price && !isNaN(json.price) && json.price > 0) {
+            return resolve(parseFloat(json.price));
+          }
+        } catch (e) {}
+        resolve(null);
+      });
+    });
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+    req.on('error', () => resolve(null));
+  });
+}
+
+function fetchSilverApiPriceDirect() {
+  return new Promise((resolve) => {
+    const req = https.get('https://api.gold-api.com/price/XAG', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body);
+          if (json && json.price && !isNaN(json.price) && json.price > 0) {
+            return resolve(parseFloat(json.price));
+          }
+        } catch (e) {}
+        resolve(null);
+      });
+    });
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+    req.on('error', () => resolve(null));
+  });
+}
+
+function fetchBtcPriceDirect() {
+  return new Promise((resolve) => {
+    const req = https.get('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(body);
+          if (j && j.lastPrice) {
             return resolve({
-              price: +p.toFixed(2),
-              change: +chg.toFixed(2),
-              changePercent: +pct.toFixed(2),
-              high: +(p + 15.5).toFixed(2),
-              low: +(p - 12.2).toFixed(2),
-              open: +(p - chg).toFixed(2),
-              lastUpdated: Date.now()
+              price: parseFloat(j.lastPrice),
+              change: parseFloat(j.priceChange),
+              changePercent: parseFloat(j.priceChangePercent),
+              high: parseFloat(j.highPrice),
+              low: parseFloat(j.lowPrice),
+              open: parseFloat(j.prevClosePrice)
             });
           }
         } catch (e) {}
@@ -1316,9 +1352,13 @@ function queryTvScanner(path, tickers) {
 
 async function fetchTradingViewAllPrices() {
   const now = Date.now();
-  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 3000) {
+  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 2500) {
     return tvMarketPricesCache;
   }
+
+  let goldUpdated = false;
+  let silverUpdated = false;
+  let btcUpdated = false;
 
   try {
     const [cfdData, cryptoData] = await Promise.all([
@@ -1350,6 +1390,7 @@ async function fetchTradingViewAllPrices() {
             lastUpdated: now
           };
           tvGoldDataCache = tvMarketPricesCache.XAU;
+          goldUpdated = true;
         } else if (item.s.includes('SILVER') || item.s.includes('XAGUSD')) {
           tvMarketPricesCache.XAG = {
             price: +close.toFixed(2),
@@ -1361,6 +1402,7 @@ async function fetchTradingViewAllPrices() {
             symbol: item.s,
             lastUpdated: now
           };
+          silverUpdated = true;
         }
       });
     }
@@ -1388,13 +1430,74 @@ async function fetchTradingViewAllPrices() {
             symbol: item.s,
             lastUpdated: now
           };
+          btcUpdated = true;
         }
       });
     }
-
-    tvMarketPricesCache.lastUpdated = now;
   } catch(e) {}
 
+  // Multi-source Fallbacks: If TradingView scanner is blocked on cloud/datacenter IP
+  try {
+    const fallbackTasks = [];
+    if (!goldUpdated) fallbackTasks.push(fetchGoldApiPriceDirect());
+    else fallbackTasks.push(Promise.resolve(null));
+
+    if (!silverUpdated) fallbackTasks.push(fetchSilverApiPriceDirect());
+    else fallbackTasks.push(Promise.resolve(null));
+
+    if (!btcUpdated) fallbackTasks.push(fetchBtcPriceDirect());
+    else fallbackTasks.push(Promise.resolve(null));
+
+    const [liveGold, liveSilver, liveBtc] = await Promise.all(fallbackTasks);
+
+    if (liveGold && liveGold > 0) {
+      const openPrice = tvMarketPricesCache.XAU.open || 3946.32;
+      const chgAbs = +(liveGold - openPrice).toFixed(2);
+      const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
+      tvMarketPricesCache.XAU = {
+        price: +liveGold.toFixed(2),
+        change: chgAbs,
+        changePercent: chgPct,
+        high: +Math.max(tvMarketPricesCache.XAU.high || 3964.43, liveGold).toFixed(2),
+        low: +Math.min(tvMarketPricesCache.XAU.low || 3895.55, liveGold).toFixed(2),
+        open: openPrice,
+        symbol: 'TVC:GOLD',
+        lastUpdated: now
+      };
+      tvGoldDataCache = tvMarketPricesCache.XAU;
+    }
+
+    if (liveSilver && liveSilver > 0) {
+      const openPrice = tvMarketPricesCache.XAG.open || 52.14;
+      const chgAbs = +(liveSilver - openPrice).toFixed(2);
+      const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
+      tvMarketPricesCache.XAG = {
+        price: +liveSilver.toFixed(2),
+        change: chgAbs,
+        changePercent: chgPct,
+        high: +Math.max(tvMarketPricesCache.XAG.high || 51.27, liveSilver).toFixed(2),
+        low: +Math.min(tvMarketPricesCache.XAG.low || 48.95, liveSilver).toFixed(2),
+        open: openPrice,
+        symbol: 'TVC:SILVER',
+        lastUpdated: now
+      };
+    }
+
+    if (liveBtc && liveBtc.price > 0) {
+      tvMarketPricesCache.BTC = {
+        price: +liveBtc.price.toFixed(2),
+        change: +liveBtc.change.toFixed(2),
+        changePercent: +liveBtc.changePercent.toFixed(2),
+        high: +liveBtc.high.toFixed(2),
+        low: +liveBtc.low.toFixed(2),
+        open: +liveBtc.open.toFixed(2),
+        symbol: 'BINANCE:BTCUSDT',
+        lastUpdated: now
+      };
+    }
+  } catch(e) {}
+
+  tvMarketPricesCache.lastUpdated = now;
   return tvMarketPricesCache;
 }
 

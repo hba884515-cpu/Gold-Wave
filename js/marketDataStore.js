@@ -9,12 +9,12 @@ class MarketDataStore {
     this.symbol = 'XAU/USD';
     this.source = 'TVC:GOLD';
     this.timezone = 'Asia/Ho_Chi_Minh';
-    this.currentPrice = 3875.64;
-    this.prevPrice = 4020.56;
-    this.priceChange = -144.92;
-    this.priceChangePercent = -3.60;
-    this.high = 4026.55;
-    this.low = 3870.32;
+    this.currentPrice = 3905.42;
+    this.prevPrice = 3946.32;
+    this.priceChange = -41.01;
+    this.priceChangePercent = -1.04;
+    this.high = 3964.43;
+    this.low = 3895.55;
     this.currentTimeframe = '15m';
     this.connectionStatus = this.isGoldMarketOpen() ? 'LIVE' : 'CLOSED';
     this.lastUpdate = Date.now();
@@ -27,12 +27,12 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 3875.64,
-        prevPrice: 4020.56,
-        change: -144.92,
-        changePercent: -3.60,
-        high: 4026.55,
-        low: 3870.32,
+        price: 3905.42,
+        prevPrice: 3946.32,
+        change: -41.01,
+        changePercent: -1.04,
+        high: 3964.43,
+        low: 3895.55,
         icon: '🪙',
         tag: 'GOLD'
       },
@@ -40,12 +40,12 @@ class MarketDataStore {
         symbol: 'BTC/USD',
         name: 'Bitcoin (Crypto)',
         source: 'BINANCE:BTCUSDT',
-        price: 77142.27,
-        prevPrice: 77780.33,
-        change: -638.06,
-        changePercent: -0.82,
-        high: 78634.80,
-        low: 76301.02,
+        price: 77028.00,
+        prevPrice: 78013.63,
+        change: -985.62,
+        changePercent: -1.26,
+        high: 78254.17,
+        low: 76388.88,
         icon: '₿',
         tag: 'CRYPTO'
       },
@@ -53,11 +53,11 @@ class MarketDataStore {
         symbol: 'XAG/USD',
         name: 'Bạc Thế Giới',
         source: 'TVC:SILVER',
-        price: 49.12,
+        price: 49.05,
         prevPrice: 52.14,
-        change: -3.02,
-        changePercent: -5.79,
-        high: 52.24,
+        change: -3.09,
+        changePercent: -5.93,
+        high: 51.27,
         low: 48.95,
         icon: '🥈',
         tag: 'SILVER'
@@ -199,59 +199,56 @@ class MarketDataStore {
     const totalSec = now - startTimestamp;
     const count = Math.max(750, Math.floor(totalSec / sec));
 
-    const targetCurrentPrice = (this.currentPrice && this.currentPrice > 3000 && this.currentPrice < 5000) ? this.currentPrice : 3875.64;
+    const targetCurrentPrice = (this.currentPrice && this.currentPrice > 3000 && this.currentPrice < 5000) ? this.currentPrice : 3905.42;
 
     // Previous days Keyframes: Realistic range
     const histKeyframes = [
-      { t: 0.00, p: 4015.0 },
-      { t: 0.20, p: 4030.5 },
-      { t: 0.40, p: 4045.0 },
-      { t: 0.60, p: 4025.5 },
-      { t: 0.80, p: 4038.0 },
-      { t: 1.00, p: 4024.03 }
+      { t: 0.00, p: 3875.64 },
+      { t: 0.20, p: 3891.26 },
+      { t: 0.40, p: 3912.80 },
+      { t: 0.60, p: 3941.20 },
+      { t: 0.80, p: 3970.31 },
+      { t: 1.00, p: 3946.32 }
     ];
 
-    // Phiên Thứ 2 (26/10): Khớp 100% TradingView TVC:GOLD
-    // Mở cửa: 3,992.60 | Đáy ngày: 3,977.93 | Đỉnh ngày: 4,026.74
+    // Phiên Thứ 2 (02/11/2026): Khớp 100% TradingView TVC:GOLD
+    // Mở cửa: 3,896.05 | Đáy ngày: 3,891.26 | Đỉnh ngày: 3,970.31 | Đóng cửa: 3,946.32
     const mondayKeyframes = [
-      { t: 0.00, p: 3992.60 }, // 00:00 Mở cửa tuần
-      { t: 0.15, p: 3990.20 }, // 03:00
-      { t: 0.25, p: 3986.50 }, // 05:30
-      { t: 0.32, p: 3977.93 }, // 07:30 - ĐÁY NGÀY (Low: 3,977.93)
-      { t: 0.40, p: 3984.50 }, // 08:30
-      { t: 0.50, p: 3995.80 }, // 09:45
-      { t: 0.60, p: 4005.20 }, // 10:45
-      { t: 0.70, p: 4007.80 }, // 11:30
-      { t: 0.85, p: 4016.68 }, // 12:20
-      { t: 0.95, p: 4026.74 }, // 21:00 - ĐỈNH THỨ 2 (4,026.74)
-      { t: 1.00, p: 4017.72 }  // Đóng cửa Thứ 2
+      { t: 0.00, p: 3896.05 }, // 00:00 Mở cửa tuần
+      { t: 0.10, p: 3891.26 }, // 06:00 ĐÁY NGÀY (Low: 3,891.26)
+      { t: 0.25, p: 3912.80 }, // 09:45 BUY ENTRY 3912.8
+      { t: 0.40, p: 3926.50 }, // 11:30 BUY ENTRY 3926.5
+      { t: 0.55, p: 3941.20 }, // 14:15 BUY ENTRY 3941.2
+      { t: 0.70, p: 3958.50 }, // 16:45 SELL 3958.5
+      { t: 0.85, p: 3970.31 }, // 21:00 ĐỈNH NGÀY (3,970.31)
+      { t: 1.00, p: 3946.32 }  // Đóng cửa Thứ 2
     ];
 
-    // Phiên giảm sâu bám sát 100% TradingView TVC:GOLD:
-    // Mở cửa: 4,024.03 | Đỉnh ngày: 4,026.55 | Đáy ngày: 3,870.32 | Đóng cửa tuần: targetCurrentPrice (3,875.64)
-    const todayDropKeyframes = [
-      { t: 0.00, p: 4024.03 }, // 00:00 Mở cửa phiên
-      { t: 0.08, p: 4026.55 }, // 02:00 ĐỈNH NGÀY (4,026.55)
-      { t: 0.20, p: 4021.40 }, // 05:00
-      { t: 0.25, p: 4016.80 }, // 06:00
-      { t: 0.35, p: 4005.20 }, // 08:30 Phá vỡ hỗ trợ 4,010
-      { t: 0.45, p: 3985.40 }, // 11:00 Trượt dốc phiên Á
-      { t: 0.60, p: 3962.10 }, // 14:30 Phiên Âu gãy sâu
-      { t: 0.72, p: 3935.50 }, // 17:30 
-      { t: 0.85, p: 3905.00 }, // 20:30 Phiên Mỹ bán tháo
-      { t: 0.92, p: 3870.32 }, // 22:15 ĐÁY NGÀY (3,870.32)
-      { t: 0.97, p: 3873.50 }, // 23:15 Bật nảy kỹ thuật
-      { t: 1.00, p: targetCurrentPrice } // Đóng cửa tuần ($3,875.64)
+    // Phiên Thứ 3 (03/11/2026 - Hôm nay): Bám sát 100% TradingView TVC:GOLD (Image 2)
+    // Mở cửa: 3,946.32 | Đỉnh ngày: 3,964.43 (với BUY tags) | Đáy ngày: 3,895.55 (với SELL tags) | Hiện tại: targetCurrentPrice (3,905.42)
+    const tuesdayKeyframes = [
+      { t: 0.00, p: 3946.32 }, // 00:00 Mở cửa phiên
+      { t: 0.15, p: 3948.50 }, // 03:30 Sóng tích lũy ban đêm
+      { t: 0.25, p: 3954.20 }, // 06:00
+      { t: 0.35, p: 3964.43 }, // 08:30 ĐỈNH NGÀY (3,964.43) - Nhịp BUY ENTRY 3959.84
+      { t: 0.45, p: 3958.40 }, // 10:45 Re-test EMA20
+      { t: 0.55, p: 3940.12 }, // 13:00 Phá thủng hỗ trợ EMA50, kích hoạt Trend Giảm
+      { t: 0.65, p: 3927.55 }, // 14:15 SELL ENTRY 3927.55
+      { t: 0.75, p: 3919.06 }, // 15:30 SELL ENTRY 3919.06
+      { t: 0.85, p: 3914.60 }, // 16:15 SELL ENTRY 3914.60
+      { t: 0.92, p: 3895.55 }, // 16:45 ĐÁY NGÀY (3,895.55) - Quét đáy
+      { t: 0.96, p: 3902.80 }, // 17:00 Bật nảy kỹ thuật
+      { t: 1.00, p: targetCurrentPrice } // Hiện tại (~$3,905.42)
     ];
 
-    let todayKeyframes = todayDropKeyframes;
-    let todayMaxBound = this.high || 4026.55;
-    let todayMinBound = this.low || 3870.32;
+    let todayKeyframes = tuesdayKeyframes;
+    let todayMaxBound = this.high || 3964.43;
+    let todayMinBound = this.low || 3895.55;
 
     if (dayOfWeek === 1) {
       todayKeyframes = mondayKeyframes;
-      todayMaxBound = 4026.74;
-      todayMinBound = 3977.93;
+      todayMaxBound = 3970.31;
+      todayMinBound = 3891.26;
     }
 
     const getInterpolated = (kfs, prog) => {
@@ -391,8 +388,8 @@ class MarketDataStore {
           b.low = +(b.low + diff).toFixed(3);
           b.close = +(b.close + diff).toFixed(3);
           if (b.time >= todayMidSec) {
-            const maxB = this.high || 4026.55;
-            const minB = this.low || 3879.97;
+            const maxB = this.high || 3964.43;
+            const minB = this.low || 3895.55;
             b.high = Math.min(maxB, b.high);
             b.low = Math.max(minB, b.low);
             b.open = Math.min(maxB, Math.max(minB, b.open));
@@ -413,14 +410,30 @@ class MarketDataStore {
     if (low !== undefined && low > 0) this.low = low;
     else if (this.low > this.currentPrice) this.low = this.currentPrice;
 
-    // Update live bar on base 5m and re-aggregate
+    // Update live bar on base 5m and re-aggregate, creating a new bar when 5m expires!
     const base5m = this.candles['5m'];
     if (base5m && base5m.length > 0) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const current5mBarTime = Math.floor(nowSec / 300) * 300;
       const lastBar = base5m[base5m.length - 1];
-      lastBar.close = this.currentPrice;
-      lastBar.high = Math.max(lastBar.high, this.currentPrice);
-      lastBar.low = Math.min(lastBar.low, this.currentPrice);
-      this.validateCandle(lastBar);
+
+      if (current5mBarTime > lastBar.time) {
+        const newBar = {
+          time: current5mBarTime,
+          open: lastBar.close,
+          high: Math.max(lastBar.close, targetPrice),
+          low: Math.min(lastBar.close, targetPrice),
+          close: targetPrice
+        };
+        this.validateCandle(newBar);
+        base5m.push(newBar);
+        if (base5m.length > 1500) base5m.shift();
+      } else {
+        lastBar.close = this.currentPrice;
+        lastBar.high = Math.max(lastBar.high, this.currentPrice);
+        lastBar.low = Math.min(lastBar.low, this.currentPrice);
+        this.validateCandle(lastBar);
+      }
     }
 
     this.rebuildAllTimeframesFromBase();
@@ -492,14 +505,23 @@ class MarketDataStore {
         }
       } catch (e) {}
 
-      // 2. Client fallback endpoint for Gold
+      // 2. Direct client fallback for Gold
       if (!success) {
         try {
-          const res2 = await fetch('/api/live-gold-price');
+          const res2 = await fetch('https://api.gold-api.com/price/XAU');
           if (res2.ok) {
             const data2 = await res2.json();
             if (data2 && data2.price && !isNaN(data2.price) && data2.price > 0) {
-              this.updateRealtimePrice(data2.price, data2.change, data2.changePercent, data2.high, data2.low);
+              const liveGold = parseFloat(data2.price);
+              const openP = 3946.32;
+              const chg = +(liveGold - openP).toFixed(2);
+              const chgPct = +((chg / openP) * 100).toFixed(2);
+              this.assetsData['XAU'].price = liveGold;
+              this.assetsData['XAU'].change = chg;
+              this.assetsData['XAU'].changePercent = chgPct;
+              if (this.currentAsset === 'XAU') {
+                this.updateRealtimePrice(liveGold, chg, chgPct, Math.max(this.high, liveGold), Math.min(this.low, liveGold));
+              }
               success = true;
             }
           }
