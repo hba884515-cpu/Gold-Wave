@@ -7,17 +7,32 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "ADMIN",
+    "subscriptionStatus": "LIFETIME",
     "createdAt": "2026-09-25T11:52:00.000Z"
   },
   {
     "id": "USR-1355",
-    "name": "Hoàng Bá",
+    "name": "Hoàng Bá (Admin)",
     "email": "hba884515@gmail.com",
-    "passwordHash": "0569b46a734bce54f99a3f57f90749ab683b5bbf9078b4f2a217408c9e0f24cc",
+    "passwordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+    "authProvider": "email",
+    "emailVerified": true,
+    "role": "ADMIN",
+    "subscriptionStatus": "LIFETIME",
+    "createdAt": "2026-09-25T06:13:11.356Z"
+  },
+  {
+    "id": "USR-2209",
+    "name": "duy",
+    "email": "hoangba220904@gmail.com",
+    "phone": "1234567",
+    "passwordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "createdAt": "2026-09-25T06:13:11.356Z"
+    "subscriptionStatus": "TRIAL",
+    "trialDays": 14,
+    "createdAt": "2026-11-03T18:20:00.000Z"
   },
   {
     "id": "USR-6745",

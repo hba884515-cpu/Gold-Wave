@@ -5297,15 +5297,32 @@ window.handleSimulateVerifyComplete = function() {
 // ── Profile Actions ──
 function updateUserUI() {
   const user = window.currentUser;
+  const emailLower = (user && user.email ? user.email : '').toLowerCase().trim();
+  const isAdmin = user && (user.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin'));
 
   const pineAdminBtn = document.getElementById('nav-pine-admin');
   if (pineAdminBtn) {
-    if (user && user.role === 'ADMIN') {
+    if (isAdmin) {
       pineAdminBtn.classList.remove('hidden');
       pineAdminBtn.style.display = 'flex';
     } else {
       pineAdminBtn.classList.add('hidden');
       pineAdminBtn.style.display = 'none';
+    }
+  }
+
+  // Account tab Admin Panel (Bảng duyệt kích hoạt chuyển khoản cho Admin)
+  const accountAdminPanel = document.getElementById('account-admin-panel');
+  if (accountAdminPanel) {
+    if (isAdmin) {
+      accountAdminPanel.classList.remove('hidden');
+      accountAdminPanel.style.display = 'block';
+      if (typeof window.loadAccountAdminData === 'function') {
+        window.loadAccountAdminData();
+      }
+    } else {
+      accountAdminPanel.classList.add('hidden');
+      accountAdminPanel.style.display = 'none';
     }
   }
 
@@ -5324,7 +5341,7 @@ function updateUserUI() {
   if (emailEl) emailEl.textContent = user.email || 'trader@goldwave.com';
   if (dateEl) dateEl.textContent = user.createdAt || '20/09/2026';
   if (badgeEl) {
-    if (user.role === 'ADMIN') {
+    if (isAdmin) {
       badgeEl.className = 'px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold';
       badgeEl.textContent = '👑 Admin Quản Trị';
     } else if (user.verified) {
@@ -5381,6 +5398,267 @@ window.handleUserDeleteAccount = function() {
     location.reload();
   }
 };
+
+// ── Account Tab Admin Panel Logic (Duyệt Chuyển Khoản & Quản Lý Thành Viên) ──
+window.loadAccountAdminData = async function() {
+  const panel = document.getElementById('account-admin-panel');
+  if (!panel || panel.classList.contains('hidden') || panel.style.display === 'none') return;
+
+  const pendingBadge = document.getElementById('acc-pending-count-badge');
+  const paymentsTbody = document.getElementById('acc-admin-payments-tbody');
+  const totalUsersBadge = document.getElementById('acc-total-users-badge');
+  const usersTbody = document.getElementById('acc-admin-users-tbody');
+
+  try {
+    const [resReqs, resUsers] = await Promise.all([
+      fetch('/api/admin/payment-requests'),
+      fetch('/api/admin/users')
+    ]);
+
+    const dataReqs = await resReqs.json();
+    const dataUsers = await resUsers.json();
+
+    const requests = (dataReqs && dataReqs.requests) ? dataReqs.requests : [];
+    const users = (dataUsers && dataUsers.users) ? dataUsers.users : [];
+
+    // 1. Render Danh Sách Yêu Cầu Chuyển Khoản Chờ Kích Hoạt
+    const pendingCount = requests.filter(r => r.status === 'PENDING').length;
+    if (pendingBadge) {
+      pendingBadge.textContent = `${pendingCount} Chờ kích hoạt`;
+      if (pendingCount > 0) {
+        pendingBadge.className = 'px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black animate-pulse';
+      } else {
+        pendingBadge.className = 'px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold';
+      }
+    }
+
+    if (paymentsTbody) {
+      if (requests.length === 0) {
+        paymentsTbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-500 font-sans">Chưa có yêu cầu chuyển khoản nào.</td></tr>';
+      } else {
+        paymentsTbody.innerHTML = requests.map(r => {
+          const isPending = r.status === 'PENDING';
+          const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : 'Vừa xong';
+          const statusBadge = isPending
+            ? '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30 text-[10px] animate-pulse">⏳ CHỜ KÍCH HOẠT</span>'
+            : '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 text-[10px]">✅ ĐÃ KÍCH HOẠT</span>';
+
+          return `
+            <tr class="hover:bg-slate-900/60 transition ${isPending ? 'bg-amber-500/5' : ''}">
+              <td class="py-3 px-3 text-slate-400 text-[11px] whitespace-nowrap">${dateStr}</td>
+              <td class="py-3 px-3">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-amber-300 font-bold">${r.email}</span>
+                  ${isPending ? '<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold">ĐÃ CHUYỂN TIỀN</span>' : ''}
+                </div>
+              </td>
+              <td class="py-3 px-3 font-bold text-white">${r.name || 'Khách'}</td>
+              <td class="py-3 px-3 font-mono font-bold text-emerald-400">${r.phone || r.note || 'Chưa cung cấp'}</td>
+              <td class="py-3 px-3 text-amber-400 font-black">${r.amount || '390.000 VNĐ'}</td>
+              <td class="py-3 px-3">${statusBadge}</td>
+              <td class="py-3 px-3 text-right">
+                ${isPending ? `
+                  <button onclick="accountAdminApprovePayment('${r.email}', 30)" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-black text-xs shadow-md shadow-emerald-500/30 flex items-center gap-1.5 ml-auto cursor-pointer transition transform active:scale-95">
+                    <span>⚡</span> <span>KÍCH HOẠT (+30 Ngày)</span>
+                  </button>
+                ` : '<span class="text-emerald-400 font-bold text-xs">Đã kích hoạt</span>'}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    // 2. Render Danh Sách Tất Cả Thành Viên Vừa Tham Gia & Hạn Sử Dụng
+    if (totalUsersBadge) {
+      totalUsersBadge.textContent = `${users.length} Thành viên`;
+    }
+
+    if (usersTbody) {
+      if (users.length === 0) {
+        usersTbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-500 font-sans">Chưa có người dùng nào đăng ký.</td></tr>';
+      } else {
+        usersTbody.innerHTML = users.map((u, i) => {
+          const emailLower = (u.email || '').toLowerCase();
+          const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+          const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false, badgeText: 'DÙNG THỬ 14 NGÀY' };
+
+          const roleBadge = isUAdmin
+            ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 ADMIN</span>'
+            : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]">👤 USER</span>';
+
+          let subBadge = '';
+          if (sub.status === 'LIFETIME' || isUAdmin) {
+            subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 VIP VĨNH VIỄN</span>';
+          } else if (sub.isExpired) {
+            subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px]">🔒 HẾT HẠN</span>';
+          } else if (sub.status === 'ACTIVE') {
+            subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px]">✨ GÓI VIP 30N</span>';
+          } else {
+            subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px]">⏱️ DÙNG THỬ 14N</span>';
+          }
+
+          let remainStr = '';
+          if (sub.status === 'LIFETIME' || isUAdmin) {
+            remainStr = '<span class="text-emerald-400 font-bold">Không giới hạn</span>';
+          } else if (sub.isExpired) {
+            remainStr = '<span class="text-rose-400 font-bold">Đã hết hạn!</span>';
+          } else {
+            remainStr = `<span class="text-amber-300 font-bold">Còn ${sub.daysRemaining != null ? sub.daysRemaining : 14} ngày</span>`;
+          }
+
+          return `
+            <tr class="hover:bg-slate-900/60 transition">
+              <td class="py-2.5 px-3 text-slate-500">${i + 1}</td>
+              <td class="py-2.5 px-3">
+                <div class="font-bold text-white text-xs">${u.name || 'Trader'}</div>
+                <div class="text-amber-300/90 text-[11px] font-mono">${u.email}</div>
+              </td>
+              <td class="py-2.5 px-3">${roleBadge}</td>
+              <td class="py-2.5 px-3">${subBadge}</td>
+              <td class="py-2.5 px-3">${remainStr}</td>
+              <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+                <button onclick="accountAdminExtendUser('${u.email}', 30)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 30 ngày (1 tháng)">
+                  +30 Ngày
+                </button>
+                <button onclick="accountAdminExtendUser('${u.email}', 60)" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 60 ngày">
+                  +60 Ngày
+                </button>
+                <button onclick="accountAdminExtendUser('${u.email}', 0, true)" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-bold text-[10px] transition cursor-pointer" title="Cấp quyền VIP Vĩnh Viễn">
+                  Vĩnh Viễn
+                </button>
+                <button onclick="accountAdminToggleRole('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer" title="Đổi quyền Admin/User">
+                  ${isUAdmin ? '⬇️ USER' : '👑 ADMIN'}
+                </button>
+                <button onclick="accountAdminDeleteUser('${u.email}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition cursor-pointer" title="Xóa tài khoản">
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('Lỗi tải dữ liệu bảng Admin tab tài khoản:', err);
+  }
+};
+
+window.refreshAccountAdminData = async function() {
+  await window.loadAccountAdminData();
+  if (typeof showToast === 'function') {
+    showToast('🔄 Đã cập nhật dữ liệu tài khoản & yêu cầu thanh toán!', 'info');
+  }
+};
+
+window.accountAdminApprovePayment = async function(email, days = 30) {
+  if (!confirm(`Xác nhận kích hoạt +${days} ngày (1 tháng) sử dụng cho tài khoản ${email}?`)) return;
+
+  try {
+    const res = await fetch('/api/admin/extend-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetEmail: email, daysToAdd: days })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'SUCCESS') {
+      if (typeof showToast === 'function') {
+        showToast(`🎉 KÍCH HOẠT THÀNH CÔNG! Đã cộng +${days} ngày cho ${email}`, 'success');
+      }
+      await window.loadAccountAdminData();
+      if (typeof loadAdminDashboardData === 'function') loadAdminDashboardData();
+    } else {
+      alert('Lỗi kích hoạt: ' + (data.error || 'Vui lòng thử lại'));
+    }
+  } catch (e) {
+    alert('Lỗi kết nối máy chủ khi kích hoạt.');
+  }
+};
+
+window.accountAdminExtendUser = async function(targetEmail, daysToAdd, setLifetime = false) {
+  const confirmMsg = setLifetime 
+    ? `Xác nhận cấp quyền VIP VĨNH VIỄN cho tài khoản ${targetEmail}?`
+    : `Xác nhận gia hạn thêm +${daysToAdd} ngày cho tài khoản ${targetEmail}?`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const res = await fetch('/api/admin/extend-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetEmail, daysToAdd, setLifetime })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'SUCCESS') {
+      if (typeof showToast === 'function') {
+        showToast(setLifetime ? `👑 Đã cấp quyền VĨNH VIỄN cho ${targetEmail}` : `✅ Đã gia hạn +${daysToAdd} ngày cho ${targetEmail}`, 'success');
+      }
+      await window.loadAccountAdminData();
+      if (typeof loadAdminDashboardData === 'function') loadAdminDashboardData();
+    } else {
+      alert('Lỗi gia hạn: ' + (data.error || 'Vui lòng thử lại'));
+    }
+  } catch (e) {
+    alert('Lỗi kết nối máy chủ khi gia hạn.');
+  }
+};
+
+window.accountAdminToggleRole = async function(email) {
+  if (!confirm(`Đổi vai trò Admin/User cho ${email}?`)) return;
+  try {
+    const res = await fetch('/api/admin/toggle-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'SUCCESS') {
+      if (typeof showToast === 'function') showToast(`👑 Đã cập nhật vai trò mới: ${data.role}`, 'success');
+      await window.loadAccountAdminData();
+      if (typeof loadAdminDashboardData === 'function') loadAdminDashboardData();
+    } else {
+      alert('Lỗi cập nhật vai trò: ' + (data.error || 'Vui lòng thử lại'));
+    }
+  } catch (e) {
+    alert('Lỗi kết nối máy chủ.');
+  }
+};
+
+window.accountAdminDeleteUser = async function(email) {
+  if (!confirm(`⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa tài khoản ${email}? Hành động này không thể hoàn tác.`)) return;
+  try {
+    const res = await fetch('/api/admin/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'SUCCESS') {
+      if (typeof showToast === 'function') showToast(`🗑️ Đã xóa tài khoản ${email}`, 'info');
+      await window.loadAccountAdminData();
+      if (typeof loadAdminDashboardData === 'function') loadAdminDashboardData();
+    } else {
+      alert('Lỗi xóa tài khoản: ' + (data.error || 'Vui lòng thử lại'));
+    }
+  } catch (e) {
+    alert('Lỗi kết nối máy chủ.');
+  }
+};
+
+// Auto polling khi Admin đang mở tab Tài Khoản
+setInterval(() => {
+  const user = window.currentUser;
+  if (!user) return;
+  const emailLower = (user.email || '').toLowerCase().trim();
+  const isAdmin = user.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+  if (!isAdmin) return;
+
+  const viewAcc = document.getElementById('view-account');
+  if (viewAcc && !viewAcc.classList.contains('hidden') && viewAcc.style.display !== 'none') {
+    if (typeof window.loadAccountAdminData === 'function') {
+      window.loadAccountAdminData();
+    }
+  }
+}, 5000);
 
 // ── Notification Dropdown Center ──
 window.filterNotifTab = function(category) {

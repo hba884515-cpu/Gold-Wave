@@ -1808,6 +1808,105 @@
         </div>
       </div>
 
+      <!-- SECTION 1.5: 👑 BẢNG QUẢN TRỊ ADMIN - DUYỆT CHUYỂN KHOẢN & TÀI KHOẢN HOẠT ĐỘNG (DÀNH CHO ADMIN) -->
+      <div id="account-admin-panel" class="hidden space-y-5">
+        
+        <!-- Header Banner Admin Panel -->
+        <div class="px-5 py-4 border border-amber-500/40 rounded-2xl bg-gradient-to-r from-[#0f1712] via-[#091510] to-[#1a1505] flex items-center justify-between flex-wrap gap-3 shadow-2xl">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-300 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30">
+              👑
+            </div>
+            <div>
+              <h3 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                BẢNG DUYỆT TÀI KHOẢN & QUẢN TRỊ ADMIN
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold uppercase">ADMIN VIP</span>
+              </h3>
+              <p class="text-xs text-slate-400">Duyệt kích hoạt khi khách hàng chuyển khoản & quản lý thời hạn các tài khoản vừa tham gia</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="refreshAccountAdminData()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition flex items-center gap-1 shadow-md shadow-amber-500/20 cursor-pointer">
+              🔄 Làm Mới Dữ Liệu
+            </button>
+          </div>
+        </div>
+
+        <!-- BẢNG 1: YÊU CẦU CHUYỂN KHOẢN GIA HẠN CHỜ DUYỆT (CHỈ HIỆN KHI KHÁCH BẤM "TÔI ĐÃ CHUYỂN KHOẢN THÀNH CÔNG") -->
+        <div class="bg-panel border border-amber-500/30 rounded-2xl p-5 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">💳</span>
+              <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                YÊU CẦU CHUYỂN KHOẢN CHỜ KÍCH HOẠT
+                <span id="acc-pending-count-badge" class="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black animate-pulse">0</span>
+              </h4>
+            </div>
+            <span class="text-xs text-slate-400">Khách hàng hết hạn & chuyển khoản xong bấm "Tôi đã chuyển khoản" sẽ hiện ở đây để Admin bấm kích hoạt</span>
+          </div>
+
+          <div class="overflow-x-auto sig-scroll">
+            <table class="w-full text-left text-xs font-mono border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+                  <th class="py-2.5 px-3">Thời Gian</th>
+                  <th class="py-2.5 px-3">Tài Khoản (Email)</th>
+                  <th class="py-2.5 px-3">Họ & Tên</th>
+                  <th class="py-2.5 px-3">SĐT / Zalo</th>
+                  <th class="py-2.5 px-3">Số Tiền</th>
+                  <th class="py-2.5 px-3">Trạng Thái</th>
+                  <th class="py-2.5 px-3 text-right">Hành Động</th>
+                </tr>
+              </thead>
+              <tbody id="acc-admin-payments-tbody" class="divide-y divide-slate-800/60">
+                <tr>
+                  <td colspan="7" class="py-6 text-center text-slate-500">
+                    Đang tải danh sách yêu cầu chuyển khoản...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- BẢNG 2: DANH SÁCH TẤT CẢ CÁC TÀI KHOẢN VỪA THAM GIA & HẠN SỬ DỤNG -->
+        <div class="bg-panel border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">👥</span>
+              <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                DANH SÁCH TÀI KHOẢN VỪA THAM GIA & HẠN SỬ DỤNG
+                <span id="acc-total-users-badge" class="px-2 py-0.5 rounded-full bg-slate-800 text-amber-300 text-[10px] font-bold">0 Thành viên</span>
+              </h4>
+            </div>
+            <span class="text-xs text-slate-400">Xem ngày tham gia, gói dùng thử 14 ngày & gia hạn trực tiếp cho từng người</span>
+          </div>
+
+          <div class="overflow-x-auto sig-scroll">
+            <table class="w-full text-left text-xs font-mono border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+                  <th class="py-2.5 px-3">STT</th>
+                  <th class="py-2.5 px-3">Tên & Email</th>
+                  <th class="py-2.5 px-3">Quyền Hạn</th>
+                  <th class="py-2.5 px-3">Gói & Trạng Thái</th>
+                  <th class="py-2.5 px-3">Hạn Sử Dụng</th>
+                  <th class="py-2.5 px-3 text-right">Kích Hoạt Nhanh</th>
+                </tr>
+              </thead>
+              <tbody id="acc-admin-users-tbody" class="divide-y divide-slate-800/60">
+                <tr>
+                  <td colspan="6" class="py-6 text-center text-slate-500">
+                    Đang tải danh sách tài khoản thành viên...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
       <!-- SECTION 2: TRUNG TÂM CÀI ĐẶT THÔNG BÁO -->
       <div class="bg-panel border border-slate-800 rounded-2xl p-5 shadow-xl space-y-5">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
@@ -4697,6 +4796,9 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       if (typeof loadAdminDashboardData === 'function') {
         loadAdminDashboardData();
       }
+    } else if (targetView === 'account') {
+      if (typeof updateUserUI === 'function') updateUserUI();
+      if (typeof window.loadAccountAdminData === 'function') window.loadAccountAdminData();
     }
   }
 
