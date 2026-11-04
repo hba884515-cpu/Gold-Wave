@@ -212,6 +212,57 @@ const NOTIFICATIONS_FILE = path.join(__dirname, 'notifications_db.json');
 let notificationsDB = loadJSON(NOTIFICATIONS_FILE, []);
 let sseClients = [];
 
+// ─── Web Push Protocol (VAPID) — Gửi Thông Báo Kể Cả Khi Thoát App / Khóa Màn Hình ───
+const PUSH_SUBSCRIPTIONS_FILE = path.join(__dirname, 'push_subscriptions_db.json');
+let pushSubscriptionsDB = loadJSON(PUSH_SUBSCRIPTIONS_FILE, []);
+
+const VAPID_PUBLIC_KEY = 'BHAXhZUIo7ZpKAWfeQigU-4vMHKWZVXKkWTN1RronWTUj5g2YNdpfwN7KuJRALr2BeLlqqSdZ3xt3j2LzIDW4X8';
+const VAPID_PRIVATE_KEY = 'b6R2shoLCs9ddRWFi5d8q3IY7NPf0Sv5TBwbwlTbHEk';
+let webpush = null;
+try {
+  webpush = require('web-push');
+  webpush.setVapidDetails(
+    'mailto:hba884515@gmail.com',
+    VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY
+  );
+  console.log('✅ Web Push VAPID engine initialized successfully');
+} catch(e) {
+  console.warn('⚠️ web-push module failed to load:', e.message);
+}
+
+async function sendWebPushToAllSubscriptions(payload) {
+  if (!webpush || !Array.isArray(pushSubscriptionsDB) || pushSubscriptionsDB.length === 0) return;
+  const expiredEndpoints = new Set();
+  const pushPayload = JSON.stringify(payload);
+
+  const promises = pushSubscriptionsDB.map(async (record) => {
+    try {
+      const sub = record.subscription || record;
+      if (!sub || !sub.endpoint) return;
+      await webpush.sendNotification(sub, pushPayload, {
+        TTL: 86400,
+        urgency: 'high'
+      });
+    } catch (err) {
+      if (err.statusCode === 404 || err.statusCode === 410) {
+        const ep = record.endpoint || (record.subscription && record.subscription.endpoint);
+        if (ep) expiredEndpoints.add(ep);
+      }
+    }
+  });
+
+  await Promise.allSettled(promises);
+
+  if (expiredEndpoints.size > 0) {
+    pushSubscriptionsDB = pushSubscriptionsDB.filter(s => {
+      const ep = s.endpoint || (s.subscription && s.subscription.endpoint);
+      return !expiredEndpoints.has(ep);
+    });
+    saveJSON(PUSH_SUBSCRIPTIONS_FILE, pushSubscriptionsDB);
+  }
+}
+
 function addNotification(category, title, body, data = {}) {
   const item = {
     id: `NOTIF-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
@@ -225,12 +276,22 @@ function addNotification(category, title, body, data = {}) {
   if (notificationsDB.length > 100) notificationsDB = notificationsDB.slice(0, 100);
   saveJSON(NOTIFICATIONS_FILE, notificationsDB);
 
-  // Broadcast via SSE to all connected clients
+  // 1. Broadcast via SSE to connected clients
   sseClients.forEach(client => {
     try {
       client.res.write(`data: ${JSON.stringify(item)}\n\n`);
     } catch(e) {}
   });
+
+  // 2. Broadcast via Web Push VAPID to subscribed phones / devices (ngay cả khi thoát app)
+  sendWebPushToAllSubscriptions({
+    title,
+    body,
+    icon: 'assets/logo.png',
+    badge: 'assets/logo.png',
+    tag: `gold-wave-${category.toLowerCase()}-${Date.now()}`,
+    data: { url: '/', category, notifId: item.id, ...data }
+  }).catch(() => {});
 
   return item;
 }
@@ -2443,7 +2504,77 @@ const server = http.createServer(async (req, res) => {
       sseClients = sseClients.filter(c => c.id !== client.id);
     });
   }
+  // ─── Web Push Subscription & Live Signal Broadcast Endpoints ───
+  else if (urlPath === '/api/push/vapid-public-key') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ status: 'SUCCESS', publicKey: VAPID_PUBLIC_KEY }));
+  }
+  else if (urlPath === '/api/push/subscribe' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const { subscription, deviceId, userEmail } = body;
+    if (subscription && subscription.endpoint) {
+      const existingIdx = pushSubscriptionsDB.findIndex(s => {
+        const ep = s.endpoint || (s.subscription && s.subscription.endpoint);
+        return ep === subscription.endpoint;
+      });
+      const record = {
+        subscription,
+        endpoint: subscription.endpoint,
+        deviceId: deviceId || 'unknown',
+        userEmail: userEmail || 'anonymous',
+        updatedAt: new Date().toISOString()
+      };
+      if (existingIdx >= 0) {
+        pushSubscriptionsDB[existingIdx] = record;
+      } else {
+        pushSubscriptionsDB.push(record);
+      }
+      saveJSON(PUSH_SUBSCRIPTIONS_FILE, pushSubscriptionsDB);
+      console.log(`📱 Thiết bị vừa đăng ký Web Push thành công (${pushSubscriptionsDB.length} thiết bị nhận thông báo khi thoát app)`);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ status: 'SUCCESS', count: pushSubscriptionsDB.length }));
+  }
+  else if (urlPath === '/api/signals/broadcast' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const { type, pair, price, tp1, tp2, tp3, sl, id } = body;
+    const isBuy = (type || 'BUY').toUpperCase() === 'BUY';
+    const pairName = pair || 'XAU/USD';
+    const numPrice = Number(price || 4035.50);
+    const title = `🚨 TÍN HIỆU MA WAVE V8: ${isBuy ? 'BUY 📈' : 'SELL 📉'} ${pairName} @ $${numPrice.toFixed(2)}`;
+    const textBody = `📍 Điểm vào: $${numPrice.toFixed(2)}\n🎯 TP1 (+10 giá): $${Number(tp1).toFixed(2)}\n🎯 TP2 (+20 giá): $${Number(tp2).toFixed(2)}\n🎯 TP3 (+30 giá 🎯): $${Number(tp3).toFixed(2)}\n🛑 Cắt lỗ SL (-5 giá): $${Number(sl).toFixed(2)}`;
+
+    const notif = addNotification('SIGNAL', title, textBody, { ...body, price: numPrice });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ status: 'SUCCESS', notification: notif }));
+  }
+  else if (urlPath === '/api/signals/broadcast-status' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const { type, pair, statusType, triggerPrice, pnlPips, pnlUsd, id } = body;
+    const isWin = (statusType || '').startsWith('TP');
+    const pairName = pair || 'XAU/USD';
+    const trigP = Number(triggerPrice || 4035.50).toFixed(2);
+    const title = isWin
+      ? `🎯 MA WAVE V8: CHỐT LỜI ${statusType} (${pairName})`
+      : `🛑 MA WAVE V8: CẮT LỖ (SL) (${pairName})`;
+    const textBody = isWin
+      ? `🎉 ${pairName} Lệnh #${id || ''} (${type}) đã CHẠM MỐC ${statusType} tại $${trigP} (+${pnlPips || 100} pips / +$${pnlUsd || 1000} USD)!`
+      : `⚠️ ${pairName} Lệnh #${id || ''} (${type}) đã chạm mốc SL tại $${trigP}. Chú ý đóng vị thế an toàn.`;
+
+    const notif = addNotification('SIGNAL', title, textBody, body);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ status: 'SUCCESS', notification: notif }));
+  }
   else if (urlPath === '/api/notifications/trigger-all') {
+    const tvData = await fetchTradingViewGoldPrice();
+    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4035.50);
+    const buyEntry = livePrice;
+    const tp1 = +(buyEntry + 10.0).toFixed(2);
+    const tp2 = +(buyEntry + 20.0).toFixed(2);
+    const sl  = +(buyEntry - 5.0).toFixed(2);
+    const s1  = +(livePrice - 10.0).toFixed(2);
+    const r1  = +(livePrice + 10.0).toFixed(2);
+
     const newsItem = addNotification(
       'NEWS',
       '📰 TIN TỨC KINH TẾ HÀNG NGÀY — GOLD WAVE',
@@ -2452,12 +2583,12 @@ const server = http.createServer(async (req, res) => {
     const trendItem = addNotification(
       'TREND',
       '📈 GOLD AI — PHÂN TÍCH XU HƯỚNG XAU/USD',
-      '〽 Xu hướng: TĂNG MẠNH 🟢 (MTF H1 & H4 đồng thuận 100%)\nHỗ trợ chú ý S1: $4,135.00 | Kháng cự R1: $4,165.00'
+      `〽 Xu hướng: TĂNG MẠNH 🟢 (MTF Đồng thuận 100%)\n📍 Giá Live: $${livePrice.toFixed(2)}\n🛡️ Hỗ trợ chú ý S1: $${s1.toFixed(2)} | 🚧 Kháng cự R1: $${r1.toFixed(2)}`
     );
     const signalItem = addNotification(
       'SIGNAL',
       '🚨 TÍN HIỆU MA WAVE V8 REALTIME: MUA (BUY) 📈',
-      '📍 Entry: $4,140.75\n🎯 TP1 (+10 giá): $4,150.75\n🎯 TP2 (+20 giá): $4,160.75\n🛑 SL (-5 giá): $4,135.75'
+      `📍 Entry: $${buyEntry.toFixed(2)}\n🎯 TP1 (+10 giá): $${tp1.toFixed(2)}\n🎯 TP2 (+20 giá): $${tp2.toFixed(2)}\n🛑 SL (-5 giá): $${sl.toFixed(2)}`
     );
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ status: 'SUCCESS', items: [newsItem, trendItem, signalItem] }));
@@ -2499,7 +2630,7 @@ const server = http.createServer(async (req, res) => {
   else if (urlPath === '/api/bot/execute-order' && req.method === 'POST') {
     const body = await parseRequestBody(req);
     const tvData = await fetchTradingViewGoldPrice();
-    const livePrice = (tvData && tvData.price) ? tvData.price : 4140.75;
+    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4035.50);
     const isBuy = (body.type || 'BUY') === 'BUY';
     const entry = body.entry || livePrice;
     const lots = body.lots || botConfigDB.lotValue || 0.10;
@@ -2620,7 +2751,7 @@ function startServerAITrendPushEngine() {
       if (!isGoldMarketOpen()) return; // 🛑 Nghỉ cuối tuần: Không đẩy thông báo phân tích giả lập
 
       const tvData = await fetchTradingViewGoldPrice();
-      const price = (tvData && tvData.price) ? tvData.price : 3995.54;
+      const price = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4035.50);
       const atr = 3.50;
 
       const r1 = +(price + atr * 1.5).toFixed(2);
@@ -2653,7 +2784,7 @@ function startServerBotExecutionEngine() {
       if (!isTradingHoursActive()) return; // 🛑 Nghỉ ngơi ban đêm (0h - 6h sáng): Tuyệt đối không mở lệnh bot
 
       const tvData = await fetchTradingViewGoldPrice();
-      const basePrice = (tvData && tvData.price) ? tvData.price : 3882.21;
+      const basePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4035.50);
 
       // Số lệnh tối đa đồng thời (mặc định 1 lệnh, không nhồi lệnh dồn dập)
       const maxOrders = botConfigDB.maxConcurrentOrders !== undefined ? botConfigDB.maxConcurrentOrders : 1;

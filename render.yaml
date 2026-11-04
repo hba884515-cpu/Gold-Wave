@@ -2,6 +2,6 @@ services:
   - type: web
     name: gold-trading-app
     env: node
-    buildCommand: ""
+    buildCommand: "npm install"
     startCommand: node server.js
     plan: free

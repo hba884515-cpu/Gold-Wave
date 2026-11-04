@@ -1588,23 +1588,60 @@ class GoldTradingApp {
       this.showPineToastAlert(signal);
       this.renderSignalHistory();
       this.renderIndicators();
+
+      // Đồng bộ sang Server để đẩy Web Push tới điện thoại kể cả khi thoát ứng dụng
+      try {
+        fetch('/api/signals/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: signal.id,
+            type: signal.type,
+            pair: signal.pair || 'XAU/USD',
+            price: signal.price,
+            tp1: signal.tp1,
+            tp2: signal.tp2,
+            tp3: signal.tp3,
+            sl: signal.sl,
+            status: signal.status
+          })
+        }).catch(() => {});
+      } catch(e) {}
     });
 
     window.signalEngine.on('onOrderStatusAlert', (signal, statusType, triggerPrice) => {
       this.showTpSlToastAlert(signal, statusType, triggerPrice);
       this.renderSignalHistory();
+      const isWin = statusType.startsWith('TP');
+      const pair = signal.pair || 'XAU/USD';
+      const trigP = Number(triggerPrice || signal.price || 0).toFixed(2);
+      const title = isWin
+        ? `🎯 MA WAVE V8: CHỐT LỜI ${statusType} (${pair})`
+        : `🛑 MA WAVE V8: CẮT LỖ (SL) (${pair})`;
+      const body = isWin
+        ? `${pair} Lệnh #${signal.id} (${signal.type}) đã chạm mốc ${statusType} tại $${trigP} (+${signal.pnlPips} pips / +$${signal.pnlUsd} USD)!`
+        : `${pair} Lệnh #${signal.id} (${signal.type}) đã chạm mốc SL tại $${trigP} (-50 pips). Đóng vị thế an toàn!`;
+
       if (typeof window.sendNativePushNotification === 'function') {
-        const isWin = statusType.startsWith('TP');
-        const pair = signal.pair || 'XAU/USD';
-        const trigP = Number(triggerPrice || signal.price || 0).toFixed(2);
-        const title = isWin
-          ? `🎯 MA WAVE V8: CHỐT LỜI ${statusType} (${pair})`
-          : `🛑 MA WAVE V8: CẮT LỖ (SL) (${pair})`;
-        const body = isWin
-          ? `${pair} Lệnh #${signal.id} (${signal.type}) đã chạm mốc ${statusType} tại $${trigP} (+${signal.pnlPips} pips / +$${signal.pnlUsd} USD)!`
-          : `${pair} Lệnh #${signal.id} (${signal.type}) đã chạm mốc SL tại $${trigP} (-50 pips). Đóng vị thế an toàn!`;
         window.sendNativePushNotification(title, { body });
       }
+
+      // Đồng bộ trạng thái lệnh sang Server để đẩy Web Push tới điện thoại kể cả khi thoát app
+      try {
+        fetch('/api/signals/broadcast-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: signal.id,
+            type: signal.type,
+            pair,
+            statusType,
+            triggerPrice: trigP,
+            pnlPips: signal.pnlPips,
+            pnlUsd: signal.pnlUsd
+          })
+        }).catch(() => {});
+      } catch(e) {}
     });
 
     window.signalEngine.on('onSignalUpdate', () => {
@@ -2696,7 +2733,9 @@ class GoldTradingApp {
       sessionClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
     }
 
-    const priceNum = this.currentPrice || 4152.00;
+    const priceNum = (window.marketDataStore && typeof window.marketDataStore.getCurrentPrice === 'function')
+      ? window.marketDataStore.getCurrentPrice()
+      : (this.currentPrice || 4035.50);
     const price = `$${priceNum.toFixed(2)}`;
 
     // Kiểm tra chính xác vị trí giá so với EMA20 và EMA50 ("Tăng bảo Tăng, Giảm bảo Giảm")
@@ -5139,12 +5178,78 @@ window.handleLogout = function() {
   window.checkAuthOnLoad();
 };
 
-// ─── Web Push Notification Helper ───
+// ─── Web Push Protocol Helper & VAPID Registration ───
+function urlB64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+window.registerWebPushSubscription = async function() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.warn('⚠️ Web Push không được hỗ trợ trên trình duyệt này');
+    return false;
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+
+    const VAPID_KEY = 'BHAXhZUIo7ZpKAWfeQigU-4vMHKWZVXKkWTN1RronWTUj5g2YNdpfwN7KuJRALr2BeLlqqSdZ3xt3j2LzIDW4X8';
+
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlB64ToUint8Array(VAPID_KEY)
+      });
+    }
+
+    if (sub) {
+      const deviceId = (typeof window.getOrCreateDeviceId === 'function') ? window.getOrCreateDeviceId() : 'unknown';
+      const user = window.currentUser ? window.currentUser.email : 'guest';
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscription: sub.toJSON ? sub.toJSON() : sub,
+          deviceId,
+          userEmail: user
+        })
+      });
+      console.log('✅ Đã đăng ký Web Push thành công! Thiết bị sẽ nhận được thông báo khi thoát app hoặc khóa màn hình.');
+      return true;
+    }
+  } catch (err) {
+    console.warn('⚠️ Lỗi đăng ký PushManager:', err);
+  }
+  return false;
+};
+
+// ─── Web Push Notification Helper (Đồng bộ 100% Theo Giá Live Thị Trường) ───
 window.sendAllCategoryPushNotifications = function() {
   if (!('Notification' in window) || Notification.permission !== 'granted') {
     if (typeof showToast === 'function') showToast('⚠️ Bạn cần cho phép quyền thông báo đẩy!', 'warning');
     return;
   }
+
+  const store = window.marketDataStore;
+  const livePrice = (store && typeof store.getCurrentPrice === 'function') 
+    ? store.getCurrentPrice() 
+    : ((window.app && window.app.currentPrice) || 4035.50);
+
+  const levels = (window.app && typeof window.app.getCalculatedKeyLevels === 'function') 
+    ? window.app.getCalculatedKeyLevels() 
+    : { s1: +(livePrice - 10).toFixed(2), r1: +(livePrice + 10).toFixed(2), atr: 3.50 };
+
+  const buyEntry = livePrice;
+  const tp1 = (buyEntry + 10.0).toFixed(2);
+  const tp2 = (buyEntry + 20.0).toFixed(2);
+  const sl  = (buyEntry - 5.0).toFixed(2);
 
   // 1. Send NEWS Push
   setTimeout(() => {
@@ -5155,19 +5260,19 @@ window.sendAllCategoryPushNotifications = function() {
     });
   }, 100);
 
-  // 2. Send TREND Push
+  // 2. Send TREND Push theo ĐÚNG GIÁ LIVE THỊ TRƯỜNG
   setTimeout(() => {
     window.sendNativePushNotification('📈 GOLD AI — PHÂN TÍCH XU HƯỚNG XAU/USD', {
-      body: '〽 Xu hướng: TĂNG MẠNH 🟢 (MTF H1 & H4 đồng thuận 100%). Hỗ trợ chú ý S1: $4,135.00 | Kháng cự R1: $4,165.00',
+      body: `〽 Xu hướng: TĂNG MẠNH 🟢 (MTF Đồng thuận 100%)\n📍 Giá Live: $${livePrice.toFixed(2)}\n🛡️ Hỗ trợ chú ý S1: $${levels.s1.toFixed(2)} | 🚧 Kháng cự R1: $${levels.r1.toFixed(2)}`,
       icon: 'assets/logo.png',
       tag: 'notif-trend-' + Date.now()
     });
   }, 500);
 
-  // 3. Send SIGNAL Push
+  // 3. Send SIGNAL Push theo ĐÚNG GIÁ LIVE THỊ TRƯỜNG
   setTimeout(() => {
     window.sendNativePushNotification('🚨 TÍN HIỆU GIAO DỊCH MA WAVE V8: MUA (BUY) 📈', {
-      body: '📍 Entry: $4,140.75 | 🎯 TP1 (+10 giá): $4,150.75 | 🎯 TP2 (+20 giá): $4,160.75 | 🛑 SL (-5 giá): $4,135.75',
+      body: `📍 Entry: $${buyEntry.toFixed(2)} | 🎯 TP1 (+10 giá): $${tp1} | 🎯 TP2 (+20 giá): $${tp2} | 🛑 SL (-5 giá): $${sl}`,
       icon: 'assets/logo.png',
       tag: 'notif-signal-' + Date.now()
     });
@@ -5178,7 +5283,7 @@ window.sendAllCategoryPushNotifications = function() {
   } catch(e) {}
 
   if (typeof showToast === 'function') {
-    showToast('🔔 Đã bắn thử nghiệm 3 Thông báo (Tin tức + Xu hướng + Tín hiệu) nảy về màn hình!', 'success');
+    showToast(`🔔 Đã gửi 3 Thông báo chuẩn theo giá thị trường live ($${livePrice.toFixed(2)})!`, 'success');
   }
 };
 
@@ -5187,7 +5292,7 @@ window.requestPushNotificationPermission = async function() {
 
   if (!('Notification' in window)) {
     if (isIOS) {
-      alert('📱 HƯỚNG DẪN BẬT THÔNG BÁO NẢY TRÊN IPHONE (iOS):\n\nApple (iOS) yêu cầu thêm ứng dụng vào Màn hình chính để nảy thông báo lên màn hình khóa:\n\n1️⃣ Bấm biểu tượng CHIA SẺ ở đáy Safari (Ô vuông có mũi tên ⎋ chỉ lên).\n2️⃣ Chọn "Thêm vào Màn hình chính" (Add to Home Screen).\n3️⃣ Mở ứng dụng Gold Wave từ Màn hình chính iPhone và bấm "Bật ngay".\n\n(Trên điện thoại Android & Máy tính, thông báo nảy trực tiếp không cần thao tác này).');
+      alert('📱 HƯỚNG DẪN BẬT THÔNG BÁO NẢY TRÊN IPHONE (iOS):\n\nApple (iOS) yêu cầu thêm ứng dụng vào Màn hình chính để nảy thông báo lên màn hình khóa kể cả khi thoát app:\n\n1️⃣ Bấm biểu tượng CHIA SẺ ở đáy Safari (Ô vuông có mũi tên ⎋ chỉ lên).\n2️⃣ Chọn "Thêm vào Màn hình chính" (Add to Home Screen).\n3️⃣ Mở ứng dụng Gold Wave từ Màn hình chính iPhone và bấm "Bật ngay".\n\n(Trên điện thoại Android & Máy tính, thông báo nảy trực tiếp không cần thao tác này).');
     } else {
       alert('⚠️ Trình duyệt của bạn không hỗ trợ thông báo Web Push. Vui lòng thử trên Chrome, Edge hoặc Firefox.');
     }
@@ -5198,7 +5303,8 @@ window.requestPushNotificationPermission = async function() {
   const currentPerm = Notification.permission;
 
   if (currentPerm === 'granted') {
-    alert('✅ BẠN ĐÃ BẬT THÔNG BÁO PUSH RỒI!\n\nHệ thống sẽ phát 3 thông báo thử nghiệm (TIN TỨC + XU HƯỚNG + TÍN HIỆU GIAO DỊCH) nảy lên màn hình ngay bây giờ...');
+    await window.registerWebPushSubscription();
+    alert('✅ BẠN ĐÃ BẬT THÔNG BÁO PUSH RỒI!\n\nĐã kích hoạt chế độ nhận thông báo ngay cả khi THOÁT ỨNG DỤNG hoặc KHÓA MÀN HÌNH. Đang phát 3 thông báo thử nghiệm theo ĐÚNG GIÁ THỊ TRƯỜNG LIVE...');
     window.sendAllCategoryPushNotifications();
     updatePushNotificationUI();
     return true;
@@ -5214,7 +5320,8 @@ window.requestPushNotificationPermission = async function() {
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-      alert('🎉 BẬT THÀNH CÔNG!\n\nBạn đã cho phép Gold Wave gửi thông báo đẩy về màn hình. Đang phát 3 thông báo thử nghiệm (TIN TỨC + XU HƯỚNG + TÍN HIỆU)...');
+      await window.registerWebPushSubscription();
+      alert('🎉 BẬT THÀNH CÔNG!\n\nBạn đã cho phép Gold Wave gửi thông báo đẩy về màn hình (kể cả khi đã thoát ứng dụng). Đang phát 3 thông báo thử nghiệm theo ĐÚNG GIÁ THỊ TRƯỜNG LIVE...');
       window.sendAllCategoryPushNotifications();
       updatePushNotificationUI();
       return true;
@@ -5229,8 +5336,11 @@ window.requestPushNotificationPermission = async function() {
 };
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(reg => {
+  navigator.serviceWorker.register('sw.js').then(async reg => {
     console.log('✅ ServiceWorker registered:', reg.scope);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      await window.registerWebPushSubscription();
+    }
   }).catch(err => {
     console.warn('⚠️ ServiceWorker registration failed:', err);
   });
