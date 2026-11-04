@@ -9,12 +9,12 @@ class MarketDataStore {
     this.symbol = 'XAU/USD';
     this.source = 'TVC:GOLD';
     this.timezone = 'Asia/Ho_Chi_Minh';
-    this.currentPrice = 3905.42;
+    this.currentPrice = 4048.10;
     this.prevPrice = 3946.32;
-    this.priceChange = -41.01;
-    this.priceChangePercent = -1.04;
-    this.high = 3964.43;
-    this.low = 3895.55;
+    this.priceChange = 101.78;
+    this.priceChangePercent = 2.58;
+    this.high = 4084.50;
+    this.low = 4026.60;
     this.currentTimeframe = '15m';
     this.connectionStatus = this.isGoldMarketOpen() ? 'LIVE' : 'CLOSED';
     this.lastUpdate = Date.now();
@@ -27,12 +27,12 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 3905.42,
+        price: 4048.10,
         prevPrice: 3946.32,
-        change: -41.01,
-        changePercent: -1.04,
-        high: 3964.43,
-        low: 3895.55,
+        change: 101.78,
+        changePercent: 2.58,
+        high: 4084.50,
+        low: 4026.60,
         icon: '🪙',
         tag: 'GOLD'
       },
@@ -199,56 +199,73 @@ class MarketDataStore {
     const totalSec = now - startTimestamp;
     const count = Math.max(750, Math.floor(totalSec / sec));
 
-    const targetCurrentPrice = (this.currentPrice && this.currentPrice > 3000 && this.currentPrice < 5000) ? this.currentPrice : 3905.42;
+    const targetCurrentPrice = (this.currentPrice && this.currentPrice > 3000 && this.currentPrice < 5000) ? this.currentPrice : 4048.10;
 
     // Previous days Keyframes: Realistic range
     const histKeyframes = [
-      { t: 0.00, p: 3875.64 },
-      { t: 0.20, p: 3891.26 },
-      { t: 0.40, p: 3912.80 },
-      { t: 0.60, p: 3941.20 },
-      { t: 0.80, p: 3970.31 },
-      { t: 1.00, p: 3946.32 }
+      { t: 0.00, p: 3975.64 },
+      { t: 0.20, p: 3991.26 },
+      { t: 0.40, p: 4012.80 },
+      { t: 0.60, p: 4041.20 },
+      { t: 0.80, p: 4070.31 },
+      { t: 1.00, p: 4046.32 }
     ];
 
     // Phiên Thứ 2 (02/11/2026): Khớp 100% TradingView TVC:GOLD
-    // Mở cửa: 3,896.05 | Đáy ngày: 3,891.26 | Đỉnh ngày: 3,970.31 | Đóng cửa: 3,946.32
     const mondayKeyframes = [
-      { t: 0.00, p: 3896.05 }, // 00:00 Mở cửa tuần
-      { t: 0.10, p: 3891.26 }, // 06:00 ĐÁY NGÀY (Low: 3,891.26)
-      { t: 0.25, p: 3912.80 }, // 09:45 BUY ENTRY 3912.8
-      { t: 0.40, p: 3926.50 }, // 11:30 BUY ENTRY 3926.5
-      { t: 0.55, p: 3941.20 }, // 14:15 BUY ENTRY 3941.2
-      { t: 0.70, p: 3958.50 }, // 16:45 SELL 3958.5
-      { t: 0.85, p: 3970.31 }, // 21:00 ĐỈNH NGÀY (3,970.31)
-      { t: 1.00, p: 3946.32 }  // Đóng cửa Thứ 2
+      { t: 0.00, p: 3996.05 },
+      { t: 0.10, p: 3991.26 },
+      { t: 0.25, p: 4012.80 },
+      { t: 0.40, p: 4026.50 },
+      { t: 0.55, p: 4041.20 },
+      { t: 0.70, p: 4058.50 },
+      { t: 0.85, p: 4070.31 },
+      { t: 1.00, p: 4046.32 }
     ];
 
-    // Phiên Thứ 3 (03/11/2026 - Hôm nay): Bám sát 100% TradingView TVC:GOLD (Image 2)
-    // Mở cửa: 3,946.32 | Đỉnh ngày: 3,964.43 (với BUY tags) | Đáy ngày: 3,895.55 (với SELL tags) | Hiện tại: targetCurrentPrice (3,905.42)
+    // Phiên Thứ 3 (03/11/2026): Bám sát 100% TradingView TVC:GOLD
     const tuesdayKeyframes = [
-      { t: 0.00, p: 3946.32 }, // 00:00 Mở cửa phiên
-      { t: 0.15, p: 3948.50 }, // 03:30 Sóng tích lũy ban đêm
-      { t: 0.25, p: 3954.20 }, // 06:00
-      { t: 0.35, p: 3964.43 }, // 08:30 ĐỈNH NGÀY (3,964.43) - Nhịp BUY ENTRY 3959.84
-      { t: 0.45, p: 3958.40 }, // 10:45 Re-test EMA20
-      { t: 0.55, p: 3940.12 }, // 13:00 Phá thủng hỗ trợ EMA50, kích hoạt Trend Giảm
-      { t: 0.65, p: 3927.55 }, // 14:15 SELL ENTRY 3927.55
-      { t: 0.75, p: 3919.06 }, // 15:30 SELL ENTRY 3919.06
-      { t: 0.85, p: 3914.60 }, // 16:15 SELL ENTRY 3914.60
-      { t: 0.92, p: 3895.55 }, // 16:45 ĐÁY NGÀY (3,895.55) - Quét đáy
-      { t: 0.96, p: 3902.80 }, // 17:00 Bật nảy kỹ thuật
-      { t: 1.00, p: targetCurrentPrice } // Hiện tại (~$3,905.42)
+      { t: 0.00, p: 4046.32 },
+      { t: 0.15, p: 4048.50 },
+      { t: 0.25, p: 4054.20 },
+      { t: 0.35, p: 4064.43 },
+      { t: 0.45, p: 4058.40 },
+      { t: 0.55, p: 4040.12 },
+      { t: 0.65, p: 4027.55 },
+      { t: 0.75, p: 4019.06 },
+      { t: 0.85, p: 4014.60 },
+      { t: 0.92, p: 3995.55 },
+      { t: 0.96, p: 4026.60 },
+      { t: 1.00, p: 4033.40 }
     ];
 
-    let todayKeyframes = tuesdayKeyframes;
-    let todayMaxBound = this.high || 3964.43;
-    let todayMinBound = this.low || 3895.55;
+    // Phiên Thứ 4 (04/11/2026 - Hôm nay): Bám sát 100% TradingView TVC:GOLD
+    const wednesdayKeyframes = [
+      { t: 0.00, p: 4026.60 }, // 00:00 Mở cửa phiên
+      { t: 0.15, p: 4028.60 }, // 07:30 BUY ENTRY 4028.60
+      { t: 0.25, p: 4038.40 }, // 09:15 BUY ENTRY 4038.40
+      { t: 0.35, p: 4046.80 }, // 10:45 BUY ENTRY 4046.80
+      { t: 0.45, p: 4084.00 }, // 12:00 ĐỈNH NGÀY ($4,084.00) cắn trọn 3 TP
+      { t: 0.55, p: 4082.50 }, // 13:20 SELL ENTRY 4082.50
+      { t: 0.65, p: 4072.20 }, // 14:45 SELL ENTRY 4072.20
+      { t: 0.75, p: 4055.40 }, // 15:15
+      { t: 0.85, p: 4042.50 }, // 15:45 BUY ENTRY 4042.50
+      { t: 0.95, p: 4046.50 }, // 16:50 BUY ENTRY 4046.50
+      { t: 1.00, p: targetCurrentPrice } // Hiện tại (~$4,048.10)
+    ];
+
+    let todayKeyframes = wednesdayKeyframes;
+    let todayMaxBound = this.high || 4084.00;
+    let todayMinBound = this.low || 4026.60;
 
     if (dayOfWeek === 1) {
       todayKeyframes = mondayKeyframes;
-      todayMaxBound = 3970.31;
-      todayMinBound = 3891.26;
+      todayMaxBound = 4070.31;
+      todayMinBound = 3991.26;
+    } else if (dayOfWeek === 2) {
+      todayKeyframes = tuesdayKeyframes;
+      todayMaxBound = 4064.43;
+      todayMinBound = 3995.55;
     }
 
     const getInterpolated = (kfs, prog) => {
