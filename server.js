@@ -2880,7 +2880,7 @@ startServerBotExecutionEngine();
 
 // 24/7 Server-Side BUY/SELL & TP1/2/3/SL Signal Notification Engine (Lọc giảm tối đa thông báo nhiễu)
 let serverActiveTrade = null;
-let lastObservedPrice = null;
+let serverPriceHistory = [];
 let lastSignalTime = 0;
 
 function startServerSignalEngine() {
@@ -2892,22 +2892,24 @@ function startServerSignalEngine() {
       const tvData = await fetchTradingViewGoldPrice();
       if (!tvData || !tvData.price) return;
       const price = tvData.price;
-
-      if (lastObservedPrice === null) {
-        lastObservedPrice = price;
-        return;
-      }
-
       const now = Date.now();
-      const timeSinceLastSignal = now - lastSignalTime;
 
-      // CHỌN LỌC CAO: Chỉ phát tín hiệu khi giãn cách tối thiểu 35-45 phút VÀ có biến động sóng lớn >= $2.50 (25 pips)
-      // Tuyệt đối không spam thông báo liên tục mỗi vài phút
-      const minIntervalMs = 35 * 60 * 1000;
-      if (!serverActiveTrade && timeSinceLastSignal >= minIntervalMs) {
-        const priceDelta = price - lastObservedPrice;
-        if (Math.abs(priceDelta) >= 2.50) {
-          const isBuy = priceDelta >= 0;
+      serverPriceHistory.push({ price, time: now });
+      // Giữ lại lịch sử giá trong 30 phút gần nhất
+      serverPriceHistory = serverPriceHistory.filter(p => now - p.time <= 30 * 60 * 1000);
+
+      const timeSinceLastSignal = now - lastSignalTime;
+      const minIntervalMs = 25 * 60 * 1000; // Giãn cách 25 phút giữa 2 tín hiệu server
+
+      // Nếu không có lệnh nào đang chạy và đã đủ thời gian giãn cách
+      if (!serverActiveTrade && timeSinceLastSignal >= minIntervalMs && serverPriceHistory.length >= 10) {
+        // So sánh giá hiện tại với giá 15 phút trước để đo đà xung lượng sóng (Momentum)
+        const oldRecord = serverPriceHistory.find(p => now - p.time >= 15 * 60 * 1000) || serverPriceHistory[0];
+        const priceDelta = price - oldRecord.price;
+
+        // Chỉ phát tín hiệu khi có biến động rõ ràng >= 2.0 giá (20 pips)
+        if (Math.abs(priceDelta) >= 2.0) {
+          const isBuy = priceDelta > 0;
           const type = isBuy ? 'BUY' : 'SELL';
           const entry = price;
           const tp1 = +(isBuy ? entry + 10.0 : entry - 10.0).toFixed(2);
@@ -2928,10 +2930,9 @@ function startServerSignalEngine() {
             hitTp3: false,
             startTime: now
           };
-          lastObservedPrice = price;
           lastSignalTime = now;
 
-          const title = `🚨 TÍN HIỆU MA WAVE V8 (CHỌN LỌC): ${type} ${type === 'BUY' ? '📈' : '📉'}`;
+          const title = `🚨 TÍN HIỆU MA WAVE V8: ${type} ${type === 'BUY' ? 'MUA 📈' : 'BÁN 📉'}`;
           const body = `📍 Điểm Vào Lệnh: $${entry.toFixed(2)}\n🎯 Mục Tiêu TP1 (+10 giá): $${tp1.toFixed(2)}\n🛑 Cắt lỗ SL (-5 giá): $${sl.toFixed(2)}`;
 
           addNotification('SIGNAL', title, body, serverActiveTrade);
@@ -2939,7 +2940,7 @@ function startServerSignalEngine() {
         }
       }
 
-      // Check open trade for TP3 / SL
+      // Check open trade for TP1 / TP2 / TP3 / SL
       if (serverActiveTrade) {
         const trade = serverActiveTrade;
         const isBuy = trade.type === 'BUY';
@@ -2950,6 +2951,10 @@ function startServerSignalEngine() {
             if (!botConfigDB.notifyOnlyMajorSignals) {
               addNotification('SIGNAL', `🎯 CHỐT LỜI TP1 (+10 GIÁ): MUA XAU/USD`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã ĐẠT CHỐT LỜI TP1 tại $${price.toFixed(2)}!`);
             }
+          }
+          if (!trade.hitTp2 && price >= trade.tp2) {
+            trade.hitTp2 = true;
+            addNotification('SIGNAL', `🎯 CHỐT LỜI TP2 (+20 GIÁ): MUA XAU/USD`, `🔥 Lệnh MUA tại $${trade.entry.toFixed(2)} đã ĐẠT CHỐT LỜI TP2 tại $${price.toFixed(2)}! Kéo SL dương bảo toàn lợi nhuận.`);
           }
           if (!trade.hitTp3 && price >= trade.tp3) {
             trade.hitTp3 = true;
@@ -2969,6 +2974,10 @@ function startServerSignalEngine() {
               addNotification('SIGNAL', `🎯 CHỐT LỜI TP1 (+10 GIÁ): BÁN XAU/USD`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã ĐẠT CHỐT LỜI TP1 tại $${price.toFixed(2)}!`);
             }
           }
+          if (!trade.hitTp2 && price <= trade.tp2) {
+            trade.hitTp2 = true;
+            addNotification('SIGNAL', `🎯 CHỐT LỜI TP2 (+20 GIÁ): BÁN XAU/USD`, `🔥 Lệnh BÁN tại $${trade.entry.toFixed(2)} đã ĐẠT CHỐT LỜI TP2 tại $${price.toFixed(2)}! Kéo SL dương bảo toàn lợi nhuận.`);
+          }
           if (!trade.hitTp3 && price <= trade.tp3) {
             trade.hitTp3 = true;
             addNotification('SIGNAL', `🏆 CHỐT LỜI TP3 KHỦNG (+30 GIÁ): BÁN XAU/USD`, `🔥 Lệnh BÁN tại $${trade.entry.toFixed(2)} ĐẠT MỤC TIÊU TỐI ĐA TP3 tại $${price.toFixed(2)} (+30 giá)!`);
@@ -2982,7 +2991,8 @@ function startServerSignalEngine() {
           }
         }
 
-        if (now - trade.startTime > 30 * 60 * 1000) {
+        // Tự động giải phóng lệnh khi đã chạm TP1 và trôi qua 25 phút hoặc tối đa 45 phút
+        if ((trade.hitTp1 && now - trade.startTime > 25 * 60 * 1000) || (now - trade.startTime > 45 * 60 * 1000)) {
           serverActiveTrade = null;
         }
       }

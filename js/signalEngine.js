@@ -8,7 +8,7 @@
 
 class SignalEngine {
   constructor() {
-    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v32';
+    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v33';
     this.signals = this.loadHistory();
     this.callbacks = {
       onNewSignal: [],
@@ -72,8 +72,8 @@ class SignalEngine {
 
   loadHistory() {
     try {
-      // Clear old v1 - v31 caches automatically
-      for (let i = 1; i <= 31; i++) {
+      // Clear old v1 - v32 caches automatically
+      for (let i = 1; i <= 32; i++) {
         localStorage.removeItem(`gold_trading_ma_wave_multi_asset_v${i}`);
         localStorage.removeItem(`gold_trading_ma_wave_pinescript_v${i}`);
       }
@@ -83,10 +83,9 @@ class SignalEngine {
         if (Array.isArray(parsed) && parsed.length >= 1000) {
           const hasBTC = parsed.some(s => s && (s.asset === 'btc' || (s.pair && s.pair.includes('BTC'))));
           const hasXAG = parsed.some(s => s && (s.asset === 'xag' || (s.pair && s.pair.includes('XAG'))));
-          const hasNov4Gold = parsed.some(s => s && s.asset === 'xau' && s.time && s.time.includes('04/11/2026'));
-          const hasNov4GoldTp3 = parsed.some(s => s && s.id === 'V8-02083' && s.hitTp3);
+          const hasNov4Afternoon = parsed.some(s => s && s.asset === 'xau' && s.id === 'V8-02091');
           const hasWeekendGold = parsed.some(s => s && s.asset === 'xau' && s.time && (s.time.includes('- T7') || s.time.includes('- CN')));
-          if (hasBTC && hasXAG && hasNov4Gold && hasNov4GoldTp3 && !hasWeekendGold) {
+          if (hasBTC && hasXAG && hasNov4Afternoon && !hasWeekendGold) {
             return parsed;
           }
           localStorage.removeItem(this.STORAGE_KEY);
@@ -150,6 +149,10 @@ class SignalEngine {
     const dNov4 = new Date(2026, 10, 4);
 
     const goldNov4 = [
+      { id: 'V8-02091', hour: 16, min: 50, type: 'SELL', price: 3974.80, sl: 3979.80, tp1: 3964.80, tp2: 3954.80, tp3: 3944.80, winType: null, status: 'ĐANG CHẠY (Chờ TP1)', pnlPips: 0, pnlUsd: 0, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'MA Wave M15 xác nhận tín hiệu SELL phiên Âu chuyển giao phiên Mỹ' },
+      { id: 'V8-02089', hour: 15, min: 45, type: 'BUY',  price: 3966.50, sl: 3961.50, tp1: 3976.50, tp2: 3986.50, tp3: 3996.50, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Bắt đáy hỗ trợ động $3,965 rút chân mạnh mẽ bật cắn TP2 $3,986.50' },
+      { id: 'V8-02087', hour: 14, min: 45, type: 'SELL', price: 3978.20, sl: 3983.20, tp1: 3968.20, tp2: 3958.20, tp3: 3948.20, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Phá vỡ cản động EMA20 M5 tiếp diễn nhịp giảm cắn TP1 $3,968.20' },
+      { id: 'V8-02085', hour: 13, min: 20, type: 'SELL', price: 3982.50, sl: 3987.50, tp1: 3972.50, tp2: 3962.50, tp3: 3952.50, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Đảo chiều cản đỉnh $3,984 phiên Âu điều chỉnh kỹ thuật cắn TP1 $3,972.50' },
       { id: 'V8-02083', hour: 10, min: 45, type: 'BUY',  price: 3946.80, sl: 3941.80, tp1: 3956.80, tp2: 3966.80, tp3: 3976.80, winType: 'TP3', status: 'TP3 +30 (Trọn Sóng 🎯)', pnlPips: 300, pnlUsd: 3000, hitTp1: true, hitTp2: true, hitTp3: true, reason: 'Giá tăng bứt phá lên đỉnh $3,984 đạt trọn vẹn 3 mốc TP (TP1, TP2, TP3 🎯)' },
       { id: 'V8-02082', hour: 9,  min: 15, type: 'BUY',  price: 3938.40, sl: 3933.40, tp1: 3948.40, tp2: 3958.40, tp3: 3968.40, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Breakout cản $3,938 cắn mốc TP1 $3,948.40' },
       { id: 'V8-02079', hour: 7,  min: 30, type: 'BUY',  price: 3928.60, sl: 3923.60, tp1: 3938.60, tp2: 3948.60, tp3: 3958.60, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Mở cửa phiên Á test hỗ trợ $3,926 bật tăng mạnh mẽ cắn TP2' }
@@ -161,6 +164,8 @@ class SignalEngine {
     });
 
     const silverNov4 = [
+      { id: 'V8-02090', hour: 16, min: 15, type: 'BUY',  price: 49.05, sl: 48.35, tp1: 49.85, tp2: 50.65, tp3: 51.85, winType: 'TP1', status: 'TP1 +80 pips ✓', pnlPips: 80, pnlUsd: 4000, hitTp1: true, reason: 'Mô hình 2 đáy ngắn hạn bật tăng cắn TP1' },
+      { id: 'V8-02086', hour: 14, min: 5,  type: 'SELL', price: 49.70, sl: 50.40, tp1: 48.90, tp2: 48.10, tp3: 46.90, winType: 'TP1', status: 'TP1 +80 pips ✓', pnlPips: 80, pnlUsd: 4000, hitTp1: true, reason: 'Chạm kháng cự phiên Âu điều chỉnh cắn TP1' },
       { id: 'V8-02081', hour: 8,  min: 45, type: 'BUY',  price: 48.80, sl: 48.10, tp1: 49.60, tp2: 50.40, tp3: 51.60, winType: 'TP1', status: 'TP1 +80 pips ✓', pnlPips: 80, pnlUsd: 4000, hitTp1: true, reason: 'Hồi phục hỗ trợ phiên sáng bứt phá cắn TP1' }
     ];
     silverNov4.forEach(s => {
@@ -170,6 +175,8 @@ class SignalEngine {
     });
 
     const btcNov4 = [
+      { id: 'V8-02088', hour: 15, min: 25, type: 'BUY',  price: 74100.00, sl: 72900.00, tp1: 75300.00, tp2: 76600.00, tp3: 78100.00, winType: 'TP1', status: 'TP1 +1,200 ✓', pnlPips: 120, pnlUsd: 1200, hitTp1: true, reason: 'Kiểm định thành công vùng đáy $74,000 tiếp diễn xu hướng tăng cắn TP1' },
+      { id: 'V8-02084', hour: 12, min: 45, type: 'SELL', price: 75600.00, sl: 76800.00, tp1: 74400.00, tp2: 73100.00, tp3: 71600.00, winType: 'TP1', status: 'TP1 +1,200 ✓', pnlPips: 120, pnlUsd: 1200, hitTp1: true, reason: 'Quá mua H1 từ chối cản $75,800 quay đầu cắn TP1' },
       { id: 'V8-02080', hour: 8,  min: 20, type: 'BUY',  price: 74200.00, sl: 73000.00, tp1: 75400.00, tp2: 76700.00, tp3: 78200.00, winType: 'TP1', status: 'TP1 +1,200 ✓', pnlPips: 120, pnlUsd: 1200, hitTp1: true, reason: 'Tạo đáy ngắn hạn $74,000 bật tăng mạnh' }
     ];
     btcNov4.forEach(s => {
@@ -634,9 +641,24 @@ class SignalEngine {
     // Sync full historical trades into signals array
     this.syncTradeLines(result, bars);
 
-    // 🛑 STRICT GUARD: GIỮ NGUYÊN LỊCH SỬ TÍN HIỆU
-    // Theo yêu cầu của người dùng: "đưa sửa lịch sử khi mình chỉnh sửa app như nào để nguyên thế đừng thay đổi khi chưa cho yêu cầu"
-    // Không tự ý sinh thêm lệnh Buy/Sell ngẫu nhiên làm thay đổi bảng 13 lệnh chuẩn của người dùng
+    // Kích hoạt phát hiện tín hiệu Realtime tự động khi có sóng mới
+    if (bars && bars.length > 0) {
+      const lastBar = bars[bars.length - 1];
+      const nowMs = Date.now();
+      this.lastEmittedSignals = this.lastEmittedSignals || {};
+      const lastEmittedTime = this.lastEmittedSignals[asset] || 0;
+
+      // Giãn cách an toàn tối thiểu 25 phút giữa 2 lệnh cùng 1 mã tài sản
+      if ((snap.buySignal || snap.sellSignal) && (nowMs - lastEmittedTime > 25 * 60 * 1000)) {
+        const openRunningTrade = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
+        if (!openRunningTrade) {
+          const type = snap.buySignal ? 'BUY' : 'SELL';
+          this.lastEmittedSignals[asset] = nowMs;
+          this.emitPineSignal(type, lastBar.close, lastBar, false, asset);
+        }
+      }
+    }
+
     return snap;
   }
 
