@@ -1448,6 +1448,19 @@ class GoldTradingApp {
             const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
             window.signalEngine.evaluateMarket(this.bars, activeAsset);
             window.signalEngine.updateOpenOrders(payload.price, activeAsset);
+
+            // Quét tức thời cho cả các tài sản khác (Vàng, Bitcoin, Bạc) để không bỏ lỡ khớp TP/SL
+            if (window.marketDataStore && window.marketDataStore.assetsData) {
+              ['XAU', 'BTC', 'XAG'].forEach(symKey => {
+                const sym = symKey.toLowerCase();
+                if (sym !== activeAsset) {
+                  const assetObj = window.marketDataStore.assetsData[symKey];
+                  if (assetObj && assetObj.price) {
+                    window.signalEngine.updateOpenOrders(assetObj.price, sym);
+                  }
+                }
+              });
+            }
           }
         } else if (event === 'timeframeChange') {
           this.currentTimeframe = payload.timeframe;
@@ -1575,6 +1588,23 @@ class GoldTradingApp {
       this.showPineToastAlert(signal);
       this.renderSignalHistory();
       this.renderIndicators();
+    });
+
+    window.signalEngine.on('onOrderStatusAlert', (signal, statusType, triggerPrice) => {
+      this.showTpSlToastAlert(signal, statusType, triggerPrice);
+      this.renderSignalHistory();
+      if (typeof window.sendNativePushNotification === 'function') {
+        const isWin = statusType.startsWith('TP');
+        const pair = signal.pair || 'XAU/USD';
+        const trigP = Number(triggerPrice || signal.price || 0).toFixed(2);
+        const title = isWin
+          ? `🎯 MA WAVE V8: CHỐT LỜI ${statusType} (${pair})`
+          : `🛑 MA WAVE V8: CẮT LỖ (SL) (${pair})`;
+        const body = isWin
+          ? `${pair} Lệnh #${signal.id} (${signal.type}) đã chạm mốc ${statusType} tại $${trigP} (+${signal.pnlPips} pips / +$${signal.pnlUsd} USD)!`
+          : `${pair} Lệnh #${signal.id} (${signal.type}) đã chạm mốc SL tại $${trigP} (-50 pips). Đóng vị thế an toàn!`;
+        window.sendNativePushNotification(title, { body });
+      }
     });
 
     window.signalEngine.on('onSignalUpdate', () => {
@@ -1812,6 +1842,83 @@ class GoldTradingApp {
 
     container.appendChild(toast);
     setTimeout(() => { if (toast.parentElement) toast.remove(); }, 9000);
+  }
+
+  showTpSlToastAlert(signal, statusType, triggerPrice) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const isWin = (statusType || '').startsWith('TP');
+    const isTp3 = statusType === 'TP3';
+    const isTp2 = statusType === 'TP2';
+    const isTp1 = statusType === 'TP1';
+
+    const pnlPips = signal.pnlPips || (isTp3 ? 300 : isTp2 ? 200 : isTp1 ? 100 : -50);
+    const pnlUsd = signal.pnlUsd || (isTp3 ? 3000 : isTp2 ? 2000 : isTp1 ? 1000 : -500);
+    const pair = signal.pair || 'XAU/USD';
+    const trigP = Number(triggerPrice || signal.price || 0).toFixed(2);
+
+    const toast = document.createElement('div');
+    toast.className = `toast-enter p-4 rounded-2xl shadow-2xl border backdrop-blur-xl max-w-sm transition-all duration-300 relative overflow-hidden ${
+      isWin
+        ? (isTp3 ? 'bg-gradient-to-r from-amber-950/95 via-slate-900/95 to-slate-950 border-amber-400 glow-buy ring-2 ring-amber-400/40' : 'bg-slate-900/95 border-emerald-500 glow-buy')
+        : 'bg-slate-900/95 border-rose-500 glow-sell'
+    }`;
+
+    const badgeTitle = isTp3
+      ? '🎉 CHỐT LỜI TRỌN SÓNG TP3 (+30 GIÁ 🎯)'
+      : isTp2
+      ? '🎯 CHỐT LỜI TP2 (+20 GIÁ)'
+      : isTp1
+      ? '🎯 CHỐT LỜI TP1 (+10 GIÁ)'
+      : '🛑 CẮT LỖ AN TOÀN (SL -5 GIÁ)';
+
+    const actionAdvice = isTp3
+      ? '🏆 Đạt trọn vẹn cả 3 mốc TP! Chốt lời tối đa thành công trọn sóng.'
+      : isTp2
+      ? '🚀 Đạt mốc TP2! Khuyến nghị chốt 70% khối lượng, dời SL về TP1 để gồng tiếp TP3.'
+      : isTp1
+      ? '⚡ Đạt mốc TP1! Hệ thống khuyến nghị dời SL về Hòa Vốn để bảo vệ vốn tuyệt đối.'
+      : '⚠️ Lệnh chạm SL bảo vệ. Ngừng theo dõi để bảo toàn vốn an toàn.';
+
+    toast.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-slate-950 text-base shrink-0 ${
+          isWin ? (isTp3 ? 'bg-gradient-to-tr from-amber-400 to-yellow-200 shadow-lg shadow-amber-400/50' : 'bg-emerald-400 shadow-lg shadow-emerald-500/40') : 'bg-rose-500 text-white shadow-lg shadow-rose-500/40'
+        }">
+          ${isWin ? (isTp3 ? '🎯' : '✓') : '✕'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <h4 class="font-black text-xs ${isWin ? (isTp3 ? 'text-amber-300' : 'text-emerald-400') : 'text-rose-400'} flex items-center gap-1.5">
+              ${badgeTitle}
+            </h4>
+            <span class="text-[10px] text-slate-400 font-mono">${signal.id}</span>
+          </div>
+          <p class="text-xs text-slate-200 mt-1 font-mono">
+            ${pair} ${signal.type}: Khớp tại <strong class="text-white text-sm">$${trigP}</strong>
+          </p>
+          <div class="flex items-center gap-2 mt-1.5 font-mono text-xs">
+            <span class="px-2 py-0.5 rounded font-bold ${isWin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">
+              ${isWin ? '+' : ''}${pnlPips} pips (${isWin ? '+' : ''}$${Math.abs(pnlUsd).toLocaleString('en-US')} USD)
+            </span>
+          </div>
+          <p class="text-[10px] text-slate-300 mt-2 p-1.5 rounded bg-slate-950/80 border border-slate-800">
+            ${actionAdvice}
+          </p>
+        </div>
+        <button class="text-slate-400 hover:text-white text-base dismiss-btn font-bold leading-none cursor-pointer">&times;</button>
+      </div>
+    `;
+
+    toast.querySelector('.dismiss-btn').onclick = () => {
+      toast.classList.remove('toast-enter');
+      toast.classList.add('toast-exit');
+      setTimeout(() => toast.remove(), 300);
+    };
+
+    container.appendChild(toast);
+    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 10000);
   }
 
   setHistoryAssetFilter(assetKey) {
@@ -2481,16 +2588,22 @@ class GoldTradingApp {
   getCalculatedKeyLevels() {
     const price = this.currentPrice || (window.marketDataStore ? window.marketDataStore.getCurrentPrice() : 3995.54);
 
-    const r1 = +(price + 10.0).toFixed(2);
+    const r3 = +(price + 30.0).toFixed(2);
     const r2 = +(price + 20.0).toFixed(2);
+    const r1 = +(price + 10.0).toFixed(2);
+    const pivot = +price.toFixed(2);
     const s1 = +(price - 10.0).toFixed(2);
     const s2 = +(price - 20.0).toFixed(2);
+    const s3 = +(price - 30.0).toFixed(2);
 
     return {
-      r1,
+      r3,
       r2,
+      r1,
+      pivot,
       s1,
       s2,
+      s3,
       atr: 3.50
     };
   }
@@ -2665,51 +2778,159 @@ class GoldTradingApp {
       ? `Trên các khung trung và dài hạn (H1, H4, D1), đồ thị duy trì xu hướng GIẢM CHỦ ĐẠO. Khung H1 và H4 ghi nhận cấu trúc đỉnh đáy thấp dần (LH/LL). Đường sóng vĩ mô D1 dốc xuống.`
       : `Trên các khung trung và dài hạn (H1, H4, D1), giá XAU/USD đang tích lũy nén biên độ sau đà biến động lớn trước đó. Xu hướng lớn ở giai đoạn nén năng lượng (Compression).`;
 
-    // 4. 🎯 KỊCH BẢN GIAO DỊCH BUY & SELL CHI TIẾT (3 MỐC TP + SL -5)
-    const s4TradingPlans = `
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-2 font-mono text-xs">
-        
-        <!-- KỊCH BẢN MUA (BUY SCENARIO) -->
-        <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40 space-y-2.5 shadow-lg">
-          <div class="flex items-center justify-between border-b border-emerald-500/30 pb-2">
-            <span class="font-black text-emerald-400 text-sm flex items-center gap-1.5">
-              <span>📈</span> KỊCH BẢN MUA (BUY PLAN)
-            </span>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">10 Giá / Mốc</span>
+    // Tin tức kinh tế vĩ mô thời gian thực từ News Engine
+    let newsListHtml = '';
+    const allNewsEvents = (window.newsAdapter && window.newsAdapter.events) || (typeof GoldNewsCenter !== 'undefined' && GoldNewsCenter.events) || [];
+    if (allNewsEvents && allNewsEvents.length > 0) {
+      const top3Events = allNewsEvents.slice(0, 3);
+      newsListHtml = `
+        <div class="mt-3 space-y-2">
+          <div class="text-[11px] font-bold text-amber-400 flex items-center gap-1.5">
+            <span>🌐 TIN TỨC VĨ MÔ ẢNH HƯỞNG TRỰC TIẾP TỚI GIÁ VÀNG (NEWS ENGINE):</span>
           </div>
-
-          <div class="space-y-1.5 text-slate-200">
-            <div><span class="text-slate-400">📍 Giá Vào (Entry):</span> <strong class="text-amber-300">$${buyEntry.toFixed(2)}</strong> (Khi nến xác nhận trên EMA20)</div>
-            <div><span class="text-emerald-400 font-bold">🎯 TP1 (+10 giá):</span> <strong class="text-emerald-300">$${buyTp1}</strong> <span class="text-[10px] text-emerald-400/80">(+100 pips)</span></div>
-            <div><span class="text-emerald-400 font-bold">🎯 TP2 (+20 giá):</span> <strong class="text-emerald-300">$${buyTp2}</strong> <span class="text-[10px] text-emerald-400/80">(+200 pips)</span></div>
-            <div><span class="text-emerald-400 font-bold">🎯 TP3 (+30 giá):</span> <strong class="text-emerald-300">$${buyTp3}</strong> <span class="text-[10px] text-emerald-400/80">(+300 pips — Trọn Sóng)</span></div>
-            <div><span class="text-rose-400 font-bold">🛡️ Cắt Lỗ SL (-5 giá):</span> <strong class="text-rose-300">$${buySl}</strong> <span class="text-[10px] text-rose-400/80">(-50 pips)</span></div>
-          </div>
-
-          <div class="p-2.5 bg-emerald-900/40 border border-emerald-500/30 rounded-lg text-[11px] text-emerald-200 leading-relaxed font-sans">
-            ⚡ <strong>Quy Tắc Gồng Lệnh:</strong> Ngay khi giá chạm <strong>TP1 ($${buyTp1})</strong>, màn hình sẽ phát thông báo. Lập tức <strong>dời SL về Hòa Vốn ($${buyEntry.toFixed(2)})</strong> để đảm bảo an toàn tuyệt đối và gồng tiếp lệnh lên TP2 & TP3!
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            ${top3Events.map(ev => `
+              <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 text-[11px] space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-200 truncate pr-1">${ev.title || ev.eventNameVn || ev.eventName}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0 ${ev.impact === 'HIGH' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">${ev.impact || 'MEDIUM'}</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-400 text-[10px]">
+                  <span>🕒 Lịch: <strong class="text-amber-300">${ev.time || '19:30'} GMT+7</strong></span>
+                  <span>Trạng thái: <strong class="text-sky-300">${ev.status === 'RELEASED' ? 'Đã công bố' : 'Sắp diễn ra'}</strong></span>
+                </div>
+                ${ev.actual ? `<div class="text-[10px] text-slate-300">Thực tế: <strong class="text-emerald-400">${ev.actual}</strong> | Dự báo: ${ev.forecast || '--'}</div>` : ''}
+                ${ev.aiAnalysis ? `<p class="text-[10px] text-slate-400 italic line-clamp-2">${ev.aiAnalysis}</p>` : ''}
+              </div>
+            `).join('')}
           </div>
         </div>
+      `;
+    }
 
-        <!-- KỊCH BẢN BÁN (SELL SCENARIO) -->
-        <div class="p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 space-y-2.5 shadow-lg">
-          <div class="flex items-center justify-between border-b border-rose-500/30 pb-2">
-            <span class="font-black text-rose-400 text-sm flex items-center gap-1.5">
-              <span>📉</span> KỊCH BẢN BÁN (SELL PLAN)
+    // 4. 🎯 BẢNG CÁC MỐC QUAN TRỌNG CANH BUY - CANH SELL & CẢN THỜI GIAN THỰC
+    const s4TradingPlans = `
+      <div class="space-y-4 my-2 font-mono text-xs">
+        
+        <!-- BẢNG CANH BUY & CANH SELL 2 CỘT -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- KỊCH BẢN CANH BUY -->
+          <div class="p-4 rounded-xl bg-gradient-to-b from-emerald-950/40 to-slate-950/90 border border-emerald-500/50 space-y-3 shadow-xl relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-emerald-500/30 pb-2">
+              <span class="font-black text-emerald-400 text-sm flex items-center gap-1.5">
+                <span>📈</span> VÙNG CANH BUY CHIẾN LƯỢC
+              </span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">Mục Tiêu +30 Giá (🎯)</span>
+            </div>
+
+            <div class="space-y-2 text-slate-200">
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                <span class="text-slate-400">📍 Vùng Canh Vào (Entry):</span>
+                <strong class="text-amber-300 font-bold">$${(buyEntry - 2.0).toFixed(2)} - $${buyEntry.toFixed(2)}</strong>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL (-5 giá):</span>
+                <strong class="text-rose-300 font-bold">$${buySl} <span class="text-[10px] text-rose-400/80 font-normal">(-50 pips)</span></strong>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1 (+10 giá):</span>
+                <strong class="text-emerald-300 font-bold">$${buyTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(+100 pips)</span></strong>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2 (+20 giá):</span>
+                <strong class="text-emerald-300 font-bold">$${buyTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(+200 pips)</span></strong>
+              </div>
+              <div class="flex justify-between items-center py-1">
+                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3 (+30 giá):</span>
+                <strong class="text-yellow-300 font-black text-sm">$${buyTp3} <span class="text-[10px] text-yellow-400 font-normal">(+300 pips - Trọn Sóng)</span></strong>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-emerald-950/80 border border-emerald-500/30 rounded-lg text-[11px] text-emerald-200 leading-relaxed font-sans space-y-1">
+              <div>⚡ <strong>Điều Kiện Nến M5/M15:</strong> Nến rút chân từ chối giá tại EMA20 ($${ema20}) hoặc hỗ trợ S1 ($${levels.s1.toFixed(2)}), xuất hiện nến xanh đảo chiều.</div>
+              <div>🔒 <strong>Quy Tắc Quản Trị Vốn:</strong> Ngay khi giá chạm <strong>TP1 ($${buyTp1})</strong>, hệ thống tự động cảnh báo ➔ <strong>Lập tức dời SL về Hòa Vốn ($${buyEntry.toFixed(2)})</strong> để bảo toàn lợi nhuận và an tâm gồng tiếp TP2 & TP3!</div>
+            </div>
+          </div>
+
+          <!-- KỊCH BẢN CANH SELL -->
+          <div class="p-4 rounded-xl bg-gradient-to-b from-rose-950/40 to-slate-950/90 border border-rose-500/50 space-y-3 shadow-xl relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-rose-500/30 pb-2">
+              <span class="font-black text-rose-400 text-sm flex items-center gap-1.5">
+                <span>📉</span> VÙNG CANH SELL PHẢN ỨNG
+              </span>
+              <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px] border border-rose-500/30">Mục Tiêu -30 Giá (🎯)</span>
+            </div>
+
+            <div class="space-y-2 text-slate-200">
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                <span class="text-slate-400">📍 Vùng Canh Vào (Entry):</span>
+                <strong class="text-amber-300 font-bold">$${sellEntry.toFixed(2)} - $${(sellEntry + 2.0).toFixed(2)}</strong>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL (+5 giá):</span>
+                <strong class="text-rose-300 font-bold">$${sellSl} <span class="text-[10px] text-rose-400/80 font-normal">(-50 pips)</span></strong>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1 (-10 giá):</span>
+                <strong class="text-emerald-300 font-bold">$${sellTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(+100 pips)</span></strong>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2 (-20 giá):</span>
+                <strong class="text-emerald-300 font-bold">$${sellTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(+200 pips)</span></strong>
+              </div>
+              <div class="flex justify-between items-center py-1">
+                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3 (-30 giá):</span>
+                <strong class="text-yellow-300 font-black text-sm">$${sellTp3} <span class="text-[10px] text-yellow-400 font-normal">(+300 pips - Trọn Sóng)</span></strong>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-rose-950/80 border border-rose-500/30 rounded-lg text-[11px] text-rose-200 leading-relaxed font-sans space-y-1">
+              <div>⚡ <strong>Điều Kiện Nến M5/M15:</strong> Giá chạm kháng cự R1 ($${levels.r1.toFixed(2)}) hoặc EMA50 ($${ema50}) xuất hiện râu nến trên dài, nến đỏ giảm mạnh.</div>
+              <div>🛑 <strong>Cảnh Báo Ngừng Lệnh:</strong> Nếu giá vi phạm SL ($${sellSl}), hệ thống lập tức thông báo: <em>"Điểm BUY/SELL hiện tại ngừng chú ý lệnh để thoát cho an toàn"</em>.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- MA TRẬN 7 MỐC CẢN QUAN TRỌNG TRONG PHIÊN (KEY LEVELS MATRIX) -->
+        <div class="p-3.5 bg-slate-950/90 border border-slate-800 rounded-xl space-y-2">
+          <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+            <span class="text-xs font-black text-amber-400 flex items-center gap-1.5">
+              <span>📍</span> MA TRẬN 7 MỐC CẢN QUAN TRỌNG TRONG PHIÊN (KEY LEVELS MATRIX)
             </span>
-            <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px]">10 Giá / Mốc</span>
+            <span class="text-[10px] text-slate-400">Tự động tính theo Giá Live</span>
           </div>
-
-          <div class="space-y-1.5 text-slate-200">
-            <div><span class="text-slate-400">📍 Giá Vào (Entry):</span> <strong class="text-amber-300">$${sellEntry.toFixed(2)}</strong> (Khi giá thủng EMA50)</div>
-            <div><span class="text-emerald-400 font-bold">🎯 TP1 (+10 giá):</span> <strong class="text-emerald-300">$${sellTp1}</strong> <span class="text-[10px] text-emerald-400/80">(+100 pips)</span></div>
-            <div><span class="text-emerald-400 font-bold">🎯 TP2 (+20 giá):</span> <strong class="text-emerald-300">$${sellTp2}</strong> <span class="text-[10px] text-emerald-400/80">(+200 pips)</span></div>
-            <div><span class="text-emerald-400 font-bold">🎯 TP3 (+30 giá):</span> <strong class="text-emerald-300">$${sellTp3}</strong> <span class="text-[10px] text-emerald-400/80">(+300 pips — Trọn Sóng)</span></div>
-            <div><span class="text-rose-400 font-bold">🛡️ Cắt Lỗ SL (-5 giá):</span> <strong class="text-rose-300">$${sellSl}</strong> <span class="text-[10px] text-rose-400/80">(-50 pips)</span></div>
-          </div>
-
-          <div class="p-2.5 bg-rose-900/40 border border-rose-500/30 rounded-lg text-[11px] text-rose-200 leading-relaxed font-sans">
-            🛑 <strong>Cảnh Báo Ngừng Lệnh:</strong> Nếu giá vi phạm SL ($${sellSl}), hệ thống sẽ thông báo: <em>"Điểm BUY/SELL hiện tại ngừng chú ý lệnh để thoát cho an toàn"</em>.
+          
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-center text-[11px]">
+            <div class="p-2 rounded-lg bg-rose-950/30 border border-rose-500/30">
+              <span class="text-[9px] text-rose-300 font-sans block">Cản R3 (Cực đại)</span>
+              <strong class="text-rose-400 font-bold">$${levels.r3.toFixed(2)}</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-rose-950/20 border border-rose-500/20">
+              <span class="text-[9px] text-rose-300 font-sans block">Cản R2 (TP2)</span>
+              <strong class="text-rose-300 font-bold">$${levels.r2.toFixed(2)}</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-rose-950/15 border border-rose-500/20">
+              <span class="text-[9px] text-rose-300 font-sans block">Cản R1 (TP1)</span>
+              <strong class="text-rose-200 font-bold">$${levels.r1.toFixed(2)}</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-amber-950/30 border border-amber-500/40">
+              <span class="text-[9px] text-amber-300 font-sans block">Điểm Pivot (Giá Live)</span>
+              <strong class="text-amber-400 font-black">$${levels.pivot.toFixed(2)}</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-emerald-950/15 border border-emerald-500/20">
+              <span class="text-[9px] text-emerald-300 font-sans block">Hỗ trợ S1 (Cầu 1)</span>
+              <strong class="text-emerald-200 font-bold">$${levels.s1.toFixed(2)}</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20">
+              <span class="text-[9px] text-emerald-300 font-sans block">Hỗ trợ S2 (Cầu 2)</span>
+              <strong class="text-emerald-300 font-bold">$${levels.s2.toFixed(2)}</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/30">
+              <span class="text-[9px] text-emerald-300 font-sans block">Hỗ trợ S3 (Cực tiểu)</span>
+              <strong class="text-emerald-400 font-bold">$${levels.s3.toFixed(2)}</strong>
+            </div>
           </div>
         </div>
 
@@ -2719,22 +2940,25 @@ class GoldTradingApp {
     // 5. 🧠 ĐÁNH GIÁ CẤU TRÚC VÀ CÁC MỐC CẢN KEY LEVELS
     const s5Text = `
       <div class="space-y-2 text-xs">
-        <div>• <strong>Mốc Kháng cự chú ý:</strong> <strong class="text-rose-400">R1 $${levels.r1.toFixed(2)}</strong> | <strong class="text-rose-400">R2 $${levels.r2.toFixed(2)}</strong></div>
-        <div>• <strong>Mốc Hỗ trợ chú ý:</strong> <strong class="text-emerald-400">S1 $${levels.s1.toFixed(2)}</strong> | <strong class="text-emerald-400">S2 $${levels.s2.toFixed(2)}</strong></div>
-        <div>• <strong>Kỳ vọng phản ứng tại Cản:</strong> Khi giá tiến về $R1 ($${levels.r1.toFixed(2)}), kỳ vọng lực chốt lời ngắn hạn sẽ xuất hiện. Nếu nến H1 đóng cửa phá vỡ $R1, giá sẽ tiến tới $R2 ($${levels.r2.toFixed(2)}). Ngược lại nếu lùi về $S1 ($${levels.s1.toFixed(2)}), vùng cầu EMA20/50 sẽ nỗ lực hỗ trợ đỡ giá.</div>
+        <div>• <strong>Mốc Kháng cự chú ý:</strong> <strong class="text-rose-400">R1 $${levels.r1.toFixed(2)}</strong> | <strong class="text-rose-400">R2 $${levels.r2.toFixed(2)}</strong> | <strong class="text-rose-400">R3 $${levels.r3.toFixed(2)}</strong></div>
+        <div>• <strong>Mốc Hỗ trợ chú ý:</strong> <strong class="text-emerald-400">S1 $${levels.s1.toFixed(2)}</strong> | <strong class="text-emerald-400">S2 $${levels.s2.toFixed(2)}</strong> | <strong class="text-emerald-400">S3 $${levels.s3.toFixed(2)}</strong></div>
+        <div>• <strong>Kỳ vọng phản ứng tại Cản:</strong> Khi giá tiến về $R1 ($${levels.r1.toFixed(2)}), kỳ vọng lực chốt lời ngắn hạn sẽ xuất hiện. Nếu nến H1 đóng cửa phá vỡ $R1, giá sẽ tiến tới $R2 ($${levels.r2.toFixed(2)}) và $R3 ($${levels.r3.toFixed(2)}). Ngược lại nếu lùi về $S1 ($${levels.s1.toFixed(2)}), vùng cầu EMA20/50 sẽ nỗ lực hỗ trợ đỡ giá.</div>
         <div>• <strong>Cấu trúc thị trường (Structure):</strong> ${struct} — Đang ủng hộ ${isBull ? '<span class="text-emerald-400 font-bold">Phe Mua</span>' : isBear ? '<span class="text-rose-400 font-bold">Phe Bán</span>' : '<span class="text-amber-400 font-bold">Trạng thái Tích Lũy</span>'}.</div>
         <div>• <strong>Động lượng (Momentum):</strong> Trạng thái <strong>${mom}</strong> — Lực đi của giá đi kèm thanh khoản thực tế.</div>
       </div>
     `;
 
-    // 6. ⚠️ RỦI RO & QUẢN TRỊ VỐN
+    // 6. ⚠️ RỦI RO & TIN TỨC VĨ MÔ THỜI GIAN THỰC
     const s6Text = `
-      <ul class="list-disc list-inside space-y-1.5 mt-2 text-slate-300 text-xs">
-        <li><strong>Quản lý khối lượng lệnh:</strong> Khuyến nghị tuyệt đối đi vốn tối đa 1-2% tài khoản cho mỗi lệnh giao dịch.</li>
-        <li><strong>Tuân thủ mốc SL -5 giá:</strong> Tuyệt đối gài SL 5 giá ($50 pips) để bảo vệ tài khoản khỏi các pha sụt giảm bất ngờ.</li>
-        ${newsRiskText ? `<li><strong>Biến động Tin Tức Kinh Tế:</strong> ${newsRiskText}</li>` : ''}
-      </ul>
-      <p class="text-[11px] text-slate-400 italic mt-2 font-mono">⚠️ Bài phân tích mang tính chất giáo dục & quan sát cấu trúc thị trường tự động từ MA WAVE V8 Engine.</p>
+      <div class="space-y-2 text-slate-300 text-xs">
+        <ul class="list-disc list-inside space-y-1.5">
+          <li><strong>Quản lý khối lượng lệnh:</strong> Khuyến nghị tuyệt đối đi vốn tối đa 1-2% tài khoản cho mỗi lệnh giao dịch.</li>
+          <li><strong>Tuân thủ mốc SL -5 giá:</strong> Tuyệt đối gài SL 5 giá ($50 pips) để bảo vệ tài khoản khỏi các pha sụt giảm bất ngờ.</li>
+          ${newsRiskText ? `<li><strong>Biến động Tin Tức Kinh Tế:</strong> ${newsRiskText}</li>` : ''}
+        </ul>
+        ${newsListHtml}
+        <p class="text-[11px] text-slate-400 italic mt-2 font-mono">⚠️ Bài phân tích mang tính chất giáo dục & quan sát cấu trúc thị trường tự động từ MA WAVE V8 Engine.</p>
+      </div>
     `;
 
     // 7. 📊 NHẬN ĐỊNH TỔNG THỂ
@@ -2808,10 +3032,10 @@ class GoldTradingApp {
         <div class="text-xs text-slate-300 leading-relaxed">${s3Text}</div>
       </section>
 
-      <!-- 4. KỊCH BẢN GIAO DỊCH BUY & SELL CHI TIẾT -->
-      <section class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-4 space-y-2">
+      <!-- 4. CÁC MỐC QUAN TRỌNG CANH BUY - CANH SELL & CẢN THỜI GIAN THỰC -->
+      <section class="bg-slate-900/90 border border-amber-500/40 rounded-xl p-4 space-y-2 shadow-2xl">
         <h4 class="text-sm font-black text-amber-400 flex items-center gap-2 border-b border-slate-800/80 pb-2">
-          <span>🎯 4. KỊCH BẢN GIAO DỊCH BUY & SELL CHI TIẾT (3 MỐC TP + SL -5)</span>
+          <span>🎯 4. CÁC MỐC QUAN TRỌNG CANH BUY - SELL & MA TRẬN CẢN THỜI GIAN THỰC (3 MỐC TP + SL -5)</span>
         </h4>
         <div>${s4TradingPlans}</div>
       </section>
@@ -2824,10 +3048,10 @@ class GoldTradingApp {
         <div class="text-xs text-slate-300 leading-relaxed">${s5Text}</div>
       </section>
 
-      <!-- 6. RỦI RO / ĐIỂM CẦN THEO DÕI -->
+      <!-- 6. RỦI RO / TIN TỨC VĨ MÔ THỜI GIAN THỰC -->
       <section class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2">
         <h4 class="text-sm font-black text-rose-400 flex items-center gap-2 border-b border-slate-800/80 pb-2">
-          <span>⚠️ 6. RỦI RO & QUẢN TRỊ VỐN</span>
+          <span>⚠️ 6. RỦI RO, QUẢN TRỊ VỐN & CẬP NHẬT TIN TỨC VĨ MÔ</span>
         </h4>
         <div class="text-xs text-slate-300 leading-relaxed">${s6Text}</div>
       </section>

@@ -13,6 +13,7 @@ class SignalEngine {
     this.callbacks = {
       onNewSignal: [],
       onSignalUpdate: [],
+      onOrderStatusAlert: [],
       onMetricsUpdate: [],
       onDashboardUpdate: []
     };
@@ -595,6 +596,14 @@ class SignalEngine {
     this.triggerMetricsUpdate();
   }
 
+  triggerOrderStatusAlert(signal, statusType, triggerPrice) {
+    if (this.callbacks.onOrderStatusAlert) {
+      this.callbacks.onOrderStatusAlert.forEach(fn => {
+        try { fn(signal, statusType, triggerPrice); } catch (e) {}
+      });
+    }
+  }
+
   triggerSignalUpdate() {
     this.callbacks.onSignalUpdate.forEach(fn => fn(this.signals));
   }
@@ -737,6 +746,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
+            this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
           } else if (!sig.hitTp2 && currentPrice >= sig.tp2) {
             sig.hitTp1 = true;
             sig.hitTp2 = true;
@@ -748,6 +758,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
+            this.triggerOrderStatusAlert(sig, 'TP2', currentPrice);
           } else if (!sig.hitTp1 && currentPrice >= sig.tp1) {
             sig.hitTp1 = true;
             sig.winType = 'TP1';
@@ -758,6 +769,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
+            this.triggerOrderStatusAlert(sig, 'TP1', currentPrice);
           } else if (!sig.hitTp1 && currentPrice <= sig.sl) {
             sig.winType = 'LOSS';
             sig.status = 'CẮT LỖ AN TOÀN (SL)';
@@ -767,6 +779,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playStopLossSound === 'function') {
               window.soundAlerts.playStopLossSound();
             }
+            this.triggerOrderStatusAlert(sig, 'SL', currentPrice);
           }
         } else {
           // SELL: Giá giảm chạm hoặc thủng các mốc TP3, TP2, TP1
@@ -783,6 +796,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
+            this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
           } else if (!sig.hitTp2 && currentPrice <= sig.tp2) {
             sig.hitTp1 = true;
             sig.hitTp2 = true;
@@ -794,6 +808,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
+            this.triggerOrderStatusAlert(sig, 'TP2', currentPrice);
           } else if (!sig.hitTp1 && currentPrice <= sig.tp1) {
             sig.hitTp1 = true;
             sig.winType = 'TP1';
@@ -804,6 +819,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
+            this.triggerOrderStatusAlert(sig, 'TP1', currentPrice);
           } else if (!sig.hitTp1 && currentPrice >= sig.sl) {
             sig.winType = 'LOSS';
             sig.status = 'CẮT LỖ AN TOÀN (SL)';
@@ -813,6 +829,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playStopLossSound === 'function') {
               window.soundAlerts.playStopLossSound();
             }
+            this.triggerOrderStatusAlert(sig, 'SL', currentPrice);
           }
         }
       }

@@ -538,7 +538,7 @@ class MarketDataStore {
     };
 
     fetchLivePrice();
-    setInterval(fetchLivePrice, 3000);
+    setInterval(fetchLivePrice, 2000);
   }
 
   setTimeframe(tf) {
