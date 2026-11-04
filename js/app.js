@@ -1588,25 +1588,6 @@ class GoldTradingApp {
       this.showPineToastAlert(signal);
       this.renderSignalHistory();
       this.renderIndicators();
-
-      // Đồng bộ sang Server để đẩy Web Push tới điện thoại kể cả khi thoát ứng dụng
-      try {
-        fetch('/api/signals/broadcast', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: signal.id,
-            type: signal.type,
-            pair: signal.pair || 'XAU/USD',
-            price: signal.price,
-            tp1: signal.tp1,
-            tp2: signal.tp2,
-            tp3: signal.tp3,
-            sl: signal.sl,
-            status: signal.status
-          })
-        }).catch(() => {});
-      } catch(e) {}
     });
 
     window.signalEngine.on('onOrderStatusAlert', (signal, statusType, triggerPrice) => {
@@ -1625,23 +1606,6 @@ class GoldTradingApp {
       if (typeof window.sendNativePushNotification === 'function') {
         window.sendNativePushNotification(title, { body });
       }
-
-      // Đồng bộ trạng thái lệnh sang Server để đẩy Web Push tới điện thoại kể cả khi thoát app
-      try {
-        fetch('/api/signals/broadcast-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: signal.id,
-            type: signal.type,
-            pair,
-            statusType,
-            triggerPrice: trigP,
-            pnlPips: signal.pnlPips,
-            pnlUsd: signal.pnlUsd
-          })
-        }).catch(() => {});
-      } catch(e) {}
     });
 
     window.signalEngine.on('onSignalUpdate', () => {

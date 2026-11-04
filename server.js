@@ -23,6 +23,16 @@ let serverSignalsDB = loadJSON(SERVER_SIGNALS_FILE, []);
 const SIGNALS_DB_FILE = path.join(__dirname, 'signals_db.json');
 let signalsDB = loadJSON(SIGNALS_DB_FILE, []);
 
+// Đảm bảo khôi phục 100% nguyên vẹn 1,606 lệnh gốc chuẩn (bắt đầu từ V8-02083)
+if (Array.isArray(signalsDB) && signalsDB.length > 0) {
+  const idx2083 = signalsDB.findIndex(s => s && s.id === 'V8-02083');
+  if (idx2083 > 0) {
+    console.log(`🧹 Đã dọn sạch ${idx2083} lệnh rác sinh tự động ngoài ý muốn, khôi phục gốc 1,606 lệnh từ V8-02083!`);
+    signalsDB = signalsDB.slice(idx2083);
+    saveJSON(SIGNALS_DB_FILE, signalsDB);
+  }
+}
+
 function loadJSON(filePath, defaultData) {
   try {
     if (fs.existsSync(filePath)) {
@@ -2550,6 +2560,18 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ status: 'SUCCESS', signals: serverSignalsDB }));
   }
+  else if (urlPath === '/api/admin/reset-history' && req.method === 'POST') {
+    const idx2083 = signalsDB.findIndex(s => s && s.id === 'V8-02083');
+    if (idx2083 > 0) {
+      signalsDB = signalsDB.slice(idx2083);
+      saveJSON(SIGNALS_DB_FILE, signalsDB);
+    }
+    serverSignalsDB = [];
+    saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+    serverActiveTrade = null;
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ status: 'SUCCESS', count: signalsDB.length, topSignal: signalsDB[0] }));
+  }
   else if (urlPath === '/api/signals/broadcast' && req.method === 'POST') {
     const body = await parseRequestBody(req);
     const { type, pair, price, tp1, tp2, tp3, sl, id, asset, reason } = body;
@@ -2557,12 +2579,18 @@ const server = http.createServer(async (req, res) => {
     const pairName = pair || 'XAU/USD';
     const numPrice = Number(price || body.entryPrice || 3998.70);
 
+    // Nếu lệnh này đã tồn tại trong signalsDB -> Bỏ qua, tránh tạo duplicate vô tận
+    if (id && signalsDB.some(s => s && s.id === id)) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ status: 'ALREADY_EXISTS', id }));
+    }
+
     // Cấp ID chuẩn duy nhất (Single Source of Truth) từ server
     let assignedId = id;
     const lastNum = (signalsDB && signalsDB.length > 0)
       ? (parseInt(String(signalsDB[0].id).replace(/^V8-?/i, ''), 10) || 2083)
       : 2083;
-    if (!assignedId || signalsDB.some(s => s && s.id === assignedId)) {
+    if (!assignedId) {
       assignedId = `V8-${String(lastNum + 1).padStart(5, '0')}`;
     }
 

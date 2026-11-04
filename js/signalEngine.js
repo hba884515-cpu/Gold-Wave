@@ -968,7 +968,19 @@ class SignalEngine {
     if (!exists) {
       this.signals.unshift(signal);
       this.saveHistory();
-      this.triggerNewSignal(signal);
+      this.triggerSignalUpdate();
+      this.triggerMetricsUpdate();
+
+      try {
+        const isBuy = signal.type === 'BUY';
+        if (window.soundAlerts) {
+          if (isBuy) window.soundAlerts.playBuySound(0.9);
+          else window.soundAlerts.playSellSound(0.9);
+        }
+        if (typeof showToast === 'function') {
+          showToast(`🚨 TÍN HIỆU MA WAVE V8: ${signal.type} ${signal.pair || 'XAU/USD'} @ $${signal.price}`, 'info');
+        }
+      } catch(e) {}
     }
   }
 
