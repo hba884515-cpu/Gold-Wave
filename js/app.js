@@ -1697,6 +1697,23 @@ class GoldTradingApp {
       sse.onmessage = (event) => {
         try {
           const item = JSON.parse(event.data);
+          if (item) {
+            // 1. Tín hiệu MUA / BÁN mới từ máy chủ tập trung (đồng bộ tức thì cả PC & Điện thoại)
+            if (item.type === 'SIGNAL_NEW' && item.signal) {
+              if (window.signalEngine && typeof window.signalEngine.onServerSignalNew === 'function') {
+                window.signalEngine.onServerSignalNew(item.signal);
+              }
+              return;
+            }
+            // 2. Cập nhật trạng thái Chốt Lời TP1/2/3 hoặc Cắt Lỗ SL từ máy chủ tập trung
+            if (item.type === 'SIGNAL_STATUS_UPDATE' && item.update) {
+              if (window.signalEngine && typeof window.signalEngine.onServerSignalStatusUpdate === 'function') {
+                window.signalEngine.onServerSignalStatusUpdate(item.update);
+              }
+              return;
+            }
+          }
+
           if (item && item.id) {
             if (!this.notifications.some(n => n.id === item.id)) {
               this.notifications.unshift(item);

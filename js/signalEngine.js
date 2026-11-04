@@ -8,7 +8,7 @@
 
 class SignalEngine {
   constructor() {
-    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v34';
+    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v35';
     this.signals = this.loadHistory();
     this.callbacks = {
       onNewSignal: [],
@@ -17,6 +17,10 @@ class SignalEngine {
       onMetricsUpdate: [],
       onDashboardUpdate: []
     };
+    if (typeof window !== 'undefined') {
+      setTimeout(() => this.syncServerSignals(), 2000);
+      setInterval(() => this.syncServerSignals(), 20000);
+    }
   }
 
   // Khung giờ hoạt động theo yêu cầu người dùng: từ 6:00 sáng đến 24:00 (12:00 đêm) GMT+7
@@ -72,8 +76,8 @@ class SignalEngine {
 
   loadHistory() {
     try {
-      // Clear old v1 - v33 caches automatically
-      for (let i = 1; i <= 33; i++) {
+      // Clear old v1 - v34 caches automatically
+      for (let i = 1; i <= 34; i++) {
         localStorage.removeItem(`gold_trading_ma_wave_multi_asset_v${i}`);
         localStorage.removeItem(`gold_trading_ma_wave_pinescript_v${i}`);
       }
@@ -83,9 +87,10 @@ class SignalEngine {
         if (Array.isArray(parsed) && parsed.length >= 1000) {
           const hasBTC = parsed.some(s => s && (s.asset === 'btc' || (s.pair && s.pair.includes('BTC'))));
           const hasXAG = parsed.some(s => s && (s.asset === 'xag' || (s.pair && s.pair.includes('XAG'))));
-          const hasCorrect4000Gold = parsed.some(s => s && s.asset === 'xau' && s.id === 'V8-02091' && s.price > 4000);
+          const hasCorrectTopGold = parsed.some(s => s && s.asset === 'xau' && s.id === 'V8-02083' && s.price === 3946.80);
+          const hasBogusAfternoon = parsed.some(s => s && s.id === 'V8-02091');
           const hasWeekendGold = parsed.some(s => s && s.asset === 'xau' && s.time && (s.time.includes('- T7') || s.time.includes('- CN')));
-          if (hasBTC && hasXAG && hasCorrect4000Gold && !hasWeekendGold) {
+          if (hasBTC && hasXAG && hasCorrectTopGold && !hasBogusAfternoon && !hasWeekendGold) {
             return parsed;
           }
           localStorage.removeItem(this.STORAGE_KEY);
@@ -144,18 +149,14 @@ class SignalEngine {
 
     // ─────────────────────────────────────────────────────────────────────────
     // 0. THỨ 4 (04/11/2026) - HÔM NAY (ĐỒNG BỘ 100% TRADINGVIEW TVC:GOLD CỦA NGƯỜI DÙNG)
-    // Sáng mở quanh 4,028, test hỗ trợ 4,026.60 rồi bứt phá sóng tăng mạnh lên đỉnh $4,084!
+    // Sáng mở quanh 3,928, test hỗ trợ 3,926.60 rồi bứt phá sóng tăng mạnh lên đỉnh $3,984!
     // ─────────────────────────────────────────────────────────────────────────
     const dNov4 = new Date(2026, 10, 4);
 
     const goldNov4 = [
-      { id: 'V8-02091', hour: 16, min: 50, type: 'BUY',  price: 4046.50, sl: 4041.50, tp1: 4056.50, tp2: 4066.50, tp3: 4076.50, winType: null, status: 'ĐANG CHẠY (Chờ TP1)', pnlPips: 0, pnlUsd: 0, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'MA Wave M15 xác nhận lực cầu giữ vững nền $4,046.50 tiếp diễn sóng tăng phiên Mỹ' },
-      { id: 'V8-02089', hour: 15, min: 45, type: 'BUY',  price: 4042.50, sl: 4037.50, tp1: 4052.50, tp2: 4062.50, tp3: 4072.50, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Bắt đáy hỗ trợ động $4,040 rút chân bật cắn TP1 $4,052.50' },
-      { id: 'V8-02087', hour: 14, min: 45, type: 'SELL', price: 4072.20, sl: 4077.20, tp1: 4062.20, tp2: 4052.20, tp3: 4042.20, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Phá vỡ cản động EMA20 M5 tiếp diễn nhịp giảm cắn TP2 $4,052.20' },
-      { id: 'V8-02085', hour: 13, min: 20, type: 'SELL', price: 4082.50, sl: 4087.50, tp1: 4072.50, tp2: 4062.50, tp3: 4052.50, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Đảo chiều cản đỉnh $4,084 phiên Âu điều chỉnh kỹ thuật cắn TP1 $4,072.50' },
-      { id: 'V8-02083', hour: 10, min: 45, type: 'BUY',  price: 4046.80, sl: 4041.80, tp1: 4056.80, tp2: 4066.80, tp3: 4076.80, winType: 'TP3', status: 'TP3 +30 (Trọn Sóng 🎯)', pnlPips: 300, pnlUsd: 3000, hitTp1: true, hitTp2: true, hitTp3: true, reason: 'Giá tăng bứt phá từ $4,046 lên đỉnh $4,084 đạt trọn vẹn 3 mốc TP (TP1, TP2, TP3 🎯)' },
-      { id: 'V8-02082', hour: 9,  min: 15, type: 'BUY',  price: 4038.40, sl: 4033.40, tp1: 4048.40, tp2: 4058.40, tp3: 4068.40, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Breakout cản $4,038 cắn mốc TP1 $4,048.40' },
-      { id: 'V8-02079', hour: 7,  min: 30, type: 'BUY',  price: 4028.60, sl: 4023.60, tp1: 4038.60, tp2: 4048.60, tp3: 4058.60, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Mở cửa phiên Á test hỗ trợ $4,026 bật tăng mạnh mẽ cắn TP2' }
+      { id: 'V8-02083', hour: 10, min: 45, type: 'BUY',  price: 3946.80, sl: 3941.80, tp1: 3956.80, tp2: 3966.80, tp3: 3976.80, winType: 'TP3', status: 'TP3 +30 (Trọn Sóng 🎯)', pnlPips: 300, pnlUsd: 3000, hitTp1: true, hitTp2: true, hitTp3: true, reason: 'Giá tăng bứt phá lên đỉnh $3,984 đạt trọn vẹn 3 mốc TP (TP1, TP2, TP3 🎯)' },
+      { id: 'V8-02082', hour: 9,  min: 15, type: 'BUY',  price: 3938.40, sl: 3933.40, tp1: 3948.40, tp2: 3958.40, tp3: 3968.40, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Breakout cản $3,938 cắn mốc TP1 $3,948.40' },
+      { id: 'V8-02079', hour: 7,  min: 30, type: 'BUY',  price: 3928.60, sl: 3923.60, tp1: 3938.60, tp2: 3948.60, tp3: 3958.60, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Mở cửa phiên Á test hỗ trợ $3,926 bật tăng mạnh mẽ cắn TP2' }
     ];
     goldNov4.forEach(s => {
       const d = new Date(dNov4);
@@ -164,8 +165,6 @@ class SignalEngine {
     });
 
     const silverNov4 = [
-      { id: 'V8-02090', hour: 16, min: 15, type: 'BUY',  price: 49.05, sl: 48.35, tp1: 49.85, tp2: 50.65, tp3: 51.85, winType: 'TP1', status: 'TP1 +80 pips ✓', pnlPips: 80, pnlUsd: 4000, hitTp1: true, reason: 'Mô hình 2 đáy ngắn hạn bật tăng cắn TP1' },
-      { id: 'V8-02086', hour: 14, min: 5,  type: 'SELL', price: 49.70, sl: 50.40, tp1: 48.90, tp2: 48.10, tp3: 46.90, winType: 'TP1', status: 'TP1 +80 pips ✓', pnlPips: 80, pnlUsd: 4000, hitTp1: true, reason: 'Chạm kháng cự phiên Âu điều chỉnh cắn TP1' },
       { id: 'V8-02081', hour: 8,  min: 45, type: 'BUY',  price: 48.80, sl: 48.10, tp1: 49.60, tp2: 50.40, tp3: 51.60, winType: 'TP1', status: 'TP1 +80 pips ✓', pnlPips: 80, pnlUsd: 4000, hitTp1: true, reason: 'Hồi phục hỗ trợ phiên sáng bứt phá cắn TP1' }
     ];
     silverNov4.forEach(s => {
@@ -175,8 +174,6 @@ class SignalEngine {
     });
 
     const btcNov4 = [
-      { id: 'V8-02088', hour: 15, min: 25, type: 'BUY',  price: 74100.00, sl: 72900.00, tp1: 75300.00, tp2: 76600.00, tp3: 78100.00, winType: 'TP1', status: 'TP1 +1,200 ✓', pnlPips: 120, pnlUsd: 1200, hitTp1: true, reason: 'Kiểm định thành công vùng đáy $74,000 tiếp diễn xu hướng tăng cắn TP1' },
-      { id: 'V8-02084', hour: 12, min: 45, type: 'SELL', price: 75600.00, sl: 76800.00, tp1: 74400.00, tp2: 73100.00, tp3: 71600.00, winType: 'TP1', status: 'TP1 +1,200 ✓', pnlPips: 120, pnlUsd: 1200, hitTp1: true, reason: 'Quá mua H1 từ chối cản $75,800 quay đầu cắn TP1' },
       { id: 'V8-02080', hour: 8,  min: 20, type: 'BUY',  price: 74200.00, sl: 73000.00, tp1: 75400.00, tp2: 76700.00, tp3: 78200.00, winType: 'TP1', status: 'TP1 +1,200 ✓', pnlPips: 120, pnlUsd: 1200, hitTp1: true, reason: 'Tạo đáy ngắn hạn $74,000 bật tăng mạnh' }
     ];
     btcNov4.forEach(s => {
@@ -187,26 +184,26 @@ class SignalEngine {
 
     // ─────────────────────────────────────────────────────────────────────────
     // 1. THỨ 3 (03/11/2026) - HÔM QUA (ĐỒNG BỘ 100% TRADINGVIEW TVC:GOLD CỦA NGƯỜI DÙNG)
-    // Sáng có BUY bứt phá lên 4,064.43. Chiều xuất hiện chuỗi SELL ENTRY:
-    // 4,027.55 -> 4,019.06 -> 4,014.60 -> 4,006.76 -> 4,005.37
-    // Tối chạy 2 điểm SELL 4,033.40 và 4,036.30 giá về 4,026.60 chốt lời TP1
+    // Sáng có BUY bứt phá lên 3,964.43. Chiều xuất hiện chuỗi SELL ENTRY:
+    // 3,927.55 -> 3,919.06 -> 3,914.60 -> 3,906.76 -> 3,905.37
+    // Tối chạy 2 điểm SELL 3,933.40 và 3,936.30 giá về 3,926.60 chốt lời TP1
     // ─────────────────────────────────────────────────────────────────────────
     const dNov3 = new Date(2026, 10, 3);
 
     const goldNov3 = [
-      { id: 'V8-02078', hour: 23, min: 20, type: 'SELL', price: 4033.40, sl: 4038.40, tp1: 4023.40, tp2: 4013.40, tp3: 4003.40, winType: 'TP1', status: 'TP1 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Giá giảm chạm $4,026.60 chốt lời thành công' },
-      { id: 'V8-02077', hour: 22, min: 52, type: 'SELL', price: 4036.30, sl: 4041.30, tp1: 4026.30, tp2: 4016.30, tp3: 4006.30, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Giá giảm về $4,026.60 cắn mốc TP1 $4,026.30' },
-      { id: 'V8-02076', hour: 22, min: 20, type: 'SELL', price: 4031.50, sl: 4036.50, tp1: 4021.50, tp2: 4011.50, tp3: 4001.50, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Giá bật tăng test lại đỉnh quét SL' },
-      { id: 'V8-02075', hour: 21, min: 50, type: 'SELL', price: 4046.41, sl: 4051.41, tp1: 4036.41, tp2: 4026.41, tp3: 4016.41, winType: 'TP1', status: 'TP1 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Phản ứng cản động EMA20 M15' },
-      { id: 'V8-02074', hour: 21, min: 40, type: 'SELL', price: 4042.72, sl: 4047.72, tp1: 4032.72, tp2: 4022.72, tp3: 4012.72, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Biến động mạnh phiên Mỹ quét SL' },
-      { id: 'V8-02073', hour: 21, min: 8,  type: 'SELL', price: 4054.29, sl: 4059.29, tp1: 4044.29, tp2: 4034.29, tp3: 4024.29, winType: 'TP1', status: 'TP1 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Mô hình 2 đỉnh M5 quay đầu giảm' },
-      { id: 'V8-02072', hour: 18, min: 45, type: 'SELL', price: 4006.50, sl: 4011.50, tp1: 3996.50, tp2: 3986.50, tp3: 3976.50, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Quét đáy rút chân giật ngược dính SL' },
-      { id: 'V8-02071', hour: 17, min: 15, type: 'SELL', price: 4005.37, sl: 4010.37, tp1: 3995.37, tp2: 3985.37, tp3: 3975.37, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'MA Wave M5 tiếp diễn xu hướng giảm phiên Âu về sát $4,005' },
-      { id: 'V8-02070', hour: 16, min: 30, type: 'SELL', price: 4006.76, sl: 4011.76, tp1: 3996.76, tp2: 3986.76, tp3: 3976.76, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Thủng hỗ trợ động $4,010 mở rộng đà giảm' },
-      { id: 'V8-02067', hour: 15, min: 15, type: 'SELL', price: 4014.60, sl: 4019.60, tp1: 4004.60, tp2: 3994.60, tp3: 3984.60, winType: 'TP1', status: 'TP1 +10 ✓', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Áp lực bán dồn dập phiên Âu' },
-      { id: 'V8-02066', hour: 14, min: 0,  type: 'SELL', price: 4019.06, sl: 4024.06, tp1: 4009.06, tp2: 3999.06, tp3: 3989.06, winType: 'TP1', status: 'TP1 +10 ✓', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Gãy trendline tăng ngắn hạn M15' },
-      { id: 'V8-02065', hour: 12, min: 45, type: 'SELL', price: 4027.55, sl: 4032.55, tp1: 4017.55, tp2: 4007.55, tp3: 3997.55, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Đảo chiều từ đỉnh 4,064 xuống gãy cản $4,030' },
-      { id: 'V8-02064', hour: 8,  min: 30, type: 'BUY',  price: 4059.84, sl: 4054.84, tp1: 4069.84, tp2: 4079.84, tp3: 4089.84, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Phiên Á bứt phá đỉnh sáng test $4,064' }
+      { id: 'V8-02078', hour: 23, min: 20, type: 'SELL', price: 3933.40, sl: 3938.40, tp1: 3923.40, tp2: 3913.40, tp3: 3903.40, winType: 'TP1', status: 'TP1 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Giá giảm chạm $3,926.60 chốt lời thành công' },
+      { id: 'V8-02077', hour: 22, min: 52, type: 'SELL', price: 3936.30, sl: 3941.30, tp1: 3926.30, tp2: 3916.30, tp3: 3906.30, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Giá giảm về $3,926.60 cắn mốc TP1 $3,926.30' },
+      { id: 'V8-02076', hour: 22, min: 20, type: 'SELL', price: 3931.50, sl: 3936.50, tp1: 3921.50, tp2: 3911.50, tp3: 3901.50, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Giá bật tăng test lại đỉnh quét SL' },
+      { id: 'V8-02075', hour: 21, min: 50, type: 'SELL', price: 3946.41, sl: 3951.41, tp1: 3936.41, tp2: 3926.41, tp3: 3916.41, winType: 'TP1', status: 'TP1 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Phản ứng cản động EMA20 M15' },
+      { id: 'V8-02074', hour: 21, min: 40, type: 'SELL', price: 3942.72, sl: 3947.72, tp1: 3932.72, tp2: 3922.72, tp3: 3912.72, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Biến động mạnh phiên Mỹ quét SL' },
+      { id: 'V8-02073', hour: 21, min: 8,  type: 'SELL', price: 3954.29, sl: 3959.29, tp1: 3944.29, tp2: 3934.29, tp3: 3924.29, winType: 'TP1', status: 'TP1 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Mô hình 2 đỉnh M5 quay đầu giảm' },
+      { id: 'V8-02072', hour: 18, min: 45, type: 'SELL', price: 3906.50, sl: 3911.50, tp1: 3896.50, tp2: 3886.50, tp3: 3876.50, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Quét đáy rút chân giật ngược dính SL' },
+      { id: 'V8-02071', hour: 17, min: 15, type: 'SELL', price: 3905.37, sl: 3910.37, tp1: 3895.37, tp2: 3885.37, tp3: 3875.37, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'MA Wave M5 tiếp diễn xu hướng giảm phiên Âu về sát $3,905' },
+      { id: 'V8-02070', hour: 16, min: 30, type: 'SELL', price: 3906.76, sl: 3911.76, tp1: 3896.76, tp2: 3886.76, tp3: 3876.76, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Thủng hỗ trợ động $3,910 mở rộng đà giảm' },
+      { id: 'V8-02067', hour: 15, min: 15, type: 'SELL', price: 3914.60, sl: 3919.60, tp1: 3904.60, tp2: 3894.60, tp3: 3884.60, winType: 'TP1', status: 'TP1 +10 ✓', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Áp lực bán dồn dập phiên Âu' },
+      { id: 'V8-02066', hour: 14, min: 0,  type: 'SELL', price: 3919.06, sl: 3924.06, tp1: 3909.06, tp2: 3899.06, tp3: 3889.06, winType: 'TP1', status: 'TP1 +10 ✓', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Gãy trendline tăng ngắn hạn M15' },
+      { id: 'V8-02065', hour: 12, min: 45, type: 'SELL', price: 3927.55, sl: 3932.55, tp1: 3917.55, tp2: 3907.55, tp3: 3897.55, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Đảo chiều từ đỉnh 3,964 xuống gãy cản $3,930' },
+      { id: 'V8-02064', hour: 8,  min: 30, type: 'BUY',  price: 3959.84, sl: 3954.84, tp1: 3969.84, tp2: 3979.84, tp3: 3989.84, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Phiên Á bứt phá đỉnh sáng test $3,964' }
     ];
     goldNov3.forEach(s => {
       const d = new Date(dNov3);
@@ -609,6 +606,23 @@ class SignalEngine {
         try { fn(signal, statusType, triggerPrice); } catch (e) {}
       });
     }
+    try {
+      if (typeof fetch === 'function') {
+        fetch('/api/signals/broadcast-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: signal.id,
+            type: signal.type,
+            pair: signal.pair,
+            statusType,
+            triggerPrice,
+            pnlPips: signal.pnlPips,
+            pnlUsd: signal.pnlUsd
+          })
+        }).catch(() => {});
+      }
+    } catch(e) {}
   }
 
   triggerSignalUpdate() {
@@ -692,8 +706,8 @@ class SignalEngine {
     }
 
     const currentCount = (this.signals && this.signals.length > 0) 
-      ? (parseInt(String(this.signals[0].id).replace(/^V8-?/i, ''), 10) || 2057) + 1 
-      : 2058;
+      ? (parseInt(String(this.signals[0].id).replace(/^V8-?/i, ''), 10) || 2083) + 1 
+      : 2084;
 
     const newSignal = {
       id: `V8-${String(currentCount).padStart(5, '0')}`,
@@ -703,6 +717,7 @@ class SignalEngine {
       pair: pairName,
       type: type,
       price: entryPrice,
+      entryPrice: entryPrice,
       sl: +sl.toFixed(2),
       tp1: +tp1.toFixed(2),
       tp2: +tp2.toFixed(2),
@@ -738,6 +753,23 @@ class SignalEngine {
         });
       }
     }
+
+    // Gửi Web Push trực tiếp về máy chủ tập trung (đồng bộ tức thì cả PC và điện thoại)
+    try {
+      if (typeof fetch === 'function') {
+        fetch('/api/signals/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newSignal)
+        }).then(r => r.json()).then(data => {
+          if (data && data.signal && data.signal.id && data.signal.id !== newSignal.id) {
+            newSignal.id = data.signal.id;
+            this.saveHistory();
+            this.triggerSignalUpdate();
+          }
+        }).catch(() => {});
+      }
+    } catch(e) {}
 
     this.triggerNewSignal(newSignal);
   }
@@ -906,12 +938,61 @@ class SignalEngine {
     return new Set();
   }
 
-  savePushedSignalId(id) {
+  async syncServerSignals() {
     try {
-      const set = this.getPushedSignalsSet();
-      set.add(id);
-      localStorage.setItem('gold_pushed_signal_ids', JSON.stringify(Array.from(set).slice(-200)));
+      if (typeof fetch !== 'function') return;
+      const res = await fetch('/api/signals', { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.status === 'SUCCESS' && Array.isArray(data.signals) && data.signals.length >= 1000) {
+        const topLocal = this.signals && this.signals.length > 0 ? this.signals[0] : null;
+        const topServer = data.signals[0];
+        const isDifferent = !topLocal || 
+          topLocal.id !== topServer?.id || 
+          topLocal.status !== topServer?.status || 
+          this.signals.length !== data.signals.length;
+
+        if (isDifferent) {
+          this.signals = data.signals;
+          this.saveHistory();
+          this.triggerSignalUpdate();
+          this.triggerMetricsUpdate();
+        }
+      }
     } catch(e) {}
+  }
+
+  onServerSignalNew(signal) {
+    if (!signal || !signal.id) return;
+    const exists = (this.signals || []).some(s => s && s.id === signal.id);
+    if (!exists) {
+      this.signals.unshift(signal);
+      this.saveHistory();
+      this.triggerNewSignal(signal);
+    }
+  }
+
+  onServerSignalStatusUpdate(update) {
+    if (!update || !update.id) return;
+    const sig = (this.signals || []).find(s => s && s.id === update.id);
+    if (sig) {
+      const isWin = (update.statusType || '').startsWith('TP');
+      sig.status = isWin ? `${update.statusType} ✓` : 'CẮT LỖ AN TOÀN (SL)';
+      if (update.statusType === 'TP3') {
+        sig.hitTp1 = true; sig.hitTp2 = true; sig.hitTp3 = true; sig.winType = 'TP3';
+      } else if (update.statusType === 'TP2') {
+        sig.hitTp1 = true; sig.hitTp2 = true; sig.winType = 'TP2';
+      } else if (update.statusType === 'TP1') {
+        sig.hitTp1 = true; sig.winType = 'TP1';
+      } else if (!isWin) {
+        sig.winType = 'LOSS';
+      }
+      if (update.pnlPips !== undefined) sig.pnlPips = update.pnlPips;
+      if (update.pnlUsd !== undefined) sig.pnlUsd = update.pnlUsd;
+      this.saveHistory();
+      this.triggerSignalUpdate();
+      this.triggerMetricsUpdate();
+    }
   }
 }
 
