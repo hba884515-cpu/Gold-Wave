@@ -1447,7 +1447,7 @@ class GoldTradingApp {
           if (window.signalEngine) {
             const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
             window.signalEngine.evaluateMarket(this.bars, activeAsset);
-            window.signalEngine.updateOpenOrders(payload.price, activeAsset);
+            window.signalEngine.updateOpenOrders(payload.price, activeAsset, payload.high, payload.low);
 
             // Quét tức thời cho cả các tài sản khác (Vàng, Bitcoin, Bạc) để không bỏ lỡ khớp TP/SL
             if (window.marketDataStore && window.marketDataStore.assetsData) {
@@ -1456,7 +1456,7 @@ class GoldTradingApp {
                 if (sym !== activeAsset) {
                   const assetObj = window.marketDataStore.assetsData[symKey];
                   if (assetObj && assetObj.price) {
-                    window.signalEngine.updateOpenOrders(assetObj.price, sym);
+                    window.signalEngine.updateOpenOrders(assetObj.price, sym, assetObj.high, assetObj.low);
                   }
                 }
               });

@@ -661,10 +661,22 @@ class SignalEngine {
       this.lastEmittedSignals = this.lastEmittedSignals || {};
       const lastEmittedTime = this.lastEmittedSignals[asset] || 0;
 
-      // Giãn cách an toàn tối thiểu 25 phút giữa 2 lệnh cùng 1 mã tài sản
-      if ((snap.buySignal || snap.sellSignal) && (nowMs - lastEmittedTime > 25 * 60 * 1000)) {
-        const openRunningTrade = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
-        if (!openRunningTrade) {
+      // 1. Quét tự động các cây nến lịch sử đối với lệnh đang chạy để tự động khớp TP/SL, không bao giờ bị treo
+      const openRunningTrade = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
+      if (openRunningTrade) {
+        const tradeSec = openRunningTrade.timestamp || 0;
+        const candlesSinceTrade = bars.filter(b => (b.time >= tradeSec || (b.time * 1000 >= tradeSec)));
+        if (candlesSinceTrade.length > 0) {
+          const highestCandle = Math.max(...candlesSinceTrade.map(b => b.high || b.close));
+          const lowestCandle = Math.min(...candlesSinceTrade.map(b => b.low || b.close));
+          this.updateOpenOrders(lastBar.close, asset, highestCandle, lowestCandle);
+        }
+      }
+
+      // 2. Giãn cách tối ưu 10 phút giữa 2 nhịp sóng để bắt được 30-40 lệnh/ngày mượt mà
+      if ((snap.buySignal || snap.sellSignal) && (nowMs - lastEmittedTime > 10 * 60 * 1000)) {
+        const stillRunning = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
+        if (!stillRunning) {
           const type = snap.buySignal ? 'BUY' : 'SELL';
           this.lastEmittedSignals[asset] = nowMs;
           this.emitPineSignal(type, lastBar.close, lastBar, false, asset);
@@ -774,19 +786,25 @@ class SignalEngine {
   }
 
   // Cập nhật các lệnh đối chiếu với mốc TP1, TP2, TP3 và SL theo biến động giá thị trường thời gian thực
-  updateOpenOrders(currentPrice, asset = 'xau') {
+  updateOpenOrders(currentPrice, asset = 'xau', highPrice = null, lowPrice = null) {
     if (!currentPrice || currentPrice <= 0) return;
     let hasChanges = false;
     const a = (asset || 'xau').toLowerCase();
+    const symKey = a.toUpperCase();
+    const storeData = (window.marketDataStore && window.marketDataStore.assetsData) ? window.marketDataStore.assetsData[symKey] : null;
+    const effHigh = (highPrice && highPrice > 0) ? highPrice : (storeData?.high || currentPrice);
+    const effLow = (lowPrice && lowPrice > 0) ? lowPrice : (storeData?.low || currentPrice);
 
     (this.signals || []).forEach(sig => {
       // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản
       if (sig && sig.status && sig.status.includes('ĐANG CHẠY') && (!sig.asset || sig.asset.toLowerCase() === a)) {
         const isBuy = sig.type === 'BUY';
+        const peakPrice = Math.max(currentPrice, effHigh);
+        const bottomPrice = Math.min(currentPrice, effLow);
 
         if (isBuy) {
-          // BUY: Giá tăng chạm hoặc vượt các mốc TP3, TP2, TP1
-          if (!sig.hitTp3 && currentPrice >= sig.tp3) {
+          // BUY: Giá tăng chạm hoặc vượt các mốc TP3, TP2, TP1 (quét cả giá hiện tại và đỉnh nến)
+          if (!sig.hitTp3 && peakPrice >= sig.tp3) {
             sig.hitTp1 = true;
             sig.hitTp2 = true;
             sig.hitTp3 = true;
@@ -794,13 +812,13 @@ class SignalEngine {
             sig.status = (a === 'btc') ? 'TP3 +4,000 (Trọn Sóng 🎯)' : (a === 'xag' ? 'TP3 +280 pips (Trọn Sóng 🎯)' : 'TP3 +30 (Trọn Sóng 🎯)');
             sig.pnlPips = (a === 'btc') ? 400 : (a === 'xag' ? 280 : 300);
             sig.pnlUsd = (a === 'btc') ? 4000 : (a === 'xag' ? 14000 : 3000);
-            sig.reason = `Giá tăng mạnh chạm mốc TP3 (Trọn Sóng 🎯) tại $${currentPrice.toFixed(2)}`;
+            sig.reason = `Giá tăng mạnh chạm mốc TP3 (Trọn Sóng 🎯) tại $${peakPrice.toFixed(2)}`;
             hasChanges = true;
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
-            this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
-          } else if (!sig.hitTp2 && currentPrice >= sig.tp2) {
+            this.triggerOrderStatusAlert(sig, 'TP3', peakPrice);
+          } else if (!sig.hitTp2 && peakPrice >= sig.tp2) {
             sig.hitTp1 = true;
             sig.hitTp2 = true;
             sig.winType = 'TP2';
@@ -811,8 +829,8 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
-            this.triggerOrderStatusAlert(sig, 'TP2', currentPrice);
-          } else if (!sig.hitTp1 && currentPrice >= sig.tp1) {
+            this.triggerOrderStatusAlert(sig, 'TP2', peakPrice);
+          } else if (!sig.hitTp1 && peakPrice >= sig.tp1) {
             sig.hitTp1 = true;
             sig.winType = 'TP1';
             sig.status = (a === 'btc') ? 'TP1 +1,200 ✓ (Kéo SL Hòa Vốn)' : (a === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
@@ -822,8 +840,8 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
-            this.triggerOrderStatusAlert(sig, 'TP1', currentPrice);
-          } else if (!sig.hitTp1 && currentPrice <= sig.sl) {
+            this.triggerOrderStatusAlert(sig, 'TP1', peakPrice);
+          } else if (!sig.hitTp1 && bottomPrice <= sig.sl) {
             sig.winType = 'LOSS';
             sig.status = 'CẮT LỖ AN TOÀN (SL)';
             sig.pnlPips = (a === 'btc') ? -120 : (a === 'xag' ? -70 : -50);
@@ -832,11 +850,11 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playStopLossSound === 'function') {
               window.soundAlerts.playStopLossSound();
             }
-            this.triggerOrderStatusAlert(sig, 'SL', currentPrice);
+            this.triggerOrderStatusAlert(sig, 'SL', bottomPrice);
           }
         } else {
-          // SELL: Giá giảm chạm hoặc thủng các mốc TP3, TP2, TP1
-          if (!sig.hitTp3 && currentPrice <= sig.tp3) {
+          // SELL: Giá giảm chạm hoặc thủng các mốc TP3, TP2, TP1 (quét cả giá hiện tại và đáy nến)
+          if (!sig.hitTp3 && bottomPrice <= sig.tp3) {
             sig.hitTp1 = true;
             sig.hitTp2 = true;
             sig.hitTp3 = true;
@@ -844,13 +862,13 @@ class SignalEngine {
             sig.status = (a === 'btc') ? 'TP3 +4,000 (Trọn Sóng 🎯)' : (a === 'xag' ? 'TP3 +280 pips (Trọn Sóng 🎯)' : 'TP3 +30 (Trọn Sóng 🎯)');
             sig.pnlPips = (a === 'btc') ? 400 : (a === 'xag' ? 280 : 300);
             sig.pnlUsd = (a === 'btc') ? 4000 : (a === 'xag' ? 14000 : 3000);
-            sig.reason = `Giá giảm mạnh chạm mốc TP3 (Trọn Sóng 🎯) tại $${currentPrice.toFixed(2)}`;
+            sig.reason = `Giá giảm mạnh chạm mốc TP3 (Trọn Sóng 🎯) tại $${bottomPrice.toFixed(2)}`;
             hasChanges = true;
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
-            this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
-          } else if (!sig.hitTp2 && currentPrice <= sig.tp2) {
+            this.triggerOrderStatusAlert(sig, 'TP3', bottomPrice);
+          } else if (!sig.hitTp2 && bottomPrice <= sig.tp2) {
             sig.hitTp1 = true;
             sig.hitTp2 = true;
             sig.winType = 'TP2';
@@ -861,8 +879,8 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
-            this.triggerOrderStatusAlert(sig, 'TP2', currentPrice);
-          } else if (!sig.hitTp1 && currentPrice <= sig.tp1) {
+            this.triggerOrderStatusAlert(sig, 'TP2', bottomPrice);
+          } else if (!sig.hitTp1 && bottomPrice <= sig.tp1) {
             sig.hitTp1 = true;
             sig.winType = 'TP1';
             sig.status = (a === 'btc') ? 'TP1 +1,200 ✓ (Kéo SL Hòa Vốn)' : (a === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
@@ -872,8 +890,8 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
-            this.triggerOrderStatusAlert(sig, 'TP1', currentPrice);
-          } else if (!sig.hitTp1 && currentPrice >= sig.sl) {
+            this.triggerOrderStatusAlert(sig, 'TP1', bottomPrice);
+          } else if (!sig.hitTp1 && peakPrice >= sig.sl) {
             sig.winType = 'LOSS';
             sig.status = 'CẮT LỖ AN TOÀN (SL)';
             sig.pnlPips = (a === 'btc') ? -120 : (a === 'xag' ? -70 : -50);
@@ -882,7 +900,7 @@ class SignalEngine {
             if (window.soundAlerts && typeof window.soundAlerts.playStopLossSound === 'function') {
               window.soundAlerts.playStopLossSound();
             }
-            this.triggerOrderStatusAlert(sig, 'SL', currentPrice);
+            this.triggerOrderStatusAlert(sig, 'SL', peakPrice);
           }
         }
       }
