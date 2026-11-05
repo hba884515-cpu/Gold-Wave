@@ -88,9 +88,8 @@ class SignalEngine {
           const hasBTC = parsed.some(s => s && (s.asset === 'btc' || (s.pair && s.pair.includes('BTC'))));
           const hasXAG = parsed.some(s => s && (s.asset === 'xag' || (s.pair && s.pair.includes('XAG'))));
           const hasCorrectTopGold = parsed.some(s => s && s.asset === 'xau' && s.id === 'V8-02083' && s.price === 3946.80);
-          const hasBogusAfternoon = parsed.some(s => s && s.id === 'V8-02091');
           const hasWeekendGold = parsed.some(s => s && s.asset === 'xau' && s.time && (s.time.includes('- T7') || s.time.includes('- CN')));
-          if (hasBTC && hasXAG && hasCorrectTopGold && !hasBogusAfternoon && !hasWeekendGold) {
+          if (hasBTC && hasXAG && hasCorrectTopGold && !hasWeekendGold) {
             return parsed;
           }
           localStorage.removeItem(this.STORAGE_KEY);

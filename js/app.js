@@ -5225,7 +5225,7 @@ window.sendAllCategoryPushNotifications = function() {
   const store = window.marketDataStore;
   const livePrice = (store && typeof store.getCurrentPrice === 'function') 
     ? store.getCurrentPrice() 
-    : ((window.app && window.app.currentPrice) || 4035.50);
+    : ((window.app && window.app.currentPrice) || 4121.20);
 
   const levels = (window.app && typeof window.app.getCalculatedKeyLevels === 'function') 
     ? window.app.getCalculatedKeyLevels() 

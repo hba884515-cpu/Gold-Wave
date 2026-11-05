@@ -23,15 +23,8 @@ let serverSignalsDB = loadJSON(SERVER_SIGNALS_FILE, []);
 const SIGNALS_DB_FILE = path.join(__dirname, 'signals_db.json');
 let signalsDB = loadJSON(SIGNALS_DB_FILE, []);
 
-// Đảm bảo khôi phục 100% nguyên vẹn 1,606 lệnh gốc chuẩn (bắt đầu từ V8-02083)
-if (Array.isArray(signalsDB) && signalsDB.length > 0) {
-  const idx2083 = signalsDB.findIndex(s => s && s.id === 'V8-02083');
-  if (idx2083 > 0) {
-    console.log(`🧹 Đã dọn sạch ${idx2083} lệnh rác sinh tự động ngoài ý muốn, khôi phục gốc 1,606 lệnh từ V8-02083!`);
-    signalsDB = signalsDB.slice(idx2083);
-    saveJSON(SIGNALS_DB_FILE, signalsDB);
-  }
-}
+// Đảm bảo duy trì toàn vẹn lịch sử tín hiệu chuẩn (bao gồm 7 lệnh hôm nay 05/11/2026 và 1,606 lệnh gốc)
+console.log(`📡 Hệ thống tín hiệu đã nạp ${signalsDB.length} lệnh. Lệnh mới nhất: ${signalsDB[0]?.id || 'N/A'} (${signalsDB[0]?.time || ''})`);
 
 function loadJSON(filePath, defaultData) {
   try {
@@ -1420,32 +1413,32 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 3905.42,
-    change: -41.01,
-    changePercent: -1.04,
-    high: 3964.43,
-    low: 3895.55,
-    open: 3946.32,
+    price: 4121.20,
+    change: 52.70,
+    changePercent: 1.29,
+    high: 4148.50,
+    low: 4064.00,
+    open: 4068.50,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
   BTC: {
-    price: 77028.00,
-    change: -985.62,
-    changePercent: -1.26,
-    high: 78254.17,
-    low: 76388.88,
-    open: 78013.63,
+    price: 80414.96,
+    change: 564.96,
+    changePercent: 0.71,
+    high: 81200.00,
+    low: 79150.00,
+    open: 79850.00,
     symbol: 'BINANCE:BTCUSDT',
     lastUpdated: Date.now()
   },
   XAG: {
-    price: 49.05,
-    change: -3.09,
-    changePercent: -5.93,
-    high: 51.27,
-    low: 48.95,
-    open: 52.14,
+    price: 52.67,
+    change: 0.57,
+    changePercent: 1.09,
+    high: 53.40,
+    low: 51.80,
+    open: 52.10,
     symbol: 'TVC:SILVER',
     lastUpdated: Date.now()
   },
@@ -1686,15 +1679,15 @@ async function fetchTradingViewAllPrices() {
     const [liveGold, liveSilver, liveBtc] = await Promise.all(fallbackTasks);
 
     if (liveGold && liveGold > 0) {
-      const openPrice = tvMarketPricesCache.XAU.open || 3946.32;
+      const openPrice = tvMarketPricesCache.XAU.open || 4068.50;
       const chgAbs = +(liveGold - openPrice).toFixed(2);
       const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
       tvMarketPricesCache.XAU = {
         price: +liveGold.toFixed(2),
         change: chgAbs,
         changePercent: chgPct,
-        high: +Math.max(tvMarketPricesCache.XAU.high || 3964.43, liveGold).toFixed(2),
-        low: +Math.min(tvMarketPricesCache.XAU.low || 3895.55, liveGold).toFixed(2),
+        high: +Math.max(tvMarketPricesCache.XAU.high || 4148.50, liveGold).toFixed(2),
+        low: +Math.min(tvMarketPricesCache.XAU.low || 4064.00, liveGold).toFixed(2),
         open: openPrice,
         symbol: 'TVC:GOLD',
         lastUpdated: now
@@ -2561,14 +2554,7 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify({ status: 'SUCCESS', signals: serverSignalsDB }));
   }
   else if (urlPath === '/api/admin/reset-history' && req.method === 'POST') {
-    const idx2083 = signalsDB.findIndex(s => s && s.id === 'V8-02083');
-    if (idx2083 > 0) {
-      signalsDB = signalsDB.slice(idx2083);
-      saveJSON(SIGNALS_DB_FILE, signalsDB);
-    }
-    serverSignalsDB = [];
-    saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
-    serverActiveTrade = null;
+    // Duy trì toàn vẹn lịch sử gốc và các lệnh hôm nay
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     return res.end(JSON.stringify({ status: 'SUCCESS', count: signalsDB.length, topSignal: signalsDB[0] }));
   }
@@ -2577,7 +2563,7 @@ const server = http.createServer(async (req, res) => {
     const { type, pair, price, tp1, tp2, tp3, sl, id, asset, reason } = body;
     const isBuy = (type || 'BUY').toUpperCase() === 'BUY';
     const pairName = pair || 'XAU/USD';
-    const numPrice = Number(price || body.entryPrice || 3998.70);
+    const numPrice = Number(price || body.entryPrice || 4121.20);
 
     // Nếu lệnh này đã tồn tại trong signalsDB -> Bỏ qua, tránh tạo duplicate vô tận
     if (id && signalsDB.some(s => s && s.id === id)) {
@@ -2640,7 +2626,7 @@ const server = http.createServer(async (req, res) => {
     const { type, pair, statusType, triggerPrice, pnlPips, pnlUsd, id } = body;
     const isWin = (statusType || '').startsWith('TP');
     const pairName = pair || 'XAU/USD';
-    const trigP = Number(triggerPrice || 3998.70).toFixed(2);
+    const trigP = Number(triggerPrice || 4121.20).toFixed(2);
     const title = isWin
       ? `🎯 MA WAVE V8: CHỐT LỜI ${statusType} (${pairName})`
       : `🛑 MA WAVE V8: CẮT LỖ (SL) (${pairName})`;
@@ -2688,7 +2674,7 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/notifications/trigger-all') {
     const tvData = await fetchTradingViewGoldPrice();
-    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4035.50);
+    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4121.20);
     const buyEntry = livePrice;
     const tp1 = +(buyEntry + 10.0).toFixed(2);
     const tp2 = +(buyEntry + 20.0).toFixed(2);
@@ -2751,7 +2737,7 @@ const server = http.createServer(async (req, res) => {
   else if (urlPath === '/api/bot/execute-order' && req.method === 'POST') {
     const body = await parseRequestBody(req);
     const tvData = await fetchTradingViewGoldPrice();
-    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4035.50);
+    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4121.20);
     const isBuy = (body.type || 'BUY') === 'BUY';
     const entry = body.entry || livePrice;
     const lots = body.lots || botConfigDB.lotValue || 0.10;
@@ -2872,7 +2858,7 @@ function startServerAITrendPushEngine() {
       if (!isGoldMarketOpen()) return; // 🛑 Nghỉ cuối tuần: Không đẩy thông báo phân tích giả lập
 
       const tvData = await fetchTradingViewGoldPrice();
-      const price = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4035.50);
+      const price = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4121.20);
       const atr = 3.50;
 
       const r1 = +(price + atr * 1.5).toFixed(2);
@@ -2905,7 +2891,7 @@ function startServerBotExecutionEngine() {
       if (!isTradingHoursActive()) return; // 🛑 Nghỉ ngơi ban đêm (0h - 6h sáng): Tuyệt đối không mở lệnh bot
 
       const tvData = await fetchTradingViewGoldPrice();
-      const basePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4035.50);
+      const basePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4121.20);
 
       // Số lệnh tối đa đồng thời (mặc định 1 lệnh, không nhồi lệnh dồn dập)
       const maxOrders = botConfigDB.maxConcurrentOrders !== undefined ? botConfigDB.maxConcurrentOrders : 1;
