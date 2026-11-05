@@ -661,11 +661,14 @@ class SignalEngine {
       this.lastEmittedSignals = this.lastEmittedSignals || {};
       const lastEmittedTime = this.lastEmittedSignals[asset] || 0;
 
-      // 1. Quét tự động các cây nến lịch sử đối với lệnh đang chạy để tự động khớp TP/SL, không bao giờ bị treo
+      // 1. Quét tự động các cây nến xuất hiện SAU KHI VÀO LỆNH để tự động khớp TP/SL chuẩn xác theo nến
       const openRunningTrade = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
       if (openRunningTrade) {
-        const tradeSec = openRunningTrade.timestamp || 0;
-        const candlesSinceTrade = bars.filter(b => (b.time >= tradeSec || (b.time * 1000 >= tradeSec)));
+        const tradeSec = openRunningTrade.timestamp ? (openRunningTrade.timestamp > 2000000000 ? Math.floor(openRunningTrade.timestamp / 1000) : openRunningTrade.timestamp) : 0;
+        const candlesSinceTrade = bars.filter(b => {
+          const barSec = b && b.time ? (b.time > 2000000000 ? Math.floor(b.time / 1000) : b.time) : 0;
+          return barSec >= tradeSec;
+        });
         if (candlesSinceTrade.length > 0) {
           const highestCandle = Math.max(...candlesSinceTrade.map(b => b.high || b.close));
           const lowestCandle = Math.min(...candlesSinceTrade.map(b => b.low || b.close));
@@ -786,21 +789,20 @@ class SignalEngine {
   }
 
   // Cập nhật các lệnh đối chiếu với mốc TP1, TP2, TP3 và SL theo biến động giá thị trường thời gian thực
-  updateOpenOrders(currentPrice, asset = 'xau', highPrice = null, lowPrice = null) {
+  // candleHigh và candleLow CHỈ được lấy từ các cây nến xuất hiện SAU THỜI ĐIỂM VÀO LỆNH (không lấy đỉnh/đáy 24h cũ)
+  updateOpenOrders(currentPrice, asset = 'xau', candleHigh = null, candleLow = null) {
     if (!currentPrice || currentPrice <= 0) return;
     let hasChanges = false;
     const a = (asset || 'xau').toLowerCase();
-    const symKey = a.toUpperCase();
-    const storeData = (window.marketDataStore && window.marketDataStore.assetsData) ? window.marketDataStore.assetsData[symKey] : null;
-    const effHigh = (highPrice && highPrice > 0) ? highPrice : (storeData?.high || currentPrice);
-    const effLow = (lowPrice && lowPrice > 0) ? lowPrice : (storeData?.low || currentPrice);
+    const effHigh = (candleHigh && candleHigh > 0) ? Math.max(currentPrice, candleHigh) : currentPrice;
+    const effLow = (candleLow && candleLow > 0) ? Math.min(currentPrice, candleLow) : currentPrice;
 
     (this.signals || []).forEach(sig => {
       // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản
       if (sig && sig.status && sig.status.includes('ĐANG CHẠY') && (!sig.asset || sig.asset.toLowerCase() === a)) {
         const isBuy = sig.type === 'BUY';
-        const peakPrice = Math.max(currentPrice, effHigh);
-        const bottomPrice = Math.min(currentPrice, effLow);
+        const peakPrice = effHigh;
+        const bottomPrice = effLow;
 
         if (isBuy) {
           // BUY: Giá tăng chạm hoặc vượt các mốc TP3, TP2, TP1 (quét cả giá hiện tại và đỉnh nến)

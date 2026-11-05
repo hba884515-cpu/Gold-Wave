@@ -1447,16 +1447,16 @@ class GoldTradingApp {
           if (window.signalEngine) {
             const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
             window.signalEngine.evaluateMarket(this.bars, activeAsset);
-            window.signalEngine.updateOpenOrders(payload.price, activeAsset, payload.high, payload.low);
+            window.signalEngine.updateOpenOrders(payload.price, activeAsset);
 
-            // Quét tức thời cho cả các tài sản khác (Vàng, Bitcoin, Bạc) để không bỏ lỡ khớp TP/SL
+            // Quét tức thời cho cả các tài sản khác (Vàng, Bitcoin, Bạc) theo giá live chuẩn xác
             if (window.marketDataStore && window.marketDataStore.assetsData) {
               ['XAU', 'BTC', 'XAG'].forEach(symKey => {
                 const sym = symKey.toLowerCase();
                 if (sym !== activeAsset) {
                   const assetObj = window.marketDataStore.assetsData[symKey];
                   if (assetObj && assetObj.price) {
-                    window.signalEngine.updateOpenOrders(assetObj.price, sym, assetObj.high, assetObj.low);
+                    window.signalEngine.updateOpenOrders(assetObj.price, sym);
                   }
                 }
               });
