@@ -3002,7 +3002,7 @@ startServerBotExecutionEngine();
 // 24/7 Server-Side BUY/SELL & TP1/2/3/SL Signal Notification Engine (Lọc giảm tối đa thông báo nhiễu)
 let serverActiveTrade = null;
 let serverPriceHistory = [];
-let lastSignalTime = 0;
+let lastSignalTime = Date.now(); // Khởi tạo bằng thời gian hiện tại để tránh tự phát lệnh ngay sau khi restart
 
 function startServerSignalEngine() {
   // Khôi phục lệnh đang chạy từ signalsDB nếu có (khi server restart)
@@ -3043,8 +3043,8 @@ function startServerSignalEngine() {
       const timeSinceLastSignal = now - lastSignalTime;
       const minIntervalMs = 25 * 60 * 1000; // Giãn cách tối thiểu 25 phút giữa 2 tín hiệu server
 
-      // Nếu không có lệnh nào đang chạy và đã đủ thời gian giãn cách
-      if (!serverActiveTrade && timeSinceLastSignal >= minIntervalMs && serverPriceHistory.length >= 6) {
+      // Nếu không có lệnh nào đang chạy và đã đủ thời gian giãn cách (tối thiểu 10 phút theo dõi ổn định)
+      if (!serverActiveTrade && timeSinceLastSignal >= minIntervalMs && serverPriceHistory.length >= 40) {
         // So sánh giá hiện tại với giá 15 phút trước để đo đà xung lượng sóng (Momentum)
         const oldRecord = serverPriceHistory.find(p => now - p.time >= 15 * 60 * 1000) || serverPriceHistory[0];
         const priceDelta = price - oldRecord.price;
