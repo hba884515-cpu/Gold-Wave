@@ -1554,6 +1554,10 @@ class GoldTradingApp {
           if (s.asset === 'btc' && store.assetsData['BTC']) s.currentPrice = store.assetsData['BTC'].price;
           if (s.asset === 'xag' && store.assetsData['XAG']) s.currentPrice = store.assetsData['XAG'].price;
         });
+        const maWaveView = document.getElementById('view-ma-wave');
+        if (maWaveView && !maWaveView.classList.contains('hidden') && typeof window.renderRadarSignalCards === 'function') {
+          window.renderRadarSignalCards();
+        }
       }
     }
 
