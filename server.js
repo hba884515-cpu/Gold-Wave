@@ -2607,6 +2607,24 @@ const server = http.createServer(async (req, res) => {
       saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
     }
 
+    const assetKey = (body.asset || (canonicalSignal.pair && canonicalSignal.pair.includes('BTC') ? 'btc' : (canonicalSignal.pair && canonicalSignal.pair.includes('XAG') ? 'xag' : 'xau'))).toLowerCase();
+    serverActiveTrades[assetKey] = {
+      id: assignedId,
+      asset: assetKey,
+      type: canonicalSignal.type,
+      entry: canonicalSignal.price,
+      tp1: canonicalSignal.tp1,
+      tp2: canonicalSignal.tp2,
+      tp3: canonicalSignal.tp3,
+      sl: canonicalSignal.sl,
+      hitTp1: false,
+      hitTp2: false,
+      hitTp3: false,
+      trailedToBreakeven: false,
+      startTime: Date.now()
+    };
+    lastSignalTimes[assetKey] = Date.now();
+
     // Broadcast tức thời tới tất cả thiết bị đang mở (vi tính & điện thoại)
     sseClients.forEach(client => {
       try {
@@ -2623,48 +2641,103 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/signals/broadcast-status' && req.method === 'POST') {
     const body = await parseRequestBody(req);
-    const { type, pair, statusType, triggerPrice, pnlPips, pnlUsd, id } = body;
+    const { type, pair, statusType, triggerPrice, pnlPips, pnlUsd, id, sl } = body;
+    const isTrailed = statusType === 'TRAILED_SL';
+    const isBreakeven = statusType === 'BREAKEVEN';
     const isWin = (statusType || '').startsWith('TP');
     const pairName = pair || 'XAU/USD';
     const trigP = Number(triggerPrice || 4121.20).toFixed(2);
-    const title = isWin
-      ? `🎯 MA WAVE V8: CHỐT LỜI ${statusType} (${pairName})`
-      : `🛑 MA WAVE V8: CẮT LỖ (SL) (${pairName})`;
-    const textBody = isWin
-      ? `🎉 ${pairName} Lệnh #${id || ''} (${type}) đã CHẠM MỐC ${statusType} tại $${trigP} (+${pnlPips || 100} pips / +$${pnlUsd || 1000} USD)!`
-      : `⚠️ ${pairName} Lệnh #${id || ''} (${type}) đã chạm mốc SL tại $${trigP}. Chú ý đóng vị thế an toàn.`;
+    let title, textBody;
+
+    if (isTrailed) {
+      title = `🛡️ MA WAVE V8: ĐÃ KÉO SL DƯƠNG / HÒA VỐN (${pairName})`;
+      textBody = `🛡️ ${pairName} Lệnh #${id || ''} (${type}) đã có lãi >= 5 giá. Đã dời SL lên $${Number(sl || trigP).toFixed(2)} bảo toàn vốn an toàn!`;
+    } else if (isBreakeven) {
+      title = `🛡️ MA WAVE V8: CHỐT HÒA VỐN / SL DƯƠNG (${pairName})`;
+      textBody = `🛡️ ${pairName} Lệnh #${id || ''} (${type}) đã chạm SL dời tại $${trigP}. Bảo toàn lợi nhuận (+${pnlPips || 5} pips / +$${pnlUsd || 50} USD)!`;
+    } else if (isWin) {
+      title = `🎯 MA WAVE V8: CHỐT LỜI ${statusType} (${pairName})`;
+      textBody = `🎉 ${pairName} Lệnh #${id || ''} (${type}) đã CHẠM MỐC ${statusType} tại $${trigP} (+${pnlPips || 100} pips / +$${pnlUsd || 1000} USD)!`;
+    } else {
+      title = `🛑 MA WAVE V8: CẮT LỖ (SL) (${pairName})`;
+      textBody = `⚠️ ${pairName} Lệnh #${id || ''} (${type}) đã chạm mốc SL tại $${trigP}. Chú ý đóng vị thế an toàn.`;
+    }
 
     // Cập nhật trạng thái lệnh trong signalsDB tập trung
     if (id) {
       const sig = signalsDB.find(s => s && s.id === id);
       if (sig) {
-        sig.status = isWin ? `${statusType} ✓` : 'CẮT LỖ AN TOÀN (SL)';
-        if (statusType === 'TP3') {
-          sig.hitTp1 = true; sig.hitTp2 = true; sig.hitTp3 = true; sig.winType = 'TP3';
-        } else if (statusType === 'TP2') {
-          sig.hitTp1 = true; sig.hitTp2 = true; sig.winType = 'TP2';
-        } else if (statusType === 'TP1') {
-          sig.hitTp1 = true; sig.winType = 'TP1';
-        } else if (!isWin) {
+        if (isTrailed) {
+          sig.status = 'ĐANG CHẠY (Đã kéo SL Dương 🛡️)';
+          sig.trailedToBreakeven = true;
+          if (sl) sig.sl = Number(sl);
+        } else if (isBreakeven) {
+          sig.status = 'CHỐT HÒA VỐN / SL DƯƠNG 🛡️';
+          sig.winType = 'BREAKEVEN';
+          sig.pnlPips = pnlPips !== undefined ? pnlPips : 5;
+          sig.pnlUsd = pnlUsd !== undefined ? pnlUsd : 50;
+        } else if (isWin) {
+          sig.status = `${statusType} ✓`;
+          if (statusType === 'TP3') {
+            sig.hitTp1 = true; sig.hitTp2 = true; sig.hitTp3 = true; sig.winType = 'TP3';
+          } else if (statusType === 'TP2') {
+            sig.hitTp1 = true; sig.hitTp2 = true; sig.winType = 'TP2';
+          } else if (statusType === 'TP1') {
+            sig.hitTp1 = true; sig.winType = 'TP1';
+          }
+          if (pnlPips !== undefined) sig.pnlPips = pnlPips;
+          if (pnlUsd !== undefined) sig.pnlUsd = pnlUsd;
+        } else {
+          sig.status = 'CẮT LỖ AN TOÀN (SL)';
           sig.winType = 'LOSS';
+          if (pnlPips !== undefined) sig.pnlPips = pnlPips;
+          if (pnlUsd !== undefined) sig.pnlUsd = pnlUsd;
         }
-        if (pnlPips !== undefined) sig.pnlPips = pnlPips;
-        if (pnlUsd !== undefined) sig.pnlUsd = pnlUsd;
         saveJSON(SIGNALS_DB_FILE, signalsDB);
       }
       const idx = serverSignalsDB.findIndex(s => s && s.id === id);
       if (idx !== -1) {
-        serverSignalsDB[idx].status = isWin ? `${statusType} ✓` : 'CẮT LỖ AN TOÀN (SL)';
-        serverSignalsDB[idx].pnlPips = pnlPips || 0;
-        serverSignalsDB[idx].pnlUsd = pnlUsd || 0;
+        if (isTrailed) {
+          serverSignalsDB[idx].status = 'ĐANG CHẠY (Đã kéo SL Dương 🛡️)';
+          serverSignalsDB[idx].trailedToBreakeven = true;
+          if (sl) serverSignalsDB[idx].sl = Number(sl);
+        } else if (isBreakeven) {
+          serverSignalsDB[idx].status = 'CHỐT HÒA VỐN / SL DƯƠNG 🛡️';
+          serverSignalsDB[idx].winType = 'BREAKEVEN';
+          serverSignalsDB[idx].pnlPips = pnlPips || 5;
+          serverSignalsDB[idx].pnlUsd = pnlUsd || 50;
+        } else if (isWin) {
+          serverSignalsDB[idx].status = `${statusType} ✓`;
+          serverSignalsDB[idx].pnlPips = pnlPips || 0;
+          serverSignalsDB[idx].pnlUsd = pnlUsd || 0;
+        } else {
+          serverSignalsDB[idx].status = 'CẮT LỖ AN TOÀN (SL)';
+          serverSignalsDB[idx].pnlPips = pnlPips || 0;
+          serverSignalsDB[idx].pnlUsd = pnlUsd || 0;
+        }
         saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+      }
+      // Đồng bộ serverActiveTrades nếu là kết thúc lệnh
+      if (isBreakeven || (!isWin && !isTrailed) || statusType === 'TP3') {
+        ['xau', 'btc', 'xag'].forEach(ak => {
+          if (serverActiveTrades[ak] && serverActiveTrades[ak].id === id) {
+            serverActiveTrades[ak] = null;
+          }
+        });
+      } else if (isTrailed) {
+        ['xau', 'btc', 'xag'].forEach(ak => {
+          if (serverActiveTrades[ak] && serverActiveTrades[ak].id === id) {
+            serverActiveTrades[ak].trailedToBreakeven = true;
+            if (sl) serverActiveTrades[ak].sl = Number(sl);
+          }
+        });
       }
     }
 
     // Broadcast trạng thái mới tới cả vi tính và điện thoại
     sseClients.forEach(client => {
       try {
-        client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id, statusType, triggerPrice, pnlPips, pnlUsd } })}\n\n`);
+        client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id, statusType, triggerPrice, sl, pnlPips, pnlUsd } })}\n\n`);
       } catch(e) {}
     });
 
@@ -3052,22 +3125,63 @@ function startServerSignalEngine() {
           const peak = trade.peakPrice;
           const bottom = trade.bottomPrice;
           const isBuy = trade.type === 'BUY';
+          const breakevenThreshold = (cfg.key === 'btc') ? 500 : (cfg.key === 'xag' ? 0.40 : 5.0);
+          const breakevenDelta = (cfg.key === 'btc') ? 50 : (cfg.key === 'xag' ? 0.05 : 0.5);
 
           if (isBuy) {
+            const profitDelta = price - trade.entry;
+
+            // Tự động kéo SL Dương / Hòa vốn khi lãi >= 5 giá (Bảo toàn vốn và lợi nhuận)
+            if (!trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= breakevenThreshold) {
+              trade.trailedToBreakeven = true;
+              trade.sl = +(trade.entry + breakevenDelta).toFixed(2);
+              const sig = signalsDB.find(s => s && s.id === trade.id);
+              if (sig) {
+                sig.trailedToBreakeven = true;
+                sig.sl = trade.sl;
+                sig.status = 'ĐANG CHẠY (Đã kéo SL Dương 🛡️)';
+                saveJSON(SIGNALS_DB_FILE, signalsDB);
+              }
+              const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+              if (sSig) {
+                sSig.trailedToBreakeven = true;
+                sSig.sl = trade.sl;
+                sSig.status = 'ĐANG CHẠY (Đã kéo SL Dương 🛡️)';
+                saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+              }
+              sseClients.forEach(client => {
+                try {
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TRAILED_SL', triggerPrice: price, sl: trade.sl } })}\n\n`);
+                } catch(e) {}
+              });
+              addNotification('SIGNAL', `🛡️ KÉO SL DƯƠNG BẢO TOÀN LÃI: MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã có lãi +5 giá (+50 pips). Đã tự động dời SL lên $${trade.sl.toFixed(2)} bảo toàn vốn an toàn!`);
+            }
+
             if (!trade.hitTp1 && peak >= trade.tp1) {
               trade.hitTp1 = true;
+              trade.sl = +(trade.entry + breakevenThreshold).toFixed(2); // Khóa cứng lãi
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
                 sig.hitTp1 = true;
                 sig.winType = 'TP1';
-                sig.status = (cfg.key === 'btc') ? 'TP1 +1,200 ✓ (Kéo SL Hòa Vốn)' : (cfg.key === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
+                sig.status = (cfg.key === 'btc') ? 'TP1 +1,200 ✓ (Kéo SL Dương)' : (cfg.key === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
+                sig.sl = trade.sl;
                 sig.pnlPips = cfg.tp1Pips;
                 sig.pnlUsd = cfg.tp1Usd;
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
               }
+              const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+              if (sSig) {
+                sSig.hitTp1 = true;
+                sSig.status = (cfg.key === 'btc') ? 'TP1 +1,200 ✓ (Kéo SL Dương)' : (cfg.key === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
+                sSig.sl = trade.sl;
+                sSig.pnlPips = cfg.tp1Pips;
+                sSig.pnlUsd = cfg.tp1Usd;
+                saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+              }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1', triggerPrice: peak, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1', triggerPrice: peak, sl: trade.sl, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
                 } catch(e) {}
               });
               if (!botConfigDB.notifyOnlyMajorSignals) {
@@ -3085,6 +3199,15 @@ function startServerSignalEngine() {
                 sig.pnlPips = cfg.tp2Pips;
                 sig.pnlUsd = cfg.tp2Usd;
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
+              }
+              const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+              if (sSig) {
+                sSig.hitTp1 = true;
+                sSig.hitTp2 = true;
+                sSig.status = (cfg.key === 'btc') ? 'TP2 +2,500 ✓' : (cfg.key === 'xag' ? 'TP2 +160 pips ✓' : 'TP2 +20 ✓');
+                sSig.pnlPips = cfg.tp2Pips;
+                sSig.pnlUsd = cfg.tp2Usd;
+                saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
               }
               sseClients.forEach(client => {
                 try {
@@ -3106,6 +3229,16 @@ function startServerSignalEngine() {
                 sig.pnlUsd = cfg.tp3Usd;
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
               }
+              const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+              if (sSig) {
+                sSig.hitTp1 = true;
+                sSig.hitTp2 = true;
+                sSig.hitTp3 = true;
+                sSig.status = (cfg.key === 'btc') ? 'TP3 +4,000 (Trọn Sóng 🎯)' : (cfg.key === 'xag' ? 'TP3 +280 pips (Trọn Sóng 🎯)' : 'TP3 +30 (Trọn Sóng 🎯)');
+                sSig.pnlPips = cfg.tp3Pips;
+                sSig.pnlUsd = cfg.tp3Usd;
+                saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+              }
               sseClients.forEach(client => {
                 try {
                   client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP3', triggerPrice: peak, pnlPips: cfg.tp3Pips, pnlUsd: cfg.tp3Usd } })}\n\n`);
@@ -3114,39 +3247,116 @@ function startServerSignalEngine() {
               addNotification('SIGNAL', `🏆 CHỐT LỜI TP3 KHỦNG (Trọn Sóng 🎯): MUA ${cfg.pair}`, `🔥 Lệnh MUA tại $${trade.entry.toFixed(2)} ĐẠT MỤC TIÊU TỐI ĐA TP3 tại $${peak.toFixed(2)} (+${cfg.tp3Pips} pips / +$${cfg.tp3Usd} USD)!`);
               serverActiveTrades[cfg.key] = null;
             }
-            if (bottom <= trade.sl) {
+            // 🛑 CẮT LỖ CHỈ ĐƯỢC PHÉP ĐO THEO GIÁ LIVE THỰC TẾ (price <= trade.sl)
+            if (price <= trade.sl) {
               const sig = signalsDB.find(s => s && s.id === trade.id);
-              if (sig) {
-                sig.winType = 'LOSS';
-                sig.status = 'CẮT LỖ AN TOÀN (SL)';
-                sig.pnlPips = cfg.slPips;
-                sig.pnlUsd = cfg.slUsd;
-                saveJSON(SIGNALS_DB_FILE, signalsDB);
+              const isBreakevenClose = trade.trailedToBreakeven || (sig && sig.trailedToBreakeven) || trade.hitTp1;
+              if (isBreakevenClose) {
+                const bPips = (cfg.key === 'btc') ? 5 : 5;
+                const bUsd = (cfg.key === 'btc') ? 50 : 50;
+                if (sig) {
+                  sig.winType = 'BREAKEVEN';
+                  sig.status = 'CHỐT HÒA VỐN / SL DƯƠNG 🛡️';
+                  sig.pnlPips = bPips;
+                  sig.pnlUsd = bUsd;
+                  sig.reason = `Giá chạm mốc SL Dương/Hòa vốn tại $${price.toFixed(2)}, bảo toàn vốn an toàn (+${bPips} pips)`;
+                  saveJSON(SIGNALS_DB_FILE, signalsDB);
+                }
+                const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+                if (sSig) {
+                  sSig.winType = 'BREAKEVEN';
+                  sSig.status = 'CHỐT HÒA VỐN / SL DƯƠNG 🛡️';
+                  sSig.pnlPips = bPips;
+                  sSig.pnlUsd = bUsd;
+                  saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+                }
+                sseClients.forEach(client => {
+                  try {
+                    client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'BREAKEVEN', triggerPrice: price, pnlPips: bPips, pnlUsd: bUsd } })}\n\n`);
+                  } catch(e) {}
+                });
+                addNotification('SIGNAL', `🛡️ CHỐT HÒA VỐN / SL DƯƠNG: MUA ${cfg.pair}`, `🛡️ Lệnh MUA chạm SL dời tại $${price.toFixed(2)}. Bảo toàn vốn an toàn (+${bPips} pips / +$${bUsd} USD)!`);
+                serverActiveTrades[cfg.key] = null;
+              } else {
+                if (sig) {
+                  sig.winType = 'LOSS';
+                  sig.status = 'CẮT LỖ AN TOÀN (SL)';
+                  sig.pnlPips = cfg.slPips;
+                  sig.pnlUsd = cfg.slUsd;
+                  saveJSON(SIGNALS_DB_FILE, signalsDB);
+                }
+                const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+                if (sSig) {
+                  sSig.winType = 'LOSS';
+                  sSig.status = 'CẮT LỖ AN TOÀN (SL)';
+                  sSig.pnlPips = cfg.slPips;
+                  sSig.pnlUsd = cfg.slUsd;
+                  saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+                }
+                sseClients.forEach(client => {
+                  try {
+                    client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'SL', triggerPrice: price, pnlPips: cfg.slPips, pnlUsd: cfg.slUsd } })}\n\n`);
+                  } catch(e) {}
+                });
+                addNotification('SIGNAL', `🛑 NGỪNG LỆNH MUA (THOÁT LỆNH AN TOÀN)`, `⚠️ Giá chạm mốc cắt lỗ $${price.toFixed(2)}. Chú ý thoát lệnh bảo toàn vốn.`);
+                serverActiveTrades[cfg.key] = null;
               }
-              sseClients.forEach(client => {
-                try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'SL', triggerPrice: bottom, pnlPips: cfg.slPips, pnlUsd: cfg.slUsd } })}\n\n`);
-                } catch(e) {}
-              });
-              addNotification('SIGNAL', `🛑 NGỪNG LỆNH MUA (THOÁT LỆNH AN TOÀN)`, `⚠️ Giá chạm mốc cắt lỗ $${bottom.toFixed(2)}. Chú ý thoát lệnh bảo toàn vốn.`);
-              serverActiveTrades[cfg.key] = null;
             }
           } else {
             // SELL
+            const profitDelta = trade.entry - price;
+
+            // Tự động kéo SL Dương / Hòa vốn khi lãi >= 5 giá (Bảo toàn vốn và lợi nhuận)
+            if (!trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= breakevenThreshold) {
+              trade.trailedToBreakeven = true;
+              trade.sl = +(trade.entry - breakevenDelta).toFixed(2);
+              const sig = signalsDB.find(s => s && s.id === trade.id);
+              if (sig) {
+                sig.trailedToBreakeven = true;
+                sig.sl = trade.sl;
+                sig.status = 'ĐANG CHẠY (Đã kéo SL Dương 🛡️)';
+                saveJSON(SIGNALS_DB_FILE, signalsDB);
+              }
+              const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+              if (sSig) {
+                sSig.trailedToBreakeven = true;
+                sSig.sl = trade.sl;
+                sSig.status = 'ĐANG CHẠY (Đã kéo SL Dương 🛡️)';
+                saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+              }
+              sseClients.forEach(client => {
+                try {
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TRAILED_SL', triggerPrice: price, sl: trade.sl } })}\n\n`);
+                } catch(e) {}
+              });
+              addNotification('SIGNAL', `🛡️ KÉO SL DƯƠNG BẢO TOÀN LÃI: BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã có lãi +5 giá (+50 pips). Đã tự động dời SL xuống $${trade.sl.toFixed(2)} bảo toàn vốn an toàn!`);
+            }
+
             if (!trade.hitTp1 && bottom <= trade.tp1) {
               trade.hitTp1 = true;
+              trade.sl = +(trade.entry - breakevenThreshold).toFixed(2); // Khóa cứng lãi
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
                 sig.hitTp1 = true;
                 sig.winType = 'TP1';
-                sig.status = (cfg.key === 'btc') ? 'TP1 +1,200 ✓ (Kéo SL Hòa Vốn)' : (cfg.key === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
+                sig.status = (cfg.key === 'btc') ? 'TP1 +1,200 ✓ (Kéo SL Dương)' : (cfg.key === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
+                sig.sl = trade.sl;
                 sig.pnlPips = cfg.tp1Pips;
                 sig.pnlUsd = cfg.tp1Usd;
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
               }
+              const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+              if (sSig) {
+                sSig.hitTp1 = true;
+                sSig.status = (cfg.key === 'btc') ? 'TP1 +1,200 ✓ (Kéo SL Dương)' : (cfg.key === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
+                sSig.sl = trade.sl;
+                sSig.pnlPips = cfg.tp1Pips;
+                sSig.pnlUsd = cfg.tp1Usd;
+                saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+              }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1', triggerPrice: bottom, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1', triggerPrice: bottom, sl: trade.sl, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
                 } catch(e) {}
               });
               if (!botConfigDB.notifyOnlyMajorSignals) {
@@ -3164,6 +3374,15 @@ function startServerSignalEngine() {
                 sig.pnlPips = cfg.tp2Pips;
                 sig.pnlUsd = cfg.tp2Usd;
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
+              }
+              const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+              if (sSig) {
+                sSig.hitTp1 = true;
+                sSig.hitTp2 = true;
+                sSig.status = (cfg.key === 'btc') ? 'TP2 +2,500 ✓' : (cfg.key === 'xag' ? 'TP2 +160 pips ✓' : 'TP2 +20 ✓');
+                sSig.pnlPips = cfg.tp2Pips;
+                sSig.pnlUsd = cfg.tp2Usd;
+                saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
               }
               sseClients.forEach(client => {
                 try {
@@ -3185,6 +3404,16 @@ function startServerSignalEngine() {
                 sig.pnlUsd = cfg.tp3Usd;
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
               }
+              const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+              if (sSig) {
+                sSig.hitTp1 = true;
+                sSig.hitTp2 = true;
+                sSig.hitTp3 = true;
+                sSig.status = (cfg.key === 'btc') ? 'TP3 +4,000 (Trọn Sóng 🎯)' : (cfg.key === 'xag' ? 'TP3 +280 pips (Trọn Sóng 🎯)' : 'TP3 +30 (Trọn Sóng 🎯)');
+                sSig.pnlPips = cfg.tp3Pips;
+                sSig.pnlUsd = cfg.tp3Usd;
+                saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+              }
               sseClients.forEach(client => {
                 try {
                   client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP3', triggerPrice: bottom, pnlPips: cfg.tp3Pips, pnlUsd: cfg.tp3Usd } })}\n\n`);
@@ -3193,22 +3422,60 @@ function startServerSignalEngine() {
               addNotification('SIGNAL', `🏆 CHỐT LỜI TP3 KHỦNG (Trọn Sóng 🎯): BÁN ${cfg.pair}`, `🔥 Lệnh BÁN tại $${trade.entry.toFixed(2)} ĐẠT MỤC TIÊU TỐI ĐA TP3 tại $${bottom.toFixed(2)} (+${cfg.tp3Pips} pips / +$${cfg.tp3Usd} USD)!`);
               serverActiveTrades[cfg.key] = null;
             }
-            if (peak >= trade.sl) {
+            // 🛑 CẮT LỖ CHỈ ĐƯỢC PHÉP ĐO THEO GIÁ LIVE THỰC TẾ (price >= trade.sl)
+            if (price >= trade.sl) {
               const sig = signalsDB.find(s => s && s.id === trade.id);
-              if (sig) {
-                sig.winType = 'LOSS';
-                sig.status = 'CẮT LỖ AN TOÀN (SL)';
-                sig.pnlPips = cfg.slPips;
-                sig.pnlUsd = cfg.slUsd;
-                saveJSON(SIGNALS_DB_FILE, signalsDB);
+              const isBreakevenClose = trade.trailedToBreakeven || (sig && sig.trailedToBreakeven) || trade.hitTp1;
+              if (isBreakevenClose) {
+                const bPips = (cfg.key === 'btc') ? 5 : 5;
+                const bUsd = (cfg.key === 'btc') ? 50 : 50;
+                if (sig) {
+                  sig.winType = 'BREAKEVEN';
+                  sig.status = 'CHỐT HÒA VỐN / SL DƯƠNG 🛡️';
+                  sig.pnlPips = bPips;
+                  sig.pnlUsd = bUsd;
+                  sig.reason = `Giá chạm mốc SL Dương/Hòa vốn tại $${price.toFixed(2)}, bảo toàn vốn an toàn (+${bPips} pips)`;
+                  saveJSON(SIGNALS_DB_FILE, signalsDB);
+                }
+                const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+                if (sSig) {
+                  sSig.winType = 'BREAKEVEN';
+                  sSig.status = 'CHỐT HÒA VỐN / SL DƯƠNG 🛡️';
+                  sSig.pnlPips = bPips;
+                  sSig.pnlUsd = bUsd;
+                  saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+                }
+                sseClients.forEach(client => {
+                  try {
+                    client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'BREAKEVEN', triggerPrice: price, pnlPips: bPips, pnlUsd: bUsd } })}\n\n`);
+                  } catch(e) {}
+                });
+                addNotification('SIGNAL', `🛡️ CHỐT HÒA VỐN / SL DƯƠNG: BÁN ${cfg.pair}`, `🛡️ Lệnh BÁN chạm SL dời tại $${price.toFixed(2)}. Bảo toàn vốn an toàn (+${bPips} pips / +$${bUsd} USD)!`);
+                serverActiveTrades[cfg.key] = null;
+              } else {
+                if (sig) {
+                  sig.winType = 'LOSS';
+                  sig.status = 'CẮT LỖ AN TOÀN (SL)';
+                  sig.pnlPips = cfg.slPips;
+                  sig.pnlUsd = cfg.slUsd;
+                  saveJSON(SIGNALS_DB_FILE, signalsDB);
+                }
+                const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+                if (sSig) {
+                  sSig.winType = 'LOSS';
+                  sSig.status = 'CẮT LỖ AN TOÀN (SL)';
+                  sSig.pnlPips = cfg.slPips;
+                  sSig.pnlUsd = cfg.slUsd;
+                  saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+                }
+                sseClients.forEach(client => {
+                  try {
+                    client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'SL', triggerPrice: price, pnlPips: cfg.slPips, pnlUsd: cfg.slUsd } })}\n\n`);
+                  } catch(e) {}
+                });
+                addNotification('SIGNAL', `🛑 NGỪNG LỆNH BÁN (THOÁT LỆNH AN TOÀN)`, `⚠️ Giá chạm mốc cắt lỗ $${price.toFixed(2)}. Chú ý thoát lệnh bảo toàn vốn.`);
+                serverActiveTrades[cfg.key] = null;
               }
-              sseClients.forEach(client => {
-                try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'SL', triggerPrice: peak, pnlPips: cfg.slPips, pnlUsd: cfg.slUsd } })}\n\n`);
-                } catch(e) {}
-              });
-              addNotification('SIGNAL', `🛑 NGỪNG LỆNH BÁN (THOÁT LỆNH AN TOÀN)`, `⚠️ Giá chạm mốc cắt lỗ $${peak.toFixed(2)}. Chú ý thoát lệnh bảo toàn vốn.`);
-              serverActiveTrades[cfg.key] = null;
             }
           }
 

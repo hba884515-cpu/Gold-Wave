@@ -9,12 +9,12 @@ class MarketDataStore {
     this.symbol = 'XAU/USD';
     this.source = 'TVC:GOLD';
     this.timezone = 'Asia/Ho_Chi_Minh';
-    this.currentPrice = 3998.70;
-    this.prevPrice = 3946.32;
-    this.priceChange = 52.38;
-    this.priceChangePercent = 1.33;
-    this.high = 4005.00;
-    this.low = 3926.60;
+    this.currentPrice = 4097.20;
+    this.prevPrice = 4064.14;
+    this.priceChange = 33.06;
+    this.priceChangePercent = 0.81;
+    this.high = 4146.92;
+    this.low = 4057.83;
     this.currentTimeframe = '15m';
     this.connectionStatus = this.isGoldMarketOpen() ? 'LIVE' : 'CLOSED';
     this.lastUpdate = Date.now();
@@ -27,12 +27,12 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 3998.70,
-        prevPrice: 3946.32,
-        change: 52.38,
-        changePercent: 1.33,
-        high: 4005.00,
-        low: 3926.60,
+        price: 4097.20,
+        prevPrice: 4064.14,
+        change: 33.06,
+        changePercent: 0.81,
+        high: 4146.92,
+        low: 4057.83,
         icon: '🪙',
         tag: 'GOLD'
       },
@@ -253,8 +253,8 @@ class MarketDataStore {
     ];
 
     let todayKeyframes = wednesdayKeyframes;
-    let todayMaxBound = this.high || 4005.00;
-    let todayMinBound = this.low || 3926.60;
+    let todayMaxBound = this.high || 4146.92;
+    let todayMinBound = this.low || 4057.83;
 
     if (dayOfWeek === 1) {
       todayKeyframes = mondayKeyframes;
