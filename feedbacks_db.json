@@ -1,8 +1,8 @@
 [
   {
     "id": "FB-1794049500-214",
-    "name": "Trịnh Diễm Anh (Trader Hà Nội)",
-    "email": "trinhanh2001@icloud.com",
+    "name": "Lương Việt Minh",
+    "email": "luongviet2001@icloud.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới"
@@ -12,21 +12,21 @@
   },
   {
     "id": "FB-1794048000-213",
-    "name": "Ngô Thu Thư (Hải Phòng Trader)",
-    "email": "ngothu1994@yahoo.com",
+    "name": "Phùng Thành Cường",
+    "email": "phungcuong1994@yahoo.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
       "📰 Tin tức vĩ mô",
       "💡 Đề xuất tính năng mới"
     ],
-    "comment": "Cực kỳ thích tính năng quản lý vốn theo % tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
+    "comment": "Cực kỳ thích tính năng quản lý vốn theo tỷ lệ phần trăm tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
     "createdAt": "2026-11-06T12:30:00.000Z"
   },
   {
     "id": "FB-1794046500-212",
-    "name": "Bùi Đăng Yến (Trader Vàng)",
-    "email": "buiyen1987@gmail.com",
+    "name": "Ngô Hồng Duyên",
+    "email": "ngoduyen1987@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -37,8 +37,8 @@
   },
   {
     "id": "FB-1794045000-211",
-    "name": "Vũ Minh Hương (Scalper H1)",
-    "email": "vuhuong2005@gmail.com",
+    "name": "Phan Minh Mai",
+    "email": "phanmai2005@gmail.com",
     "rating": 4,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -48,8 +48,8 @@
   },
   {
     "id": "FB-1794043500-210",
-    "name": "Hoàng Thế Lâm (Trader Tự Do)",
-    "email": "hoanglam1998@gmail.com",
+    "name": "Cao Văn Bình",
+    "email": "caobinh1998@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -61,8 +61,8 @@
   },
   {
     "id": "FB-1794042000-209",
-    "name": "Trần Hữu Toàn (Nhà Đầu Tư)",
-    "email": "trantoan1991@outlook.com",
+    "name": "Đinh Hải Phát",
+    "email": "dinhphat1991@outlook.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -73,8 +73,8 @@
   },
   {
     "id": "FB-1794040500-208",
-    "name": "Hà Diễm Phong (Gold Wave Fan)",
-    "email": "haphong2009@icloud.com",
+    "name": "Lý Tuấn Hoàng",
+    "email": "lyhoang2009@icloud.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
@@ -84,8 +84,8 @@
   },
   {
     "id": "FB-1794039000-207",
-    "name": "Chu Thu Kiên (Swing Trader)",
-    "email": "chukien2002@yahoo.com",
+    "name": "Võ Trúc Hà",
+    "email": "voha2002@yahoo.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -97,8 +97,8 @@
   },
   {
     "id": "FB-1794037500-206",
-    "name": "Đinh Đăng Long (Trader M15)",
-    "email": "dinhlong1995@gmail.com",
+    "name": "Trần Đăng Thảo",
+    "email": "tranthao1995@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -109,19 +109,19 @@
   },
   {
     "id": "FB-1794036000-205",
-    "name": "Lâm Minh Dũng (FX Sài Gòn)",
-    "email": "lamdung1988@gmail.com",
+    "name": "Bạch Gia Tùng",
+    "email": "bachtung1988@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách scalping.",
+    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách lướt sóng ngắn.",
     "createdAt": "2026-11-05T03:42:00.000Z"
   },
   {
     "id": "FB-1794034500-204",
-    "name": "Trịnh Thế Hà (Quản Lý Quỹ)",
-    "email": "trinhha2006@gmail.com",
+    "name": "Đoàn Kim Kiên",
+    "email": "doankien2006@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -133,8 +133,8 @@
   },
   {
     "id": "FB-1794033000-203",
-    "name": "Ngô Hữu Lan (Scalper M5)",
-    "email": "ngolan1999@outlook.com",
+    "name": "Bùi Xuân Tuấn",
+    "email": "buituan1999@outlook.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -145,8 +145,8 @@
   },
   {
     "id": "FB-1794031500-202",
-    "name": "Bùi Diễm Trang (Forex Pro)",
-    "email": "buitrang1992@icloud.com",
+    "name": "Phạm Đức Quỳnh",
+    "email": "phamquynh1992@icloud.com",
     "rating": 4,
     "tags": [
       "🤖 Bot MT5 tự động"
@@ -156,8 +156,8 @@
   },
   {
     "id": "FB-1794030000-201",
-    "name": "Vũ Thu Bình",
-    "email": "vubinh1985@yahoo.com",
+    "name": "Tạ Ánh Lâm",
+    "email": "talam1985@yahoo.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -169,20 +169,20 @@
   },
   {
     "id": "FB-1794028500-200",
-    "name": "Hoàng Đăng Duy (Trader Đà Nẵng)",
-    "email": "hoangduy2003@gmail.com",
+    "name": "Lâm Thanh Quang",
+    "email": "lamquang2003@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
       "🎯 Tín hiệu Vàng chuẩn"
     ],
-    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy/Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
+    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy và Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
     "createdAt": "2026-11-04T05:06:00.000Z"
   },
   {
     "id": "FB-1794027000-199",
-    "name": "Trần Minh Thịnh (Thành Viên VIP)",
-    "email": "tranthinh1996@gmail.com",
+    "name": "Hồ Anh Hải",
+    "email": "hohai1996@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI"
@@ -192,8 +192,8 @@
   },
   {
     "id": "FB-1794025500-198",
-    "name": "Hà Thế Cường (Kỹ Sư FX)",
-    "email": "hacuong1989@gmail.com",
+    "name": "Huỳnh Ngọc Thư",
+    "email": "huynhthu1989@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -205,20 +205,20 @@
   },
   {
     "id": "FB-1794024000-197",
-    "name": "Chu Hữu Đức (Chiến Lược Gia)",
-    "email": "chuduc2007@outlook.com",
+    "name": "Hà Bảo Nhung",
+    "email": "hanhung2007@outlook.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime"
     ],
-    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy con bot khác. Rất đáng giá từng đồng!",
+    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy công cụ khác. Rất đáng giá từng đồng!",
     "createdAt": "2026-11-03T18:54:00.000Z"
   },
   {
     "id": "FB-1794022500-196",
-    "name": "Đinh Diễm Hiền (Gold Hunter)",
-    "email": "dinhhien2000@icloud.com",
+    "name": "Tô Mỹ Hậu",
+    "email": "tohau2000@icloud.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô"
@@ -228,8 +228,8 @@
   },
   {
     "id": "FB-1794021000-195",
-    "name": "Lâm Thu Ngọc (Cần Thơ FX)",
-    "email": "lamngoc1993@yahoo.com",
+    "name": "Dương Quang Khang",
+    "email": "duongkhang1993@yahoo.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -241,20 +241,20 @@
   },
   {
     "id": "FB-1794019500-194",
-    "name": "Trịnh Đăng Nhung (Trader Hà Nội)",
-    "email": "trinhnhung1986@gmail.com",
+    "name": "Vũ Quốc Đức",
+    "email": "vuduc1986@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em trader.",
+    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em.",
     "createdAt": "2026-11-03T03:06:00.000Z"
   },
   {
     "id": "FB-1794018000-193",
-    "name": "Ngô Minh Tâm (Hải Phòng Trader)",
-    "email": "ngotam2004@gmail.com",
+    "name": "Nguyễn Phương Trâm",
+    "email": "nguyentram2004@gmail.com",
     "rating": 4,
     "tags": [
       "💡 Đề xuất tính năng mới"
@@ -264,8 +264,8 @@
   },
   {
     "id": "FB-1794016500-192",
-    "name": "Bùi Thế Khoa (Trader Vàng)",
-    "email": "buikhoa1997@gmail.com",
+    "name": "Quách Đình Luân",
+    "email": "quachluan1997@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -277,8 +277,8 @@
   },
   {
     "id": "FB-1794015000-191",
-    "name": "Vũ Hữu Quang (Scalper H1)",
-    "email": "vuquang1990@outlook.com",
+    "name": "Trịnh Hữu Duy",
+    "email": "trinhduy1990@outlook.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -289,8 +289,8 @@
   },
   {
     "id": "FB-1794013500-190",
-    "name": "Hoàng Diễm Hưng (Trader Tự Do)",
-    "email": "hoanghung2008@icloud.com",
+    "name": "Đặng Thu Thắng",
+    "email": "dangthang2008@icloud.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -300,8 +300,8 @@
   },
   {
     "id": "FB-1794012000-189",
-    "name": "Trần Thu Nam (Nhà Đầu Tư)",
-    "email": "trannam2001@yahoo.com",
+    "name": "Lê Hoàng Hùng",
+    "email": "lehung2001@yahoo.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -313,8 +313,8 @@
   },
   {
     "id": "FB-1794010500-188",
-    "name": "Hà Đăng Tuấn (Gold Wave Fan)",
-    "email": "hatuan1994@gmail.com",
+    "name": "Chu Tường Lan",
+    "email": "chulan1994@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -325,8 +325,8 @@
   },
   {
     "id": "FB-1794009000-187",
-    "name": "Chu Minh Ly (Swing Trader)",
-    "email": "chuly1987@gmail.com",
+    "name": "Mai Khánh Thành",
+    "email": "maithanh1987@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
@@ -336,8 +336,8 @@
   },
   {
     "id": "FB-1794007500-186",
-    "name": "Đinh Thế Ngân (Trader M15)",
-    "email": "dinhngan2005@gmail.com",
+    "name": "Đỗ Thế Triết",
+    "email": "dotriet2005@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -349,8 +349,8 @@
   },
   {
     "id": "FB-1794006000-185",
-    "name": "Lâm Hữu Thảo (FX Sài Gòn)",
-    "email": "lamthao1998@outlook.com",
+    "name": "Hoàng Diễm Long",
+    "email": "hoanglong1998@outlook.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -361,8 +361,8 @@
   },
   {
     "id": "FB-1794004500-184",
-    "name": "Trịnh Diễm Thành (Quản Lý Quỹ)",
-    "email": "trinhthanh1991@icloud.com",
+    "name": "Lương Việt Ly",
+    "email": "luongly1991@icloud.com",
     "rating": 4,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
@@ -372,44 +372,44 @@
   },
   {
     "id": "FB-1794003000-183",
-    "name": "Ngô Thu Đạt (Scalper M5)",
-    "email": "ngodat2009@yahoo.com",
+    "name": "Phùng Thành Linh",
+    "email": "phunglinh2009@yahoo.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Tín hiệu rõ ràng, dứt khoát, không mập mờ hai chiều như các hội nhóm telegram. Rất tôn trọng sự minh bạch của admin.",
+    "comment": "Tín hiệu rõ ràng, dứt khoát, không mập mờ hai chiều như các hội nhóm trôi nổi. Rất tôn trọng sự minh bạch của admin.",
     "createdAt": "2026-11-01T08:06:00.000Z"
   },
   {
     "id": "FB-1794001500-182",
-    "name": "Bùi Đăng Phát (Forex Pro)",
-    "email": "buiphat2002@gmail.com",
+    "name": "Ngô Hồng Toàn",
+    "email": "ngotoan2002@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
       "💡 Đề xuất tính năng mới"
     ],
-    "comment": "Từ ngày có app, mình không còn phải thức đêm canh lệnh đến 2-3 giờ sáng nữa. Cứ đặt theo các mốc TP/SL của app là ngủ ngon giấc.",
+    "comment": "Từ ngày có app, mình không còn phải thức đêm canh lệnh đến 2-3 giờ sáng nữa. Cứ đặt theo các mốc TP và SL của app là ngủ ngon giấc.",
     "createdAt": "2026-10-31T23:06:00.000Z"
   },
   {
     "id": "FB-1794000000-181",
-    "name": "Vũ Minh Thắng",
-    "email": "vuthang1995@gmail.com",
+    "name": "Phan Minh Hưng",
+    "email": "phanhung1995@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động"
     ],
-    "comment": "Một trong số ít những ứng dụng hỗ trợ giao dịch Vàng thực chiến hiệu quả nhất tại Việt Nam hiện nay. 5 sao xứng đáng!",
+    "comment": "Một trong số ít những ứng dụng hỗ trợ giao dịch Vàng thực chiến hiệu quả nhất hiện nay. 5 sao xứng đáng!",
     "createdAt": "2026-10-31T19:42:00.000Z"
   },
   {
     "id": "FB-1793998500-180",
-    "name": "Hoàng Thế Huy (Trader Đà Nẵng)",
-    "email": "hoanghuy1988@gmail.com",
+    "name": "Hà Tường Hùng",
+    "email": "hahung1988@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -421,8 +421,8 @@
   },
   {
     "id": "FB-1793997000-179",
-    "name": "Trần Hữu Duyên (Thành Viên VIP)",
-    "email": "tranduyen2006@outlook.com",
+    "name": "Tô Khánh Lan",
+    "email": "tolan2006@outlook.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -433,8 +433,8 @@
   },
   {
     "id": "FB-1793995500-178",
-    "name": "Hà Diễm Trâm (Kỹ Sư FX)",
-    "email": "hatram1999@icloud.com",
+    "name": "Dương Thế Thành",
+    "email": "duongthanh1999@icloud.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI"
@@ -444,21 +444,21 @@
   },
   {
     "id": "FB-1793994000-177",
-    "name": "Chu Thu Hằng (Chiến Lược Gia)",
-    "email": "chuhang1992@yahoo.com",
+    "name": "Vũ Diễm Triết",
+    "email": "vutriet1992@yahoo.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
       "🤖 Bot MT5 tự động",
       "📈 Phân tích xu hướng AI"
     ],
-    "comment": "Là người mới bước chân vào thị trường Forex, app như một người thầy chỉ đường giúp mình không bị lạc lối giữa ma trận chỉ báo.",
+    "comment": "Là người mới bước chân vào thị trường tài chính, app như một người thầy chỉ đường giúp mình không bị lạc lối giữa ma trận chỉ báo.",
     "createdAt": "2026-10-31T06:06:00.000Z"
   },
   {
     "id": "FB-1793992500-176",
-    "name": "Đinh Đăng Vũ (Gold Hunter)",
-    "email": "dinhvu1985@gmail.com",
+    "name": "Nguyễn Việt Long",
+    "email": "nguyenlong1985@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -469,8 +469,8 @@
   },
   {
     "id": "FB-1793991000-175",
-    "name": "Lâm Minh Hậu (Cần Thơ FX)",
-    "email": "lamhau2003@gmail.com",
+    "name": "Quách Thành Ly",
+    "email": "quachly2003@gmail.com",
     "rating": 4,
     "tags": [
       "📰 Tin tức vĩ mô"
@@ -480,8 +480,8 @@
   },
   {
     "id": "FB-1793989500-174",
-    "name": "Trịnh Thế Quân (Trader Hà Nội)",
-    "email": "trinhquan1996@gmail.com",
+    "name": "Trịnh Hồng Linh",
+    "email": "trinhlinh1996@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -493,20 +493,20 @@
   },
   {
     "id": "FB-1793988000-173",
-    "name": "Ngô Hữu Nghĩa (Hải Phòng Trader)",
-    "email": "ngonghia1989@outlook.com",
+    "name": "Đặng Minh Toàn",
+    "email": "dangtoan1989@outlook.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Nếu có thêm tính năng tính toán khối lượng vào lệnh (Position Size Calculator) dựa trên số pips stoploss thì hoàn hảo 10/10.",
+    "comment": "Nếu có thêm tính năng tính toán khối lượng vào lệnh dựa trên số pips stoploss thì hoàn hảo 10/10.",
     "createdAt": "2026-10-30T10:54:00.000Z"
   },
   {
     "id": "FB-1793986500-172",
-    "name": "Bùi Diễm Hải (Trader Vàng)",
-    "email": "buihai2007@icloud.com",
+    "name": "Lê Văn Hưng",
+    "email": "lehung2007@icloud.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới"
@@ -516,8 +516,8 @@
   },
   {
     "id": "FB-1793985000-171",
-    "name": "Vũ Thu Minh (Scalper H1)",
-    "email": "vuminh2000@yahoo.com",
+    "name": "Chu Hải Minh",
+    "email": "chuminh2000@yahoo.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -529,8 +529,8 @@
   },
   {
     "id": "FB-1793983500-170",
-    "name": "Hoàng Đăng Oanh (Trader Tự Do)",
-    "email": "hoangoanh1993@gmail.com",
+    "name": "Mai Tuấn Yến",
+    "email": "maiyen1993@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -541,19 +541,19 @@
   },
   {
     "id": "FB-1793982000-169",
-    "name": "Trần Minh Quỳnh (Nhà Đầu Tư)",
-    "email": "tranquynh1986@gmail.com",
+    "name": "Đỗ Trúc Tâm",
+    "email": "dotam1986@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
     ],
-    "comment": "Nên có thêm một tab chia sẻ kinh nghiệm cộng đồng để các anh em trader có thể trao đổi góc nhìn phân tích trong ngày.",
+    "comment": "Nên có thêm một tab chia sẻ kinh nghiệm cộng đồng để các anh em có thể trao đổi góc nhìn phân tích trong ngày.",
     "createdAt": "2026-10-29T21:18:00.000Z"
   },
   {
     "id": "FB-1793980500-168",
-    "name": "Hà Thế Linh (Gold Wave Fan)",
-    "email": "halinh2004@gmail.com",
+    "name": "Hoàng Đăng Quân",
+    "email": "hoangquan2004@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -565,8 +565,8 @@
   },
   {
     "id": "FB-1793979000-167",
-    "name": "Chu Hữu Bảo (Swing Trader)",
-    "email": "chubao1997@outlook.com",
+    "name": "Lương Gia Sơn",
+    "email": "luongson1997@outlook.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -577,19 +577,19 @@
   },
   {
     "id": "FB-1793977500-166",
-    "name": "Đinh Diễm Tùng (Trader M15)",
-    "email": "dinhtung1990@icloud.com",
+    "name": "Phùng Kim Hiền",
+    "email": "phunghien1990@icloud.com",
     "rating": 4,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
     ],
-    "comment": "Gợi ý admin thêm tính năng ghi chú nhật ký giao dịch (Trading Journal) ngay bên cạnh từng lệnh để người dùng tự rút kinh nghiệm.",
+    "comment": "Gợi ý admin thêm tính năng ghi chú nhật ký giao dịch ngay bên cạnh từng lệnh để người dùng tự rút kinh nghiệm.",
     "createdAt": "2026-10-29T05:30:00.000Z"
   },
   {
     "id": "FB-1793976000-165",
-    "name": "Lâm Thu Triết (FX Sài Gòn)",
-    "email": "lamtriet2008@yahoo.com",
+    "name": "Ngô Xuân Hằng",
+    "email": "ngohang2008@yahoo.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -601,8 +601,8 @@
   },
   {
     "id": "FB-1793974500-164",
-    "name": "Trịnh Đăng Trung (Quản Lý Quỹ)",
-    "email": "trinhtrung2001@gmail.com",
+    "name": "Phan Đức Vinh",
+    "email": "phanvinh2001@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -613,8 +613,8 @@
   },
   {
     "id": "FB-1793973000-163",
-    "name": "Ngô Minh Hoàng (Scalper M5)",
-    "email": "ngohoang1994@gmail.com",
+    "name": "Cao Ánh Thịnh",
+    "email": "caothinh1994@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
@@ -624,8 +624,8 @@
   },
   {
     "id": "FB-1793971500-162",
-    "name": "Bùi Thế Hùng (Forex Pro)",
-    "email": "buihung1987@gmail.com",
+    "name": "Đinh Thanh Huy",
+    "email": "dinhhuy1987@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -637,8 +637,8 @@
   },
   {
     "id": "FB-1793970000-161",
-    "name": "Vũ Hữu Vi",
-    "email": "vuvi2005@outlook.com",
+    "name": "Lý Anh Vi",
+    "email": "lyvi2005@outlook.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -649,8 +649,8 @@
   },
   {
     "id": "FB-1793968500-160",
-    "name": "Hoàng Diễm Mai (Trader Đà Nẵng)",
-    "email": "hoangmai1998@icloud.com",
+    "name": "Võ Ngọc Trang",
+    "email": "votrang1998@icloud.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động"
@@ -660,8 +660,8 @@
   },
   {
     "id": "FB-1793967000-159",
-    "name": "Trần Thu Luân (Thành Viên VIP)",
-    "email": "tranluan1991@yahoo.com",
+    "name": "Trần Bảo Đạt",
+    "email": "trandat1991@yahoo.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -673,8 +673,8 @@
   },
   {
     "id": "FB-1793965500-158",
-    "name": "Hà Đăng Vinh (Kỹ Sư FX)",
-    "email": "havinh2009@gmail.com",
+    "name": "Bạch Mỹ Trung",
+    "email": "bachtrung2009@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -685,8 +685,8 @@
   },
   {
     "id": "FB-1793964000-157",
-    "name": "Chu Minh Việt (Chiến Lược Gia)",
-    "email": "chuviet2002@gmail.com",
+    "name": "Đoàn Quang Dũng",
+    "email": "doandung2002@gmail.com",
     "rating": 4,
     "tags": [
       "📈 Phân tích xu hướng AI"
@@ -696,8 +696,8 @@
   },
   {
     "id": "FB-1793962500-156",
-    "name": "Đinh Thế Khang (Gold Hunter)",
-    "email": "dinhkhang1995@gmail.com",
+    "name": "Bùi Quốc Ngân",
+    "email": "buingan1995@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -709,8 +709,8 @@
   },
   {
     "id": "FB-1793961000-155",
-    "name": "Lâm Hữu Sơn (Cần Thơ FX)",
-    "email": "lamson1988@outlook.com",
+    "name": "Phạm Phương Bảo",
+    "email": "phambao1988@outlook.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -721,8 +721,8 @@
   },
   {
     "id": "FB-1793959500-154",
-    "name": "Trịnh Diễm Anh (Trader Hà Nội)",
-    "email": "trinhanh2006@icloud.com",
+    "name": "Tạ Đình Phong",
+    "email": "taphong2006@icloud.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô"
@@ -732,33 +732,33 @@
   },
   {
     "id": "FB-1793958000-153",
-    "name": "Ngô Thu Thư (Hải Phòng Trader)",
-    "email": "ngothu1999@yahoo.com",
+    "name": "Lâm Hữu Nam",
+    "email": "lamnam1999@yahoo.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
       "📈 Phân tích xu hướng AI",
       "📰 Tin tức vĩ mô"
     ],
-    "comment": "AI phân tích tâm lý thị trường (Market Sentiment) đưa ra góc nhìn khách quan, giúp mình không bị tâm lý đám đông dẫn dụ.",
+    "comment": "AI phân tích tâm lý thị trường đưa ra góc nhìn khách quan, giúp mình không bị tâm lý đám đông dẫn dụ.",
     "createdAt": "2026-10-26T22:06:00.000Z"
   },
   {
     "id": "FB-1793956500-152",
-    "name": "Bùi Đăng Yến (Trader Vàng)",
-    "email": "buiyen1992@gmail.com",
+    "name": "Hồ Thu Oanh",
+    "email": "hooanh1992@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Bảng lịch kinh tế lọc đúng các tin đỏ quan trọng (CPI, Bảng lương phi nông nghiệp, Lãi suất Fed), không bị ngợp bởi các tin rác.",
+    "comment": "Bảng lịch kinh tế lọc đúng các tin đỏ quan trọng như CPI, Bảng lương phi nông nghiệp, Lãi suất Fed, không bị ngợp bởi các tin rác.",
     "createdAt": "2026-10-26T18:42:00.000Z"
   },
   {
     "id": "FB-1793955000-151",
-    "name": "Vũ Minh Hương (Scalper H1)",
-    "email": "vuhuong1985@gmail.com",
+    "name": "Huỳnh Hoàng Hương",
+    "email": "huynhhuong1985@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới"
@@ -768,21 +768,21 @@
   },
   {
     "id": "FB-1793953500-150",
-    "name": "Hoàng Thế Lâm (Trader Tự Do)",
-    "email": "hoanglam2003@gmail.com",
+    "name": "Hà Tường Khoa",
+    "email": "hakhoa2003@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
       "📰 Tin tức vĩ mô",
       "💡 Đề xuất tính năng mới"
     ],
-    "comment": "Hệ thống cảnh báo bằng màu sắc (Xanh Buy - Đỏ Sell) rất rõ ràng, hạn chế tối đa việc nhìn nhầm chiều xu hướng.",
+    "comment": "Hệ thống cảnh báo bằng màu sắc Xanh Buy Đỏ Sell rất rõ ràng, hạn chế tối đa việc nhìn nhầm chiều xu hướng.",
     "createdAt": "2026-10-26T11:54:00.000Z"
   },
   {
     "id": "FB-1793952000-149",
-    "name": "Trần Hữu Toàn (Nhà Đầu Tư)",
-    "email": "trantoan1996@outlook.com",
+    "name": "Tô Khánh Nghĩa",
+    "email": "tonghia1996@outlook.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -793,8 +793,8 @@
   },
   {
     "id": "FB-1793950500-148",
-    "name": "Hà Diễm Phong (Gold Wave Fan)",
-    "email": "haphong1989@icloud.com",
+    "name": "Dương Thế Anh",
+    "email": "duonganh1989@icloud.com",
     "rating": 4,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -804,8 +804,8 @@
   },
   {
     "id": "FB-1793949000-147",
-    "name": "Chu Thu Kiên (Swing Trader)",
-    "email": "chukien2007@yahoo.com",
+    "name": "Vũ Diễm Ngọc",
+    "email": "vungoc2007@yahoo.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -817,8 +817,8 @@
   },
   {
     "id": "FB-1793947500-146",
-    "name": "Đinh Đăng Long (Trader M15)",
-    "email": "dinhlong2000@gmail.com",
+    "name": "Nguyễn Việt Vũ",
+    "email": "nguyenvu2000@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -829,8 +829,8 @@
   },
   {
     "id": "FB-1793946000-145",
-    "name": "Lâm Minh Dũng (FX Sài Gòn)",
-    "email": "lamdung1993@gmail.com",
+    "name": "Quách Thành Việt",
+    "email": "quachviet1993@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
@@ -840,21 +840,21 @@
   },
   {
     "id": "FB-1793944500-144",
-    "name": "Trịnh Thế Hà (Quản Lý Quỹ)",
-    "email": "trinhha1986@gmail.com",
+    "name": "Trịnh Hồng Cường",
+    "email": "trinhcuong1986@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime"
     ],
-    "comment": "Cột hiển thị độ dốc xu hướng (Trend Slope) và động lượng Momentum ở góc phải màn hình rất hữu ích khi phân tích đa khung thời gian.",
+    "comment": "Cột hiển thị độ dốc xu hướng và động lượng Momentum ở góc phải màn hình rất hữu ích khi phân tích đa khung thời gian.",
     "createdAt": "2026-10-25T09:54:00.000Z"
   },
   {
     "id": "FB-1793943000-143",
-    "name": "Ngô Hữu Lan (Scalper M5)",
-    "email": "ngolan2004@outlook.com",
+    "name": "Đặng Minh Duyên",
+    "email": "dangduyen2004@outlook.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -865,8 +865,8 @@
   },
   {
     "id": "FB-1793941500-142",
-    "name": "Bùi Diễm Trang (Forex Pro)",
-    "email": "buitrang1997@icloud.com",
+    "name": "Lê Văn Mai",
+    "email": "lemai1997@icloud.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
@@ -876,8 +876,8 @@
   },
   {
     "id": "FB-1793940000-141",
-    "name": "Vũ Thu Bình",
-    "email": "vubinh1990@yahoo.com",
+    "name": "Chu Hải Bình",
+    "email": "chubinh1990@yahoo.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -889,8 +889,8 @@
   },
   {
     "id": "FB-1793938500-140",
-    "name": "Hoàng Đăng Duy (Trader Đà Nẵng)",
-    "email": "hoangduy2008@gmail.com",
+    "name": "Mai Tuấn Phát",
+    "email": "maiphat2008@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -901,8 +901,8 @@
   },
   {
     "id": "FB-1793937000-139",
-    "name": "Trần Minh Thịnh (Thành Viên VIP)",
-    "email": "tranthinh2001@gmail.com",
+    "name": "Đỗ Trúc Hoàng",
+    "email": "dohoang2001@gmail.com",
     "rating": 4,
     "tags": [
       "🤖 Bot MT5 tự động"
@@ -912,8 +912,8 @@
   },
   {
     "id": "FB-1793935500-138",
-    "name": "Hà Thế Cường (Kỹ Sư FX)",
-    "email": "hacuong1994@gmail.com",
+    "name": "Hoàng Đăng Hà",
+    "email": "hoangha1994@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -925,8 +925,8 @@
   },
   {
     "id": "FB-1793934000-137",
-    "name": "Chu Hữu Đức (Chiến Lược Gia)",
-    "email": "chuduc1987@outlook.com",
+    "name": "Lương Gia Thảo",
+    "email": "luongthao1987@outlook.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -937,19 +937,19 @@
   },
   {
     "id": "FB-1793932500-136",
-    "name": "Đinh Diễm Hiền (Gold Hunter)",
-    "email": "dinhhien2005@icloud.com",
+    "name": "Phùng Kim Tùng",
+    "email": "phungtung2005@icloud.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI"
     ],
-    "comment": "Tính năng chuông cảnh báo âm thanh giúp mình không cần phải dán mắt vào màn hình 24/7 mà vẫn không lọt mất kèo đẹp.",
+    "comment": "Tính năng chuông cảnh báo âm thanh giúp mình không cần phải dán mắt vào màn hình liên tục mà vẫn không lọt mất kèo đẹp.",
     "createdAt": "2026-10-24T01:06:00.000Z"
   },
   {
     "id": "FB-1793931000-135",
-    "name": "Lâm Thu Ngọc (Cần Thơ FX)",
-    "email": "lamngoc1998@yahoo.com",
+    "name": "Ngô Xuân Kiên",
+    "email": "ngokien1998@yahoo.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -961,8 +961,8 @@
   },
   {
     "id": "FB-1793929500-134",
-    "name": "Trịnh Đăng Nhung (Trader Hà Nội)",
-    "email": "trinhnhung1991@gmail.com",
+    "name": "Phan Đức Tuấn",
+    "email": "phantuan1991@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -973,8 +973,8 @@
   },
   {
     "id": "FB-1793928000-133",
-    "name": "Ngô Minh Tâm (Hải Phòng Trader)",
-    "email": "ngotam2009@gmail.com",
+    "name": "Cao Ánh Quỳnh",
+    "email": "caoquynh2009@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô"
@@ -984,21 +984,21 @@
   },
   {
     "id": "FB-1793926500-132",
-    "name": "Bùi Thế Khoa (Trader Vàng)",
-    "email": "buikhoa2002@gmail.com",
+    "name": "Đinh Thanh Lâm",
+    "email": "dinhlam2002@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
       "📈 Phân tích xu hướng AI",
       "📰 Tin tức vĩ mô"
     ],
-    "comment": "Hệ thống Web Push VAPID hoạt động rất mượt, mình khóa màn hình điện thoại mà vẫn nhận được thông báo kèm điểm Buy/Sell rõ ràng.",
+    "comment": "Hệ thống Web Push VAPID hoạt động rất mượt, mình khóa màn hình điện thoại mà vẫn nhận được thông báo kèm điểm Buy Sell rõ ràng.",
     "createdAt": "2026-10-23T05:54:00.000Z"
   },
   {
     "id": "FB-1793925000-131",
-    "name": "Vũ Hữu Quang (Scalper H1)",
-    "email": "vuquang1995@outlook.com",
+    "name": "Lý Anh Quang",
+    "email": "lyquang1995@outlook.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -1009,8 +1009,8 @@
   },
   {
     "id": "FB-1793923500-130",
-    "name": "Hoàng Diễm Hưng (Trader Tự Do)",
-    "email": "hoanghung1988@icloud.com",
+    "name": "Võ Ngọc Hải",
+    "email": "vohai1988@icloud.com",
     "rating": 4,
     "tags": [
       "💡 Đề xuất tính năng mới"
@@ -1020,21 +1020,21 @@
   },
   {
     "id": "FB-1793922000-129",
-    "name": "Trần Thu Nam (Nhà Đầu Tư)",
-    "email": "trannam2006@yahoo.com",
+    "name": "Trần Bảo Thư",
+    "email": "tranthu2006@yahoo.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
       "📰 Tin tức vĩ mô",
       "💡 Đề xuất tính năng mới"
     ],
-    "comment": "Tự động đóng 50% khối lượng tại TP1 và gồng 50% còn lại lên TP2/TP3 là một chiến lược quản lý vốn kinh điển được bot thực thi xuất sắc.",
+    "comment": "Tự động đóng 50% khối lượng tại TP1 và gồng 50% còn lại lên TP2 hoặc TP3 là một chiến lược quản lý vốn kinh điển được bot thực thi xuất sắc.",
     "createdAt": "2026-10-22T19:42:00.000Z"
   },
   {
     "id": "FB-1793920500-128",
-    "name": "Hà Đăng Tuấn (Gold Wave Fan)",
-    "email": "hatuan1999@gmail.com",
+    "name": "Bạch Mỹ Nhung",
+    "email": "bachnhung1999@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -1045,8 +1045,8 @@
   },
   {
     "id": "FB-1793919000-127",
-    "name": "Chu Minh Ly (Swing Trader)",
-    "email": "chuly1992@gmail.com",
+    "name": "Đoàn Quang Hậu",
+    "email": "doanhau1992@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -1056,8 +1056,8 @@
   },
   {
     "id": "FB-1793917500-126",
-    "name": "Đinh Thế Ngân (Trader M15)",
-    "email": "dinhngan1985@gmail.com",
+    "name": "Bùi Quốc Khang",
+    "email": "buikhang1985@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -1069,8 +1069,8 @@
   },
   {
     "id": "FB-1793916000-125",
-    "name": "Lâm Hữu Thảo (FX Sài Gòn)",
-    "email": "lamthao2003@outlook.com",
+    "name": "Phạm Phương Đức",
+    "email": "phamduc2003@outlook.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -1081,19 +1081,19 @@
   },
   {
     "id": "FB-1793914500-124",
-    "name": "Trịnh Diễm Thành (Quản Lý Quỹ)",
-    "email": "trinhthanh1996@icloud.com",
+    "name": "Tạ Đình Trâm",
+    "email": "tatram1996@icloud.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
     ],
-    "comment": "Cài đặt bot lên MT5 rất nhanh gọn, chỉ cần copy file EA và paste API key là xong. Video hướng dẫn của admin rất chi tiết.",
+    "comment": "Cài đặt bot lên MT5 rất nhanh gọn, chỉ cần copy file EA và paste API key là xong. Hướng dẫn của admin rất chi tiết.",
     "createdAt": "2026-10-21T21:06:00.000Z"
   },
   {
     "id": "FB-1793913000-123",
-    "name": "Ngô Thu Đạt (Scalper M5)",
-    "email": "ngodat1989@yahoo.com",
+    "name": "Lâm Hữu Luân",
+    "email": "lamluan1989@yahoo.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -1105,8 +1105,8 @@
   },
   {
     "id": "FB-1793911500-122",
-    "name": "Bùi Đăng Phát (Forex Pro)",
-    "email": "buiphat2007@gmail.com",
+    "name": "Hồ Thu Duy",
+    "email": "hoduy2007@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -1117,8 +1117,8 @@
   },
   {
     "id": "FB-1793910000-121",
-    "name": "Vũ Minh Thắng",
-    "email": "vuthang2000@gmail.com",
+    "name": "Huỳnh Hoàng Thắng",
+    "email": "huynhthang2000@gmail.com",
     "rating": 4,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
@@ -1128,21 +1128,21 @@
   },
   {
     "id": "FB-1793908500-120",
-    "name": "Hoàng Thế Huy (Trader Đà Nẵng)",
-    "email": "hoanghuy1993@gmail.com",
+    "name": "Lương Mỹ Thư",
+    "email": "luongthu1993@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Đã cho bot chạy thử nghiệm trên tài khoản live 500$, sau 2 tuần lợi nhuận đạt 12% với mức drawdown tối đa chỉ 3.8%. Rất an toàn!",
+    "comment": "Đã cho bot chạy thử nghiệm trên tài khoản live 500 đô, sau 2 tuần lợi nhuận đạt 12% với mức drawdown tối đa chỉ 3.8%. Rất an toàn!",
     "createdAt": "2026-10-21T07:30:00.000Z"
   },
   {
     "id": "FB-1793907000-119",
-    "name": "Trần Hữu Duyên (Thành Viên VIP)",
-    "email": "tranduyen1986@outlook.com",
+    "name": "Phùng Quang Nhung",
+    "email": "phungnhung1986@outlook.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -1153,19 +1153,19 @@
   },
   {
     "id": "FB-1793905500-118",
-    "name": "Hà Diễm Trâm (Kỹ Sư FX)",
-    "email": "hatram2004@icloud.com",
+    "name": "Ngô Quốc Hậu",
+    "email": "ngohau2004@icloud.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động"
     ],
-    "comment": "Cực kỳ thích tính năng quản lý vốn theo % tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
+    "comment": "Cực kỳ thích tính năng quản lý vốn theo tỷ lệ phần trăm tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
     "createdAt": "2026-10-20T19:06:00.000Z"
   },
   {
     "id": "FB-1793904000-117",
-    "name": "Chu Thu Hằng (Chiến Lược Gia)",
-    "email": "chuhang1997@yahoo.com",
+    "name": "Phan Phương Khang",
+    "email": "phankhang1997@yahoo.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -1177,8 +1177,8 @@
   },
   {
     "id": "FB-1793902500-116",
-    "name": "Đinh Đăng Vũ (Gold Hunter)",
-    "email": "dinhvu1990@gmail.com",
+    "name": "Cao Đình Đức",
+    "email": "caoduc1990@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -1189,8 +1189,8 @@
   },
   {
     "id": "FB-1793901000-115",
-    "name": "Lâm Minh Hậu (Cần Thơ FX)",
-    "email": "lamhau2008@gmail.com",
+    "name": "Đinh Hữu Trâm",
+    "email": "dinhtram2008@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI"
@@ -1200,8 +1200,8 @@
   },
   {
     "id": "FB-1793899500-114",
-    "name": "Trịnh Thế Quân (Trader Hà Nội)",
-    "email": "trinhquan2001@gmail.com",
+    "name": "Lý Thu Luân",
+    "email": "lyluan2001@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -1213,8 +1213,8 @@
   },
   {
     "id": "FB-1793898000-113",
-    "name": "Ngô Hữu Nghĩa (Hải Phòng Trader)",
-    "email": "ngonghia1994@outlook.com",
+    "name": "Võ Hoàng Duy",
+    "email": "voduy1994@outlook.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -1225,8 +1225,8 @@
   },
   {
     "id": "FB-1793896500-112",
-    "name": "Bùi Diễm Hải (Trader Vàng)",
-    "email": "buihai1987@icloud.com",
+    "name": "Trần Tường Thắng",
+    "email": "tranthang1987@icloud.com",
     "rating": 4,
     "tags": [
       "📰 Tin tức vĩ mô"
@@ -1236,8 +1236,8 @@
   },
   {
     "id": "FB-1793895000-111",
-    "name": "Vũ Thu Minh (Scalper H1)",
-    "email": "vuminh2005@yahoo.com",
+    "name": "Bạch Khánh Hùng",
+    "email": "bachhung2005@yahoo.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -1249,20 +1249,20 @@
   },
   {
     "id": "FB-1793893500-110",
-    "name": "Hoàng Đăng Oanh (Trader Tự Do)",
-    "email": "hoangoanh1998@gmail.com",
+    "name": "Đoàn Thế Lan",
+    "email": "doanlan1998@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách scalping.",
+    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách lướt sóng ngắn.",
     "createdAt": "2026-10-19T10:18:00.000Z"
   },
   {
     "id": "FB-1793892000-109",
-    "name": "Trần Minh Quỳnh (Nhà Đầu Tư)",
-    "email": "tranquynh1991@gmail.com",
+    "name": "Bùi Diễm Thành",
+    "email": "buithanh1991@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới"
@@ -1272,8 +1272,8 @@
   },
   {
     "id": "FB-1793890500-108",
-    "name": "Hà Thế Linh (Gold Wave Fan)",
-    "email": "halinh2009@gmail.com",
+    "name": "Phạm Việt Triết",
+    "email": "phamtriet2009@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -1285,8 +1285,8 @@
   },
   {
     "id": "FB-1793889000-107",
-    "name": "Chu Hữu Bảo (Swing Trader)",
-    "email": "chubao2002@outlook.com",
+    "name": "Tạ Thành Long",
+    "email": "talong2002@outlook.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -1297,8 +1297,8 @@
   },
   {
     "id": "FB-1793887500-106",
-    "name": "Đinh Diễm Tùng (Trader M15)",
-    "email": "dinhtung1995@icloud.com",
+    "name": "Lâm Hồng Ly",
+    "email": "lamly1995@icloud.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -1308,21 +1308,21 @@
   },
   {
     "id": "FB-1793886000-105",
-    "name": "Lâm Thu Triết (FX Sài Gòn)",
-    "email": "lamtriet1988@yahoo.com",
+    "name": "Hồ Minh Linh",
+    "email": "holinh1988@yahoo.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
       "💡 Đề xuất tính năng mới",
       "🎯 Tín hiệu Vàng chuẩn"
     ],
-    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy/Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
+    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy và Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
     "createdAt": "2026-10-18T11:42:00.000Z"
   },
   {
     "id": "FB-1793884500-104",
-    "name": "Trịnh Đăng Trung (Quản Lý Quỹ)",
-    "email": "trinhtrung2006@gmail.com",
+    "name": "Huỳnh Văn Toàn",
+    "email": "huynhtoan2006@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -1333,8 +1333,8 @@
   },
   {
     "id": "FB-1793883000-103",
-    "name": "Ngô Minh Hoàng (Scalper M5)",
-    "email": "ngohoang1999@gmail.com",
+    "name": "Hà Hải Hưng",
+    "email": "hahung1999@gmail.com",
     "rating": 4,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
@@ -1344,21 +1344,21 @@
   },
   {
     "id": "FB-1793881500-102",
-    "name": "Bùi Thế Hùng (Forex Pro)",
-    "email": "buihung1992@gmail.com",
+    "name": "Tô Tuấn Minh",
+    "email": "tominh1992@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime"
     ],
-    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy con bot khác. Rất đáng giá từng đồng!",
+    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy công cụ khác. Rất đáng giá từng đồng!",
     "createdAt": "2026-10-18T01:30:00.000Z"
   },
   {
     "id": "FB-1793880000-101",
-    "name": "Vũ Hữu Vi",
-    "email": "vuvi1985@outlook.com",
+    "name": "Dương Trúc Yến",
+    "email": "duongyen1985@outlook.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -1369,8 +1369,8 @@
   },
   {
     "id": "FB-1793878500-100",
-    "name": "Hoàng Diễm Mai (Trader Đà Nẵng)",
-    "email": "hoangmai2003@icloud.com",
+    "name": "Vũ Đăng Tâm",
+    "email": "vutam2003@icloud.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
@@ -1380,21 +1380,21 @@
   },
   {
     "id": "FB-1793877000-099",
-    "name": "Trần Thu Luân (Thành Viên VIP)",
-    "email": "tranluan1996@yahoo.com",
+    "name": "Nguyễn Gia Quân",
+    "email": "nguyenquan1996@yahoo.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em trader.",
+    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em.",
     "createdAt": "2026-10-17T15:18:00.000Z"
   },
   {
     "id": "FB-1793875500-098",
-    "name": "Hà Đăng Vinh (Kỹ Sư FX)",
-    "email": "havinh1989@gmail.com",
+    "name": "Quách Kim Sơn",
+    "email": "quachson1989@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -1405,8 +1405,8 @@
   },
   {
     "id": "FB-1793874000-097",
-    "name": "Chu Minh Việt (Chiến Lược Gia)",
-    "email": "chuviet2007@gmail.com",
+    "name": "Trịnh Xuân Hiền",
+    "email": "trinhhien2007@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động"
@@ -1416,8 +1416,8 @@
   },
   {
     "id": "FB-1793872500-096",
-    "name": "Đinh Thế Khang (Gold Hunter)",
-    "email": "dinhkhang2000@gmail.com",
+    "name": "Đặng Đức Hằng",
+    "email": "danghang2000@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -1429,8 +1429,8 @@
   },
   {
     "id": "FB-1793871000-095",
-    "name": "Lâm Hữu Sơn (Cần Thơ FX)",
-    "email": "lamson1993@outlook.com",
+    "name": "Lê Ánh Vinh",
+    "email": "levinh1993@outlook.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -1441,8 +1441,8 @@
   },
   {
     "id": "FB-1793869500-094",
-    "name": "Trịnh Diễm Anh (Trader Hà Nội)",
-    "email": "trinhanh1986@icloud.com",
+    "name": "Chu Thanh Thịnh",
+    "email": "chuthinh1986@icloud.com",
     "rating": 4,
     "tags": [
       "📈 Phân tích xu hướng AI"
@@ -1452,8 +1452,8 @@
   },
   {
     "id": "FB-1793868000-093",
-    "name": "Ngô Thu Thư (Hải Phòng Trader)",
-    "email": "ngothu2004@yahoo.com",
+    "name": "Mai Anh Huy",
+    "email": "maihuy2004@yahoo.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -1465,8 +1465,8 @@
   },
   {
     "id": "FB-1793866500-092",
-    "name": "Bùi Đăng Yến (Trader Vàng)",
-    "email": "buiyen1997@gmail.com",
+    "name": "Đỗ Ngọc Vi",
+    "email": "dovi1997@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -1477,8 +1477,8 @@
   },
   {
     "id": "FB-1793865000-091",
-    "name": "Vũ Minh Hương (Scalper H1)",
-    "email": "vuhuong1990@gmail.com",
+    "name": "Hoàng Bảo Trang",
+    "email": "hoangtrang1990@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô"
@@ -1488,8 +1488,8 @@
   },
   {
     "id": "FB-1793863500-090",
-    "name": "Hoàng Thế Lâm (Trader Tự Do)",
-    "email": "hoanglam2008@gmail.com",
+    "name": "Lương Mỹ Đạt",
+    "email": "luongdat2008@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -1501,8 +1501,8 @@
   },
   {
     "id": "FB-1793862000-089",
-    "name": "Trần Hữu Toàn (Nhà Đầu Tư)",
-    "email": "trantoan2001@outlook.com",
+    "name": "Phùng Quang Trung",
+    "email": "phungtrung2001@outlook.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -1513,44 +1513,44 @@
   },
   {
     "id": "FB-1793860500-088",
-    "name": "Hà Diễm Phong (Gold Wave Fan)",
-    "email": "haphong1994@icloud.com",
+    "name": "Ngô Quốc Dũng",
+    "email": "ngodung1994@icloud.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới"
     ],
-    "comment": "Tín hiệu rõ ràng, dứt khoát, không mập mờ hai chiều như các hội nhóm telegram. Rất tôn trọng sự minh bạch của admin.",
+    "comment": "Tín hiệu rõ ràng, dứt khoát, không mập mờ hai chiều như các hội nhóm trôi nổi. Rất tôn trọng sự minh bạch của admin.",
     "createdAt": "2026-10-15T14:42:00.000Z"
   },
   {
     "id": "FB-1793859000-087",
-    "name": "Chu Thu Kiên (Swing Trader)",
-    "email": "chukien1987@yahoo.com",
+    "name": "Phan Phương Ngân",
+    "email": "phanngan1987@yahoo.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
       "📰 Tin tức vĩ mô",
       "💡 Đề xuất tính năng mới"
     ],
-    "comment": "Từ ngày có app, mình không còn phải thức đêm canh lệnh đến 2-3 giờ sáng nữa. Cứ đặt theo các mốc TP/SL của app là ngủ ngon giấc.",
+    "comment": "Từ ngày có app, mình không còn phải thức đêm canh lệnh đến 2-3 giờ sáng nữa. Cứ đặt theo các mốc TP và SL của app là ngủ ngon giấc.",
     "createdAt": "2026-10-15T11:18:00.000Z"
   },
   {
     "id": "FB-1793857500-086",
-    "name": "Đinh Đăng Long (Trader M15)",
-    "email": "dinhlong2005@gmail.com",
+    "name": "Cao Đình Bảo",
+    "email": "caobao2005@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
       "🤖 Bot MT5 tự động"
     ],
-    "comment": "Một trong số ít những ứng dụng hỗ trợ giao dịch Vàng thực chiến hiệu quả nhất tại Việt Nam hiện nay. 5 sao xứng đáng!",
+    "comment": "Một trong số ít những ứng dụng hỗ trợ giao dịch Vàng thực chiến hiệu quả nhất hiện nay. 5 sao xứng đáng!",
     "createdAt": "2026-10-15T07:54:00.000Z"
   },
   {
     "id": "FB-1793856000-085",
-    "name": "Lâm Minh Dũng (FX Sài Gòn)",
-    "email": "lamdung1998@gmail.com",
+    "name": "Đinh Hữu Phong",
+    "email": "dinhphong1998@gmail.com",
     "rating": 4,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -1560,8 +1560,8 @@
   },
   {
     "id": "FB-1793854500-084",
-    "name": "Trịnh Thế Hà (Quản Lý Quỹ)",
-    "email": "trinhha1991@gmail.com",
+    "name": "Lý Thu Nam",
+    "email": "lynam1991@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -1573,8 +1573,8 @@
   },
   {
     "id": "FB-1793853000-083",
-    "name": "Ngô Hữu Lan (Scalper M5)",
-    "email": "ngolan2009@outlook.com",
+    "name": "Võ Hoàng Oanh",
+    "email": "vooanh2009@outlook.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -1585,19 +1585,19 @@
   },
   {
     "id": "FB-1793851500-082",
-    "name": "Bùi Diễm Trang (Forex Pro)",
-    "email": "buitrang2002@icloud.com",
+    "name": "Trần Tường Hương",
+    "email": "tranhuong2002@icloud.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
     ],
-    "comment": "Là người mới bước chân vào thị trường Forex, app như một người thầy chỉ đường giúp mình không bị lạc lối giữa ma trận chỉ báo.",
+    "comment": "Là người mới bước chân vào thị trường tài chính, app như một người thầy chỉ đường giúp mình không bị lạc lối giữa ma trận chỉ báo.",
     "createdAt": "2026-10-14T12:42:00.000Z"
   },
   {
     "id": "FB-1793850000-081",
-    "name": "Vũ Thu Bình",
-    "email": "vubinh1995@yahoo.com",
+    "name": "Bạch Khánh Khoa",
+    "email": "bachkhoa1995@yahoo.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -1609,8 +1609,8 @@
   },
   {
     "id": "FB-1793848500-080",
-    "name": "Hoàng Đăng Duy (Trader Đà Nẵng)",
-    "email": "hoangduy1988@gmail.com",
+    "name": "Đoàn Thế Nghĩa",
+    "email": "doannghia1988@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -1621,8 +1621,8 @@
   },
   {
     "id": "FB-1793847000-079",
-    "name": "Trần Minh Thịnh (Thành Viên VIP)",
-    "email": "tranthinh2006@gmail.com",
+    "name": "Bùi Diễm Anh",
+    "email": "buianh2006@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
@@ -1632,21 +1632,21 @@
   },
   {
     "id": "FB-1793845500-078",
-    "name": "Hà Thế Cường (Kỹ Sư FX)",
-    "email": "hacuong1999@gmail.com",
+    "name": "Phạm Việt Ngọc",
+    "email": "phamngoc1999@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Nếu có thêm tính năng tính toán khối lượng vào lệnh (Position Size Calculator) dựa trên số pips stoploss thì hoàn hảo 10/10.",
+    "comment": "Nếu có thêm tính năng tính toán khối lượng vào lệnh dựa trên số pips stoploss thì hoàn hảo 10/10.",
     "createdAt": "2026-10-13T23:06:00.000Z"
   },
   {
     "id": "FB-1793844000-077",
-    "name": "Chu Hữu Đức (Chiến Lược Gia)",
-    "email": "chuduc1992@outlook.com",
+    "name": "Tạ Thành Vũ",
+    "email": "tavu1992@outlook.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -1657,8 +1657,8 @@
   },
   {
     "id": "FB-1793842500-076",
-    "name": "Đinh Diễm Hiền (Gold Hunter)",
-    "email": "dinhhien1985@icloud.com",
+    "name": "Lâm Hồng Việt",
+    "email": "lamviet1985@icloud.com",
     "rating": 4,
     "tags": [
       "🤖 Bot MT5 tự động"
@@ -1668,8 +1668,8 @@
   },
   {
     "id": "FB-1793841000-075",
-    "name": "Lâm Thu Ngọc (Cần Thơ FX)",
-    "email": "lamngoc2003@yahoo.com",
+    "name": "Hồ Minh Cường",
+    "email": "hocuong2003@yahoo.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -1681,20 +1681,20 @@
   },
   {
     "id": "FB-1793839500-074",
-    "name": "Trịnh Đăng Nhung (Trader Hà Nội)",
-    "email": "trinhnhung1996@gmail.com",
+    "name": "Huỳnh Văn Duyên",
+    "email": "huynhduyen1996@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
       "🎯 Tín hiệu Vàng chuẩn"
     ],
-    "comment": "Nên có thêm một tab chia sẻ kinh nghiệm cộng đồng để các anh em trader có thể trao đổi góc nhìn phân tích trong ngày.",
+    "comment": "Nên có thêm một tab chia sẻ kinh nghiệm cộng đồng để các anh em có thể trao đổi góc nhìn phân tích trong ngày.",
     "createdAt": "2026-10-13T03:54:00.000Z"
   },
   {
     "id": "FB-1793838000-073",
-    "name": "Ngô Minh Tâm (Hải Phòng Trader)",
-    "email": "ngotam1989@gmail.com",
+    "name": "Hà Hải Mai",
+    "email": "hamai1989@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI"
@@ -1704,8 +1704,8 @@
   },
   {
     "id": "FB-1793836500-072",
-    "name": "Bùi Thế Khoa (Trader Vàng)",
-    "email": "buikhoa2007@gmail.com",
+    "name": "Tô Tuấn Bình",
+    "email": "tobinh2007@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -1717,20 +1717,20 @@
   },
   {
     "id": "FB-1793835000-071",
-    "name": "Vũ Hữu Quang (Scalper H1)",
-    "email": "vuquang2000@outlook.com",
+    "name": "Dương Trúc Phát",
+    "email": "duongphat2000@outlook.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime"
     ],
-    "comment": "Gợi ý admin thêm tính năng ghi chú nhật ký giao dịch (Trading Journal) ngay bên cạnh từng lệnh để người dùng tự rút kinh nghiệm.",
+    "comment": "Gợi ý admin thêm tính năng ghi chú nhật ký giao dịch ngay bên cạnh từng lệnh để người dùng tự rút kinh nghiệm.",
     "createdAt": "2026-10-12T17:42:00.000Z"
   },
   {
     "id": "FB-1793833500-070",
-    "name": "Hoàng Diễm Hưng (Trader Tự Do)",
-    "email": "hoanghung1993@icloud.com",
+    "name": "Vũ Đăng Hoàng",
+    "email": "vuhoang1993@icloud.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô"
@@ -1740,8 +1740,8 @@
   },
   {
     "id": "FB-1793832000-069",
-    "name": "Trần Thu Nam (Nhà Đầu Tư)",
-    "email": "trannam1986@yahoo.com",
+    "name": "Nguyễn Gia Hà",
+    "email": "nguyenha1986@yahoo.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -1753,8 +1753,8 @@
   },
   {
     "id": "FB-1793830500-068",
-    "name": "Hà Đăng Tuấn (Gold Wave Fan)",
-    "email": "hatuan2004@gmail.com",
+    "name": "Quách Kim Thảo",
+    "email": "quachthao2004@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -1765,8 +1765,8 @@
   },
   {
     "id": "FB-1793829000-067",
-    "name": "Chu Minh Ly (Swing Trader)",
-    "email": "chuly1997@gmail.com",
+    "name": "Trịnh Xuân Tùng",
+    "email": "trinhtung1997@gmail.com",
     "rating": 4,
     "tags": [
       "💡 Đề xuất tính năng mới"
@@ -1776,8 +1776,8 @@
   },
   {
     "id": "FB-1793827500-066",
-    "name": "Đinh Thế Ngân (Trader M15)",
-    "email": "dinhngan1990@gmail.com",
+    "name": "Đặng Đức Kiên",
+    "email": "dangkien1990@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -1789,8 +1789,8 @@
   },
   {
     "id": "FB-1793826000-065",
-    "name": "Lâm Hữu Thảo (FX Sài Gòn)",
-    "email": "lamthao2008@outlook.com",
+    "name": "Lê Ánh Tuấn",
+    "email": "letuan2008@outlook.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -1801,8 +1801,8 @@
   },
   {
     "id": "FB-1793824500-064",
-    "name": "Trịnh Diễm Thành (Quản Lý Quỹ)",
-    "email": "trinhthanh2001@icloud.com",
+    "name": "Chu Thanh Quỳnh",
+    "email": "chuquynh2001@icloud.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -1812,8 +1812,8 @@
   },
   {
     "id": "FB-1793823000-063",
-    "name": "Ngô Thu Đạt (Scalper M5)",
-    "email": "ngodat1994@yahoo.com",
+    "name": "Mai Anh Lâm",
+    "email": "mailam1994@yahoo.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -1825,8 +1825,8 @@
   },
   {
     "id": "FB-1793821500-062",
-    "name": "Bùi Đăng Phát (Forex Pro)",
-    "email": "buiphat1987@gmail.com",
+    "name": "Đỗ Ngọc Quang",
+    "email": "doquang1987@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -1837,8 +1837,8 @@
   },
   {
     "id": "FB-1793820000-061",
-    "name": "Vũ Minh Thắng",
-    "email": "vuthang2005@gmail.com",
+    "name": "Hoàng Bảo Hải",
+    "email": "hoanghai2005@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
@@ -1848,8 +1848,8 @@
   },
   {
     "id": "FB-1793818500-060",
-    "name": "Hoàng Thế Huy (Trader Đà Nẵng)",
-    "email": "hoanghuy1998@gmail.com",
+    "name": "Tạ Kim Hà",
+    "email": "taha1998@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -1861,8 +1861,8 @@
   },
   {
     "id": "FB-1793817000-059",
-    "name": "Trần Hữu Duyên (Thành Viên VIP)",
-    "email": "tranduyen1991@outlook.com",
+    "name": "Lâm Xuân Thảo",
+    "email": "lamthao1991@outlook.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -1873,32 +1873,32 @@
   },
   {
     "id": "FB-1793815500-058",
-    "name": "Hà Diễm Trâm (Kỹ Sư FX)",
-    "email": "hatram2009@icloud.com",
+    "name": "Hồ Đức Tùng",
+    "email": "hotung2009@icloud.com",
     "rating": 4,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "AI phân tích tâm lý thị trường (Market Sentiment) đưa ra góc nhìn khách quan, giúp mình không bị tâm lý đám đông dẫn dụ.",
+    "comment": "AI phân tích tâm lý thị trường đưa ra góc nhìn khách quan, giúp mình không bị tâm lý đám đông dẫn dụ.",
     "createdAt": "2026-10-10T10:18:00.000Z"
   },
   {
     "id": "FB-1793814000-057",
-    "name": "Chu Thu Hằng (Chiến Lược Gia)",
-    "email": "chuhang2002@yahoo.com",
+    "name": "Huỳnh Ánh Kiên",
+    "email": "huynhkien2002@yahoo.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Bảng lịch kinh tế lọc đúng các tin đỏ quan trọng (CPI, Bảng lương phi nông nghiệp, Lãi suất Fed), không bị ngợp bởi các tin rác.",
+    "comment": "Bảng lịch kinh tế lọc đúng các tin đỏ quan trọng như CPI, Bảng lương phi nông nghiệp, Lãi suất Fed, không bị ngợp bởi các tin rác.",
     "createdAt": "2026-10-10T06:54:00.000Z"
   },
   {
     "id": "FB-1793812500-056",
-    "name": "Đinh Đăng Vũ (Gold Hunter)",
-    "email": "dinhvu1995@gmail.com",
+    "name": "Hà Thanh Tuấn",
+    "email": "hatuan1995@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -1909,19 +1909,19 @@
   },
   {
     "id": "FB-1793811000-055",
-    "name": "Lâm Minh Hậu (Cần Thơ FX)",
-    "email": "lamhau1988@gmail.com",
+    "name": "Tô Anh Quỳnh",
+    "email": "toquynh1988@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động"
     ],
-    "comment": "Hệ thống cảnh báo bằng màu sắc (Xanh Buy - Đỏ Sell) rất rõ ràng, hạn chế tối đa việc nhìn nhầm chiều xu hướng.",
+    "comment": "Hệ thống cảnh báo bằng màu sắc Xanh Buy Đỏ Sell rất rõ ràng, hạn chế tối đa việc nhìn nhầm chiều xu hướng.",
     "createdAt": "2026-10-09T18:30:00.000Z"
   },
   {
     "id": "FB-1793809500-054",
-    "name": "Trịnh Thế Quân (Trader Hà Nội)",
-    "email": "trinhquan2006@gmail.com",
+    "name": "Dương Ngọc Lâm",
+    "email": "duonglam2006@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -1933,8 +1933,8 @@
   },
   {
     "id": "FB-1793808000-053",
-    "name": "Ngô Hữu Nghĩa (Hải Phòng Trader)",
-    "email": "ngonghia1999@outlook.com",
+    "name": "Vũ Bảo Quang",
+    "email": "vuquang1999@outlook.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -1945,8 +1945,8 @@
   },
   {
     "id": "FB-1793806500-052",
-    "name": "Bùi Diễm Hải (Trader Vàng)",
-    "email": "buihai1992@icloud.com",
+    "name": "Nguyễn Mỹ Hải",
+    "email": "nguyenhai1992@icloud.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI"
@@ -1956,8 +1956,8 @@
   },
   {
     "id": "FB-1793805000-051",
-    "name": "Vũ Thu Minh (Scalper H1)",
-    "email": "vuminh1985@yahoo.com",
+    "name": "Quách Quang Thư",
+    "email": "quachthu1985@yahoo.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -1969,8 +1969,8 @@
   },
   {
     "id": "FB-1793803500-050",
-    "name": "Hoàng Đăng Oanh (Trader Tự Do)",
-    "email": "hoangoanh2003@gmail.com",
+    "name": "Trịnh Quốc Nhung",
+    "email": "trinhnhung2003@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -1981,19 +1981,19 @@
   },
   {
     "id": "FB-1793802000-049",
-    "name": "Trần Minh Quỳnh (Nhà Đầu Tư)",
-    "email": "tranquynh1996@gmail.com",
+    "name": "Đặng Phương Hậu",
+    "email": "danghau1996@gmail.com",
     "rating": 4,
     "tags": [
       "📰 Tin tức vĩ mô"
     ],
-    "comment": "Cột hiển thị độ dốc xu hướng (Trend Slope) và động lượng Momentum ở góc phải màn hình rất hữu ích khi phân tích đa khung thời gian.",
+    "comment": "Cột hiển thị độ dốc xu hướng và động lượng Momentum ở góc phải màn hình rất hữu ích khi phân tích đa khung thời gian.",
     "createdAt": "2026-10-08T16:30:00.000Z"
   },
   {
     "id": "FB-1793800500-048",
-    "name": "Hà Thế Linh (Gold Wave Fan)",
-    "email": "halinh1989@gmail.com",
+    "name": "Lê Đình Khang",
+    "email": "lekhang1989@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -2005,8 +2005,8 @@
   },
   {
     "id": "FB-1793799000-047",
-    "name": "Chu Hữu Bảo (Swing Trader)",
-    "email": "chubao2007@outlook.com",
+    "name": "Chu Hữu Đức",
+    "email": "chuduc2007@outlook.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -2017,8 +2017,8 @@
   },
   {
     "id": "FB-1793797500-046",
-    "name": "Đinh Diễm Tùng (Trader M15)",
-    "email": "dinhtung2000@icloud.com",
+    "name": "Mai Thu Trâm",
+    "email": "maitram2000@icloud.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới"
@@ -2028,8 +2028,8 @@
   },
   {
     "id": "FB-1793796000-045",
-    "name": "Lâm Thu Triết (FX Sài Gòn)",
-    "email": "lamtriet1993@yahoo.com",
+    "name": "Đỗ Hoàng Luân",
+    "email": "doluan1993@yahoo.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -2041,8 +2041,8 @@
   },
   {
     "id": "FB-1793794500-044",
-    "name": "Trịnh Đăng Trung (Quản Lý Quỹ)",
-    "email": "trinhtrung1986@gmail.com",
+    "name": "Hoàng Tường Duy",
+    "email": "hoangduy1986@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -2053,8 +2053,8 @@
   },
   {
     "id": "FB-1793793000-043",
-    "name": "Ngô Minh Hoàng (Scalper M5)",
-    "email": "ngohoang2004@gmail.com",
+    "name": "Lương Khánh Thắng",
+    "email": "luongthang2004@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -2064,8 +2064,8 @@
   },
   {
     "id": "FB-1793791500-042",
-    "name": "Bùi Thế Hùng (Forex Pro)",
-    "email": "buihung1997@gmail.com",
+    "name": "Phùng Thế Hùng",
+    "email": "phunghung1997@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -2077,20 +2077,20 @@
   },
   {
     "id": "FB-1793790000-041",
-    "name": "Vũ Hữu Vi",
-    "email": "vuvi1990@outlook.com",
+    "name": "Ngô Diễm Lan",
+    "email": "ngolan1990@outlook.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
       "📈 Phân tích xu hướng AI"
     ],
-    "comment": "Tính năng chuông cảnh báo âm thanh giúp mình không cần phải dán mắt vào màn hình 24/7 mà vẫn không lọt mất kèo đẹp.",
+    "comment": "Tính năng chuông cảnh báo âm thanh giúp mình không cần phải dán mắt vào màn hình liên tục mà vẫn không lọt mất kèo đẹp.",
     "createdAt": "2026-10-07T07:42:00.000Z"
   },
   {
     "id": "FB-1793788500-040",
-    "name": "Hoàng Diễm Mai (Trader Đà Nẵng)",
-    "email": "hoangmai2008@icloud.com",
+    "name": "Phan Việt Thành",
+    "email": "phanthanh2008@icloud.com",
     "rating": 4,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
@@ -2100,8 +2100,8 @@
   },
   {
     "id": "FB-1793787000-039",
-    "name": "Trần Thu Luân (Thành Viên VIP)",
-    "email": "tranluan2001@yahoo.com",
+    "name": "Cao Thành Triết",
+    "email": "caotriet2001@yahoo.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -2113,8 +2113,8 @@
   },
   {
     "id": "FB-1793785500-038",
-    "name": "Hà Đăng Vinh (Kỹ Sư FX)",
-    "email": "havinh1994@gmail.com",
+    "name": "Đinh Hồng Long",
+    "email": "dinhlong1994@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -2125,19 +2125,19 @@
   },
   {
     "id": "FB-1793784000-037",
-    "name": "Chu Minh Việt (Chiến Lược Gia)",
-    "email": "chuviet1987@gmail.com",
+    "name": "Lý Minh Ly",
+    "email": "lyly1987@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Hệ thống Web Push VAPID hoạt động rất mượt, mình khóa màn hình điện thoại mà vẫn nhận được thông báo kèm điểm Buy/Sell rõ ràng.",
+    "comment": "Hệ thống Web Push VAPID hoạt động rất mượt, mình khóa màn hình điện thoại mà vẫn nhận được thông báo kèm điểm Buy Sell rõ ràng.",
     "createdAt": "2026-10-06T18:06:00.000Z"
   },
   {
     "id": "FB-1793782500-036",
-    "name": "Đinh Thế Khang (Gold Hunter)",
-    "email": "dinhkhang2005@gmail.com",
+    "name": "Võ Văn Linh",
+    "email": "volinh2005@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -2149,8 +2149,8 @@
   },
   {
     "id": "FB-1793781000-035",
-    "name": "Lâm Hữu Sơn (Cần Thơ FX)",
-    "email": "lamson1998@outlook.com",
+    "name": "Trần Hải Toàn",
+    "email": "trantoan1998@outlook.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -2161,19 +2161,19 @@
   },
   {
     "id": "FB-1793779500-034",
-    "name": "Trịnh Diễm Anh (Trader Hà Nội)",
-    "email": "trinhanh1991@icloud.com",
+    "name": "Bạch Tuấn Hưng",
+    "email": "bachhung1991@icloud.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động"
     ],
-    "comment": "Tự động đóng 50% khối lượng tại TP1 và gồng 50% còn lại lên TP2/TP3 là một chiến lược quản lý vốn kinh điển được bot thực thi xuất sắc.",
+    "comment": "Tự động đóng 50% khối lượng tại TP1 và gồng 50% còn lại lên TP2 hoặc TP3 là một chiến lược quản lý vốn kinh điển được bot thực thi xuất sắc.",
     "createdAt": "2026-10-06T02:18:00.000Z"
   },
   {
     "id": "FB-1793778000-033",
-    "name": "Ngô Thu Thư (Hải Phòng Trader)",
-    "email": "ngothu2009@yahoo.com",
+    "name": "Đoàn Trúc Minh",
+    "email": "doanminh2009@yahoo.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -2185,7 +2185,7 @@
   },
   {
     "id": "FB-1793776500-032",
-    "name": "Bùi Đăng Yến (Trader Vàng)",
+    "name": "Bùi Đăng Yến",
     "email": "buiyen2002@gmail.com",
     "rating": 5,
     "tags": [
@@ -2197,8 +2197,8 @@
   },
   {
     "id": "FB-1793775000-031",
-    "name": "Vũ Minh Hương (Scalper H1)",
-    "email": "vuhuong1995@gmail.com",
+    "name": "Phạm Gia Tâm",
+    "email": "phamtam1995@gmail.com",
     "rating": 4,
     "tags": [
       "📈 Phân tích xu hướng AI"
@@ -2208,8 +2208,8 @@
   },
   {
     "id": "FB-1793773500-030",
-    "name": "Hoàng Thế Lâm (Trader Tự Do)",
-    "email": "hoanglam1988@gmail.com",
+    "name": "Tạ Kim Quân",
+    "email": "taquan1988@gmail.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -2221,20 +2221,20 @@
   },
   {
     "id": "FB-1793772000-029",
-    "name": "Trần Hữu Toàn (Nhà Đầu Tư)",
-    "email": "trantoan2006@outlook.com",
+    "name": "Lâm Xuân Sơn",
+    "email": "lamson2006@outlook.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime"
     ],
-    "comment": "Cài đặt bot lên MT5 rất nhanh gọn, chỉ cần copy file EA và paste API key là xong. Video hướng dẫn của admin rất chi tiết.",
+    "comment": "Cài đặt bot lên MT5 rất nhanh gọn, chỉ cần copy file EA và paste API key là xong. Hướng dẫn của admin rất chi tiết.",
     "createdAt": "2026-10-05T09:18:00.000Z"
   },
   {
     "id": "FB-1793770500-028",
-    "name": "Hà Diễm Phong (Gold Wave Fan)",
-    "email": "haphong1999@icloud.com",
+    "name": "Hồ Đức Hiền",
+    "email": "hohien1999@icloud.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô"
@@ -2244,8 +2244,8 @@
   },
   {
     "id": "FB-1793769000-027",
-    "name": "Chu Thu Kiên (Swing Trader)",
-    "email": "chukien1992@yahoo.com",
+    "name": "Huỳnh Ánh Hằng",
+    "email": "huynhhang1992@yahoo.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -2257,8 +2257,8 @@
   },
   {
     "id": "FB-1793767500-026",
-    "name": "Đinh Đăng Long (Trader M15)",
-    "email": "dinhlong1985@gmail.com",
+    "name": "Hà Thanh Vinh",
+    "email": "havinh1985@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -2269,19 +2269,19 @@
   },
   {
     "id": "FB-1793766000-025",
-    "name": "Lâm Minh Dũng (FX Sài Gòn)",
-    "email": "lamdung2003@gmail.com",
+    "name": "Tô Anh Thịnh",
+    "email": "tothinh2003@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới"
     ],
-    "comment": "Đã cho bot chạy thử nghiệm trên tài khoản live 500$, sau 2 tuần lợi nhuận đạt 12% với mức drawdown tối đa chỉ 3.8%. Rất an toàn!",
+    "comment": "Đã cho bot chạy thử nghiệm trên tài khoản live 500 đô, sau 2 tuần lợi nhuận đạt 12% với mức drawdown tối đa chỉ 3.8%. Rất an toàn!",
     "createdAt": "2026-10-04T14:06:00.000Z"
   },
   {
     "id": "FB-1793764500-024",
-    "name": "Trịnh Thế Hà (Quản Lý Quỹ)",
-    "email": "trinhha1996@gmail.com",
+    "name": "Dương Ngọc Huy",
+    "email": "duonghuy1996@gmail.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -2293,20 +2293,20 @@
   },
   {
     "id": "FB-1793763000-023",
-    "name": "Ngô Hữu Lan (Scalper M5)",
-    "email": "ngolan1989@outlook.com",
+    "name": "Vũ Bảo Vi",
+    "email": "vuvi1989@outlook.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
       "🤖 Bot MT5 tự động"
     ],
-    "comment": "Cực kỳ thích tính năng quản lý vốn theo % tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
+    "comment": "Cực kỳ thích tính năng quản lý vốn theo tỷ lệ phần trăm tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
     "createdAt": "2026-10-04T07:18:00.000Z"
   },
   {
     "id": "FB-1793761500-022",
-    "name": "Bùi Diễm Trang (Forex Pro)",
-    "email": "buitrang2007@icloud.com",
+    "name": "Nguyễn Mỹ Trang",
+    "email": "nguyentran2007@icloud.com",
     "rating": 4,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"
@@ -2316,8 +2316,8 @@
   },
   {
     "id": "FB-1793760000-021",
-    "name": "Vũ Thu Bình",
-    "email": "vubinh2000@yahoo.com",
+    "name": "Quách Quang Đạt",
+    "email": "quachdat2000@yahoo.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -2329,8 +2329,8 @@
   },
   {
     "id": "FB-1793758500-020",
-    "name": "Hoàng Đăng Duy (Trader Đà Nẵng)",
-    "email": "hoangduy1993@gmail.com",
+    "name": "Trịnh Quốc Trung",
+    "email": "trinhtrung1993@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -2341,8 +2341,8 @@
   },
   {
     "id": "FB-1793757000-019",
-    "name": "Trần Minh Thịnh (Thành Viên VIP)",
-    "email": "tranthinh1986@gmail.com",
+    "name": "Đặng Phương Dũng",
+    "email": "dangdung1986@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime"
@@ -2352,8 +2352,8 @@
   },
   {
     "id": "FB-1793755500-018",
-    "name": "Hà Thế Cường (Kỹ Sư FX)",
-    "email": "hacuong2004@gmail.com",
+    "name": "Lê Đình Ngân",
+    "email": "lengan2004@gmail.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -2365,8 +2365,8 @@
   },
   {
     "id": "FB-1793754000-017",
-    "name": "Chu Hữu Đức (Chiến Lược Gia)",
-    "email": "chuduc1997@outlook.com",
+    "name": "Chu Hữu Bảo",
+    "email": "chubao1997@outlook.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -2377,8 +2377,8 @@
   },
   {
     "id": "FB-1793752500-016",
-    "name": "Đinh Diễm Hiền (Gold Hunter)",
-    "email": "dinhhien1990@icloud.com",
+    "name": "Mai Thu Phong",
+    "email": "maiphong1990@icloud.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo"
@@ -2388,21 +2388,21 @@
   },
   {
     "id": "FB-1793751000-015",
-    "name": "Lâm Thu Ngọc (Cần Thơ FX)",
-    "email": "lamngoc2008@yahoo.com",
+    "name": "Đỗ Hoàng Nam",
+    "email": "donam2008@yahoo.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách scalping.",
+    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách lướt sóng ngắn.",
     "createdAt": "2026-10-02T22:30:00.000Z"
   },
   {
     "id": "FB-1793749500-014",
-    "name": "Trịnh Đăng Nhung (Trader Hà Nội)",
-    "email": "trinhnhung2001@gmail.com",
+    "name": "Hoàng Tường Oanh",
+    "email": "hoangoanh2001@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô",
@@ -2413,8 +2413,8 @@
   },
   {
     "id": "FB-1793748000-013",
-    "name": "Ngô Minh Tâm (Hải Phòng Trader)",
-    "email": "ngotam1994@gmail.com",
+    "name": "Lương Khánh Hương",
+    "email": "luonghuong1994@gmail.com",
     "rating": 4,
     "tags": [
       "🤖 Bot MT5 tự động"
@@ -2424,8 +2424,8 @@
   },
   {
     "id": "FB-1793746500-012",
-    "name": "Bùi Thế Khoa (Trader Vàng)",
-    "email": "buikhoa1987@gmail.com",
+    "name": "Phùng Thế Khoa",
+    "email": "phungkhoa1987@gmail.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -2437,8 +2437,8 @@
   },
   {
     "id": "FB-1793745000-011",
-    "name": "Vũ Hữu Quang (Scalper H1)",
-    "email": "vuquang2005@outlook.com",
+    "name": "Ngô Diễm Nghĩa",
+    "email": "ngonghia2005@outlook.com",
     "rating": 5,
     "tags": [
       "💡 Đề xuất tính năng mới",
@@ -2449,19 +2449,19 @@
   },
   {
     "id": "FB-1793743500-010",
-    "name": "Hoàng Diễm Hưng (Trader Tự Do)",
-    "email": "hoanghung1998@icloud.com",
+    "name": "Phan Việt Anh",
+    "email": "phananh1998@icloud.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI"
     ],
-    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy/Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
+    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy và Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
     "createdAt": "2026-10-01T23:54:00.000Z"
   },
   {
     "id": "FB-1793742000-009",
-    "name": "Trần Thu Nam (Nhà Đầu Tư)",
-    "email": "trannam1991@yahoo.com",
+    "name": "Cao Thành Ngọc",
+    "email": "caongoc1991@yahoo.com",
     "rating": 5,
     "tags": [
       "📊 Biểu đồ & Chỉ báo",
@@ -2473,8 +2473,8 @@
   },
   {
     "id": "FB-1793740500-008",
-    "name": "Hà Đăng Tuấn (Gold Wave Fan)",
-    "email": "hatuan2009@gmail.com",
+    "name": "Đinh Hồng Vũ",
+    "email": "dinhvu2009@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
@@ -2485,19 +2485,19 @@
   },
   {
     "id": "FB-1793739000-007",
-    "name": "Chu Minh Ly (Swing Trader)",
-    "email": "chuly2002@gmail.com",
+    "name": "Lý Minh Việt",
+    "email": "lyviet2002@gmail.com",
     "rating": 5,
     "tags": [
       "📰 Tin tức vĩ mô"
     ],
-    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy con bot khác. Rất đáng giá từng đồng!",
+    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy công cụ khác. Rất đáng giá từng đồng!",
     "createdAt": "2026-10-01T08:06:00.000Z"
   },
   {
     "id": "FB-1793737500-006",
-    "name": "Đinh Thế Ngân (Trader M15)",
-    "email": "dinhngan1995@gmail.com",
+    "name": "Võ Văn Cường",
+    "email": "vocuong1995@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
@@ -2509,8 +2509,8 @@
   },
   {
     "id": "FB-1793736000-005",
-    "name": "Lâm Hữu Thảo (FX Sài Gòn)",
-    "email": "lamthao1988@outlook.com",
+    "name": "Trần Hải Duyên",
+    "email": "tranduyen1988@outlook.com",
     "rating": 5,
     "tags": [
       "⚡ Tốc độ báo lệnh Realtime",
@@ -2521,19 +2521,19 @@
   },
   {
     "id": "FB-1793734500-004",
-    "name": "Trịnh Diễm Thành (Quản Lý Quỹ)",
-    "email": "trinhthanh2006@icloud.com",
+    "name": "Bạch Tuấn Mai",
+    "email": "bachmai2006@icloud.com",
     "rating": 4,
     "tags": [
       "💡 Đề xuất tính năng mới"
     ],
-    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em trader.",
+    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em.",
     "createdAt": "2026-09-30T21:54:00.000Z"
   },
   {
     "id": "FB-1793733000-003",
-    "name": "Ngô Thu Đạt (Scalper M5)",
-    "email": "ngodat1999@yahoo.com",
+    "name": "Đoàn Trúc Bình",
+    "email": "doanbinh1999@yahoo.com",
     "rating": 5,
     "tags": [
       "📈 Phân tích xu hướng AI",
@@ -2545,7 +2545,7 @@
   },
   {
     "id": "FB-1793731500-002",
-    "name": "Bùi Đăng Phát (Forex Pro)",
+    "name": "Bùi Đăng Phát",
     "email": "buiphat1992@gmail.com",
     "rating": 5,
     "tags": [
@@ -2557,8 +2557,8 @@
   },
   {
     "id": "FB-1793730000-001",
-    "name": "Vũ Minh Thắng",
-    "email": "vuthang1985@gmail.com",
+    "name": "Phạm Gia Hoàng",
+    "email": "phamhoang1985@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn"

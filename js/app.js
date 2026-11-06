@@ -6212,9 +6212,9 @@ window.loadAccountAdminData = async function() {
       if (feedbacks.length > 0) {
         const sum = feedbacks.reduce((acc, f) => acc + (f.rating || 5), 0);
         const avg = (sum / feedbacks.length).toFixed(1);
-        avgRatingBadge.textContent = `⭐ ${avg} / 5.0 (${feedbacks.length} lượt)`;
+        avgRatingBadge.textContent = `⭐ ${avg} / 5.0 • ${feedbacks.length} lượt`;
       } else {
-        avgRatingBadge.textContent = `⭐ 5.0 / 5.0 (Chưa có đánh giá)`;
+        avgRatingBadge.textContent = `⭐ 5.0 / 5.0 • Chưa có đánh giá`;
       }
     }
 
@@ -6231,12 +6231,12 @@ window.loadAccountAdminData = async function() {
             <tr class="hover:bg-slate-900/60 transition">
               <td class="py-3 px-3 text-slate-400 text-[11px] whitespace-nowrap">${dateStr}</td>
               <td class="py-3 px-3">
-                <div class="font-bold text-white text-xs">${f.name || 'Trader'}</div>
+                <div class="font-bold text-white text-xs">${f.name || 'Thành viên'}</div>
                 <div class="text-amber-300/80 text-[11px] font-mono">${f.email}</div>
               </td>
               <td class="py-3 px-3 whitespace-nowrap">
                 <span class="text-amber-400 font-bold text-xs">${stars}</span>
-                <span class="text-slate-400 text-[10px] block font-mono">(${f.rating}/5 sao)</span>
+                <span class="text-slate-400 text-[10px] block font-mono">${f.rating}/5 sao</span>
               </td>
               <td class="py-3 px-3">
                 <div class="flex flex-wrap">${tagsHtml || '<span class="text-slate-500 text-[10px]">Chung</span>'}</div>
@@ -6546,9 +6546,9 @@ window.loadPublicCommunityFeedbacks = async function() {
         const btnAll = filtersContainer.querySelector("button[onclick*='ALL']");
         const btn5 = filtersContainer.querySelector("button[onclick*='5STAR']");
         const btn4 = filtersContainer.querySelector("button[onclick*='4STAR']");
-        if (btnAll) btnAll.textContent = `Tất cả (${totalCount})`;
-        if (btn5) btn5.textContent = `5 Sao ⭐ (${star5Count})`;
-        if (btn4) btn4.textContent = `4 Sao ⭐ (${star4Count})`;
+        if (btnAll) btnAll.textContent = `Tất cả: ${totalCount}`;
+        if (btn5) btn5.textContent = `5 Sao ⭐: ${star5Count}`;
+        if (btn4) btn4.textContent = `4 Sao ⭐: ${star4Count}`;
       }
 
       renderCommunityReviewsList();
@@ -6618,8 +6618,8 @@ function renderCommunityReviewsList() {
   }
 
   container.innerHTML = visibleList.map((f, idx) => {
-    // Tạo initials cho avatar
-    const nameWords = (f.name || 'Trader').replace(/[()]/g, '').trim().split(/\s+/);
+    // Tạo initials cho avatar từ họ và tên thật
+    const nameWords = (f.name || 'Trader').trim().split(/\s+/);
     let initials = 'TR';
     if (nameWords.length >= 2) {
       initials = (nameWords[0][0] + nameWords[nameWords.length - 1][0]).toUpperCase();
@@ -6645,16 +6645,16 @@ function renderCommunityReviewsList() {
               ${initials}
             </div>
             <div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-bold text-white text-xs">${f.name || 'Trader'}</span>
-                <span class="text-[10px] text-amber-300/80 font-mono">(${f.email})</span>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-white text-xs">${f.name || 'Thành viên'}</span>
+                <span class="text-[10px] text-slate-400 font-mono">• ${f.email}</span>
               </div>
               <div class="text-[10px] text-slate-400 font-mono">${dateStr}</div>
             </div>
           </div>
-          <div class="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg">
+          <div class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg">
             <span class="text-amber-400 text-xs">${starsStr}</span>
-            <span class="text-amber-300 font-bold text-[10px] font-mono">${f.rating}/5</span>
+            <span class="text-amber-300 font-bold text-[10px] font-mono">${f.rating}/5 sao</span>
           </div>
         </div>
 
@@ -6677,7 +6677,7 @@ function renderCommunityReviewsList() {
       loadMoreBtn.classList.add('hidden');
     } else {
       loadMoreBtn.classList.remove('hidden');
-      loadMoreBtn.innerHTML = `<span>Xem thêm đánh giá (${filtered.length - communityReviewsVisibleCount} còn lại)</span> <span>▼</span>`;
+      loadMoreBtn.innerHTML = `<span>Xem thêm ${filtered.length - communityReviewsVisibleCount} đánh giá khác</span> <span>▼</span>`;
     }
   }
 }
