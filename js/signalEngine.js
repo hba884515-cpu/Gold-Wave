@@ -8,7 +8,7 @@
 
 class SignalEngine {
   constructor() {
-    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v37';
+    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v38';
     this.signals = this.loadHistory();
     this.callbacks = {
       onNewSignal: [],
@@ -76,8 +76,8 @@ class SignalEngine {
 
   loadHistory() {
     try {
-      // Clear old v1 - v36 caches automatically
-      for (let i = 1; i <= 36; i++) {
+      // Clear old v1 - v37 caches automatically
+      for (let i = 1; i <= 37; i++) {
         localStorage.removeItem(`gold_trading_ma_wave_multi_asset_v${i}`);
         localStorage.removeItem(`gold_trading_ma_wave_pinescript_v${i}`);
       }
@@ -87,7 +87,7 @@ class SignalEngine {
         if (Array.isArray(parsed) && parsed.length >= 1000) {
           const hasBTC = parsed.some(s => s && (s.asset === 'btc' || (s.pair && s.pair.includes('BTC'))));
           const hasXAG = parsed.some(s => s && (s.asset === 'xag' || (s.pair && s.pair.includes('XAG'))));
-          const hasCorrectTopGold = parsed.some(s => s && s.asset === 'xau' && (s.id === 'V8-02091' || s.id === 'V8-02083'));
+          const hasCorrectTopGold = parsed.some(s => s && s.asset === 'xau' && (s.id === 'V8-02096' || s.id === 'V8-02091' || s.id === 'V8-02083'));
           const hasWeekendGold = parsed.some(s => s && s.asset === 'xau' && s.time && (s.time.includes('- T7') || s.time.includes('- CN')));
           if (hasBTC && hasXAG && hasCorrectTopGold && !hasWeekendGold) {
             return parsed;
@@ -145,6 +145,24 @@ class SignalEngine {
     };
 
     const allRecentSchedules = [];
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 0. THỨ 6 (06/11/2026) - HÔM NAY (ĐỒNG BỘ 100% CÁC ĐIỂM BÁO THỰC TẾ)
+    // ─────────────────────────────────────────────────────────────────────────
+    const dNov6 = new Date(2026, 10, 6);
+
+    const goldNov6 = [
+      { id: 'V8-02096', hour: 13, min: 10, type: 'BUY',  price: 4047.34, sl: 4042.34, tp1: 4057.34, tp2: 4067.34, tp3: 4077.34, winType: 'RUNNING', status: 'ĐANG CHẠY (Chờ TP1)', pnlPips: 0, pnlUsd: 0, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Nhịp bứt phá tiếp diễn tại $4,047.34 (vùng 46-47), mở sóng tăng M15 hướng tới TP1 ($4,057.34)' },
+      { id: 'V8-02095', hour: 12, min: 35, type: 'BUY',  price: 4042.95, sl: 4037.95, tp1: 4052.95, tp2: 4062.95, tp3: 4072.95, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Tạo đáy phục hồi tại hỗ trợ $4,042 bật tăng mạnh lên $4,047+ cắn mốc TP1' },
+      { id: 'V8-02094', hour: 11, min: 10, type: 'SELL', price: 4038.70, sl: 4043.70, tp1: 4028.70, tp2: 4018.70, tp3: 4008.70, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Thử thách vùng đáy $4,038 rút chân tăng trở lại dính SL $4,043.70' },
+      { id: 'V8-02093', hour: 9,  min: 36, type: 'SELL', price: 4065.86, sl: 4070.86, tp1: 4055.86, tp2: 4045.86, tp3: 4035.86, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Đà giảm tiếp diễn phiên sáng giá giảm sâu về $4,038 cắn trọn vẹn TP1 & TP2' },
+      { id: 'V8-02092', hour: 7,  min: 54, type: 'SELL', price: 4073.46, sl: 4078.46, tp1: 4063.46, tp2: 4053.46, tp3: 4043.46, winType: 'LOSS', status: 'CẮT LỖ AN TOÀN (SL)', pnlPips: -50, pnlUsd: -500, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Mở phiên Á áp lực bán ngắn hạn, giá đảo chiều quét SL' }
+    ];
+    goldNov6.forEach(s => {
+      const d = new Date(dNov6);
+      d.setHours(s.hour, s.min, 0, 0);
+      allRecentSchedules.push({ ...s, dateObj: d, asset: 'xau', pair: 'XAU/USD' });
+    });
 
     // ─────────────────────────────────────────────────────────────────────────
     // 0.1 THỨ 5 (05/11/2026) - HÔM QUA
