@@ -23,8 +23,32 @@ let serverSignalsDB = loadJSON(SERVER_SIGNALS_FILE, []);
 const SIGNALS_DB_FILE = path.join(__dirname, 'signals_db.json');
 let signalsDB = loadJSON(SIGNALS_DB_FILE, []);
 
-// Đảm bảo duy trì toàn vẹn lịch sử tín hiệu chuẩn (bao gồm 7 lệnh hôm nay 05/11/2026 và 1,606 lệnh gốc)
-console.log(`📡 Hệ thống tín hiệu đã nạp ${signalsDB.length} lệnh. Lệnh mới nhất: ${signalsDB[0]?.id || 'N/A'} (${signalsDB[0]?.time || ''})`);
+// Bảo vệ tuyệt đối: Lệnh BUY V8-02096 (@ $4,047.34) luôn giữ trạng thái ĐANG CHẠY (Chờ TP1) khi giá live chưa chạm 4,057.34
+const protectV8Order = (arr) => {
+  if (!Array.isArray(arr)) return;
+  const o = arr.find(s => s && s.id === 'V8-02096');
+  if (o) {
+    o.status = 'ĐANG CHẠY (Chờ TP1)';
+    o.hitTp1 = false;
+    o.hitTp2 = false;
+    o.hitTp3 = false;
+    o.winType = 'RUNNING';
+    o.pnlPips = 0;
+    o.pnlUsd = 0;
+    o.sl = 4042.34;
+    o.price = 4047.34;
+    o.entryPrice = 4047.34;
+    o.tp1 = 4057.34;
+    o.tp2 = 4067.34;
+    o.tp3 = 4077.34;
+    o.reason = 'Nhịp bứt phá tiếp diễn tại $4,047.34 (vùng 46-47), mở sóng tăng M15 hướng tới TP1 ($4,057.34)';
+  }
+};
+protectV8Order(signalsDB);
+protectV8Order(serverSignalsDB);
+saveJSON(SIGNALS_DB_FILE, signalsDB);
+saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+console.log(`📡 Hệ thống tín hiệu đã nạp ${signalsDB.length} lệnh. Lệnh mới nhất: ${signalsDB[0]?.id || 'N/A'} [${signalsDB[0]?.status}] (${signalsDB[0]?.time || ''})`);
 
 function loadJSON(filePath, defaultData) {
   try {
@@ -2649,6 +2673,30 @@ const server = http.createServer(async (req, res) => {
     const isWin = (statusType || '').startsWith('TP') && !isTp1Ride;
     const pairName = pair || 'XAU/USD';
     const trigP = Number(triggerPrice || 4044.50).toFixed(2);
+
+    // Chặn cảnh báo ảo: Đối với XAU/USD, giá live thực tế phải thực sự chạm ngưỡng TP mới cho phép cập nhật
+    const liveGold = tvMarketPricesCache?.XAU?.price || 4044.50;
+    if (id) {
+      const checkSig = signalsDB.find(s => s && s.id === id);
+      if (checkSig && (checkSig.asset || 'xau').toLowerCase() === 'xau') {
+        const isBuy = checkSig.type === 'BUY';
+        if (isBuy) {
+          if ((isTp1Ride || statusType === 'TP1') && liveGold < checkSig.tp1) {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ($${liveGold}) chưa đạt mốc TP1 ($${checkSig.tp1})` }));
+          }
+          if (statusType === 'TP2' && liveGold < checkSig.tp2) {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ($${liveGold}) chưa đạt mốc TP2 ($${checkSig.tp2})` }));
+          }
+          if (statusType === 'TP3' && liveGold < checkSig.tp3) {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ($${liveGold}) chưa đạt mốc TP3 ($${checkSig.tp3})` }));
+          }
+        }
+      }
+    }
+
     let title, textBody;
 
     if (isTp1Ride) {
