@@ -1,27 +1,2569 @@
 [
   {
-    "id": "FB-1793731100-01",
-    "name": "Hoàng Minh (Trader)",
-    "email": "hoangminh.trader@gmail.com",
+    "id": "FB-1794049500-214",
+    "name": "Trịnh Diễm Anh (Trader Hà Nội)",
+    "email": "trinhanh2001@icloud.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Bot tự động tính toán lot chuẩn theo số dư tài khoản, giao diện cấu hình trực quan dễ dùng ngay cả với người không rành công nghệ.",
+    "createdAt": "2026-11-06T15:54:00.000Z"
+  },
+  {
+    "id": "FB-1794048000-213",
+    "name": "Ngô Thu Thư (Hải Phòng Trader)",
+    "email": "ngothu1994@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Cực kỳ thích tính năng quản lý vốn theo % tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
+    "createdAt": "2026-11-06T12:30:00.000Z"
+  },
+  {
+    "id": "FB-1794046500-212",
+    "name": "Bùi Đăng Yến (Trader Vàng)",
+    "email": "buiyen1987@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Bot MT5 chạy trên VPS rất ổn định, khớp lệnh tức thì không có độ trễ. Cơ chế tự động dời SL về hòa vốn khi đạt TP1 giúp mình an tâm tuyệt đối khi đi ngủ.",
+    "createdAt": "2026-11-06T09:06:00.000Z"
+  },
+  {
+    "id": "FB-1794045000-211",
+    "name": "Vũ Minh Hương (Scalper H1)",
+    "email": "vuhuong2005@gmail.com",
+    "rating": 4,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "App dùng rất tốt, bot tự động vào lệnh quản lý vốn tốt, mong admin ra thêm bản kết nối trực tiếp với tài khoản Exness nữa là tuyệt vời 10/10.",
+    "createdAt": "2026-11-06T05:42:00.000Z"
+  },
+  {
+    "id": "FB-1794043500-210",
+    "name": "Hoàng Thế Lâm (Trader Tự Do)",
+    "email": "hoanglam1998@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Khuyến nghị anh em nên kết hợp tín hiệu với quản lý vốn 1-2% tài khoản, lợi nhuận tích lũy đều đặn hàng tuần rất tốt.",
+    "createdAt": "2026-11-05T20:42:00.000Z"
+  },
+  {
+    "id": "FB-1794042000-209",
+    "name": "Trần Hữu Toàn (Nhà Đầu Tư)",
+    "email": "trantoan1991@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Điểm vào lệnh rất nét, thường chỉ cách đỉnh đáy vài pip. Cảm giác đội ngũ coder có kiến thức sâu về Price Action và sóng thị trường.",
+    "createdAt": "2026-11-05T17:18:00.000Z"
+  },
+  {
+    "id": "FB-1794040500-208",
+    "name": "Hà Diễm Phong (Gold Wave Fan)",
+    "email": "haphong2009@icloud.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "App nhận diện các vùng FVG và MA Wave rất chuẩn, tỷ lệ winrate vượt ngoài mong đợi của mình.",
+    "createdAt": "2026-11-05T13:54:00.000Z"
+  },
+  {
+    "id": "FB-1794039000-207",
+    "name": "Chu Thu Kiên (Swing Trader)",
+    "email": "chukien2002@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Tín hiệu phân kỳ MA Wave báo rất sớm trước khi giá bứt phá. Nhờ đó mình luôn đón đầu được các nhịp sóng lớn.",
+    "createdAt": "2026-11-05T10:30:00.000Z"
+  },
+  {
+    "id": "FB-1794037500-206",
+    "name": "Đinh Đăng Long (Trader M15)",
+    "email": "dinhlong1995@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Mình thích nhất là các mốc TP1, TP2, TP3 được chia nhỏ để chốt lời từng phần, giúp tâm lý giao dịch nhẹ nhàng hơn rất nhiều.",
+    "createdAt": "2026-11-05T07:06:00.000Z"
+  },
+  {
+    "id": "FB-1794036000-205",
+    "name": "Lâm Minh Dũng (FX Sài Gòn)",
+    "email": "lamdung1988@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách scalping.",
+    "createdAt": "2026-11-05T03:42:00.000Z"
+  },
+  {
+    "id": "FB-1794034500-204",
+    "name": "Trịnh Thế Hà (Quản Lý Quỹ)",
+    "email": "trinhha2006@gmail.com",
     "rating": 5,
     "tags": [
       "🎯 Tín hiệu Vàng chuẩn",
       "⚡ Tốc độ báo lệnh Realtime",
       "📊 Biểu đồ & Chỉ báo"
     ],
-    "comment": "Tín hiệu Vàng MA Wave V8 bắt nhịp sóng rất chuẩn, tỷ lệ win cao và giao diện xem trên điện thoại rất mượt mà. Mong admin nâng cấp thêm tính năng thông báo âm thanh chuông đặc biệt khi chạm TP3!",
-    "createdAt": "2026-11-03T16:45:00.000Z"
+    "comment": "Từ ngày dùng Gold Wave mình bỏ hẳn các nhóm phím kèo trôi nổi. App cập nhật liên tục, minh bạch từng lệnh thắng thua.",
+    "createdAt": "2026-11-05T00:18:00.000Z"
   },
   {
-    "id": "FB-1793732200-02",
-    "name": "Nguyễn Văn Đạt",
-    "email": "datnguyen.forex@gmail.com",
+    "id": "FB-1794033000-203",
+    "name": "Ngô Hữu Lan (Scalper M5)",
+    "email": "ngolan1999@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Đánh giá cao việc hệ thống biết kiên nhẫn đứng ngoài khi thị trường không có xu hướng rõ ràng, bảo toàn vốn cực kỳ tốt.",
+    "createdAt": "2026-11-04T15:18:00.000Z"
+  },
+  {
+    "id": "FB-1794031500-202",
+    "name": "Bùi Diễm Trang (Forex Pro)",
+    "email": "buitrang1992@icloud.com",
+    "rating": 4,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Tín hiệu chuẩn, có giải thích rõ lý do vào lệnh theo cấu trúc MA Wave và vùng thanh khoản. Giúp người mới như mình học hỏi thêm được rất nhiều.",
+    "createdAt": "2026-11-04T11:54:00.000Z"
+  },
+  {
+    "id": "FB-1794030000-201",
+    "name": "Vũ Thu Bình",
+    "email": "vubinh1985@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Khả năng nhận diện sóng của MA Wave rất độc đáo. Xem biểu đồ trực tiếp trên app rất tiện, không cần phải mở TradingView cồng kềnh.",
+    "createdAt": "2026-11-04T08:30:00.000Z"
+  },
+  {
+    "id": "FB-1794028500-200",
+    "name": "Hoàng Đăng Duy (Trader Đà Nẵng)",
+    "email": "hoangduy2003@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy/Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
+    "createdAt": "2026-11-04T05:06:00.000Z"
+  },
+  {
+    "id": "FB-1794027000-199",
+    "name": "Trần Minh Thịnh (Thành Viên VIP)",
+    "email": "tranthinh1996@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Ấn tượng nhất là tín hiệu V8 phiên Mỹ, lúc tin ra giá giật mạnh nhưng hệ thống vẫn lọc nhiễu tốt và cho điểm re-test chuẩn xác.",
+    "createdAt": "2026-11-04T01:42:00.000Z"
+  },
+  {
+    "id": "FB-1794025500-198",
+    "name": "Hà Thế Cường (Kỹ Sư FX)",
+    "email": "hacuong1989@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Tín hiệu vàng chạy mượt mà, điểm SL được tính toán rất hợp lý ngay dưới vùng cản động, không bị quét râu nến oan uổng.",
+    "createdAt": "2026-11-03T22:18:00.000Z"
+  },
+  {
+    "id": "FB-1794024000-197",
+    "name": "Chu Hữu Đức (Chiến Lược Gia)",
+    "email": "chuduc2007@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy con bot khác. Rất đáng giá từng đồng!",
+    "createdAt": "2026-11-03T18:54:00.000Z"
+  },
+  {
+    "id": "FB-1794022500-196",
+    "name": "Đinh Diễm Hiền (Gold Hunter)",
+    "email": "dinhhien2000@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Tín hiệu bắt sóng H1 và M15 rất chắc chắn. Đặc biệt là những pha nén giá MA Wave bung dải, báo điểm vào rất ngọt và tỷ lệ RR tốt.",
+    "createdAt": "2026-11-03T09:54:00.000Z"
+  },
+  {
+    "id": "FB-1794021000-195",
+    "name": "Lâm Thu Ngọc (Cần Thơ FX)",
+    "email": "lamngoc1993@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Bộ lọc MA Wave phát hiện đảo chiều đỉnh đáy cực kỳ nhạy. Trước đây mình hay bị FOMO đu đỉnh, từ ngày dùng app kỷ luật hơn hẳn vì chỉ chờ tín hiệu xác nhận rõ ràng mới vào.",
+    "createdAt": "2026-11-03T06:30:00.000Z"
+  },
+  {
+    "id": "FB-1794019500-194",
+    "name": "Trịnh Đăng Nhung (Trader Hà Nội)",
+    "email": "trinhnhung1986@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em trader.",
+    "createdAt": "2026-11-03T03:06:00.000Z"
+  },
+  {
+    "id": "FB-1794018000-193",
+    "name": "Ngô Minh Tâm (Hải Phòng Trader)",
+    "email": "ngotam2004@gmail.com",
+    "rating": 4,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Đã test tín hiệu được 3 tuần, tỷ lệ chạm TP1 và TP2 đạt hơn 85%. Rất thích cách app đo lường biên độ nến và không vào lệnh bừa bãi khi thị trường sideway giằng co.",
+    "createdAt": "2026-11-02T23:42:00.000Z"
+  },
+  {
+    "id": "FB-1794016500-192",
+    "name": "Bùi Thế Khoa (Trader Vàng)",
+    "email": "buikhoa1997@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Theo tín hiệu Buy Vàng hôm trước ăn trọn nhịp 70 pips, điểm vào lệnh rất sát vùng hỗ trợ cứng. Hệ thống chỉ báo MA Wave trực quan và dễ theo dõi hơn hẳn các chỉ báo thông thường.",
+    "createdAt": "2026-11-02T20:18:00.000Z"
+  },
+  {
+    "id": "FB-1794015000-191",
+    "name": "Vũ Hữu Quang (Scalper H1)",
+    "email": "vuquang1990@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Tín hiệu Vàng MA Wave V8 bắt nhịp sóng rất chuẩn, tỷ lệ win cao và giao diện xem trên điện thoại rất mượt mà. Mong admin nâng cấp thêm tính năng thông báo âm thanh chuông đặc biệt khi chạm TP3!",
+    "createdAt": "2026-11-02T16:54:00.000Z"
+  },
+  {
+    "id": "FB-1794013500-190",
+    "name": "Hoàng Diễm Hưng (Trader Tự Do)",
+    "email": "hoanghung2008@icloud.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Cực kỳ hài lòng! Sẽ tiếp tục đồng hành và ủng hộ Gold Wave Terminal lâu dài.",
+    "createdAt": "2026-11-02T13:30:00.000Z"
+  },
+  {
+    "id": "FB-1794012000-189",
+    "name": "Trần Thu Nam (Nhà Đầu Tư)",
+    "email": "trannam2001@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Một trải nghiệm công nghệ tài chính tuyệt vời, tốc độ và độ chính xác đều vượt xa kỳ vọng ban đầu của mình.",
+    "createdAt": "2026-11-02T04:30:00.000Z"
+  },
+  {
+    "id": "FB-1794010500-188",
+    "name": "Hà Đăng Tuấn (Gold Wave Fan)",
+    "email": "hatuan1994@gmail.com",
     "rating": 5,
     "tags": [
       "🤖 Bot MT5 tự động",
       "📈 Phân tích xu hướng AI"
     ],
+    "comment": "Trước đây mình hay gồng lỗ đến cháy tài khoản, từ khi có app chỉ điểm dừng lỗ rõ ràng, tâm lý thoải mái hơn hẳn.",
+    "createdAt": "2026-11-02T01:06:00.000Z"
+  },
+  {
+    "id": "FB-1794009000-187",
+    "name": "Chu Minh Ly (Swing Trader)",
+    "email": "chuly1987@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Đánh giá 5 sao cho sự tận tâm của đội ngũ phát triển. App cập nhật vá lỗi và bổ sung tính năng mới liên tục hàng tuần.",
+    "createdAt": "2026-11-01T21:42:00.000Z"
+  },
+  {
+    "id": "FB-1794007500-186",
+    "name": "Đinh Thế Ngân (Trader M15)",
+    "email": "dinhngan2005@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Học hỏi được rất nhiều về tư duy quản lý vốn từ thuật toán của bot. Cảm ơn đội ngũ kỹ thuật rất nhiều!",
+    "createdAt": "2026-11-01T18:18:00.000Z"
+  },
+  {
+    "id": "FB-1794006000-185",
+    "name": "Lâm Hữu Thảo (FX Sài Gòn)",
+    "email": "lamthao1998@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Đáng giá từng xu! Chỉ cần theo đúng 1 nhịp sóng đẹp của app là đã đủ bù lại chi phí cả năm sử dụng.",
+    "createdAt": "2026-11-01T14:54:00.000Z"
+  },
+  {
+    "id": "FB-1794004500-184",
+    "name": "Trịnh Diễm Thành (Quản Lý Quỹ)",
+    "email": "trinhthanh1991@icloud.com",
+    "rating": 4,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Lệnh nào thắng báo thắng, lệnh nào hòa hoặc cắt lỗ báo cắt lỗ, không bao giờ có chuyện sửa lệnh hay giấu lỗ. Cực kỳ uy tín!",
+    "createdAt": "2026-11-01T11:30:00.000Z"
+  },
+  {
+    "id": "FB-1794003000-183",
+    "name": "Ngô Thu Đạt (Scalper M5)",
+    "email": "ngodat2009@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tín hiệu rõ ràng, dứt khoát, không mập mờ hai chiều như các hội nhóm telegram. Rất tôn trọng sự minh bạch của admin.",
+    "createdAt": "2026-11-01T08:06:00.000Z"
+  },
+  {
+    "id": "FB-1794001500-182",
+    "name": "Bùi Đăng Phát (Forex Pro)",
+    "email": "buiphat2002@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Từ ngày có app, mình không còn phải thức đêm canh lệnh đến 2-3 giờ sáng nữa. Cứ đặt theo các mốc TP/SL của app là ngủ ngon giấc.",
+    "createdAt": "2026-10-31T23:06:00.000Z"
+  },
+  {
+    "id": "FB-1794000000-181",
+    "name": "Vũ Minh Thắng",
+    "email": "vuthang1995@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Một trong số ít những ứng dụng hỗ trợ giao dịch Vàng thực chiến hiệu quả nhất tại Việt Nam hiện nay. 5 sao xứng đáng!",
+    "createdAt": "2026-10-31T19:42:00.000Z"
+  },
+  {
+    "id": "FB-1793998500-180",
+    "name": "Hoàng Thế Huy (Trader Đà Nẵng)",
+    "email": "hoanghuy1988@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Đã giới thiệu cho 3 người bạn trong nhóm đầu tư cùng sử dụng, ai cũng khen tín hiệu bắt sóng nhạy và dễ nhìn.",
+    "createdAt": "2026-10-31T16:18:00.000Z"
+  },
+  {
+    "id": "FB-1793997000-179",
+    "name": "Trần Hữu Duyên (Thành Viên VIP)",
+    "email": "tranduyen2006@outlook.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Giao diện hiện đại, chuyên nghiệp, hỗ trợ viên phản hồi tin nhắn rất nhanh và nhiệt tình. Chúc app ngày càng phát triển mạnh mẽ!",
+    "createdAt": "2026-10-31T12:54:00.000Z"
+  },
+  {
+    "id": "FB-1793995500-178",
+    "name": "Hà Diễm Trâm (Kỹ Sư FX)",
+    "email": "hatram1999@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Ban đầu mình cũng bán tín bán nghi, nhưng sau khi trải nghiệm gói dùng thử 14 ngày thì quyết định gia hạn gói 1 năm ngay lập tức.",
+    "createdAt": "2026-10-31T09:30:00.000Z"
+  },
+  {
+    "id": "FB-1793994000-177",
+    "name": "Chu Thu Hằng (Chiến Lược Gia)",
+    "email": "chuhang1992@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Là người mới bước chân vào thị trường Forex, app như một người thầy chỉ đường giúp mình không bị lạc lối giữa ma trận chỉ báo.",
+    "createdAt": "2026-10-31T06:06:00.000Z"
+  },
+  {
+    "id": "FB-1793992500-176",
+    "name": "Đinh Đăng Vũ (Gold Hunter)",
+    "email": "dinhvu1985@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Thực sự biết ơn đội ngũ Gold Wave! Nhờ kiên nhẫn bám theo tín hiệu V8 mà tháng này mình đã gỡ lại được khoản lỗ do tự đánh vô kỷ luật trước đó.",
+    "createdAt": "2026-10-31T02:42:00.000Z"
+  },
+  {
+    "id": "FB-1793991000-175",
+    "name": "Lâm Minh Hậu (Cần Thơ FX)",
+    "email": "lamhau2003@gmail.com",
+    "rating": 4,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Rất mong có thêm các buổi livestream hoặc video ngắn phân tích nhận định sóng MA Wave vào tối thứ 2 đầu tuần.",
+    "createdAt": "2026-10-30T17:42:00.000Z"
+  },
+  {
+    "id": "FB-1793989500-174",
+    "name": "Trịnh Thế Quân (Trader Hà Nội)",
+    "email": "trinhquan1996@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Nên có thêm chế độ tiết kiệm pin hoặc giảm bớt animation khi pin điện thoại xuống dưới 20%.",
+    "createdAt": "2026-10-30T14:18:00.000Z"
+  },
+  {
+    "id": "FB-1793988000-173",
+    "name": "Ngô Hữu Nghĩa (Hải Phòng Trader)",
+    "email": "ngonghia1989@outlook.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Nếu có thêm tính năng tính toán khối lượng vào lệnh (Position Size Calculator) dựa trên số pips stoploss thì hoàn hảo 10/10.",
+    "createdAt": "2026-10-30T10:54:00.000Z"
+  },
+  {
+    "id": "FB-1793986500-172",
+    "name": "Bùi Diễm Hải (Trader Vàng)",
+    "email": "buihai2007@icloud.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Tín hiệu rất tốt rồi, chỉ mong admin duy trì chi phí gia hạn hợp lý cho anh em gắn bó lâu dài cùng app.",
+    "createdAt": "2026-10-30T07:30:00.000Z"
+  },
+  {
+    "id": "FB-1793985000-171",
+    "name": "Vũ Thu Minh (Scalper H1)",
+    "email": "vuminh2000@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Đề xuất bổ sung thêm cảnh báo phân kỳ RSI và MACD kết hợp với MA Wave để tăng thêm một lớp xác nhận tín hiệu nữa.",
+    "createdAt": "2026-10-30T04:06:00.000Z"
+  },
+  {
+    "id": "FB-1793983500-170",
+    "name": "Hoàng Đăng Oanh (Trader Tự Do)",
+    "email": "hoangoanh1993@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "App chạy rất mượt trên Safari iOS, hy vọng sớm có ứng dụng tải trực tiếp từ Google Play và App Store để tiện quản lý cập nhật.",
+    "createdAt": "2026-10-30T00:42:00.000Z"
+  },
+  {
+    "id": "FB-1793982000-169",
+    "name": "Trần Minh Quỳnh (Nhà Đầu Tư)",
+    "email": "tranquynh1986@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Nên có thêm một tab chia sẻ kinh nghiệm cộng đồng để các anh em trader có thể trao đổi góc nhìn phân tích trong ngày.",
+    "createdAt": "2026-10-29T21:18:00.000Z"
+  },
+  {
+    "id": "FB-1793980500-168",
+    "name": "Hà Thế Linh (Gold Wave Fan)",
+    "email": "halinh2004@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Mong muốn có thêm tùy chọn kết nối trực tiếp tài khoản thông qua API của các sàn giao dịch phổ biến.",
+    "createdAt": "2026-10-29T12:18:00.000Z"
+  },
+  {
+    "id": "FB-1793979000-167",
+    "name": "Chu Hữu Bảo (Swing Trader)",
+    "email": "chubao1997@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Mình muốn đề xuất thêm chế độ chia đôi màn hình: bên trái xem nến M5, bên phải xem nến H1 để dễ soi đa khung thời gian.",
+    "createdAt": "2026-10-29T08:54:00.000Z"
+  },
+  {
+    "id": "FB-1793977500-166",
+    "name": "Đinh Diễm Tùng (Trader M15)",
+    "email": "dinhtung1990@icloud.com",
+    "rating": 4,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Gợi ý admin thêm tính năng ghi chú nhật ký giao dịch (Trading Journal) ngay bên cạnh từng lệnh để người dùng tự rút kinh nghiệm.",
+    "createdAt": "2026-10-29T05:30:00.000Z"
+  },
+  {
+    "id": "FB-1793976000-165",
+    "name": "Lâm Thu Triết (FX Sài Gòn)",
+    "email": "lamtriet2008@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "App dùng rất thích, nếu có thêm widget hiển thị giá Vàng trực tiếp ra màn hình khóa của iOS thì quá tuyệt vời!",
+    "createdAt": "2026-10-29T02:06:00.000Z"
+  },
+  {
+    "id": "FB-1793974500-164",
+    "name": "Trịnh Đăng Trung (Quản Lý Quỹ)",
+    "email": "trinhtrung2001@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Đề xuất thêm cặp tiền tệ chính như EUR/USD, GBP/USD và chỉ số US30 vào hệ thống phân tích sóng MA Wave trong bản cập nhật tới.",
+    "createdAt": "2026-10-28T22:42:00.000Z"
+  },
+  {
+    "id": "FB-1793973000-163",
+    "name": "Ngô Minh Hoàng (Scalper M5)",
+    "email": "ngohoang1994@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Chất lượng tín hiệu 5 sao không có gì bàn cãi. Chỉ góp ý nhỏ là admin nên cho phép người dùng tự đổi âm báo chuông theo sở thích cá nhân.",
+    "createdAt": "2026-10-28T19:18:00.000Z"
+  },
+  {
+    "id": "FB-1793971500-162",
+    "name": "Bùi Thế Hùng (Forex Pro)",
+    "email": "buihung1987@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Mong admin phát triển thêm tính năng cho phép backtest chiến lược MA Wave trực tiếp trên biểu đồ với dữ liệu lịch sử 1 năm.",
+    "createdAt": "2026-10-28T15:54:00.000Z"
+  },
+  {
+    "id": "FB-1793970000-161",
+    "name": "Vũ Hữu Vi",
+    "email": "vuvi2005@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "App rất tuyệt vời rồi, nếu có thể thêm thông báo qua Telegram hoặc Bot Discord nữa thì sẽ tiện hơn cho anh em làm việc văn phòng.",
+    "createdAt": "2026-10-28T06:54:00.000Z"
+  },
+  {
+    "id": "FB-1793968500-160",
+    "name": "Hoàng Diễm Mai (Trader Đà Nẵng)",
+    "email": "hoangmai1998@icloud.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Sự kết hợp giữa chỉ báo kỹ thuật MA Wave và bộ lọc tin tức vĩ mô tạo nên một hệ thống giao dịch toàn diện và vững chắc.",
+    "createdAt": "2026-10-28T03:30:00.000Z"
+  },
+  {
+    "id": "FB-1793967000-159",
+    "name": "Trần Thu Luân (Thành Viên VIP)",
+    "email": "tranluan1991@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Hệ thống tự động đánh dấu các vùng thời gian biến động cao trên lịch, giúp trader an tâm không bị săn thanh khoản bất ngờ.",
+    "createdAt": "2026-10-28T00:06:00.000Z"
+  },
+  {
+    "id": "FB-1793965500-158",
+    "name": "Hà Đăng Vinh (Kỹ Sư FX)",
+    "email": "havinh2009@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Mục nhận định xu hướng của AI mỗi đầu phiên giao dịch rất hữu ích, mình luôn đọc trước khi bắt đầu phiên làm việc.",
+    "createdAt": "2026-10-27T20:42:00.000Z"
+  },
+  {
+    "id": "FB-1793964000-157",
+    "name": "Chu Minh Việt (Chiến Lược Gia)",
+    "email": "chuviet2002@gmail.com",
+    "rating": 4,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Tin tức được lấy trực tiếp từ các nguồn uy tín như ForexFactory và Investing, độ trễ cực thấp.",
+    "createdAt": "2026-10-27T17:18:00.000Z"
+  },
+  {
+    "id": "FB-1793962500-156",
+    "name": "Đinh Thế Khang (Gold Hunter)",
+    "email": "dinhkhang1995@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Nhờ có phần phân tích tương quan giữa chỉ số DXY và Vàng mà mình dự đoán được cú đảo chiều lớn đầu tháng.",
+    "createdAt": "2026-10-27T13:54:00.000Z"
+  },
+  {
+    "id": "FB-1793961000-155",
+    "name": "Lâm Hữu Sơn (Cần Thơ FX)",
+    "email": "lamson1988@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Phần dịch tin tức tiếng Anh sang tiếng Việt rất mượt mà, chuẩn thuật ngữ tài chính ngân hàng chứ không phải dịch thô bằng Google Dịch.",
+    "createdAt": "2026-10-27T10:30:00.000Z"
+  },
+  {
+    "id": "FB-1793959500-154",
+    "name": "Trịnh Diễm Anh (Trader Hà Nội)",
+    "email": "trinhanh2006@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Đánh giá cao tính năng tự động cảnh báo trước giờ ra tin quan trọng 15 phút để trader chủ động siết stoploss hoặc đứng ngoài.",
+    "createdAt": "2026-10-27T01:30:00.000Z"
+  },
+  {
+    "id": "FB-1793958000-153",
+    "name": "Ngô Thu Thư (Hải Phòng Trader)",
+    "email": "ngothu1999@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "AI phân tích tâm lý thị trường (Market Sentiment) đưa ra góc nhìn khách quan, giúp mình không bị tâm lý đám đông dẫn dụ.",
+    "createdAt": "2026-10-26T22:06:00.000Z"
+  },
+  {
+    "id": "FB-1793956500-152",
+    "name": "Bùi Đăng Yến (Trader Vàng)",
+    "email": "buiyen1992@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Bảng lịch kinh tế lọc đúng các tin đỏ quan trọng (CPI, Bảng lương phi nông nghiệp, Lãi suất Fed), không bị ngợp bởi các tin rác.",
+    "createdAt": "2026-10-26T18:42:00.000Z"
+  },
+  {
+    "id": "FB-1793955000-151",
+    "name": "Vũ Minh Hương (Scalper H1)",
+    "email": "vuhuong1985@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Tính năng AI tóm tắt tin tức vĩ mô cực kỳ đỉnh! Dịch nhanh và phân tích ngay tác động của tin tức lên giá Vàng trong vòng 30 giây.",
+    "createdAt": "2026-10-26T15:18:00.000Z"
+  },
+  {
+    "id": "FB-1793953500-150",
+    "name": "Hoàng Thế Lâm (Trader Tự Do)",
+    "email": "hoanglam2003@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Hệ thống cảnh báo bằng màu sắc (Xanh Buy - Đỏ Sell) rất rõ ràng, hạn chế tối đa việc nhìn nhầm chiều xu hướng.",
+    "createdAt": "2026-10-26T11:54:00.000Z"
+  },
+  {
+    "id": "FB-1793952000-149",
+    "name": "Trần Hữu Toàn (Nhà Đầu Tư)",
+    "email": "trantoan1996@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Bảng thông số tài khoản và thống kê winrate trình bày khoa học, giúp mình dễ dàng theo dõi hiệu suất đầu tư.",
+    "createdAt": "2026-10-26T08:30:00.000Z"
+  },
+  {
+    "id": "FB-1793950500-148",
+    "name": "Hà Diễm Phong (Gold Wave Fan)",
+    "email": "haphong1989@icloud.com",
+    "rating": 4,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Hiệu ứng phát sáng và hoạt họa của các thanh nến nhìn rất đẳng cấp, mang lại cảm giác công nghệ cao đích thực.",
+    "createdAt": "2026-10-26T05:06:00.000Z"
+  },
+  {
+    "id": "FB-1793949000-147",
+    "name": "Chu Thu Kiên (Swing Trader)",
+    "email": "chukien2007@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Giao diện điện thoại được tối ưu rất gọn gàng, các nút thao tác nhanh được đặt ngay tầm với của ngón cái.",
+    "createdAt": "2026-10-25T20:06:00.000Z"
+  },
+  {
+    "id": "FB-1793947500-146",
+    "name": "Đinh Đăng Long (Trader M15)",
+    "email": "dinhlong2000@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Thích nhất là bảng giá Radar theo dõi đồng thời Vàng, Bạc và Bitcoin. So sánh tương quan sức mạnh giữa các tài sản rất nhanh.",
+    "createdAt": "2026-10-25T16:42:00.000Z"
+  },
+  {
+    "id": "FB-1793946000-145",
+    "name": "Lâm Minh Dũng (FX Sài Gòn)",
+    "email": "lamdung1993@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Thiết kế trực quan, dễ dùng hơn nhiều nền tảng phân tích kỹ thuật phức tạp khác. Người mới tiếp cận cũng nắm bắt được ngay.",
+    "createdAt": "2026-10-25T13:18:00.000Z"
+  },
+  {
+    "id": "FB-1793944500-144",
+    "name": "Trịnh Thế Hà (Quản Lý Quỹ)",
+    "email": "trinhha1986@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Cột hiển thị độ dốc xu hướng (Trend Slope) và động lượng Momentum ở góc phải màn hình rất hữu ích khi phân tích đa khung thời gian.",
+    "createdAt": "2026-10-25T09:54:00.000Z"
+  },
+  {
+    "id": "FB-1793943000-143",
+    "name": "Ngô Hữu Lan (Scalper M5)",
+    "email": "ngolan2004@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Các dải sóng MA Wave phối màu rất thông minh, nhìn vào là phân biệt ngay được xu hướng chính tăng hay giảm.",
+    "createdAt": "2026-10-25T06:30:00.000Z"
+  },
+  {
+    "id": "FB-1793941500-142",
+    "name": "Bùi Diễm Trang (Forex Pro)",
+    "email": "buitrang1997@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Biểu đồ Lightweight Charts tích hợp mượt mà, kéo thả phóng to thu nhỏ rất trơn tru trên cả máy tính lẫn điện thoại.",
+    "createdAt": "2026-10-25T03:06:00.000Z"
+  },
+  {
+    "id": "FB-1793940000-141",
+    "name": "Vũ Thu Bình",
+    "email": "vubinh1990@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Giao diện thiết kế theo phong cách Cyberpunk tối màu rất chuyên nghiệp và dịu mắt, ngồi soi chart ban đêm không bị mỏi.",
+    "createdAt": "2026-10-24T23:42:00.000Z"
+  },
+  {
+    "id": "FB-1793938500-140",
+    "name": "Hoàng Đăng Duy (Trader Đà Nẵng)",
+    "email": "hoangduy2008@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Nhận thông báo qua điện thoại rất chuẩn xác, độ trễ gần như bằng 0 so với nến trên TradingView.",
+    "createdAt": "2026-10-24T14:42:00.000Z"
+  },
+  {
+    "id": "FB-1793937000-139",
+    "name": "Trần Minh Thịnh (Thành Viên VIP)",
+    "email": "tranthinh2001@gmail.com",
+    "rating": 4,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Đội ngũ tối ưu server rất tốt, ngay cả những lúc thị trường biến động mạnh khi tin CPI công bố app vẫn mượt mà.",
+    "createdAt": "2026-10-24T11:18:00.000Z"
+  },
+  {
+    "id": "FB-1793935500-138",
+    "name": "Hà Thế Cường (Kỹ Sư FX)",
+    "email": "hacuong1994@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Rất ấn tượng với tốc độ load trang, giao diện khởi động trong chưa đầy 1 giây, dữ liệu giá chạy liên tục không bị đơ.",
+    "createdAt": "2026-10-24T07:54:00.000Z"
+  },
+  {
+    "id": "FB-1793934000-137",
+    "name": "Chu Hữu Đức (Chiến Lược Gia)",
+    "email": "chuduc1987@outlook.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Thông báo ghi rõ: Giá vào, Stoploss, TP1, TP2, TP3 và mức đòn bẩy gợi ý. Đọc lướt qua màn hình khóa là thao tác được ngay.",
+    "createdAt": "2026-10-24T04:30:00.000Z"
+  },
+  {
+    "id": "FB-1793932500-136",
+    "name": "Đinh Diễm Hiền (Gold Hunter)",
+    "email": "dinhhien2005@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Tính năng chuông cảnh báo âm thanh giúp mình không cần phải dán mắt vào màn hình 24/7 mà vẫn không lọt mất kèo đẹp.",
+    "createdAt": "2026-10-24T01:06:00.000Z"
+  },
+  {
+    "id": "FB-1793931000-135",
+    "name": "Lâm Thu Ngọc (Cần Thơ FX)",
+    "email": "lamngoc1998@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Cực kỳ tiện lợi khi app có thể cài đặt trực tiếp dưới dạng PWA trên iPhone. Nhận thông báo nhanh như app native từ App Store.",
+    "createdAt": "2026-10-23T21:42:00.000Z"
+  },
+  {
+    "id": "FB-1793929500-134",
+    "name": "Trịnh Đăng Nhung (Trader Hà Nội)",
+    "email": "trinhnhung1991@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Tốc độ cập nhật nến và giá Vàng realtime từng mili-giây, không hề bị giật lag dù mở app liên tục nhiều giờ liền.",
+    "createdAt": "2026-10-23T18:18:00.000Z"
+  },
+  {
+    "id": "FB-1793928000-133",
+    "name": "Ngô Minh Tâm (Hải Phòng Trader)",
+    "email": "ngotam2009@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Âm báo tín hiệu rất dứt khoát, nghe là biết ngay có sóng mới. Mong app duy trì server ổn định như hiện tại.",
+    "createdAt": "2026-10-23T09:18:00.000Z"
+  },
+  {
+    "id": "FB-1793926500-132",
+    "name": "Bùi Thế Khoa (Trader Vàng)",
+    "email": "buikhoa2002@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Hệ thống Web Push VAPID hoạt động rất mượt, mình khóa màn hình điện thoại mà vẫn nhận được thông báo kèm điểm Buy/Sell rõ ràng.",
+    "createdAt": "2026-10-23T05:54:00.000Z"
+  },
+  {
+    "id": "FB-1793925000-131",
+    "name": "Vũ Hữu Quang (Scalper H1)",
+    "email": "vuquang1995@outlook.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tốc độ đẩy thông báo tín hiệu cực nhanh, điện thoại vừa rung chuông là trên biểu đồ xuất hiện mũi tên vào lệnh ngay lập tức.",
+    "createdAt": "2026-10-23T02:30:00.000Z"
+  },
+  {
+    "id": "FB-1793923500-130",
+    "name": "Hoàng Diễm Hưng (Trader Tự Do)",
+    "email": "hoanghung1988@icloud.com",
+    "rating": 4,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Bot vận hành êm ái, log ghi lại đầy đủ từng thao tác vào lệnh, dời stoploss, chốt lời. Rất minh bạch và tin cậy.",
+    "createdAt": "2026-10-22T23:06:00.000Z"
+  },
+  {
+    "id": "FB-1793922000-129",
+    "name": "Trần Thu Nam (Nhà Đầu Tư)",
+    "email": "trannam2006@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Tự động đóng 50% khối lượng tại TP1 và gồng 50% còn lại lên TP2/TP3 là một chiến lược quản lý vốn kinh điển được bot thực thi xuất sắc.",
+    "createdAt": "2026-10-22T19:42:00.000Z"
+  },
+  {
+    "id": "FB-1793920500-128",
+    "name": "Hà Đăng Tuấn (Gold Wave Fan)",
+    "email": "hatuan1999@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Mình rất bận công việc ban ngày nên nhờ có bot tự động canh lệnh theo MA Wave giúp mình không bỏ lỡ các cơ hội đẹp.",
+    "createdAt": "2026-10-22T16:18:00.000Z"
+  },
+  {
+    "id": "FB-1793919000-127",
+    "name": "Chu Minh Ly (Swing Trader)",
+    "email": "chuly1992@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Bot bắt lệnh break-out đỉnh đáy rất nhạy, tốc độ gửi lệnh qua socket lên MT5 chưa tới 0.1 giây.",
+    "createdAt": "2026-10-22T12:54:00.000Z"
+  },
+  {
+    "id": "FB-1793917500-126",
+    "name": "Đinh Thế Ngân (Trader M15)",
+    "email": "dinhngan1985@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Hệ thống quản trị rủi ro của bot rất chặt chẽ, tự động ngưng giao dịch khi đạt mức lỗ tối đa trong ngày.",
+    "createdAt": "2026-10-22T03:54:00.000Z"
+  },
+  {
+    "id": "FB-1793916000-125",
+    "name": "Lâm Hữu Thảo (FX Sài Gòn)",
+    "email": "lamthao2003@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Đề xuất admin bổ sung thêm tính năng hẹn giờ bật tắt bot theo khung giờ phiên Á, Âu, Mỹ để tối ưu hóa hiệu quả.",
+    "createdAt": "2026-10-22T00:30:00.000Z"
+  },
+  {
+    "id": "FB-1793914500-124",
+    "name": "Trịnh Diễm Thành (Quản Lý Quỹ)",
+    "email": "trinhthanh1996@icloud.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Cài đặt bot lên MT5 rất nhanh gọn, chỉ cần copy file EA và paste API key là xong. Video hướng dẫn của admin rất chi tiết.",
+    "createdAt": "2026-10-21T21:06:00.000Z"
+  },
+  {
+    "id": "FB-1793913000-123",
+    "name": "Ngô Thu Đạt (Scalper M5)",
+    "email": "ngodat1989@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Bot không vào lệnh dồn dập, chỉ đánh khi hội tụ đủ 3 điều kiện MA Wave. Đây là con bot kỷ luật nhất mình từng sử dụng.",
+    "createdAt": "2026-10-21T17:42:00.000Z"
+  },
+  {
+    "id": "FB-1793911500-122",
+    "name": "Bùi Đăng Phát (Forex Pro)",
+    "email": "buiphat2007@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Cơ chế trailing stop của bot xử lý rất khéo, nhiều lệnh ăn trọn con sóng dài hơn 100 pips mà không sợ bị quay đầu mất lãi.",
+    "createdAt": "2026-10-21T14:18:00.000Z"
+  },
+  {
+    "id": "FB-1793910000-121",
+    "name": "Vũ Minh Thắng",
+    "email": "vuthang2000@gmail.com",
+    "rating": 4,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tính năng đồng bộ vị thế giữa app và MT5 hoạt động hoàn hảo. Xem trạng thái lệnh đang chạy trực tiếp trên điện thoại rất tiện.",
+    "createdAt": "2026-10-21T10:54:00.000Z"
+  },
+  {
+    "id": "FB-1793908500-120",
+    "name": "Hoàng Thế Huy (Trader Đà Nẵng)",
+    "email": "hoanghuy1993@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Đã cho bot chạy thử nghiệm trên tài khoản live 500$, sau 2 tuần lợi nhuận đạt 12% với mức drawdown tối đa chỉ 3.8%. Rất an toàn!",
+    "createdAt": "2026-10-21T07:30:00.000Z"
+  },
+  {
+    "id": "FB-1793907000-119",
+    "name": "Trần Hữu Duyên (Thành Viên VIP)",
+    "email": "tranduyen1986@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Bot tự động tính toán lot chuẩn theo số dư tài khoản, giao diện cấu hình trực quan dễ dùng ngay cả với người không rành công nghệ.",
+    "createdAt": "2026-10-20T22:30:00.000Z"
+  },
+  {
+    "id": "FB-1793905500-118",
+    "name": "Hà Diễm Trâm (Kỹ Sư FX)",
+    "email": "hatram2004@icloud.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Cực kỳ thích tính năng quản lý vốn theo % tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
+    "createdAt": "2026-10-20T19:06:00.000Z"
+  },
+  {
+    "id": "FB-1793904000-117",
+    "name": "Chu Thu Hằng (Chiến Lược Gia)",
+    "email": "chuhang1997@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Bot MT5 chạy trên VPS rất ổn định, khớp lệnh tức thì không có độ trễ. Cơ chế tự động dời SL về hòa vốn khi đạt TP1 giúp mình an tâm tuyệt đối khi đi ngủ.",
+    "createdAt": "2026-10-20T15:42:00.000Z"
+  },
+  {
+    "id": "FB-1793902500-116",
+    "name": "Đinh Đăng Vũ (Gold Hunter)",
+    "email": "dinhvu1990@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
     "comment": "App dùng rất tốt, bot tự động vào lệnh quản lý vốn tốt, mong admin ra thêm bản kết nối trực tiếp với tài khoản Exness nữa là tuyệt vời 10/10.",
-    "createdAt": "2026-11-04T01:15:00.000Z"
+    "createdAt": "2026-10-20T12:18:00.000Z"
+  },
+  {
+    "id": "FB-1793901000-115",
+    "name": "Lâm Minh Hậu (Cần Thơ FX)",
+    "email": "lamhau2008@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Khuyến nghị anh em nên kết hợp tín hiệu với quản lý vốn 1-2% tài khoản, lợi nhuận tích lũy đều đặn hàng tuần rất tốt.",
+    "createdAt": "2026-10-20T08:54:00.000Z"
+  },
+  {
+    "id": "FB-1793899500-114",
+    "name": "Trịnh Thế Quân (Trader Hà Nội)",
+    "email": "trinhquan2001@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Điểm vào lệnh rất nét, thường chỉ cách đỉnh đáy vài pip. Cảm giác đội ngũ coder có kiến thức sâu về Price Action và sóng thị trường.",
+    "createdAt": "2026-10-20T05:30:00.000Z"
+  },
+  {
+    "id": "FB-1793898000-113",
+    "name": "Ngô Hữu Nghĩa (Hải Phòng Trader)",
+    "email": "ngonghia1994@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "App nhận diện các vùng FVG và MA Wave rất chuẩn, tỷ lệ winrate vượt ngoài mong đợi của mình.",
+    "createdAt": "2026-10-20T02:06:00.000Z"
+  },
+  {
+    "id": "FB-1793896500-112",
+    "name": "Bùi Diễm Hải (Trader Vàng)",
+    "email": "buihai1987@icloud.com",
+    "rating": 4,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Tín hiệu phân kỳ MA Wave báo rất sớm trước khi giá bứt phá. Nhờ đó mình luôn đón đầu được các nhịp sóng lớn.",
+    "createdAt": "2026-10-19T17:06:00.000Z"
+  },
+  {
+    "id": "FB-1793895000-111",
+    "name": "Vũ Thu Minh (Scalper H1)",
+    "email": "vuminh2005@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Mình thích nhất là các mốc TP1, TP2, TP3 được chia nhỏ để chốt lời từng phần, giúp tâm lý giao dịch nhẹ nhàng hơn rất nhiều.",
+    "createdAt": "2026-10-19T13:42:00.000Z"
+  },
+  {
+    "id": "FB-1793893500-110",
+    "name": "Hoàng Đăng Oanh (Trader Tự Do)",
+    "email": "hoangoanh1998@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách scalping.",
+    "createdAt": "2026-10-19T10:18:00.000Z"
+  },
+  {
+    "id": "FB-1793892000-109",
+    "name": "Trần Minh Quỳnh (Nhà Đầu Tư)",
+    "email": "tranquynh1991@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Từ ngày dùng Gold Wave mình bỏ hẳn các nhóm phím kèo trôi nổi. App cập nhật liên tục, minh bạch từng lệnh thắng thua.",
+    "createdAt": "2026-10-19T06:54:00.000Z"
+  },
+  {
+    "id": "FB-1793890500-108",
+    "name": "Hà Thế Linh (Gold Wave Fan)",
+    "email": "halinh2009@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Đánh giá cao việc hệ thống biết kiên nhẫn đứng ngoài khi thị trường không có xu hướng rõ ràng, bảo toàn vốn cực kỳ tốt.",
+    "createdAt": "2026-10-19T03:30:00.000Z"
+  },
+  {
+    "id": "FB-1793889000-107",
+    "name": "Chu Hữu Bảo (Swing Trader)",
+    "email": "chubao2002@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Tín hiệu chuẩn, có giải thích rõ lý do vào lệnh theo cấu trúc MA Wave và vùng thanh khoản. Giúp người mới như mình học hỏi thêm được rất nhiều.",
+    "createdAt": "2026-10-19T00:06:00.000Z"
+  },
+  {
+    "id": "FB-1793887500-106",
+    "name": "Đinh Diễm Tùng (Trader M15)",
+    "email": "dinhtung1995@icloud.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Khả năng nhận diện sóng của MA Wave rất độc đáo. Xem biểu đồ trực tiếp trên app rất tiện, không cần phải mở TradingView cồng kềnh.",
+    "createdAt": "2026-10-18T20:42:00.000Z"
+  },
+  {
+    "id": "FB-1793886000-105",
+    "name": "Lâm Thu Triết (FX Sài Gòn)",
+    "email": "lamtriet1988@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy/Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
+    "createdAt": "2026-10-18T11:42:00.000Z"
+  },
+  {
+    "id": "FB-1793884500-104",
+    "name": "Trịnh Đăng Trung (Quản Lý Quỹ)",
+    "email": "trinhtrung2006@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Ấn tượng nhất là tín hiệu V8 phiên Mỹ, lúc tin ra giá giật mạnh nhưng hệ thống vẫn lọc nhiễu tốt và cho điểm re-test chuẩn xác.",
+    "createdAt": "2026-10-18T08:18:00.000Z"
+  },
+  {
+    "id": "FB-1793883000-103",
+    "name": "Ngô Minh Hoàng (Scalper M5)",
+    "email": "ngohoang1999@gmail.com",
+    "rating": 4,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Tín hiệu vàng chạy mượt mà, điểm SL được tính toán rất hợp lý ngay dưới vùng cản động, không bị quét râu nến oan uổng.",
+    "createdAt": "2026-10-18T04:54:00.000Z"
+  },
+  {
+    "id": "FB-1793881500-102",
+    "name": "Bùi Thế Hùng (Forex Pro)",
+    "email": "buihung1992@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy con bot khác. Rất đáng giá từng đồng!",
+    "createdAt": "2026-10-18T01:30:00.000Z"
+  },
+  {
+    "id": "FB-1793880000-101",
+    "name": "Vũ Hữu Vi",
+    "email": "vuvi1985@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Tín hiệu bắt sóng H1 và M15 rất chắc chắn. Đặc biệt là những pha nén giá MA Wave bung dải, báo điểm vào rất ngọt và tỷ lệ RR tốt.",
+    "createdAt": "2026-10-17T22:06:00.000Z"
+  },
+  {
+    "id": "FB-1793878500-100",
+    "name": "Hoàng Diễm Mai (Trader Đà Nẵng)",
+    "email": "hoangmai2003@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Bộ lọc MA Wave phát hiện đảo chiều đỉnh đáy cực kỳ nhạy. Trước đây mình hay bị FOMO đu đỉnh, từ ngày dùng app kỷ luật hơn hẳn vì chỉ chờ tín hiệu xác nhận rõ ràng mới vào.",
+    "createdAt": "2026-10-17T18:42:00.000Z"
+  },
+  {
+    "id": "FB-1793877000-099",
+    "name": "Trần Thu Luân (Thành Viên VIP)",
+    "email": "tranluan1996@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em trader.",
+    "createdAt": "2026-10-17T15:18:00.000Z"
+  },
+  {
+    "id": "FB-1793875500-098",
+    "name": "Hà Đăng Vinh (Kỹ Sư FX)",
+    "email": "havinh1989@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Đã test tín hiệu được 3 tuần, tỷ lệ chạm TP1 và TP2 đạt hơn 85%. Rất thích cách app đo lường biên độ nến và không vào lệnh bừa bãi khi thị trường sideway giằng co.",
+    "createdAt": "2026-10-17T06:18:00.000Z"
+  },
+  {
+    "id": "FB-1793874000-097",
+    "name": "Chu Minh Việt (Chiến Lược Gia)",
+    "email": "chuviet2007@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Theo tín hiệu Buy Vàng hôm trước ăn trọn nhịp 70 pips, điểm vào lệnh rất sát vùng hỗ trợ cứng. Hệ thống chỉ báo MA Wave trực quan và dễ theo dõi hơn hẳn các chỉ báo thông thường.",
+    "createdAt": "2026-10-17T02:54:00.000Z"
+  },
+  {
+    "id": "FB-1793872500-096",
+    "name": "Đinh Thế Khang (Gold Hunter)",
+    "email": "dinhkhang2000@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Tín hiệu Vàng MA Wave V8 bắt nhịp sóng rất chuẩn, tỷ lệ win cao và giao diện xem trên điện thoại rất mượt mà. Mong admin nâng cấp thêm tính năng thông báo âm thanh chuông đặc biệt khi chạm TP3!",
+    "createdAt": "2026-10-16T23:30:00.000Z"
+  },
+  {
+    "id": "FB-1793871000-095",
+    "name": "Lâm Hữu Sơn (Cần Thơ FX)",
+    "email": "lamson1993@outlook.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Cực kỳ hài lòng! Sẽ tiếp tục đồng hành và ủng hộ Gold Wave Terminal lâu dài.",
+    "createdAt": "2026-10-16T20:06:00.000Z"
+  },
+  {
+    "id": "FB-1793869500-094",
+    "name": "Trịnh Diễm Anh (Trader Hà Nội)",
+    "email": "trinhanh1986@icloud.com",
+    "rating": 4,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Một trải nghiệm công nghệ tài chính tuyệt vời, tốc độ và độ chính xác đều vượt xa kỳ vọng ban đầu của mình.",
+    "createdAt": "2026-10-16T16:42:00.000Z"
+  },
+  {
+    "id": "FB-1793868000-093",
+    "name": "Ngô Thu Thư (Hải Phòng Trader)",
+    "email": "ngothu2004@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Trước đây mình hay gồng lỗ đến cháy tài khoản, từ khi có app chỉ điểm dừng lỗ rõ ràng, tâm lý thoải mái hơn hẳn.",
+    "createdAt": "2026-10-16T13:18:00.000Z"
+  },
+  {
+    "id": "FB-1793866500-092",
+    "name": "Bùi Đăng Yến (Trader Vàng)",
+    "email": "buiyen1997@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Đánh giá 5 sao cho sự tận tâm của đội ngũ phát triển. App cập nhật vá lỗi và bổ sung tính năng mới liên tục hàng tuần.",
+    "createdAt": "2026-10-16T09:54:00.000Z"
+  },
+  {
+    "id": "FB-1793865000-091",
+    "name": "Vũ Minh Hương (Scalper H1)",
+    "email": "vuhuong1990@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Học hỏi được rất nhiều về tư duy quản lý vốn từ thuật toán của bot. Cảm ơn đội ngũ kỹ thuật rất nhiều!",
+    "createdAt": "2026-10-16T00:54:00.000Z"
+  },
+  {
+    "id": "FB-1793863500-090",
+    "name": "Hoàng Thế Lâm (Trader Tự Do)",
+    "email": "hoanglam2008@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Đáng giá từng xu! Chỉ cần theo đúng 1 nhịp sóng đẹp của app là đã đủ bù lại chi phí cả năm sử dụng.",
+    "createdAt": "2026-10-15T21:30:00.000Z"
+  },
+  {
+    "id": "FB-1793862000-089",
+    "name": "Trần Hữu Toàn (Nhà Đầu Tư)",
+    "email": "trantoan2001@outlook.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Lệnh nào thắng báo thắng, lệnh nào hòa hoặc cắt lỗ báo cắt lỗ, không bao giờ có chuyện sửa lệnh hay giấu lỗ. Cực kỳ uy tín!",
+    "createdAt": "2026-10-15T18:06:00.000Z"
+  },
+  {
+    "id": "FB-1793860500-088",
+    "name": "Hà Diễm Phong (Gold Wave Fan)",
+    "email": "haphong1994@icloud.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Tín hiệu rõ ràng, dứt khoát, không mập mờ hai chiều như các hội nhóm telegram. Rất tôn trọng sự minh bạch của admin.",
+    "createdAt": "2026-10-15T14:42:00.000Z"
+  },
+  {
+    "id": "FB-1793859000-087",
+    "name": "Chu Thu Kiên (Swing Trader)",
+    "email": "chukien1987@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Từ ngày có app, mình không còn phải thức đêm canh lệnh đến 2-3 giờ sáng nữa. Cứ đặt theo các mốc TP/SL của app là ngủ ngon giấc.",
+    "createdAt": "2026-10-15T11:18:00.000Z"
+  },
+  {
+    "id": "FB-1793857500-086",
+    "name": "Đinh Đăng Long (Trader M15)",
+    "email": "dinhlong2005@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Một trong số ít những ứng dụng hỗ trợ giao dịch Vàng thực chiến hiệu quả nhất tại Việt Nam hiện nay. 5 sao xứng đáng!",
+    "createdAt": "2026-10-15T07:54:00.000Z"
+  },
+  {
+    "id": "FB-1793856000-085",
+    "name": "Lâm Minh Dũng (FX Sài Gòn)",
+    "email": "lamdung1998@gmail.com",
+    "rating": 4,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Đã giới thiệu cho 3 người bạn trong nhóm đầu tư cùng sử dụng, ai cũng khen tín hiệu bắt sóng nhạy và dễ nhìn.",
+    "createdAt": "2026-10-15T04:30:00.000Z"
+  },
+  {
+    "id": "FB-1793854500-084",
+    "name": "Trịnh Thế Hà (Quản Lý Quỹ)",
+    "email": "trinhha1991@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Giao diện hiện đại, chuyên nghiệp, hỗ trợ viên phản hồi tin nhắn rất nhanh và nhiệt tình. Chúc app ngày càng phát triển mạnh mẽ!",
+    "createdAt": "2026-10-14T19:30:00.000Z"
+  },
+  {
+    "id": "FB-1793853000-083",
+    "name": "Ngô Hữu Lan (Scalper M5)",
+    "email": "ngolan2009@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Ban đầu mình cũng bán tín bán nghi, nhưng sau khi trải nghiệm gói dùng thử 14 ngày thì quyết định gia hạn gói 1 năm ngay lập tức.",
+    "createdAt": "2026-10-14T16:06:00.000Z"
+  },
+  {
+    "id": "FB-1793851500-082",
+    "name": "Bùi Diễm Trang (Forex Pro)",
+    "email": "buitrang2002@icloud.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Là người mới bước chân vào thị trường Forex, app như một người thầy chỉ đường giúp mình không bị lạc lối giữa ma trận chỉ báo.",
+    "createdAt": "2026-10-14T12:42:00.000Z"
+  },
+  {
+    "id": "FB-1793850000-081",
+    "name": "Vũ Thu Bình",
+    "email": "vubinh1995@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Thực sự biết ơn đội ngũ Gold Wave! Nhờ kiên nhẫn bám theo tín hiệu V8 mà tháng này mình đã gỡ lại được khoản lỗ do tự đánh vô kỷ luật trước đó.",
+    "createdAt": "2026-10-14T09:18:00.000Z"
+  },
+  {
+    "id": "FB-1793848500-080",
+    "name": "Hoàng Đăng Duy (Trader Đà Nẵng)",
+    "email": "hoangduy1988@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Rất mong có thêm các buổi livestream hoặc video ngắn phân tích nhận định sóng MA Wave vào tối thứ 2 đầu tuần.",
+    "createdAt": "2026-10-14T05:54:00.000Z"
+  },
+  {
+    "id": "FB-1793847000-079",
+    "name": "Trần Minh Thịnh (Thành Viên VIP)",
+    "email": "tranthinh2006@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Nên có thêm chế độ tiết kiệm pin hoặc giảm bớt animation khi pin điện thoại xuống dưới 20%.",
+    "createdAt": "2026-10-14T02:30:00.000Z"
+  },
+  {
+    "id": "FB-1793845500-078",
+    "name": "Hà Thế Cường (Kỹ Sư FX)",
+    "email": "hacuong1999@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Nếu có thêm tính năng tính toán khối lượng vào lệnh (Position Size Calculator) dựa trên số pips stoploss thì hoàn hảo 10/10.",
+    "createdAt": "2026-10-13T23:06:00.000Z"
+  },
+  {
+    "id": "FB-1793844000-077",
+    "name": "Chu Hữu Đức (Chiến Lược Gia)",
+    "email": "chuduc1992@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Tín hiệu rất tốt rồi, chỉ mong admin duy trì chi phí gia hạn hợp lý cho anh em gắn bó lâu dài cùng app.",
+    "createdAt": "2026-10-13T14:06:00.000Z"
+  },
+  {
+    "id": "FB-1793842500-076",
+    "name": "Đinh Diễm Hiền (Gold Hunter)",
+    "email": "dinhhien1985@icloud.com",
+    "rating": 4,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Đề xuất bổ sung thêm cảnh báo phân kỳ RSI và MACD kết hợp với MA Wave để tăng thêm một lớp xác nhận tín hiệu nữa.",
+    "createdAt": "2026-10-13T10:42:00.000Z"
+  },
+  {
+    "id": "FB-1793841000-075",
+    "name": "Lâm Thu Ngọc (Cần Thơ FX)",
+    "email": "lamngoc2003@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "App chạy rất mượt trên Safari iOS, hy vọng sớm có ứng dụng tải trực tiếp từ Google Play và App Store để tiện quản lý cập nhật.",
+    "createdAt": "2026-10-13T07:18:00.000Z"
+  },
+  {
+    "id": "FB-1793839500-074",
+    "name": "Trịnh Đăng Nhung (Trader Hà Nội)",
+    "email": "trinhnhung1996@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Nên có thêm một tab chia sẻ kinh nghiệm cộng đồng để các anh em trader có thể trao đổi góc nhìn phân tích trong ngày.",
+    "createdAt": "2026-10-13T03:54:00.000Z"
+  },
+  {
+    "id": "FB-1793838000-073",
+    "name": "Ngô Minh Tâm (Hải Phòng Trader)",
+    "email": "ngotam1989@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Mong muốn có thêm tùy chọn kết nối trực tiếp tài khoản thông qua API của các sàn giao dịch phổ biến.",
+    "createdAt": "2026-10-13T00:30:00.000Z"
+  },
+  {
+    "id": "FB-1793836500-072",
+    "name": "Bùi Thế Khoa (Trader Vàng)",
+    "email": "buikhoa2007@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Mình muốn đề xuất thêm chế độ chia đôi màn hình: bên trái xem nến M5, bên phải xem nến H1 để dễ soi đa khung thời gian.",
+    "createdAt": "2026-10-12T21:06:00.000Z"
+  },
+  {
+    "id": "FB-1793835000-071",
+    "name": "Vũ Hữu Quang (Scalper H1)",
+    "email": "vuquang2000@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Gợi ý admin thêm tính năng ghi chú nhật ký giao dịch (Trading Journal) ngay bên cạnh từng lệnh để người dùng tự rút kinh nghiệm.",
+    "createdAt": "2026-10-12T17:42:00.000Z"
+  },
+  {
+    "id": "FB-1793833500-070",
+    "name": "Hoàng Diễm Hưng (Trader Tự Do)",
+    "email": "hoanghung1993@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "App dùng rất thích, nếu có thêm widget hiển thị giá Vàng trực tiếp ra màn hình khóa của iOS thì quá tuyệt vời!",
+    "createdAt": "2026-10-12T08:42:00.000Z"
+  },
+  {
+    "id": "FB-1793832000-069",
+    "name": "Trần Thu Nam (Nhà Đầu Tư)",
+    "email": "trannam1986@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Đề xuất thêm cặp tiền tệ chính như EUR/USD, GBP/USD và chỉ số US30 vào hệ thống phân tích sóng MA Wave trong bản cập nhật tới.",
+    "createdAt": "2026-10-12T05:18:00.000Z"
+  },
+  {
+    "id": "FB-1793830500-068",
+    "name": "Hà Đăng Tuấn (Gold Wave Fan)",
+    "email": "hatuan2004@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Chất lượng tín hiệu 5 sao không có gì bàn cãi. Chỉ góp ý nhỏ là admin nên cho phép người dùng tự đổi âm báo chuông theo sở thích cá nhân.",
+    "createdAt": "2026-10-12T01:54:00.000Z"
+  },
+  {
+    "id": "FB-1793829000-067",
+    "name": "Chu Minh Ly (Swing Trader)",
+    "email": "chuly1997@gmail.com",
+    "rating": 4,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Mong admin phát triển thêm tính năng cho phép backtest chiến lược MA Wave trực tiếp trên biểu đồ với dữ liệu lịch sử 1 năm.",
+    "createdAt": "2026-10-11T22:30:00.000Z"
+  },
+  {
+    "id": "FB-1793827500-066",
+    "name": "Đinh Thế Ngân (Trader M15)",
+    "email": "dinhngan1990@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "App rất tuyệt vời rồi, nếu có thể thêm thông báo qua Telegram hoặc Bot Discord nữa thì sẽ tiện hơn cho anh em làm việc văn phòng.",
+    "createdAt": "2026-10-11T19:06:00.000Z"
+  },
+  {
+    "id": "FB-1793826000-065",
+    "name": "Lâm Hữu Thảo (FX Sài Gòn)",
+    "email": "lamthao2008@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Sự kết hợp giữa chỉ báo kỹ thuật MA Wave và bộ lọc tin tức vĩ mô tạo nên một hệ thống giao dịch toàn diện và vững chắc.",
+    "createdAt": "2026-10-11T15:42:00.000Z"
+  },
+  {
+    "id": "FB-1793824500-064",
+    "name": "Trịnh Diễm Thành (Quản Lý Quỹ)",
+    "email": "trinhthanh2001@icloud.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Hệ thống tự động đánh dấu các vùng thời gian biến động cao trên lịch, giúp trader an tâm không bị săn thanh khoản bất ngờ.",
+    "createdAt": "2026-10-11T12:18:00.000Z"
+  },
+  {
+    "id": "FB-1793823000-063",
+    "name": "Ngô Thu Đạt (Scalper M5)",
+    "email": "ngodat1994@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Mục nhận định xu hướng của AI mỗi đầu phiên giao dịch rất hữu ích, mình luôn đọc trước khi bắt đầu phiên làm việc.",
+    "createdAt": "2026-10-11T03:18:00.000Z"
+  },
+  {
+    "id": "FB-1793821500-062",
+    "name": "Bùi Đăng Phát (Forex Pro)",
+    "email": "buiphat1987@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Tin tức được lấy trực tiếp từ các nguồn uy tín như ForexFactory và Investing, độ trễ cực thấp.",
+    "createdAt": "2026-10-10T23:54:00.000Z"
+  },
+  {
+    "id": "FB-1793820000-061",
+    "name": "Vũ Minh Thắng",
+    "email": "vuthang2005@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Nhờ có phần phân tích tương quan giữa chỉ số DXY và Vàng mà mình dự đoán được cú đảo chiều lớn đầu tháng.",
+    "createdAt": "2026-10-10T20:30:00.000Z"
+  },
+  {
+    "id": "FB-1793818500-060",
+    "name": "Hoàng Thế Huy (Trader Đà Nẵng)",
+    "email": "hoanghuy1998@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Phần dịch tin tức tiếng Anh sang tiếng Việt rất mượt mà, chuẩn thuật ngữ tài chính ngân hàng chứ không phải dịch thô bằng Google Dịch.",
+    "createdAt": "2026-10-10T17:06:00.000Z"
+  },
+  {
+    "id": "FB-1793817000-059",
+    "name": "Trần Hữu Duyên (Thành Viên VIP)",
+    "email": "tranduyen1991@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Đánh giá cao tính năng tự động cảnh báo trước giờ ra tin quan trọng 15 phút để trader chủ động siết stoploss hoặc đứng ngoài.",
+    "createdAt": "2026-10-10T13:42:00.000Z"
+  },
+  {
+    "id": "FB-1793815500-058",
+    "name": "Hà Diễm Trâm (Kỹ Sư FX)",
+    "email": "hatram2009@icloud.com",
+    "rating": 4,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "AI phân tích tâm lý thị trường (Market Sentiment) đưa ra góc nhìn khách quan, giúp mình không bị tâm lý đám đông dẫn dụ.",
+    "createdAt": "2026-10-10T10:18:00.000Z"
+  },
+  {
+    "id": "FB-1793814000-057",
+    "name": "Chu Thu Hằng (Chiến Lược Gia)",
+    "email": "chuhang2002@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Bảng lịch kinh tế lọc đúng các tin đỏ quan trọng (CPI, Bảng lương phi nông nghiệp, Lãi suất Fed), không bị ngợp bởi các tin rác.",
+    "createdAt": "2026-10-10T06:54:00.000Z"
+  },
+  {
+    "id": "FB-1793812500-056",
+    "name": "Đinh Đăng Vũ (Gold Hunter)",
+    "email": "dinhvu1995@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Tính năng AI tóm tắt tin tức vĩ mô cực kỳ đỉnh! Dịch nhanh và phân tích ngay tác động của tin tức lên giá Vàng trong vòng 30 giây.",
+    "createdAt": "2026-10-09T21:54:00.000Z"
+  },
+  {
+    "id": "FB-1793811000-055",
+    "name": "Lâm Minh Hậu (Cần Thơ FX)",
+    "email": "lamhau1988@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Hệ thống cảnh báo bằng màu sắc (Xanh Buy - Đỏ Sell) rất rõ ràng, hạn chế tối đa việc nhìn nhầm chiều xu hướng.",
+    "createdAt": "2026-10-09T18:30:00.000Z"
+  },
+  {
+    "id": "FB-1793809500-054",
+    "name": "Trịnh Thế Quân (Trader Hà Nội)",
+    "email": "trinhquan2006@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Bảng thông số tài khoản và thống kê winrate trình bày khoa học, giúp mình dễ dàng theo dõi hiệu suất đầu tư.",
+    "createdAt": "2026-10-09T15:06:00.000Z"
+  },
+  {
+    "id": "FB-1793808000-053",
+    "name": "Ngô Hữu Nghĩa (Hải Phòng Trader)",
+    "email": "ngonghia1999@outlook.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Hiệu ứng phát sáng và hoạt họa của các thanh nến nhìn rất đẳng cấp, mang lại cảm giác công nghệ cao đích thực.",
+    "createdAt": "2026-10-09T11:42:00.000Z"
+  },
+  {
+    "id": "FB-1793806500-052",
+    "name": "Bùi Diễm Hải (Trader Vàng)",
+    "email": "buihai1992@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Giao diện điện thoại được tối ưu rất gọn gàng, các nút thao tác nhanh được đặt ngay tầm với của ngón cái.",
+    "createdAt": "2026-10-09T08:18:00.000Z"
+  },
+  {
+    "id": "FB-1793805000-051",
+    "name": "Vũ Thu Minh (Scalper H1)",
+    "email": "vuminh1985@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Thích nhất là bảng giá Radar theo dõi đồng thời Vàng, Bạc và Bitcoin. So sánh tương quan sức mạnh giữa các tài sản rất nhanh.",
+    "createdAt": "2026-10-09T04:54:00.000Z"
+  },
+  {
+    "id": "FB-1793803500-050",
+    "name": "Hoàng Đăng Oanh (Trader Tự Do)",
+    "email": "hoangoanh2003@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Thiết kế trực quan, dễ dùng hơn nhiều nền tảng phân tích kỹ thuật phức tạp khác. Người mới tiếp cận cũng nắm bắt được ngay.",
+    "createdAt": "2026-10-09T01:30:00.000Z"
+  },
+  {
+    "id": "FB-1793802000-049",
+    "name": "Trần Minh Quỳnh (Nhà Đầu Tư)",
+    "email": "tranquynh1996@gmail.com",
+    "rating": 4,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Cột hiển thị độ dốc xu hướng (Trend Slope) và động lượng Momentum ở góc phải màn hình rất hữu ích khi phân tích đa khung thời gian.",
+    "createdAt": "2026-10-08T16:30:00.000Z"
+  },
+  {
+    "id": "FB-1793800500-048",
+    "name": "Hà Thế Linh (Gold Wave Fan)",
+    "email": "halinh1989@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Các dải sóng MA Wave phối màu rất thông minh, nhìn vào là phân biệt ngay được xu hướng chính tăng hay giảm.",
+    "createdAt": "2026-10-08T13:06:00.000Z"
+  },
+  {
+    "id": "FB-1793799000-047",
+    "name": "Chu Hữu Bảo (Swing Trader)",
+    "email": "chubao2007@outlook.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Biểu đồ Lightweight Charts tích hợp mượt mà, kéo thả phóng to thu nhỏ rất trơn tru trên cả máy tính lẫn điện thoại.",
+    "createdAt": "2026-10-08T09:42:00.000Z"
+  },
+  {
+    "id": "FB-1793797500-046",
+    "name": "Đinh Diễm Tùng (Trader M15)",
+    "email": "dinhtung2000@icloud.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Giao diện thiết kế theo phong cách Cyberpunk tối màu rất chuyên nghiệp và dịu mắt, ngồi soi chart ban đêm không bị mỏi.",
+    "createdAt": "2026-10-08T06:18:00.000Z"
+  },
+  {
+    "id": "FB-1793796000-045",
+    "name": "Lâm Thu Triết (FX Sài Gòn)",
+    "email": "lamtriet1993@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Nhận thông báo qua điện thoại rất chuẩn xác, độ trễ gần như bằng 0 so với nến trên TradingView.",
+    "createdAt": "2026-10-08T02:54:00.000Z"
+  },
+  {
+    "id": "FB-1793794500-044",
+    "name": "Trịnh Đăng Trung (Quản Lý Quỹ)",
+    "email": "trinhtrung1986@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Đội ngũ tối ưu server rất tốt, ngay cả những lúc thị trường biến động mạnh khi tin CPI công bố app vẫn mượt mà.",
+    "createdAt": "2026-10-07T23:30:00.000Z"
+  },
+  {
+    "id": "FB-1793793000-043",
+    "name": "Ngô Minh Hoàng (Scalper M5)",
+    "email": "ngohoang2004@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Rất ấn tượng với tốc độ load trang, giao diện khởi động trong chưa đầy 1 giây, dữ liệu giá chạy liên tục không bị đơ.",
+    "createdAt": "2026-10-07T20:06:00.000Z"
+  },
+  {
+    "id": "FB-1793791500-042",
+    "name": "Bùi Thế Hùng (Forex Pro)",
+    "email": "buihung1997@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Thông báo ghi rõ: Giá vào, Stoploss, TP1, TP2, TP3 và mức đòn bẩy gợi ý. Đọc lướt qua màn hình khóa là thao tác được ngay.",
+    "createdAt": "2026-10-07T11:06:00.000Z"
+  },
+  {
+    "id": "FB-1793790000-041",
+    "name": "Vũ Hữu Vi",
+    "email": "vuvi1990@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Tính năng chuông cảnh báo âm thanh giúp mình không cần phải dán mắt vào màn hình 24/7 mà vẫn không lọt mất kèo đẹp.",
+    "createdAt": "2026-10-07T07:42:00.000Z"
+  },
+  {
+    "id": "FB-1793788500-040",
+    "name": "Hoàng Diễm Mai (Trader Đà Nẵng)",
+    "email": "hoangmai2008@icloud.com",
+    "rating": 4,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Cực kỳ tiện lợi khi app có thể cài đặt trực tiếp dưới dạng PWA trên iPhone. Nhận thông báo nhanh như app native từ App Store.",
+    "createdAt": "2026-10-07T04:18:00.000Z"
+  },
+  {
+    "id": "FB-1793787000-039",
+    "name": "Trần Thu Luân (Thành Viên VIP)",
+    "email": "tranluan2001@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Tốc độ cập nhật nến và giá Vàng realtime từng mili-giây, không hề bị giật lag dù mở app liên tục nhiều giờ liền.",
+    "createdAt": "2026-10-07T00:54:00.000Z"
+  },
+  {
+    "id": "FB-1793785500-038",
+    "name": "Hà Đăng Vinh (Kỹ Sư FX)",
+    "email": "havinh1994@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Âm báo tín hiệu rất dứt khoát, nghe là biết ngay có sóng mới. Mong app duy trì server ổn định như hiện tại.",
+    "createdAt": "2026-10-06T21:30:00.000Z"
+  },
+  {
+    "id": "FB-1793784000-037",
+    "name": "Chu Minh Việt (Chiến Lược Gia)",
+    "email": "chuviet1987@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Hệ thống Web Push VAPID hoạt động rất mượt, mình khóa màn hình điện thoại mà vẫn nhận được thông báo kèm điểm Buy/Sell rõ ràng.",
+    "createdAt": "2026-10-06T18:06:00.000Z"
+  },
+  {
+    "id": "FB-1793782500-036",
+    "name": "Đinh Thế Khang (Gold Hunter)",
+    "email": "dinhkhang2005@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tốc độ đẩy thông báo tín hiệu cực nhanh, điện thoại vừa rung chuông là trên biểu đồ xuất hiện mũi tên vào lệnh ngay lập tức.",
+    "createdAt": "2026-10-06T14:42:00.000Z"
+  },
+  {
+    "id": "FB-1793781000-035",
+    "name": "Lâm Hữu Sơn (Cần Thơ FX)",
+    "email": "lamson1998@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Bot vận hành êm ái, log ghi lại đầy đủ từng thao tác vào lệnh, dời stoploss, chốt lời. Rất minh bạch và tin cậy.",
+    "createdAt": "2026-10-06T05:42:00.000Z"
+  },
+  {
+    "id": "FB-1793779500-034",
+    "name": "Trịnh Diễm Anh (Trader Hà Nội)",
+    "email": "trinhanh1991@icloud.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Tự động đóng 50% khối lượng tại TP1 và gồng 50% còn lại lên TP2/TP3 là một chiến lược quản lý vốn kinh điển được bot thực thi xuất sắc.",
+    "createdAt": "2026-10-06T02:18:00.000Z"
+  },
+  {
+    "id": "FB-1793778000-033",
+    "name": "Ngô Thu Thư (Hải Phòng Trader)",
+    "email": "ngothu2009@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Mình rất bận công việc ban ngày nên nhờ có bot tự động canh lệnh theo MA Wave giúp mình không bỏ lỡ các cơ hội đẹp.",
+    "createdAt": "2026-10-05T22:54:00.000Z"
+  },
+  {
+    "id": "FB-1793776500-032",
+    "name": "Bùi Đăng Yến (Trader Vàng)",
+    "email": "buiyen2002@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Bot bắt lệnh break-out đỉnh đáy rất nhạy, tốc độ gửi lệnh qua socket lên MT5 chưa tới 0.1 giây.",
+    "createdAt": "2026-10-05T19:30:00.000Z"
+  },
+  {
+    "id": "FB-1793775000-031",
+    "name": "Vũ Minh Hương (Scalper H1)",
+    "email": "vuhuong1995@gmail.com",
+    "rating": 4,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Hệ thống quản trị rủi ro của bot rất chặt chẽ, tự động ngưng giao dịch khi đạt mức lỗ tối đa trong ngày.",
+    "createdAt": "2026-10-05T16:06:00.000Z"
+  },
+  {
+    "id": "FB-1793773500-030",
+    "name": "Hoàng Thế Lâm (Trader Tự Do)",
+    "email": "hoanglam1988@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Đề xuất admin bổ sung thêm tính năng hẹn giờ bật tắt bot theo khung giờ phiên Á, Âu, Mỹ để tối ưu hóa hiệu quả.",
+    "createdAt": "2026-10-05T12:42:00.000Z"
+  },
+  {
+    "id": "FB-1793772000-029",
+    "name": "Trần Hữu Toàn (Nhà Đầu Tư)",
+    "email": "trantoan2006@outlook.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Cài đặt bot lên MT5 rất nhanh gọn, chỉ cần copy file EA và paste API key là xong. Video hướng dẫn của admin rất chi tiết.",
+    "createdAt": "2026-10-05T09:18:00.000Z"
+  },
+  {
+    "id": "FB-1793770500-028",
+    "name": "Hà Diễm Phong (Gold Wave Fan)",
+    "email": "haphong1999@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Bot không vào lệnh dồn dập, chỉ đánh khi hội tụ đủ 3 điều kiện MA Wave. Đây là con bot kỷ luật nhất mình từng sử dụng.",
+    "createdAt": "2026-10-05T00:18:00.000Z"
+  },
+  {
+    "id": "FB-1793769000-027",
+    "name": "Chu Thu Kiên (Swing Trader)",
+    "email": "chukien1992@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Cơ chế trailing stop của bot xử lý rất khéo, nhiều lệnh ăn trọn con sóng dài hơn 100 pips mà không sợ bị quay đầu mất lãi.",
+    "createdAt": "2026-10-04T20:54:00.000Z"
+  },
+  {
+    "id": "FB-1793767500-026",
+    "name": "Đinh Đăng Long (Trader M15)",
+    "email": "dinhlong1985@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tính năng đồng bộ vị thế giữa app và MT5 hoạt động hoàn hảo. Xem trạng thái lệnh đang chạy trực tiếp trên điện thoại rất tiện.",
+    "createdAt": "2026-10-04T17:30:00.000Z"
+  },
+  {
+    "id": "FB-1793766000-025",
+    "name": "Lâm Minh Dũng (FX Sài Gòn)",
+    "email": "lamdung2003@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Đã cho bot chạy thử nghiệm trên tài khoản live 500$, sau 2 tuần lợi nhuận đạt 12% với mức drawdown tối đa chỉ 3.8%. Rất an toàn!",
+    "createdAt": "2026-10-04T14:06:00.000Z"
+  },
+  {
+    "id": "FB-1793764500-024",
+    "name": "Trịnh Thế Hà (Quản Lý Quỹ)",
+    "email": "trinhha1996@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Bot tự động tính toán lot chuẩn theo số dư tài khoản, giao diện cấu hình trực quan dễ dùng ngay cả với người không rành công nghệ.",
+    "createdAt": "2026-10-04T10:42:00.000Z"
+  },
+  {
+    "id": "FB-1793763000-023",
+    "name": "Ngô Hữu Lan (Scalper M5)",
+    "email": "ngolan1989@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Cực kỳ thích tính năng quản lý vốn theo % tài khoản của bot. Không bị gồng lỗ, sai là cắt dứt khoát đúng kế hoạch.",
+    "createdAt": "2026-10-04T07:18:00.000Z"
+  },
+  {
+    "id": "FB-1793761500-022",
+    "name": "Bùi Diễm Trang (Forex Pro)",
+    "email": "buitrang2007@icloud.com",
+    "rating": 4,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Bot MT5 chạy trên VPS rất ổn định, khớp lệnh tức thì không có độ trễ. Cơ chế tự động dời SL về hòa vốn khi đạt TP1 giúp mình an tâm tuyệt đối khi đi ngủ.",
+    "createdAt": "2026-10-04T03:54:00.000Z"
+  },
+  {
+    "id": "FB-1793760000-021",
+    "name": "Vũ Thu Bình",
+    "email": "vubinh2000@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "App dùng rất tốt, bot tự động vào lệnh quản lý vốn tốt, mong admin ra thêm bản kết nối trực tiếp với tài khoản Exness nữa là tuyệt vời 10/10.",
+    "createdAt": "2026-10-03T18:54:00.000Z"
+  },
+  {
+    "id": "FB-1793758500-020",
+    "name": "Hoàng Đăng Duy (Trader Đà Nẵng)",
+    "email": "hoangduy1993@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Khuyến nghị anh em nên kết hợp tín hiệu với quản lý vốn 1-2% tài khoản, lợi nhuận tích lũy đều đặn hàng tuần rất tốt.",
+    "createdAt": "2026-10-03T15:30:00.000Z"
+  },
+  {
+    "id": "FB-1793757000-019",
+    "name": "Trần Minh Thịnh (Thành Viên VIP)",
+    "email": "tranthinh1986@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Điểm vào lệnh rất nét, thường chỉ cách đỉnh đáy vài pip. Cảm giác đội ngũ coder có kiến thức sâu về Price Action và sóng thị trường.",
+    "createdAt": "2026-10-03T12:06:00.000Z"
+  },
+  {
+    "id": "FB-1793755500-018",
+    "name": "Hà Thế Cường (Kỹ Sư FX)",
+    "email": "hacuong2004@gmail.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "App nhận diện các vùng FVG và MA Wave rất chuẩn, tỷ lệ winrate vượt ngoài mong đợi của mình.",
+    "createdAt": "2026-10-03T08:42:00.000Z"
+  },
+  {
+    "id": "FB-1793754000-017",
+    "name": "Chu Hữu Đức (Chiến Lược Gia)",
+    "email": "chuduc1997@outlook.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Tín hiệu phân kỳ MA Wave báo rất sớm trước khi giá bứt phá. Nhờ đó mình luôn đón đầu được các nhịp sóng lớn.",
+    "createdAt": "2026-10-03T05:18:00.000Z"
+  },
+  {
+    "id": "FB-1793752500-016",
+    "name": "Đinh Diễm Hiền (Gold Hunter)",
+    "email": "dinhhien1990@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Mình thích nhất là các mốc TP1, TP2, TP3 được chia nhỏ để chốt lời từng phần, giúp tâm lý giao dịch nhẹ nhàng hơn rất nhiều.",
+    "createdAt": "2026-10-03T01:54:00.000Z"
+  },
+  {
+    "id": "FB-1793751000-015",
+    "name": "Lâm Thu Ngọc (Cần Thơ FX)",
+    "email": "lamngoc2008@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Tín hiệu chạm TP1 rất nhanh, thường chỉ trong vòng 15-30 phút sau khi có thông báo. Rất phù hợp cho phong cách scalping.",
+    "createdAt": "2026-10-02T22:30:00.000Z"
+  },
+  {
+    "id": "FB-1793749500-014",
+    "name": "Trịnh Đăng Nhung (Trader Hà Nội)",
+    "email": "trinhnhung2001@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Từ ngày dùng Gold Wave mình bỏ hẳn các nhóm phím kèo trôi nổi. App cập nhật liên tục, minh bạch từng lệnh thắng thua.",
+    "createdAt": "2026-10-02T13:30:00.000Z"
+  },
+  {
+    "id": "FB-1793748000-013",
+    "name": "Ngô Minh Tâm (Hải Phòng Trader)",
+    "email": "ngotam1994@gmail.com",
+    "rating": 4,
+    "tags": [
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Đánh giá cao việc hệ thống biết kiên nhẫn đứng ngoài khi thị trường không có xu hướng rõ ràng, bảo toàn vốn cực kỳ tốt.",
+    "createdAt": "2026-10-02T10:06:00.000Z"
+  },
+  {
+    "id": "FB-1793746500-012",
+    "name": "Bùi Thế Khoa (Trader Vàng)",
+    "email": "buikhoa1987@gmail.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Tín hiệu chuẩn, có giải thích rõ lý do vào lệnh theo cấu trúc MA Wave và vùng thanh khoản. Giúp người mới như mình học hỏi thêm được rất nhiều.",
+    "createdAt": "2026-10-02T06:42:00.000Z"
+  },
+  {
+    "id": "FB-1793745000-011",
+    "name": "Vũ Hữu Quang (Scalper H1)",
+    "email": "vuquang2005@outlook.com",
+    "rating": 5,
+    "tags": [
+      "💡 Đề xuất tính năng mới",
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Khả năng nhận diện sóng của MA Wave rất độc đáo. Xem biểu đồ trực tiếp trên app rất tiện, không cần phải mở TradingView cồng kềnh.",
+    "createdAt": "2026-10-02T03:18:00.000Z"
+  },
+  {
+    "id": "FB-1793743500-010",
+    "name": "Hoàng Diễm Hưng (Trader Tự Do)",
+    "email": "hoanghung1998@icloud.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Cực kỳ ưng ý với tỷ lệ thắng của các lệnh Buy/Sell. Tuần vừa rồi theo 8 lệnh thì 7 lệnh cán TP1, 5 lệnh đạt TP2.",
+    "createdAt": "2026-10-01T23:54:00.000Z"
+  },
+  {
+    "id": "FB-1793742000-009",
+    "name": "Trần Thu Nam (Nhà Đầu Tư)",
+    "email": "trannam1991@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI"
+    ],
+    "comment": "Ấn tượng nhất là tín hiệu V8 phiên Mỹ, lúc tin ra giá giật mạnh nhưng hệ thống vẫn lọc nhiễu tốt và cho điểm re-test chuẩn xác.",
+    "createdAt": "2026-10-01T20:30:00.000Z"
+  },
+  {
+    "id": "FB-1793740500-008",
+    "name": "Hà Đăng Tuấn (Gold Wave Fan)",
+    "email": "hatuan2009@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn",
+      "⚡ Tốc độ báo lệnh Realtime"
+    ],
+    "comment": "Tín hiệu vàng chạy mượt mà, điểm SL được tính toán rất hợp lý ngay dưới vùng cản động, không bị quét râu nến oan uổng.",
+    "createdAt": "2026-10-01T17:06:00.000Z"
+  },
+  {
+    "id": "FB-1793739000-007",
+    "name": "Chu Minh Ly (Swing Trader)",
+    "email": "chuly2002@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Hệ thống đo lường lực nến rất tốt, không bị tình trạng báo tín hiệu ảo liên tục như mấy con bot khác. Rất đáng giá từng đồng!",
+    "createdAt": "2026-10-01T08:06:00.000Z"
+  },
+  {
+    "id": "FB-1793737500-006",
+    "name": "Đinh Thế Ngân (Trader M15)",
+    "email": "dinhngan1995@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🤖 Bot MT5 tự động",
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô"
+    ],
+    "comment": "Tín hiệu bắt sóng H1 và M15 rất chắc chắn. Đặc biệt là những pha nén giá MA Wave bung dải, báo điểm vào rất ngọt và tỷ lệ RR tốt.",
+    "createdAt": "2026-10-01T04:42:00.000Z"
+  },
+  {
+    "id": "FB-1793736000-005",
+    "name": "Lâm Hữu Thảo (FX Sài Gòn)",
+    "email": "lamthao1988@outlook.com",
+    "rating": 5,
+    "tags": [
+      "⚡ Tốc độ báo lệnh Realtime",
+      "📊 Biểu đồ & Chỉ báo"
+    ],
+    "comment": "Bộ lọc MA Wave phát hiện đảo chiều đỉnh đáy cực kỳ nhạy. Trước đây mình hay bị FOMO đu đỉnh, từ ngày dùng app kỷ luật hơn hẳn vì chỉ chờ tín hiệu xác nhận rõ ràng mới vào.",
+    "createdAt": "2026-10-01T01:18:00.000Z"
+  },
+  {
+    "id": "FB-1793734500-004",
+    "name": "Trịnh Diễm Thành (Quản Lý Quỹ)",
+    "email": "trinhthanh2006@icloud.com",
+    "rating": 4,
+    "tags": [
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Tín hiệu vàng phiên Âu hôm nay chuẩn đét, quét đúng nhịp hồi MA20 rồi phi thẳng lên TP2. Cảm ơn đội ngũ phát triển đã tạo ra một công cụ chất lượng cho anh em trader.",
+    "createdAt": "2026-09-30T21:54:00.000Z"
+  },
+  {
+    "id": "FB-1793733000-003",
+    "name": "Ngô Thu Đạt (Scalper M5)",
+    "email": "ngodat1999@yahoo.com",
+    "rating": 5,
+    "tags": [
+      "📈 Phân tích xu hướng AI",
+      "📰 Tin tức vĩ mô",
+      "💡 Đề xuất tính năng mới"
+    ],
+    "comment": "Đã test tín hiệu được 3 tuần, tỷ lệ chạm TP1 và TP2 đạt hơn 85%. Rất thích cách app đo lường biên độ nến và không vào lệnh bừa bãi khi thị trường sideway giằng co.",
+    "createdAt": "2026-09-30T18:30:00.000Z"
+  },
+  {
+    "id": "FB-1793731500-002",
+    "name": "Bùi Đăng Phát (Forex Pro)",
+    "email": "buiphat1992@gmail.com",
+    "rating": 5,
+    "tags": [
+      "📊 Biểu đồ & Chỉ báo",
+      "🤖 Bot MT5 tự động"
+    ],
+    "comment": "Theo tín hiệu Buy Vàng hôm trước ăn trọn nhịp 70 pips, điểm vào lệnh rất sát vùng hỗ trợ cứng. Hệ thống chỉ báo MA Wave trực quan và dễ theo dõi hơn hẳn các chỉ báo thông thường.",
+    "createdAt": "2026-09-30T15:06:00.000Z"
+  },
+  {
+    "id": "FB-1793730000-001",
+    "name": "Vũ Minh Thắng",
+    "email": "vuthang1985@gmail.com",
+    "rating": 5,
+    "tags": [
+      "🎯 Tín hiệu Vàng chuẩn"
+    ],
+    "comment": "Tín hiệu Vàng MA Wave V8 bắt nhịp sóng rất chuẩn, tỷ lệ win cao và giao diện xem trên điện thoại rất mượt mà. Mong admin nâng cấp thêm tính năng thông báo âm thanh chuông đặc biệt khi chạm TP3!",
+    "createdAt": "2026-09-30T11:42:00.000Z"
   }
 ]

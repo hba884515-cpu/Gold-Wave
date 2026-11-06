@@ -2246,6 +2246,50 @@ const server = http.createServer(async (req, res) => {
       feedback: feedbackItem
     }));
   }
+  // Public Feedbacks & Reviews Endpoint (Công khai danh sách đánh giá từ cộng đồng)
+  else if ((urlPath === '/api/feedbacks' || urlPath === '/api/public-feedbacks') && req.method === 'GET') {
+    const total = feedbacksDB.length;
+    const sum = feedbacksDB.reduce((acc, f) => acc + (f.rating || 5), 0);
+    const avg = total > 0 ? (sum / total).toFixed(1) : '4.9';
+    const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    feedbacksDB.forEach(f => {
+      const r = f.rating || 5;
+      if (starCounts[r] !== undefined) starCounts[r]++;
+    });
+
+    // Che mờ email để bảo mật riêng tư chuẩn quốc tế (ví dụ: hoang***@gmail.com)
+    const publicList = feedbacksDB.map(f => {
+      let maskedEmail = '';
+      if (f.email) {
+        const parts = f.email.split('@');
+        const namePart = parts[0];
+        const domainPart = parts[1] || 'gmail.com';
+        if (namePart.length <= 3) {
+          maskedEmail = `${namePart.charAt(0)}***@${domainPart}`;
+        } else {
+          maskedEmail = `${namePart.slice(0, 3)}***@${domainPart}`;
+        }
+      }
+      return {
+        id: f.id,
+        name: f.name || 'Trader',
+        email: maskedEmail,
+        rating: f.rating || 5,
+        tags: f.tags || [],
+        comment: f.comment || '',
+        createdAt: f.createdAt
+      };
+    });
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'SUCCESS',
+      total,
+      average: avg,
+      starCounts,
+      feedbacks: publicList
+    }));
+  }
   // Admin Feedbacks List Endpoint
   else if (urlPath === '/api/admin/feedbacks') {
     res.writeHead(200, { 'Content-Type': 'application/json' });

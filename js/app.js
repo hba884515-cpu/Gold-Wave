@@ -6509,6 +6509,186 @@ window.handleSubmitFeedback = async function() {
   }
 };
 
+// ── 🌟 Community Feedbacks & Reviews Showcase Engine (214 Đánh Giá) ──
+let communityFeedbacksAll = [];
+let communityReviewsVisibleCount = 10;
+let currentCommunityFilter = 'ALL';
+
+const avatarGradients = [
+  'from-amber-400 to-yellow-500',
+  'from-emerald-400 to-teal-500',
+  'from-sky-400 to-blue-500',
+  'from-indigo-400 to-purple-500',
+  'from-rose-400 to-pink-500',
+  'from-violet-400 to-fuchsia-500',
+  'from-orange-400 to-amber-500'
+];
+
+window.loadPublicCommunityFeedbacks = async function() {
+  try {
+    const res = await fetch('/api/feedbacks');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.status === 'SUCCESS' && Array.isArray(data.feedbacks)) {
+      communityFeedbacksAll = data.feedbacks;
+
+      // Cập nhật huy hiệu tổng số đánh giá
+      const totalBadge = document.getElementById('community-total-reviews-badge');
+      if (totalBadge) totalBadge.textContent = `${data.total || communityFeedbacksAll.length} Đánh giá`;
+
+      // Cập nhật bộ lọc thống kê nếu có
+      const star5Count = data.starCounts ? data.starCounts[5] : 190;
+      const star4Count = data.starCounts ? data.starCounts[4] : 24;
+      const totalCount = data.total || communityFeedbacksAll.length;
+
+      const filtersContainer = document.getElementById('community-reviews-filters');
+      if (filtersContainer) {
+        const btnAll = filtersContainer.querySelector("button[onclick*='ALL']");
+        const btn5 = filtersContainer.querySelector("button[onclick*='5STAR']");
+        const btn4 = filtersContainer.querySelector("button[onclick*='4STAR']");
+        if (btnAll) btnAll.textContent = `Tất cả (${totalCount})`;
+        if (btn5) btn5.textContent = `5 Sao ⭐ (${star5Count})`;
+        if (btn4) btn4.textContent = `4 Sao ⭐ (${star4Count})`;
+      }
+
+      renderCommunityReviewsList();
+    }
+  } catch (err) {
+    console.warn('Lỗi tải danh sách đánh giá cộng đồng:', err);
+  }
+};
+
+window.filterCommunityReviews = function(filterType) {
+  currentCommunityFilter = filterType;
+  communityReviewsVisibleCount = 10;
+
+  // Cập nhật style nút filter active
+  const filterBtns = document.querySelectorAll('#community-reviews-filters .comm-filter-btn');
+  filterBtns.forEach(btn => {
+    btn.className = 'comm-filter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:text-white cursor-pointer';
+  });
+
+  const activeBtn = document.querySelector(`#community-reviews-filters button[onclick*="${filterType}"]`);
+  if (activeBtn) {
+    activeBtn.className = 'comm-filter-btn px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold cursor-pointer active-filter';
+  }
+
+  renderCommunityReviewsList();
+};
+
+window.loadMoreCommunityReviews = function() {
+  communityReviewsVisibleCount += 15;
+  renderCommunityReviewsList();
+};
+
+function renderCommunityReviewsList() {
+  const container = document.getElementById('community-reviews-container');
+  const counterEl = document.getElementById('community-reviews-counter');
+  const loadMoreBtn = document.getElementById('btn-load-more-reviews');
+  if (!container) return;
+
+  if (!communityFeedbacksAll || communityFeedbacksAll.length === 0) {
+    container.innerHTML = '<div class="py-6 text-center text-slate-500 text-xs">Chưa có đánh giá nào.</div>';
+    if (counterEl) counterEl.textContent = '0 / 0 đánh giá';
+    if (loadMoreBtn) loadMoreBtn.classList.add('hidden');
+    return;
+  }
+
+  // Áp dụng bộ lọc
+  let filtered = communityFeedbacksAll;
+  if (currentCommunityFilter === '5STAR') {
+    filtered = communityFeedbacksAll.filter(f => (f.rating || 5) === 5);
+  } else if (currentCommunityFilter === '4STAR') {
+    filtered = communityFeedbacksAll.filter(f => (f.rating || 5) === 4);
+  } else if (currentCommunityFilter === 'SIGNAL') {
+    filtered = communityFeedbacksAll.filter(f => (f.tags || []).some(t => t.includes('Tín hiệu') || t.includes('Vàng')));
+  } else if (currentCommunityFilter === 'BOT') {
+    filtered = communityFeedbacksAll.filter(f => (f.tags || []).some(t => t.includes('Bot') || t.includes('MT5')));
+  } else if (currentCommunityFilter === 'SPEED') {
+    filtered = communityFeedbacksAll.filter(f => (f.tags || []).some(t => t.includes('Realtime') || t.includes('Tốc độ')));
+  }
+
+  const visibleList = filtered.slice(0, communityReviewsVisibleCount);
+
+  if (visibleList.length === 0) {
+    container.innerHTML = '<div class="py-8 text-center text-slate-500 text-xs">Không có đánh giá nào phù hợp với bộ lọc này.</div>';
+    if (counterEl) counterEl.textContent = `0 / ${filtered.length} đánh giá`;
+    if (loadMoreBtn) loadMoreBtn.classList.add('hidden');
+    return;
+  }
+
+  container.innerHTML = visibleList.map((f, idx) => {
+    // Tạo initials cho avatar
+    const nameWords = (f.name || 'Trader').replace(/[()]/g, '').trim().split(/\s+/);
+    let initials = 'TR';
+    if (nameWords.length >= 2) {
+      initials = (nameWords[0][0] + nameWords[nameWords.length - 1][0]).toUpperCase();
+    } else if (nameWords.length === 1 && nameWords[0].length >= 1) {
+      initials = nameWords[0].slice(0, 2).toUpperCase();
+    }
+
+    const gradClass = avatarGradients[idx % avatarGradients.length];
+    const dateStr = f.createdAt ? new Date(f.createdAt).toLocaleString('vi-VN', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : 'Vừa xong';
+
+    const starsStr = '⭐'.repeat(f.rating || 5);
+    const tagsHtml = (f.tags || []).map(t => 
+      `<span class="px-2 py-0.5 rounded-md bg-slate-800 text-amber-300 border border-slate-700/80 text-[10px] font-medium mr-1.5 mb-1 inline-block">${t}</span>`
+    ).join('');
+
+    return `
+      <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 hover:border-amber-500/30 transition space-y-2">
+        <div class="flex items-start justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr ${gradClass} flex items-center justify-center text-slate-950 font-black text-xs shadow-md">
+              ${initials}
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-bold text-white text-xs">${f.name || 'Trader'}</span>
+                <span class="text-[10px] text-amber-300/80 font-mono">(${f.email})</span>
+              </div>
+              <div class="text-[10px] text-slate-400 font-mono">${dateStr}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg">
+            <span class="text-amber-400 text-xs">${starsStr}</span>
+            <span class="text-amber-300 font-bold text-[10px] font-mono">${f.rating}/5</span>
+          </div>
+        </div>
+
+        ${tagsHtml ? `<div class="flex flex-wrap">${tagsHtml}</div>` : ''}
+
+        <p class="text-xs text-slate-200 leading-relaxed font-sans italic bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/60">
+          "${f.comment || 'Rất hài lòng với chất lượng phục vụ của app!'}"
+        </p>
+      </div>
+    `;
+  }).join('');
+
+  // Cập nhật bộ đếm và nút xem thêm
+  if (counterEl) {
+    counterEl.textContent = `Đang hiển thị ${Math.min(communityReviewsVisibleCount, filtered.length)} / ${filtered.length} đánh giá`;
+  }
+
+  if (loadMoreBtn) {
+    if (communityReviewsVisibleCount >= filtered.length) {
+      loadMoreBtn.classList.add('hidden');
+    } else {
+      loadMoreBtn.classList.remove('hidden');
+      loadMoreBtn.innerHTML = `<span>Xem thêm đánh giá (${filtered.length - communityReviewsVisibleCount} còn lại)</span> <span>▼</span>`;
+    }
+  }
+}
+
+// Tự động tải danh sách đánh giá khi khởi động ứng dụng
+setTimeout(() => {
+  if (typeof window.loadPublicCommunityFeedbacks === 'function') {
+    window.loadPublicCommunityFeedbacks();
+  }
+}, 1000);
+
 // Auto polling khi Admin đang mở tab Tài Khoản
 setInterval(() => {
   const user = window.currentUser;

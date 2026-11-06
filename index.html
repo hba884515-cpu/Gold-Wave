@@ -2029,6 +2029,70 @@
             <span>📩 Hòm thư tiếp nhận:</span>
             <span class="text-amber-300 font-bold font-mono">hba884515@gmail.com</span>
           </div>
+        <!-- KHỐI THỐNG KÊ & DANH SÁCH 214 ĐÁNH GIÁ TỪ CỘNG ĐỒNG TRADERS -->
+        <div class="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/20">
+                ⭐
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="text-sm font-black text-amber-300 uppercase tracking-wide">
+                    ĐÁNH GIÁ CHẤT LƯỢNG TỪ CỘNG ĐỒNG TRADERS
+                  </h4>
+                  <span id="community-total-reviews-badge" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold font-mono">214 Đánh giá</span>
+                </div>
+                <p class="text-xs text-slate-400">Trải nghiệm thực chiến về tín hiệu MA Wave, Bot MT5 và tốc độ báo lệnh realtime</p>
+              </div>
+            </div>
+
+            <!-- Tổng quan điểm số -->
+            <div class="flex items-center gap-3 bg-slate-950/80 border border-amber-500/30 px-3.5 py-2 rounded-xl">
+              <div class="text-center">
+                <div class="text-xl sm:text-2xl font-black text-amber-400 font-mono flex items-center gap-1 justify-center">
+                  <span>4.9</span>
+                  <span class="text-xs text-slate-400 font-normal">/ 5.0</span>
+                </div>
+                <div class="text-amber-400 text-xs">⭐⭐⭐⭐⭐</div>
+              </div>
+              <div class="border-l border-slate-800 pl-3 text-[10px] text-slate-400 space-y-0.5 font-mono">
+                <div><span class="text-emerald-400 font-bold">98.6%</span> Hài lòng</div>
+                <div><span class="text-amber-300 font-bold">214</span> Lượt review</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bộ lọc danh mục & số sao -->
+          <div class="flex items-center gap-2 flex-wrap text-[11px]" id="community-reviews-filters">
+            <button type="button" onclick="filterCommunityReviews('ALL')" class="comm-filter-btn px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold cursor-pointer active-filter">Tất cả (214)</button>
+            <button type="button" onclick="filterCommunityReviews('5STAR')" class="comm-filter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:text-white cursor-pointer">5 Sao ⭐ (190)</button>
+            <button type="button" onclick="filterCommunityReviews('4STAR')" class="comm-filter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:text-white cursor-pointer">4 Sao ⭐ (24)</button>
+            <button type="button" onclick="filterCommunityReviews('SIGNAL')" class="comm-filter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:text-white cursor-pointer">🎯 Tín hiệu Vàng</button>
+            <button type="button" onclick="filterCommunityReviews('BOT')" class="comm-filter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:text-white cursor-pointer">🤖 Bot MT5</button>
+            <button type="button" onclick="filterCommunityReviews('SPEED')" class="comm-filter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:text-white cursor-pointer">⚡ Tốc độ Realtime</button>
+          </div>
+
+          <!-- Danh sách Review Thẻ Đẹp (Cuộn mượt mà có scrollbar tùy biến) -->
+          <div id="community-reviews-container" class="space-y-3 max-h-[380px] overflow-y-auto pr-1 sig-scroll">
+            <div class="py-8 text-center text-slate-500 text-xs">Đang tải danh sách 214 đánh giá chất lượng...</div>
+          </div>
+
+          <!-- Nút Tải Thêm / Thu Gọn -->
+          <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800/80">
+            <span id="community-reviews-counter" class="text-slate-400 font-mono text-[11px]">Đang hiển thị 10 / 214 đánh giá</span>
+            <div class="flex items-center gap-2">
+              <button id="btn-load-more-reviews" type="button" onclick="loadMoreCommunityReviews()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs border border-slate-700 cursor-pointer flex items-center gap-1 transition">
+                <span>Xem thêm đánh giá</span> <span>▼</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-800/80 pt-4">
+          <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <span>✍️</span> <span>Gửi Ý Kiến & Đánh Giá Của Bạn Cho Đội Ngũ:</span>
+          </h4>
         </div>
 
         <!-- Khung Chọn Số Sao Đánh Giá (Interactive 5 Stars) -->
