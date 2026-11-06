@@ -515,6 +515,9 @@ class MarketDataStore {
             }
 
             this.connectionStatus = (data.marketStatus === 'CLOSED' || !this.isGoldMarketOpen()) ? 'CLOSED' : 'LIVE';
+            if (data.onlineUsers && typeof window.updateOnlineUsersFromServer === 'function') {
+              window.updateOnlineUsersFromServer(data.onlineUsers);
+            }
             success = true;
           }
         }

@@ -67,6 +67,19 @@ function saveJSON(filePath, data) {
 
 let deviceTrialsDB = loadJSON(DEVICE_TRIALS_FILE, []);
 
+// ─── Giả Lập Số Người Dùng Đang Online (~400 Traders, Dao Động Tự Nhiên 392 - 435) ───
+let simulatedOnlineUsers = 412;
+function getSimulatedOnlineUsers() {
+  const delta = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1);
+  simulatedOnlineUsers += delta;
+  if (simulatedOnlineUsers < 392) simulatedOnlineUsers = 398;
+  if (simulatedOnlineUsers > 435) simulatedOnlineUsers = 428;
+  return simulatedOnlineUsers;
+}
+setInterval(() => {
+  getSimulatedOnlineUsers();
+}, 10000);
+
 // Helper: Normalize Email (chặn thủ thuật tạo gmail dấu chấm và dấu + alias để lách dùng thử)
 function normalizeEmail(email) {
   if (!email) return '';
@@ -2401,6 +2414,14 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200);
     res.end(JSON.stringify({ status: 'SUCCESS', device }));
   }
+  else if (urlPath === '/api/online-users') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({
+      status: 'SUCCESS',
+      onlineUsers: getSimulatedOnlineUsers(),
+      label: 'Traders Online'
+    }));
+  }
   else if (urlPath === '/api/market-prices') {
     const allPrices = await fetchTradingViewAllPrices();
     const marketOpen = isGoldMarketOpen();
@@ -2410,6 +2431,7 @@ const server = http.createServer(async (req, res) => {
       isMarketOpen: marketOpen,
       marketStatus: marketOpen ? 'OPEN' : 'CLOSED',
       marketStatusText: marketOpen ? 'Đang giao dịch' : 'Thị trường đóng cửa (Nghỉ cuối tuần)',
+      onlineUsers: getSimulatedOnlineUsers(),
       prices: allPrices,
       timestamp: new Date().toISOString()
     }));

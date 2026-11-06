@@ -803,6 +803,15 @@
       ⚙ Cài Đặt
     </button>
 
+    <!-- Mini Live Online Users Widget in Sidebar -->
+    <div class="px-1.5 py-1 mb-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center cursor-default select-none" title="Traders đang hoạt động trực tuyến">
+      <div class="flex items-center justify-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="sidebar-online-count" class="text-[9px] font-black text-emerald-300 price-font">412</span>
+      </div>
+      <span class="text-[7px] text-slate-400 block font-bold leading-none mt-0.5">ONLINE</span>
+    </div>
+
     <div class="nav-item" title="Admin / System">
       <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-[10px]">
         AI
@@ -892,6 +901,17 @@
       <div id="feed-status-badge" class="hidden sm:flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-lg">
         <span id="feed-status-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
         <span id="feed-status-text" class="text-[11px] font-bold text-amber-400">Thị trường đóng cửa (Nghỉ cuối tuần)</span>
+      </div>
+
+      <!-- Live Online Traders Counter Badge (~400 người online ảo) -->
+      <div id="top-bar-online-badge" class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[10px] sm:text-[11px] font-bold text-emerald-400 shadow-sm transition hover:bg-emerald-500/20 cursor-default select-none" title="Cộng đồng Trader đang hoạt động trực tuyến thời gian thực trên hệ thống">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span class="hidden xs:inline text-slate-300 font-semibold">Traders:</span>
+        <span id="top-online-count" class="font-black text-white price-font text-xs">412</span>
+        <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Online</span>
       </div>
 
       <!-- User Subscription Status Badge -->
@@ -1204,6 +1224,11 @@
             <span class="text-base">🥈</span>
             <span class="font-bold">XAG:</span>
             <strong id="radar-live-silver-val" class="text-white font-black">$52.67</strong>
+          </div>
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300" title="Cộng đồng Trader đang theo dõi trực tuyến">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-bold text-slate-300">Online:</span>
+            <strong id="radar-online-users-count" class="text-white font-black price-font">412 Traders</strong>
           </div>
         </div>
       </div>
