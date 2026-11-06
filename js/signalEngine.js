@@ -8,7 +8,7 @@
 
 class SignalEngine {
   constructor() {
-    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v36';
+    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v37';
     this.signals = this.loadHistory();
     this.callbacks = {
       onNewSignal: [],
@@ -76,8 +76,8 @@ class SignalEngine {
 
   loadHistory() {
     try {
-      // Clear old v1 - v35 caches automatically
-      for (let i = 1; i <= 35; i++) {
+      // Clear old v1 - v36 caches automatically
+      for (let i = 1; i <= 36; i++) {
         localStorage.removeItem(`gold_trading_ma_wave_multi_asset_v${i}`);
         localStorage.removeItem(`gold_trading_ma_wave_pinescript_v${i}`);
       }
@@ -87,7 +87,7 @@ class SignalEngine {
         if (Array.isArray(parsed) && parsed.length >= 1000) {
           const hasBTC = parsed.some(s => s && (s.asset === 'btc' || (s.pair && s.pair.includes('BTC'))));
           const hasXAG = parsed.some(s => s && (s.asset === 'xag' || (s.pair && s.pair.includes('XAG'))));
-          const hasCorrectTopGold = parsed.some(s => s && s.asset === 'xau' && (s.id === 'V8-02096' || s.id === 'V8-02092' || s.id === 'V8-02083'));
+          const hasCorrectTopGold = parsed.some(s => s && s.asset === 'xau' && (s.id === 'V8-02091' || s.id === 'V8-02083'));
           const hasWeekendGold = parsed.some(s => s && s.asset === 'xau' && s.time && (s.time.includes('- T7') || s.time.includes('- CN')));
           if (hasBTC && hasXAG && hasCorrectTopGold && !hasWeekendGold) {
             return parsed;
@@ -145,32 +145,6 @@ class SignalEngine {
     };
 
     const allRecentSchedules = [];
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // 0. THỨ 6 (06/11/2026) - HÔM NAY (ĐỒNG BỘ 100% TRADINGVIEW THỰC TẾ)
-    // ─────────────────────────────────────────────────────────────────────────
-    const dNov6 = new Date(2026, 10, 6);
-
-    const goldNov6 = [
-      { id: 'V8-02096', hour: 12, min: 45, type: 'BUY',  price: 4116.80, sl: 4111.80, tp1: 4126.80, tp2: 4136.80, tp3: 4146.80, winType: 'RUNNING', status: 'ĐANG CHẠY (Chờ TP1)', pnlPips: 0, pnlUsd: 0, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Retest dải MA Wave M15 tại hỗ trợ $4,116 sẵn sàng mở sóng tăng đầu phiên Âu' },
-      { id: 'V8-02095', hour: 11, min: 15, type: 'SELL', price: 4131.20, sl: 4136.20, tp1: 4121.20, tp2: 4111.20, tp3: 4101.20, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Chạm kháng cự động quá mua M15 đảo chiều điều chỉnh' },
-      { id: 'V8-02094', hour: 9,  min: 30, type: 'BUY',  price: 4118.40, sl: 4113.40, tp1: 4128.40, tp2: 4138.40, tp3: 4148.40, winType: 'TP1', status: 'TP1 +10 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Hồi phục hỗ trợ $4,118 bật tăng cắn mốc TP1' },
-      { id: 'V8-02092', hour: 7,  min: 25, type: 'BUY',  price: 4106.50, sl: 4101.50, tp1: 4116.50, tp2: 4126.50, tp3: 4136.50, winType: 'TP2', status: 'TP2 +20 ✓', pnlPips: 200, pnlUsd: 2000, hitTp1: true, hitTp2: true, hitTp3: false, reason: 'Mở cửa phiên Á test hỗ trợ $4,106 bật tăng mạnh mẽ cắn TP2' }
-    ];
-    goldNov6.forEach(s => {
-      const d = new Date(dNov6);
-      d.setHours(s.hour, s.min, 0, 0);
-      allRecentSchedules.push({ ...s, dateObj: d, asset: 'xau', pair: 'XAU/USD' });
-    });
-
-    const btcNov6 = [
-      { id: 'V8-02093', hour: 8, min: 40, type: 'BUY', price: 76150.00, sl: 74950.00, tp1: 77350.00, tp2: 78650.00, tp3: 80150.00, winType: 'TP1', status: 'TP1 +1,200 ✓ (Kéo SL Hòa Vốn)', pnlPips: 120, pnlUsd: 1200, hitTp1: true, reason: 'Tạo đáy ngắn hạn $76,000 bật tăng mạnh cắn TP1' }
-    ];
-    btcNov6.forEach(s => {
-      const d = new Date(dNov6);
-      d.setHours(s.hour, s.min, 0, 0);
-      allRecentSchedules.push({ ...s, dateObj: d, asset: 'btc', pair: 'BTC/USD' });
-    });
 
     // ─────────────────────────────────────────────────────────────────────────
     // 0.1 THỨ 5 (05/11/2026) - HÔM QUA
