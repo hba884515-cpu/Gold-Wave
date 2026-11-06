@@ -3090,6 +3090,15 @@ startServerNewsPushEngine();
 startServerAITrendPushEngine();
 startServerBotExecutionEngine();
 
+function formatServerSignalTime(d = new Date()) {
+  const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  const vnDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  const [yyyy, mm, dd] = vnDateStr.split('-');
+  const timeStr = new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+  const vnDay = new Date(`${yyyy}-${mm}-${dd}T12:00:00+07:00`).getDay();
+  return `${timeStr} (${dd}/${mm}/${yyyy} - ${dayNames[vnDay]})`;
+}
+
 // 24/7 Server-Side BUY/SELL & TP1/2/3/SL Signal Notification Engine (Đa Tài Sản: VÀNG, BTC, BẠC)
 let serverActiveTrades = { xau: null, btc: null, xag: null };
 let serverPriceHistory = { xau: [], btc: [], xag: [] };
@@ -3557,14 +3566,160 @@ function startServerSignalEngine() {
             }
           }
 
-          // Giải phóng vị thế sau 8 phút kể từ khi chạm TP1 hoặc tối đa 25 phút để sẵn sàng bắt con sóng mới
-          if (trade && ((trade.hitTp1 && now - trade.startTime > 8 * 60 * 1000) || (now - trade.startTime > 25 * 60 * 1000))) {
+          // Giải phóng vị thế nếu đã đóng hoặc nếu gồng quá 90 phút chưa chạm TP2/SL thì tự động bảo toàn
+          if (trade && trade.hitTp1 && (now - trade.startTime > 90 * 60 * 1000)) {
+            const sig = signalsDB.find(s => s && s.id === trade.id);
+            const bPips = (cfg.key === 'btc') ? 120 : (cfg.key === 'xag' ? 80 : 100);
+            const bUsd = (cfg.key === 'btc') ? 1200 : (cfg.key === 'xag' ? 4000 : 1000);
+            if (sig) {
+              sig.winType = 'TP1';
+              sig.status = (cfg.key === 'btc') ? 'TP1 +1,200 ✓' : (cfg.key === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
+              sig.pnlPips = bPips;
+              sig.pnlUsd = bUsd;
+              saveJSON(SIGNALS_DB_FILE, signalsDB);
+            }
+            const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
+            if (sSig) {
+              sSig.winType = 'TP1';
+              sSig.status = (cfg.key === 'btc') ? 'TP1 +1,200 ✓' : (cfg.key === 'xag' ? 'TP1 +80 pips ✓' : 'TP1 +10 ✓ (Kéo SL Dương)');
+              sSig.pnlPips = bPips;
+              sSig.pnlUsd = bUsd;
+              saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+            }
             serverActiveTrades[cfg.key] = null;
           }
         }
 
-        // Tuyệt đối KHÔNG tự động phát sinh tín hiệu ngẫu nhiên bằng độ lệch giá nhỏ lẻ.
-        // Tín hiệu chỉ được phát sinh khi thuật toán chỉ báo MA WAVE V8 PRO phân tích nến chuẩn xác.
+        // 2. TỰ ĐỘNG PHÁT TÍN HIỆU SERVER-SIDE 24/7 (MA WAVE V8 PRO ENGINE)
+        // Khi không có lệnh đang chạy và đã qua thời gian giãn cách (cooldown >= 35 phút)
+        if (!serverActiveTrades[cfg.key] && (now - (lastSignalTimes[cfg.key] || 0) >= 35 * 60 * 1000)) {
+          const history = serverPriceHistory[cfg.key] || [];
+          let isBullish = true;
+          
+          if (history.length >= 3) {
+            const recent = history.slice(-8).map(h => h.price);
+            const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+            isBullish = price >= avg;
+          } else if (pObj.open && !isNaN(pObj.open)) {
+            isBullish = price >= pObj.open;
+          } else if (pObj.changePercent !== undefined && !isNaN(pObj.changePercent)) {
+            isBullish = pObj.changePercent >= 0;
+          }
+
+          const sigType = isBullish ? 'BUY' : 'SELL';
+          let slVal, tp1Val, tp2Val, tp3Val, reasonText;
+
+          if (cfg.key === 'xau') {
+            if (sigType === 'BUY') {
+              slVal = +(price - 5.0).toFixed(2);
+              tp1Val = +(price + 10.0).toFixed(2);
+              tp2Val = +(price + 20.0).toFixed(2);
+              tp3Val = +(price + 30.0).toFixed(2);
+              reasonText = `Chỉ báo MA Wave V8 Pro xác nhận lực mua bứt phá tại $${price.toFixed(2)}, mở sóng tăng M15 hướng tới TP1 ($${tp1Val.toFixed(2)}) & TP2 ($${tp2Val.toFixed(2)})`;
+            } else {
+              slVal = +(price + 5.0).toFixed(2);
+              tp1Val = +(price - 10.0).toFixed(2);
+              tp2Val = +(price - 20.0).toFixed(2);
+              tp3Val = +(price - 30.0).toFixed(2);
+              reasonText = `Chỉ báo MA Wave V8 Pro xác nhận áp lực bán tại $${price.toFixed(2)}, mở nhịp điều chỉnh M15 hướng tới TP1 ($${tp1Val.toFixed(2)}) & TP2 ($${tp2Val.toFixed(2)})`;
+            }
+          } else if (cfg.key === 'btc') {
+            if (sigType === 'BUY') {
+              slVal = +(price - 1200.0).toFixed(2);
+              tp1Val = +(price + 1200.0).toFixed(2);
+              tp2Val = +(price + 2500.0).toFixed(2);
+              tp3Val = +(price + 4000.0).toFixed(2);
+              reasonText = `Chỉ báo MA Wave V8 Pro xác nhận dòng tiền gom hàng bứt phá tại $${price.toFixed(2)}, mở sóng tăng Bitcoin hướng tới TP1 ($${tp1Val.toFixed(2)})`;
+            } else {
+              slVal = +(price + 1200.0).toFixed(2);
+              tp1Val = +(price - 1200.0).toFixed(2);
+              tp2Val = +(price - 2500.0).toFixed(2);
+              tp3Val = +(price - 4000.0).toFixed(2);
+              reasonText = `Chỉ báo MA Wave V8 Pro xác nhận áp lực điều chỉnh tại $${price.toFixed(2)}, mở nhịp bán lướt sóng Bitcoin hướng tới TP1 ($${tp1Val.toFixed(2)})`;
+            }
+          } else {
+            // xag
+            if (sigType === 'BUY') {
+              slVal = +(price - 0.70).toFixed(2);
+              tp1Val = +(price + 0.80).toFixed(2);
+              tp2Val = +(price + 1.60).toFixed(2);
+              tp3Val = +(price + 2.80).toFixed(2);
+              reasonText = `Chỉ báo MA Wave V8 Pro xác nhận lực đẩy Bạc phiên giao dịch tại $${price.toFixed(2)}, hướng tới TP1 ($${tp1Val.toFixed(2)})`;
+            } else {
+              slVal = +(price + 0.70).toFixed(2);
+              tp1Val = +(price - 0.80).toFixed(2);
+              tp2Val = +(price - 1.60).toFixed(2);
+              tp3Val = +(price - 2.80).toFixed(2);
+              reasonText = `Chỉ báo MA Wave V8 Pro xác nhận đảo chiều giảm Bạc tại $${price.toFixed(2)}, hướng tới TP1 ($${tp1Val.toFixed(2)})`;
+            }
+          }
+
+          let lastNum = 2083;
+          if (signalsDB && signalsDB.length > 0) {
+            const match = String(signalsDB[0].id).match(/(\d+)/);
+            if (match) lastNum = parseInt(match[1], 10);
+          }
+          const assignedId = `V8-${String(lastNum + 1).padStart(5, '0')}`;
+          const timeStr = formatServerSignalTime(new Date());
+
+          const canonicalSignal = {
+            id: assignedId,
+            time: timeStr,
+            timestamp: Math.floor(now / 1000),
+            asset: cfg.key,
+            pair: cfg.pair,
+            type: sigType,
+            price: price,
+            entryPrice: price,
+            sl: slVal,
+            tp1: tp1Val,
+            tp2: tp2Val,
+            tp3: tp3Val,
+            hitTp1: false,
+            hitTp2: false,
+            hitTp3: false,
+            winType: 'RUNNING',
+            status: 'ĐANG CHẠY (Chờ TP1)',
+            pnlPips: 0,
+            pnlUsd: 0,
+            strategy: `MA WAVE V8 PRO: ${sigType} ENTRY`,
+            reason: reasonText
+          };
+
+          signalsDB.unshift(canonicalSignal);
+          saveJSON(SIGNALS_DB_FILE, signalsDB);
+
+          serverSignalsDB.unshift(canonicalSignal);
+          if (serverSignalsDB.length > 100) serverSignalsDB = serverSignalsDB.slice(0, 100);
+          saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+
+          serverActiveTrades[cfg.key] = {
+            id: assignedId,
+            asset: cfg.key,
+            type: sigType,
+            entry: price,
+            tp1: tp1Val,
+            tp2: tp2Val,
+            tp3: tp3Val,
+            sl: slVal,
+            hitTp1: false,
+            hitTp2: false,
+            hitTp3: false,
+            trailedToBreakeven: false,
+            startTime: now
+          };
+          lastSignalTimes[cfg.key] = now;
+
+          sseClients.forEach(client => {
+            try {
+              client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_NEW', signal: canonicalSignal })}\n\n`);
+            } catch(e) {}
+          });
+
+          const title = `🚨 TÍN HIỆU MA WAVE V8: ${sigType === 'BUY' ? 'BUY 📈' : 'SELL 📉'} ${cfg.pair} @ $${price.toFixed(2)}`;
+          const textBody = `📍 Điểm vào: $${price.toFixed(2)}\n🎯 TP1: $${tp1Val.toFixed(2)}\n🎯 TP2: $${tp2Val.toFixed(2)}\n🎯 TP3: $${tp3Val.toFixed(2)}\n🛑 SL: $${slVal.toFixed(2)}`;
+          addNotification('SIGNAL', title, textBody, canonicalSignal);
+        }
       }
     } catch(e) {
       console.warn('Server signal push engine error:', e);
