@@ -1413,12 +1413,12 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 4121.20,
-    change: 52.70,
-    changePercent: 1.29,
-    high: 4148.50,
-    low: 4064.00,
-    open: 4068.50,
+    price: 4044.50,
+    change: -3.50,
+    changePercent: -0.09,
+    high: 4050.00,
+    low: 4038.00,
+    open: 4048.00,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
@@ -1679,15 +1679,15 @@ async function fetchTradingViewAllPrices() {
     const [liveGold, liveSilver, liveBtc] = await Promise.all(fallbackTasks);
 
     if (liveGold && liveGold > 0) {
-      const openPrice = tvMarketPricesCache.XAU.open || 4068.50;
+      const openPrice = tvMarketPricesCache.XAU.open || 4048.00;
       const chgAbs = +(liveGold - openPrice).toFixed(2);
       const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
       tvMarketPricesCache.XAU = {
         price: +liveGold.toFixed(2),
         change: chgAbs,
         changePercent: chgPct,
-        high: +Math.max(tvMarketPricesCache.XAU.high || 4148.50, liveGold).toFixed(2),
-        low: +Math.min(tvMarketPricesCache.XAU.low || 4064.00, liveGold).toFixed(2),
+        high: +Math.max(tvMarketPricesCache.XAU.high || 4050.00, liveGold).toFixed(2),
+        low: +Math.min(tvMarketPricesCache.XAU.low || 4038.00, liveGold).toFixed(2),
         open: openPrice,
         symbol: 'TVC:GOLD',
         lastUpdated: now
@@ -2563,7 +2563,7 @@ const server = http.createServer(async (req, res) => {
     const { type, pair, price, tp1, tp2, tp3, sl, id, asset, reason } = body;
     const isBuy = (type || 'BUY').toUpperCase() === 'BUY';
     const pairName = pair || 'XAU/USD';
-    const numPrice = Number(price || body.entryPrice || 4121.20);
+    const numPrice = Number(price || body.entryPrice || 4044.50);
 
     // Nếu lệnh này đã tồn tại trong signalsDB -> Bỏ qua, tránh tạo duplicate vô tận
     if (id && signalsDB.some(s => s && s.id === id)) {
@@ -2648,7 +2648,7 @@ const server = http.createServer(async (req, res) => {
     const isTp1SlSecured = statusType === 'TP1_SL_SECURED';
     const isWin = (statusType || '').startsWith('TP') && !isTp1Ride;
     const pairName = pair || 'XAU/USD';
-    const trigP = Number(triggerPrice || 4121.20).toFixed(2);
+    const trigP = Number(triggerPrice || 4044.50).toFixed(2);
     let title, textBody;
 
     if (isTp1Ride) {
@@ -2779,7 +2779,7 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/notifications/trigger-all') {
     const tvData = await fetchTradingViewGoldPrice();
-    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4121.20);
+    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4044.50);
     const buyEntry = livePrice;
     const tp1 = +(buyEntry + 10.0).toFixed(2);
     const tp2 = +(buyEntry + 20.0).toFixed(2);
@@ -2842,7 +2842,7 @@ const server = http.createServer(async (req, res) => {
   else if (urlPath === '/api/bot/execute-order' && req.method === 'POST') {
     const body = await parseRequestBody(req);
     const tvData = await fetchTradingViewGoldPrice();
-    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4121.20);
+    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4044.50);
     const isBuy = (body.type || 'BUY') === 'BUY';
     const entry = body.entry || livePrice;
     const lots = body.lots || botConfigDB.lotValue || 0.10;
@@ -2963,7 +2963,7 @@ function startServerAITrendPushEngine() {
       if (!isGoldMarketOpen()) return; // 🛑 Nghỉ cuối tuần: Không đẩy thông báo phân tích giả lập
 
       const tvData = await fetchTradingViewGoldPrice();
-      const price = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4121.20);
+      const price = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4044.50);
       const atr = 3.50;
 
       const r1 = +(price + atr * 1.5).toFixed(2);
@@ -2996,7 +2996,7 @@ function startServerBotExecutionEngine() {
       if (!isTradingHoursActive()) return; // 🛑 Nghỉ ngơi ban đêm (0h - 6h sáng): Tuyệt đối không mở lệnh bot
 
       const tvData = await fetchTradingViewGoldPrice();
-      const basePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4121.20);
+      const basePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4044.50);
 
       // Số lệnh tối đa đồng thời (mặc định 1 lệnh, không nhồi lệnh dồn dập)
       const maxOrders = botConfigDB.maxConcurrentOrders !== undefined ? botConfigDB.maxConcurrentOrders : 1;
@@ -3122,7 +3122,10 @@ function startServerSignalEngine() {
           hitTp1: !!running.hitTp1,
           hitTp2: !!running.hitTp2,
           hitTp3: !!running.hitTp3,
-          startTime: (running.timestamp ? running.timestamp * 1000 : Date.now())
+          trailedToBreakeven: !!running.trailedToBreakeven,
+          peakPrice: running.price || running.entryPrice,
+          bottomPrice: running.price || running.entryPrice,
+          startTime: (running.timestamp ? (running.timestamp > 2000000000 ? running.timestamp : running.timestamp * 1000) : Date.now())
         };
         lastSignalTimes[assetKey] = serverActiveTrades[assetKey].startTime;
       }
@@ -3152,19 +3155,22 @@ function startServerSignalEngine() {
         const high = Number(pObj.high || price);
         const low = Number(pObj.low || price);
 
+        // Bảo vệ an toàn: Kiểm tra giá hợp lý, loại bỏ hoàn toàn giá bất thường hoặc cache cũ
+        if (cfg.key === 'xau' && (price < 3800 || price > 4300)) continue;
+        if (cfg.key === 'btc' && (price < 50000 || price > 150000)) continue;
+        if (cfg.key === 'xag' && (price < 30 || price > 80)) continue;
+
         if (!serverPriceHistory[cfg.key]) serverPriceHistory[cfg.key] = [];
         serverPriceHistory[cfg.key].push({ price, high, low, time: now });
         serverPriceHistory[cfg.key] = serverPriceHistory[cfg.key].filter(p => now - p.time <= 30 * 60 * 1000);
 
         const trade = serverActiveTrades[cfg.key];
 
-        // 1. Quét tự động TP1 / TP2 / TP3 / SL theo diễn biến giá thực tế kể từ khi mở vị thế
+        // 1. Quét tự động TP1 / TP2 / TP3 / SL theo diễn biến giá live thực tế kể từ khi mở vị thế
         if (trade) {
           if (!trade.peakPrice || price > trade.peakPrice) trade.peakPrice = price;
           if (!trade.bottomPrice || price < trade.bottomPrice) trade.bottomPrice = price;
 
-          const peak = trade.peakPrice;
-          const bottom = trade.bottomPrice;
           const isBuy = trade.type === 'BUY';
           const breakevenThreshold = (cfg.key === 'btc') ? 500 : (cfg.key === 'xag' ? 0.40 : 5.0);
           const breakevenDelta = (cfg.key === 'btc') ? 50 : (cfg.key === 'xag' ? 0.05 : 0.5);
@@ -3198,7 +3204,8 @@ function startServerSignalEngine() {
               addNotification('SIGNAL', `🛡️ KÉO SL DƯƠNG BẢO TOÀN LÃI: MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã có lãi +5 giá (+50 pips). Đã tự động dời SL lên $${trade.sl.toFixed(2)} bảo toàn vốn an toàn!`);
             }
 
-            if (!trade.hitTp1 && peak >= trade.tp1) {
+            // ĐẠT TP1: CHỈ kích hoạt khi GIÁ LIVE THỰC TẾ chạm mốc TP1 (price >= trade.tp1), tuyệt đối không dùng giá cũ/đỉnh nến cũ
+            if (!trade.hitTp1 && price >= trade.tp1) {
               trade.hitTp1 = true;
               trade.sl = +(trade.entry + (cfg.key === 'btc' ? 500 : (cfg.key === 'xag' ? 0.40 : 5.0))).toFixed(2); // Khóa cứng lãi 5 giá
               const sig = signalsDB.find(s => s && s.id === trade.id);
@@ -3222,12 +3229,12 @@ function startServerSignalEngine() {
               }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1_RIDE', triggerPrice: peak, sl: trade.sl, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1_RIDE', triggerPrice: price, sl: trade.sl, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🎯 ĐẠT TP1 (+10 GIÁ) ➔ KÉO SL DƯƠNG (GỒNG TP2 🚀): MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã ĐẠT TP1 tại $${peak.toFixed(2)} (+${cfg.tp1Pips} pips)! Hệ thống đã dời SL lên $${trade.sl.toFixed(2)} (+5 giá) để bảo toàn lãi và tiếp tục gồng lệnh tới TP2!`);
+              addNotification('SIGNAL', `🎯 ĐẠT TP1 (+10 GIÁ) ➔ KÉO SL DƯƠNG (GỒNG TP2 🚀): MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã ĐẠT TP1 tại $${price.toFixed(2)} (+${cfg.tp1Pips} pips)! Hệ thống đã dời SL lên $${trade.sl.toFixed(2)} (+5 giá) để bảo toàn lãi và tiếp tục gồng lệnh tới TP2!`);
             }
-            if (!trade.hitTp2 && peak >= trade.tp2) {
+            if (trade.hitTp1 && !trade.hitTp2 && price >= trade.tp2) {
               trade.hitTp2 = true;
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
@@ -3250,12 +3257,12 @@ function startServerSignalEngine() {
               }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP2', triggerPrice: peak, pnlPips: cfg.tp2Pips, pnlUsd: cfg.tp2Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP2', triggerPrice: price, pnlPips: cfg.tp2Pips, pnlUsd: cfg.tp2Usd } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🎯 CHỐT LỜI TP2: MUA ${cfg.pair}`, `🔥 Lệnh MUA tại $${trade.entry.toFixed(2)} đã ĐẠT CHỐT LỜI TP2 tại $${peak.toFixed(2)}! (+${cfg.tp2Pips} pips / +$${cfg.tp2Usd} USD)`);
+              addNotification('SIGNAL', `🎯 CHỐT LỜI TP2: MUA ${cfg.pair}`, `🔥 Lệnh MUA tại $${trade.entry.toFixed(2)} đã ĐẠT CHỐT LỜI TP2 tại $${price.toFixed(2)}! (+${cfg.tp2Pips} pips / +$${cfg.tp2Usd} USD)`);
             }
-            if (!trade.hitTp3 && peak >= trade.tp3) {
+            if (trade.hitTp2 && !trade.hitTp3 && price >= trade.tp3) {
               trade.hitTp3 = true;
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
@@ -3280,10 +3287,10 @@ function startServerSignalEngine() {
               }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP3', triggerPrice: peak, pnlPips: cfg.tp3Pips, pnlUsd: cfg.tp3Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP3', triggerPrice: price, pnlPips: cfg.tp3Pips, pnlUsd: cfg.tp3Usd } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🏆 CHỐT LỜI TP3 KHỦNG (Trọn Sóng 🎯): MUA ${cfg.pair}`, `🔥 Lệnh MUA tại $${trade.entry.toFixed(2)} ĐẠT MỤC TIÊU TỐI ĐA TP3 tại $${peak.toFixed(2)} (+${cfg.tp3Pips} pips / +$${cfg.tp3Usd} USD)!`);
+              addNotification('SIGNAL', `🏆 CHỐT LỜI TP3 KHỦNG (Trọn Sóng 🎯): MUA ${cfg.pair}`, `🔥 Lệnh MUA tại $${trade.entry.toFixed(2)} ĐẠT MỤC TIÊU TỐI ĐA TP3 tại $${price.toFixed(2)} (+${cfg.tp3Pips} pips / +$${cfg.tp3Usd} USD)!`);
               serverActiveTrades[cfg.key] = null;
             }
             // 🛑 CẮT LỖ CHỈ ĐƯỢC PHÉP ĐO THEO GIÁ LIVE THỰC TẾ (price <= trade.sl)
@@ -3396,7 +3403,8 @@ function startServerSignalEngine() {
               addNotification('SIGNAL', `🛡️ KÉO SL DƯƠNG BẢO TOÀN LÃI: BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã có lãi +5 giá (+50 pips). Đã tự động dời SL xuống $${trade.sl.toFixed(2)} bảo toàn vốn an toàn!`);
             }
 
-            if (!trade.hitTp1 && bottom <= trade.tp1) {
+            // ĐẠT TP1: CHỈ kích hoạt khi GIÁ LIVE THỰC TẾ chạm mốc TP1 (price <= trade.tp1), tuyệt đối không dùng giá cũ/đáy nến cũ
+            if (!trade.hitTp1 && price <= trade.tp1) {
               trade.hitTp1 = true;
               trade.sl = +(trade.entry - (cfg.key === 'btc' ? 500 : (cfg.key === 'xag' ? 0.40 : 5.0))).toFixed(2); // Khóa cứng lãi 5 giá
               const sig = signalsDB.find(s => s && s.id === trade.id);
@@ -3420,12 +3428,12 @@ function startServerSignalEngine() {
               }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1_RIDE', triggerPrice: bottom, sl: trade.sl, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1_RIDE', triggerPrice: price, sl: trade.sl, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🎯 ĐẠT TP1 (+10 GIÁ) ➔ KÉO SL DƯƠNG (GỒNG TP2 🚀): BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã ĐẠT TP1 tại $${bottom.toFixed(2)} (+${cfg.tp1Pips} pips)! Hệ thống đã dời SL xuống $${trade.sl.toFixed(2)} (+5 giá) để bảo toàn lãi và tiếp tục gồng lệnh tới TP2!`);
+              addNotification('SIGNAL', `🎯 ĐẠT TP1 (+10 GIÁ) ➔ KÉO SL DƯƠNG (GỒNG TP2 🚀): BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã ĐẠT TP1 tại $${price.toFixed(2)} (+${cfg.tp1Pips} pips)! Hệ thống đã dời SL xuống $${trade.sl.toFixed(2)} (+5 giá) để bảo toàn lãi và tiếp tục gồng lệnh tới TP2!`);
             }
-            if (!trade.hitTp2 && bottom <= trade.tp2) {
+            if (trade.hitTp1 && !trade.hitTp2 && price <= trade.tp2) {
               trade.hitTp2 = true;
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
@@ -3448,12 +3456,12 @@ function startServerSignalEngine() {
               }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP2', triggerPrice: bottom, pnlPips: cfg.tp2Pips, pnlUsd: cfg.tp2Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP2', triggerPrice: price, pnlPips: cfg.tp2Pips, pnlUsd: cfg.tp2Usd } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🎯 CHỐT LỜI TP2: BÁN ${cfg.pair}`, `🔥 Lệnh BÁN tại $${trade.entry.toFixed(2)} đã ĐẠT CHỐT LỜI TP2 tại $${bottom.toFixed(2)}! (+${cfg.tp2Pips} pips / +$${cfg.tp2Usd} USD)`);
+              addNotification('SIGNAL', `🎯 CHỐT LỜI TP2: BÁN ${cfg.pair}`, `🔥 Lệnh BÁN tại $${trade.entry.toFixed(2)} đã ĐẠT CHỐT LỜI TP2 tại $${price.toFixed(2)}! (+${cfg.tp2Pips} pips / +$${cfg.tp2Usd} USD)`);
             }
-            if (!trade.hitTp3 && bottom <= trade.tp3) {
+            if (trade.hitTp2 && !trade.hitTp3 && price <= trade.tp3) {
               trade.hitTp3 = true;
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
@@ -3478,10 +3486,10 @@ function startServerSignalEngine() {
               }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP3', triggerPrice: bottom, pnlPips: cfg.tp3Pips, pnlUsd: cfg.tp3Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP3', triggerPrice: price, pnlPips: cfg.tp3Pips, pnlUsd: cfg.tp3Usd } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🏆 CHỐT LỜI TP3 KHỦNG (Trọn Sóng 🎯): BÁN ${cfg.pair}`, `🔥 Lệnh BÁN tại $${trade.entry.toFixed(2)} ĐẠT MỤC TIÊU TỐI ĐA TP3 tại $${bottom.toFixed(2)} (+${cfg.tp3Pips} pips / +$${cfg.tp3Usd} USD)!`);
+              addNotification('SIGNAL', `🏆 CHỐT LỜI TP3 KHỦNG (Trọn Sóng 🎯): BÁN ${cfg.pair}`, `🔥 Lệnh BÁN tại $${trade.entry.toFixed(2)} ĐẠT MỤC TIÊU TỐI ĐA TP3 tại $${price.toFixed(2)} (+${cfg.tp3Pips} pips / +$${cfg.tp3Usd} USD)!`);
               serverActiveTrades[cfg.key] = null;
             }
             // 🛑 CẮT LỖ CHỈ ĐƯỢC PHÉP ĐO THEO GIÁ LIVE THỰC TẾ (price >= trade.sl)

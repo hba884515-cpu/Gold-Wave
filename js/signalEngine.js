@@ -839,9 +839,10 @@ class SignalEngine {
     (this.signals || []).forEach(sig => {
       // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản
       if (sig && sig.status && sig.status.includes('ĐANG CHẠY') && (!sig.asset || sig.asset.toLowerCase() === a)) {
+        // Bảo vệ an toàn: Loại trừ giá dị thường
+        if (a === 'xau' && (currentPrice < 3800 || currentPrice > 4300)) return;
+
         const isBuy = sig.type === 'BUY';
-        const peakPrice = effHigh;
-        const bottomPrice = effLow;
         const entryPrice = sig.entryPrice || sig.price;
         const breakevenThreshold = (a === 'btc') ? 500 : (a === 'xag' ? 0.40 : 5.0);
 
@@ -862,34 +863,8 @@ class SignalEngine {
             this.triggerOrderStatusAlert(sig, 'TRAILED_SL', currentPrice);
           }
 
-          // 2. Chốt lời các mốc TP3, TP2, TP1
-          if (!sig.hitTp3 && peakPrice >= sig.tp3) {
-            sig.hitTp1 = true;
-            sig.hitTp2 = true;
-            sig.hitTp3 = true;
-            sig.winType = 'TP3';
-            sig.status = (a === 'btc') ? 'TP3 +4,000 (Trọn Sóng 🎯)' : (a === 'xag' ? 'TP3 +280 pips (Trọn Sóng 🎯)' : 'TP3 +30 (Trọn Sóng 🎯)');
-            sig.pnlPips = (a === 'btc') ? 400 : (a === 'xag' ? 280 : 300);
-            sig.pnlUsd = (a === 'btc') ? 4000 : (a === 'xag' ? 14000 : 3000);
-            sig.reason = `Giá tăng mạnh chạm mốc TP3 (Trọn Sóng 🎯) tại $${peakPrice.toFixed(2)}`;
-            hasChanges = true;
-            if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
-              window.soundAlerts.playPingSound();
-            }
-            this.triggerOrderStatusAlert(sig, 'TP3', peakPrice);
-          } else if (!sig.hitTp2 && peakPrice >= sig.tp2) {
-            sig.hitTp1 = true;
-            sig.hitTp2 = true;
-            sig.winType = 'TP2';
-            sig.status = (a === 'btc') ? 'TP2 +2,500 ✓' : (a === 'xag' ? 'TP2 +160 pips ✓' : 'TP2 +20 ✓');
-            sig.pnlPips = (a === 'btc') ? 250 : (a === 'xag' ? 160 : 200);
-            sig.pnlUsd = (a === 'btc') ? 2500 : (a === 'xag' ? 8000 : 2000);
-            hasChanges = true;
-            if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
-              window.soundAlerts.playPingSound();
-            }
-            this.triggerOrderStatusAlert(sig, 'TP2', peakPrice);
-          } else if (!sig.hitTp1 && peakPrice >= sig.tp1) {
+          // 2. Chốt lời các mốc TP1, TP2, TP3 (CHỈ kích hoạt khi giá live hiện tại thực sự đạt mốc)
+          if (!sig.hitTp1 && currentPrice >= sig.tp1) {
             sig.hitTp1 = true;
             sig.winType = 'TP1';
             // Đã đạt TP1: Tự động dời SL Dương lên Entry + 5 giá (+50 pips) để khóa chặt lãi, và TIẾP TỤC GỒNG TỚI TP2
@@ -897,12 +872,36 @@ class SignalEngine {
             sig.status = (a === 'btc') ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : (a === 'xag' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : 'ĐANG CHẠY (Đạt TP1 +10 ✓ ➔ Gồng TP2 🚀)');
             sig.pnlPips = (a === 'btc') ? 120 : (a === 'xag' ? 80 : 100);
             sig.pnlUsd = (a === 'btc') ? 1200 : (a === 'xag' ? 4000 : 1000);
-            sig.reason = `Đã đạt Chốt lời TP1 tại $${peakPrice.toFixed(2)}, tự động khóa SL Dương lên $${sig.sl.toFixed(2)} (+5 giá) và tiếp tục gồng lệnh tới TP2`;
+            sig.reason = `Đã đạt Chốt lời TP1 tại $${currentPrice.toFixed(2)}, tự động khóa SL Dương lên $${sig.sl.toFixed(2)} (+5 giá) và tiếp tục gồng lệnh tới TP2`;
             hasChanges = true;
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
-            this.triggerOrderStatusAlert(sig, 'TP1_RIDE', peakPrice);
+            this.triggerOrderStatusAlert(sig, 'TP1_RIDE', currentPrice);
+          } else if (sig.hitTp1 && !sig.hitTp2 && currentPrice >= sig.tp2) {
+            sig.hitTp2 = true;
+            sig.winType = 'TP2';
+            sig.status = (a === 'btc') ? 'TP2 +2,500 ✓' : (a === 'xag' ? 'TP2 +160 pips ✓' : 'TP2 +20 ✓');
+            sig.pnlPips = (a === 'btc') ? 250 : (a === 'xag' ? 160 : 200);
+            sig.pnlUsd = (a === 'btc') ? 2500 : (a === 'xag' ? 8000 : 2000);
+            sig.reason = `Giá tăng mạnh chạm mốc TP2 tại $${currentPrice.toFixed(2)}`;
+            hasChanges = true;
+            if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
+              window.soundAlerts.playPingSound();
+            }
+            this.triggerOrderStatusAlert(sig, 'TP2', currentPrice);
+          } else if (sig.hitTp2 && !sig.hitTp3 && currentPrice >= sig.tp3) {
+            sig.hitTp3 = true;
+            sig.winType = 'TP3';
+            sig.status = (a === 'btc') ? 'TP3 +4,000 (Trọn Sóng 🎯)' : (a === 'xag' ? 'TP3 +280 pips (Trọn Sóng 🎯)' : 'TP3 +30 (Trọn Sóng 🎯)');
+            sig.pnlPips = (a === 'btc') ? 400 : (a === 'xag' ? 280 : 300);
+            sig.pnlUsd = (a === 'btc') ? 4000 : (a === 'xag' ? 14000 : 3000);
+            sig.reason = `Giá tăng mạnh chạm mốc TP3 (Trọn Sóng 🎯) tại $${currentPrice.toFixed(2)}`;
+            hasChanges = true;
+            if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
+              window.soundAlerts.playPingSound();
+            }
+            this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
           } else if (currentPrice <= sig.sl) {
             // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT THEO GIÁ LIVE THẬT SỰ):
             if (sig.hitTp1) {
@@ -958,34 +957,8 @@ class SignalEngine {
             this.triggerOrderStatusAlert(sig, 'TRAILED_SL', currentPrice);
           }
 
-          // 2. Chốt lời các mốc TP3, TP2, TP1
-          if (!sig.hitTp3 && bottomPrice <= sig.tp3) {
-            sig.hitTp1 = true;
-            sig.hitTp2 = true;
-            sig.hitTp3 = true;
-            sig.winType = 'TP3';
-            sig.status = (a === 'btc') ? 'TP3 +4,000 (Trọn Sóng 🎯)' : (a === 'xag' ? 'TP3 +280 pips (Trọn Sóng 🎯)' : 'TP3 +30 (Trọn Sóng 🎯)');
-            sig.pnlPips = (a === 'btc') ? 400 : (a === 'xag' ? 280 : 300);
-            sig.pnlUsd = (a === 'btc') ? 4000 : (a === 'xag' ? 14000 : 3000);
-            sig.reason = `Giá giảm mạnh chạm mốc TP3 (Trọn Sóng 🎯) tại $${bottomPrice.toFixed(2)}`;
-            hasChanges = true;
-            if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
-              window.soundAlerts.playPingSound();
-            }
-            this.triggerOrderStatusAlert(sig, 'TP3', bottomPrice);
-          } else if (!sig.hitTp2 && bottomPrice <= sig.tp2) {
-            sig.hitTp1 = true;
-            sig.hitTp2 = true;
-            sig.winType = 'TP2';
-            sig.status = (a === 'btc') ? 'TP2 +2,500 ✓' : (a === 'xag' ? 'TP2 +160 pips ✓' : 'TP2 +20 ✓');
-            sig.pnlPips = (a === 'btc') ? 250 : (a === 'xag' ? 160 : 200);
-            sig.pnlUsd = (a === 'btc') ? 2500 : (a === 'xag' ? 8000 : 2000);
-            hasChanges = true;
-            if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
-              window.soundAlerts.playPingSound();
-            }
-            this.triggerOrderStatusAlert(sig, 'TP2', bottomPrice);
-          } else if (!sig.hitTp1 && bottomPrice <= sig.tp1) {
+          // 2. Chốt lời các mốc TP1, TP2, TP3 (CHỈ kích hoạt khi giá live hiện tại thực sự đạt mốc)
+          if (!sig.hitTp1 && currentPrice <= sig.tp1) {
             sig.hitTp1 = true;
             sig.winType = 'TP1';
             // Đã đạt TP1: Tự động dời SL Dương xuống Entry - 5 giá (+50 pips) để khóa chặt lãi, và TIẾP TỤC GỒNG TỚI TP2
@@ -993,12 +966,36 @@ class SignalEngine {
             sig.status = (a === 'btc') ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : (a === 'xag' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : 'ĐANG CHẠY (Đạt TP1 +10 ✓ ➔ Gồng TP2 🚀)');
             sig.pnlPips = (a === 'btc') ? 120 : (a === 'xag' ? 80 : 100);
             sig.pnlUsd = (a === 'btc') ? 1200 : (a === 'xag' ? 4000 : 1000);
-            sig.reason = `Đã đạt Chốt lời TP1 tại $${bottomPrice.toFixed(2)}, tự động khóa SL Dương xuống $${sig.sl.toFixed(2)} (+5 giá) và tiếp tục gồng lệnh tới TP2`;
+            sig.reason = `Đã đạt Chốt lời TP1 tại $${currentPrice.toFixed(2)}, tự động khóa SL Dương xuống $${sig.sl.toFixed(2)} (+5 giá) và tiếp tục gồng lệnh tới TP2`;
             hasChanges = true;
             if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
               window.soundAlerts.playPingSound();
             }
-            this.triggerOrderStatusAlert(sig, 'TP1_RIDE', bottomPrice);
+            this.triggerOrderStatusAlert(sig, 'TP1_RIDE', currentPrice);
+          } else if (sig.hitTp1 && !sig.hitTp2 && currentPrice <= sig.tp2) {
+            sig.hitTp2 = true;
+            sig.winType = 'TP2';
+            sig.status = (a === 'btc') ? 'TP2 +2,500 ✓' : (a === 'xag' ? 'TP2 +160 pips ✓' : 'TP2 +20 ✓');
+            sig.pnlPips = (a === 'btc') ? 250 : (a === 'xag' ? 160 : 200);
+            sig.pnlUsd = (a === 'btc') ? 2500 : (a === 'xag' ? 8000 : 2000);
+            sig.reason = `Giá giảm mạnh chạm mốc TP2 tại $${currentPrice.toFixed(2)}`;
+            hasChanges = true;
+            if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
+              window.soundAlerts.playPingSound();
+            }
+            this.triggerOrderStatusAlert(sig, 'TP2', currentPrice);
+          } else if (sig.hitTp2 && !sig.hitTp3 && currentPrice <= sig.tp3) {
+            sig.hitTp3 = true;
+            sig.winType = 'TP3';
+            sig.status = (a === 'btc') ? 'TP3 +4,000 (Trọn Sóng 🎯)' : (a === 'xag' ? 'TP3 +280 pips (Trọn Sóng 🎯)' : 'TP3 +30 (Trọn Sóng 🎯)');
+            sig.pnlPips = (a === 'btc') ? 400 : (a === 'xag' ? 280 : 300);
+            sig.pnlUsd = (a === 'btc') ? 4000 : (a === 'xag' ? 14000 : 3000);
+            sig.reason = `Giá giảm mạnh chạm mốc TP3 (Trọn Sóng 🎯) tại $${currentPrice.toFixed(2)}`;
+            hasChanges = true;
+            if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
+              window.soundAlerts.playPingSound();
+            }
+            this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
           } else if (currentPrice >= sig.sl) {
             // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT THEO GIÁ LIVE THẬT SỰ):
             if (sig.hitTp1) {
