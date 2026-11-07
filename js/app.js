@@ -7667,3 +7667,259 @@ setInterval(() => {
   const ss = String(remSeconds).padStart(2, '0');
   el.textContent = `M15: ${mm}:${ss}`;
 }, 1000);
+
+// ── ENGINE PHÂN TÍCH THEO TỪNG PHIÊN GIAO DỊCH (TRADING SESSIONS ENGINE) ──
+(function initTradingSessionsEngine() {
+  function updateTradingSessions() {
+    const now = new Date();
+    // Tính giờ theo GMT+7 (Việt Nam)
+    const utcHours = now.getUTCHours();
+    const utcMinutes = now.getUTCMinutes();
+    const utcSeconds = now.getUTCSeconds();
+    const vnTime = (utcHours + 7) % 24 + utcMinutes / 60 + utcSeconds / 3600;
+    const vnHour = (utcHours + 7) % 24;
+
+    const sessionNameEl = document.getElementById('live-current-session-name');
+    const directiveTitleEl = document.getElementById('live-directive-title');
+    const directiveBodyEl = document.getElementById('live-directive-body');
+    const countdownPillEl = document.getElementById('live-session-countdown-pill');
+
+    const cardAsia = document.getElementById('session-card-asia');
+    const cardLondon = document.getElementById('session-card-london');
+    const cardNy = document.getElementById('session-card-ny');
+
+    const badgeAsia = document.getElementById('badge-session-asia');
+    const badgeLondon = document.getElementById('badge-session-london');
+    const badgeNy = document.getElementById('badge-session-ny');
+
+    if (!sessionNameEl || !directiveBodyEl) return;
+
+    // Reset styles
+    [cardAsia, cardLondon, cardNy].forEach(c => {
+      if (c) {
+        c.classList.remove('border-amber-400', 'bg-amber-950/20', 'shadow-amber-500/10', 'border-sky-400', 'bg-sky-950/20', 'border-emerald-400', 'bg-emerald-950/20');
+        c.classList.add('border-slate-800', 'bg-slate-950/80');
+      }
+    });
+
+    [badgeAsia, badgeLondon, badgeNy].forEach(b => {
+      if (b) {
+        b.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700';
+        b.textContent = 'CHỜ MỞ CỬA';
+      }
+    });
+
+    let currentSession = '';
+    let nextSessionTargetHour = 6;
+    let directiveHTML = '';
+    let directiveTitle = '';
+
+    if (vnTime >= 6 && vnTime < 14) {
+      // 1. PHIÊN Á (06:00 - 14:00)
+      currentSession = '🌏 PHIÊN Á (TOKYO/SYDNEY) • ĐANG MỞ CỬA';
+      nextSessionTargetHour = 14;
+
+      if (cardAsia) {
+        cardAsia.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardAsia.classList.add('border-amber-400', 'bg-amber-950/20', 'shadow-amber-500/20', 'shadow-lg');
+      }
+      if (badgeAsia) {
+        badgeAsia.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse';
+        badgeAsia.textContent = '🟢 ĐANG MỞ CỬA';
+      }
+
+      directiveTitle = 'QUAN ĐIỂM THAM KHẢO PHIÊN Á: KIÊN NHẪN TÍCH LŨY • ĐÁNH DẤU BIÊN ASIAN RANGE';
+      directiveHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1">
+            <span class="text-amber-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>🛡️</span> <span>Chiến lược phiên Á:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Biên độ phiên Á thường chỉ giằng co hẹp 60–120 pips ($6–$12). <strong>Tuyệt đối không Fomo mua đỉnh bán đáy</strong> khi nến có các nhịp giật ngắn. Khuyến nghị kiên nhẫn đứng ngoài hoặc chỉ lướt ngắn 10–15 pips tại 2 biên hộp.
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-sky-500/30 space-y-1">
+            <span class="text-sky-300 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>📍</span> <span>Nhiệm vụ trọng tâm của Trader:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Xác định và ghi nhớ vùng đỉnh cao nhất <strong>(Asian High)</strong> và đáy thấp nhất <strong>(Asian Low)</strong> phiên Á để chuẩn bị đón cú quét thanh khoản bùng nổ khi phiên London mở cửa lúc 14:00.
+            </p>
+          </div>
+        </div>
+      `;
+
+    } else if (vnTime >= 14 && vnTime < 19.5) {
+      // 2. PHIÊN ÂU (14:00 - 19:30)
+      currentSession = '🏛️ PHIÊN ÂU (LONDON) • ĐANG MỞ CỬA';
+      nextSessionTargetHour = 19.5;
+
+      if (cardLondon) {
+        cardLondon.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardLondon.classList.add('border-sky-400', 'bg-sky-950/20', 'shadow-sky-500/20', 'shadow-lg');
+      }
+      if (badgeLondon) {
+        badgeLondon.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse';
+        badgeLondon.textContent = '🟢 ĐANG MỞ CỬA';
+      }
+
+      directiveTitle = 'QUAN ĐIỂM THAM KHẢO PHIÊN ÂU: SĂN NHỊP RŨ BỎ QUÉT THANH KHOẢN • VÀO LỆNH THUẬN XU HƯỚNG';
+      directiveHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-sky-500/30 space-y-1">
+            <span class="text-sky-300 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>🎯</span> <span>Chiêu bài săn Judas Swing:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Khi London mở cửa, giá thường có nhịp quét thủng đáy Asian Low để kích hoạt Stop Loss. <strong>Nếu nến M15 rút chân tạo Pinbar đóng trên EMA20</strong>, lập tức mở vị thế BUY theo sóng H1 lớn với Stop Loss chỉ 4–5 giá dưới chân râu nến.
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
+            <span class="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>⚡</span> <span>Chiến lược London Breakout:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Nếu nến M30 đóng cửa thân đặc vượt dứt khoát đỉnh Asian High kèm khối lượng tăng vọt, thị trường xác nhận sóng đẩy tiếp diễn (London Expansion). Vào lệnh thuận xu hướng hướng về mốc TP kỳ vọng $15–$25 giá.
+            </p>
+          </div>
+        </div>
+      `;
+
+    } else if (vnTime >= 19.5 && vnTime < 22.5) {
+      // 3. GIAO THOA ÂU - MỸ (19:30 - 22:30)
+      currentSession = '🔥 GIỜ VÀNG GIAO THOA ÂU - MỸ (OVERLAP) • SÓNG MẠNH NHẤT NGÀY';
+      nextSessionTargetHour = 22.5;
+
+      if (cardLondon) {
+        cardLondon.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardLondon.classList.add('border-sky-400', 'bg-sky-950/20');
+      }
+      if (cardNy) {
+        cardNy.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardNy.classList.add('border-emerald-400', 'bg-emerald-950/20', 'shadow-emerald-500/20', 'shadow-lg');
+      }
+      if (badgeLondon) {
+        badgeLondon.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        badgeLondon.textContent = 'HOẠT ĐỘNG CUỐI PHIÊN';
+      }
+      if (badgeNy) {
+        badgeNy.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse';
+        badgeNy.textContent = '🟢 ĐANG MỞ CỬA';
+      }
+
+      directiveTitle = 'QUAN ĐIỂM THAM KHẢO GIỜ VÀNG OVERLAP: SÓNG MẠNH NHẤT NGÀY • BẢO TOÀN LỢI NHUẬN TRƯỚC TIN';
+      directiveHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
+            <span class="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>🚀</span> <span>Dòng tiền đỉnh điểm 68% toàn cầu:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Giai đoạn 19:30 – 22:30 thanh khoản khổng lồ đẩy sóng đi dứt khoát 150–400 pips. Lệnh khớp mượt mà, kỹ thuật MA WAVE phát huy hiệu quả cao nhất. Ưu tiên giữ vị thế theo xu hướng dẫn dắt H1 & H4.
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-rose-500/30 space-y-1">
+            <span class="text-rose-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>⚠️</span> <span>Cảnh báo tin tức vĩ mô (19:30 / 20:30):</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Nếu có tin CPI/NFP/GDP của Mỹ: <strong>Kéo toàn bộ Stop Loss về Breakeven trước giờ tin</strong>. Không đặt lệnh Limit dò đáy/đỉnh khi tin ra. Đợi 15–20 phút sau tin để thị trường thẩm thấu rồi đánh theo nhịp hồi Retest.
+            </p>
+          </div>
+        </div>
+      `;
+
+    } else if ((vnTime >= 22.5 && vnTime <= 24) || (vnTime >= 0 && vnTime < 4)) {
+      // 4. PHIÊN MỸ ĐƠN LẺ (22:30 - 04:00)
+      currentSession = '🗽 PHIÊN MỸ (NEW YORK) • DÒNG TIỀN PHỐ WALL';
+      nextSessionTargetHour = 4;
+
+      if (cardNy) {
+        cardNy.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardNy.classList.add('border-emerald-400', 'bg-emerald-950/20', 'shadow-emerald-500/20', 'shadow-lg');
+      }
+      if (badgeNy) {
+        badgeNy.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse';
+        badgeNy.textContent = '🟢 ĐANG MỞ CỬA';
+      }
+
+      directiveTitle = 'QUAN ĐIỂM THAM KHẢO PHIÊN MỸ: ĐÁNH THEO SÓNG ĐÃ HẤP THỤ TIN • CHỐT LỜI KHI ĐẠT TARGET';
+      directiveHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
+            <span class="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>📊</span> <span>Giao dịch sóng sau tin:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Dữ liệu vĩ mô đã phản ánh vào giá. Xu hướng phiên Mỹ được định hình rõ ràng. Đánh theo các nhịp hồi về dải EMA20 khung M15/M30 để vào lệnh, mục tiêu hướng về đỉnh/đáy của ngày.
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1">
+            <span class="text-amber-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>🔒</span> <span>Đóng sổ vị thế trước 03:00 sáng:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Các quỹ đầu cơ thường chốt lời và tất toán sổ sách vào cuối phiên Mỹ. Khuyến nghị đóng các lệnh lướt trong ngày để bảo toàn thành quả, tránh giữ lệnh qua đêm chịu phí Swap và spread giãn.
+            </p>
+          </div>
+        </div>
+      `;
+
+    } else {
+      // 5. PHIÊN ĐÊM MUỘN (04:00 - 06:00)
+      currentSession = '🌙 PHIÊN ĐÊM MUỘN • NGHỈ NGƠI CHỜ PHIÊN Á MỚI';
+      nextSessionTargetHour = 6;
+
+      directiveTitle = 'THỊ TRƯỜNG ĐÊM MUỘN: THANH KHOẢN ĐÓNG BĂNG • NGHỈ NGƠI BẢO TOÀN VỐN';
+      directiveHTML = `
+        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-[11px] leading-relaxed space-y-1">
+          <p>
+            Từ 04:00 đến 06:00 sáng là khoảng thời gian các sàn tài chính chuyển ngày (Roll-over). Spread giãn cao kỷ lục và thanh khoản cạn kiệt.
+          </p>
+          <p class="text-amber-400 font-bold">
+            Khuyến nghị: Không mở vị thế mới. Chuẩn bị tinh thần và chiến lược để đón chào Phiên Á mới lúc 06:00 sáng.
+          </p>
+        </div>
+      `;
+    }
+
+    sessionNameEl.textContent = currentSession;
+    if (directiveTitleEl) directiveTitleEl.textContent = directiveTitle;
+    directiveBodyEl.innerHTML = directiveHTML;
+
+    // Tính đếm ngược
+    let diffHours = nextSessionTargetHour - vnTime;
+    if (diffHours < 0) diffHours += 24;
+    const totalSec = Math.floor(diffHours * 3600);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const cdStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+    if (countdownPillEl) {
+      if (vnTime >= 6 && vnTime < 14) {
+        countdownPillEl.textContent = `Mở phiên Âu lúc 14:00 (còn ${cdStr})`;
+      } else if (vnTime >= 14 && vnTime < 19.5) {
+        countdownPillEl.textContent = `Giờ Vàng Overlap lúc 19:30 (còn ${cdStr})`;
+      } else if (vnTime >= 19.5 && vnTime < 22.5) {
+        countdownPillEl.textContent = `Kết thúc Overlap lúc 22:30 (còn ${cdStr})`;
+      } else if ((vnTime >= 22.5 && vnTime <= 24) || (vnTime >= 0 && vnTime < 4)) {
+        countdownPillEl.textContent = `Đóng phiên Mỹ lúc 04:00 (còn ${cdStr})`;
+      } else {
+        countdownPillEl.textContent = `Mở phiên Á lúc 06:00 (còn ${cdStr})`;
+      }
+    }
+  }
+
+  // Khởi chạy ngay và định kỳ
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      updateTradingSessions();
+      setInterval(updateTradingSessions, 1000);
+    });
+  } else {
+    updateTradingSessions();
+    setInterval(updateTradingSessions, 1000);
+  }
+})();
