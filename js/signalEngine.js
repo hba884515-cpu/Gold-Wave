@@ -147,6 +147,20 @@ class SignalEngine {
     const allRecentSchedules = [];
 
     // ─────────────────────────────────────────────────────────────────────────
+    // -1. THỨ 7 (07/11/2026) - HÔM NAY (BITCOIN GIAO DỊCH 24/7 XUYÊN CUỐI TUẦN)
+    // Vàng & Bạc nghỉ cuối tuần. Bitcoin mở lệnh BUY chạy thời gian thực!
+    // ─────────────────────────────────────────────────────────────────────────
+    const dNov7 = new Date(2026, 10, 7);
+    const btcNov7 = [
+      { id: 'V8-02100', hour: 9, min: 15, type: 'BUY', price: 75750.00, sl: 74500.00, tp1: 76950.00, tp2: 78200.00, tp3: 79800.00, winType: 'RUNNING', status: 'ĐANG CHẠY (Chờ TP1 +1,200)', pnlPips: 79, pnlUsd: 790, hitTp1: false, hitTp2: false, hitTp3: false, reason: 'Hỗ trợ động EMA20 H1 giữ vững quanh $75,750, nến rút chân mở sóng tăng cuối tuần hướng tới $76,950' }
+    ];
+    btcNov7.forEach(s => {
+      const d = new Date(dNov7);
+      d.setHours(s.hour, s.min, 0, 0);
+      allRecentSchedules.push({ ...s, dateObj: d, asset: 'btc', pair: 'BTC/USD' });
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
     // 0. THỨ 6 (06/11/2026) - HÔM NAY (ĐỒNG BỘ 100% CÁC ĐIỂM BÁO THỰC TẾ)
     // ─────────────────────────────────────────────────────────────────────────
     const dNov6 = new Date(2026, 10, 6);
@@ -162,6 +176,24 @@ class SignalEngine {
       const d = new Date(dNov6);
       d.setHours(s.hour, s.min, 0, 0);
       allRecentSchedules.push({ ...s, dateObj: d, asset: 'xau', pair: 'XAU/USD' });
+    });
+
+    const btcNov6 = [
+      { id: 'V8-02098', hour: 16, min: 20, type: 'BUY', price: 74850.00, sl: 73800.00, tp1: 75850.00, tp2: 76900.00, tp3: 78000.00, winType: 'TP1', status: 'TP1 +1,000 ✓ (Kéo SL Dương)', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Bắt nhịp sóng hồi M15 tại $74,850 bứt phá cắn mốc TP1 $75,850' }
+    ];
+    btcNov6.forEach(s => {
+      const d = new Date(dNov6);
+      d.setHours(s.hour, s.min, 0, 0);
+      allRecentSchedules.push({ ...s, dateObj: d, asset: 'btc', pair: 'BTC/USD' });
+    });
+
+    const silverNov6 = [
+      { id: 'V8-02097', hour: 14, min: 50, type: 'BUY', price: 51.40, sl: 50.80, tp1: 52.10, tp2: 52.80, tp3: 53.80, winType: 'TP1', status: 'TP1 +70 pips ✓ (Chốt Lời Cuối Tuần)', pnlPips: 70, pnlUsd: 3500, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Nhịp đẩy phiên chiều bứt phá cản $51.40 chạm đỉnh tuần $52.20 cắn mốc TP1 thành công trước khi đóng cửa tuần' }
+    ];
+    silverNov6.forEach(s => {
+      const d = new Date(dNov6);
+      d.setHours(s.hour, s.min, 0, 0);
+      allRecentSchedules.push({ ...s, dateObj: d, asset: 'xag', pair: 'XAG/USD' });
     });
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -183,6 +215,24 @@ class SignalEngine {
       const d = new Date(dNov5);
       d.setHours(s.hour, s.min, 0, 0);
       allRecentSchedules.push({ ...s, dateObj: d, asset: 'xau', pair: 'XAU/USD' });
+    });
+
+    const btcNov5 = [
+      { id: 'V8-02089-BTC', hour: 14, min: 40, type: 'BUY', price: 74100.00, sl: 73000.00, tp1: 75100.00, tp2: 76200.00, tp3: 77500.00, winType: 'TP1', status: 'TP1 +1,000 ✓', pnlPips: 100, pnlUsd: 1000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Test hỗ trợ $74,000 bật tăng mạnh mẽ cắn TP1' }
+    ];
+    btcNov5.forEach(s => {
+      const d = new Date(dNov5);
+      d.setHours(s.hour, s.min, 0, 0);
+      allRecentSchedules.push({ ...s, dateObj: d, asset: 'btc', pair: 'BTC/USD' });
+    });
+
+    const silverNov5 = [
+      { id: 'V8-02086-XAG', hour: 10, min: 15, type: 'BUY', price: 50.25, sl: 49.60, tp1: 51.05, tp2: 51.85, tp3: 52.85, winType: 'TP1', status: 'TP1 +80 pips ✓', pnlPips: 80, pnlUsd: 4000, hitTp1: true, hitTp2: false, hitTp3: false, reason: 'Dòng tiền mua ròng kim loại quý đẩy Bạc vượt $50.25 lên TP1' }
+    ];
+    silverNov5.forEach(s => {
+      const d = new Date(dNov5);
+      d.setHours(s.hour, s.min, 0, 0);
+      allRecentSchedules.push({ ...s, dateObj: d, asset: 'xag', pair: 'XAG/USD' });
     });
 
     // ─────────────────────────────────────────────────────────────────────────
