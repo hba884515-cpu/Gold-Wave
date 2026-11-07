@@ -6537,8 +6537,8 @@ window.loadPublicCommunityFeedbacks = async function() {
       if (totalBadge) totalBadge.textContent = `${data.total || communityFeedbacksAll.length} Đánh giá`;
 
       // Cập nhật bộ lọc thống kê nếu có
-      const star5Count = data.starCounts ? data.starCounts[5] : 190;
-      const star4Count = data.starCounts ? data.starCounts[4] : 24;
+      const star5Count = data.starCounts ? data.starCounts[5] : 721;
+      const star4Count = data.starCounts ? data.starCounts[4] : 79;
       const totalCount = data.total || communityFeedbacksAll.length;
 
       const filtersContainer = document.getElementById('community-reviews-filters');
@@ -7602,10 +7602,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// ─── Live Online Traders Counter Engine (Mô phỏng ~400 Traders hoạt động thực tế) ───
+// ─── Live Online Traders Counter Engine (Mô phỏng ~1700 Traders hoạt động thực tế) ───
 (function initOnlineUsersEngine() {
-  // Bắt đầu quanh mốc 412 người dùng
-  let currentCount = 412;
+  // Bắt đầu quanh mốc 1718 người dùng
+  let currentCount = 1718;
 
   function updateDisplay(count) {
     currentCount = count;
@@ -7624,12 +7624,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Biến thiên tự nhiên nhẹ nhàng (mỗi 7 - 14 giây thay đổi ±1 đến ±3 người, dao động quanh 392 - 435)
+  // Biến thiên tự nhiên nhẹ nhàng (mỗi 7 - 14 giây thay đổi ±1 đến ±4 người, dao động quanh 1685 - 1745)
   function stepFluctuation() {
-    const change = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1);
+    const change = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 4) + 1);
     let newCount = currentCount + change;
-    if (newCount < 392) newCount = 398;
-    if (newCount > 435) newCount = 428;
+    if (newCount < 1685) newCount = 1696;
+    if (newCount > 1745) newCount = 1735;
     updateDisplay(newCount);
     const nextInterval = Math.floor(Math.random() * 7000) + 7000;
     setTimeout(stepFluctuation, nextInterval);

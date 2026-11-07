@@ -67,13 +67,13 @@ function saveJSON(filePath, data) {
 
 let deviceTrialsDB = loadJSON(DEVICE_TRIALS_FILE, []);
 
-// ─── Giả Lập Số Người Dùng Đang Online (~400 Traders, Dao Động Tự Nhiên 392 - 435) ───
-let simulatedOnlineUsers = 412;
+// ─── Giả Lập Số Người Dùng Đang Online (~1700 Traders, Dao Động Tự Nhiên 1685 - 1745) ───
+let simulatedOnlineUsers = 1718;
 function getSimulatedOnlineUsers() {
-  const delta = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1);
+  const delta = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 4) + 1);
   simulatedOnlineUsers += delta;
-  if (simulatedOnlineUsers < 392) simulatedOnlineUsers = 398;
-  if (simulatedOnlineUsers > 435) simulatedOnlineUsers = 428;
+  if (simulatedOnlineUsers < 1685) simulatedOnlineUsers = 1696;
+  if (simulatedOnlineUsers > 1745) simulatedOnlineUsers = 1735;
   return simulatedOnlineUsers;
 }
 setInterval(() => {
@@ -2233,7 +2233,7 @@ const server = http.createServer(async (req, res) => {
     };
 
     feedbacksDB.unshift(feedbackItem);
-    if (feedbacksDB.length > 500) feedbacksDB = feedbacksDB.slice(0, 500);
+    if (feedbacksDB.length > 2000) feedbacksDB = feedbacksDB.slice(0, 2000);
     saveJSON(FEEDBACKS_FILE, feedbacksDB);
 
     const starsStr = '⭐'.repeat(rating);
