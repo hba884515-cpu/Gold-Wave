@@ -7654,6 +7654,16 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 })();
 
-
-
-
+// Realtime countdown thời gian đóng nến M15 trong Tab Phân Tích Xu Hướng
+setInterval(() => {
+  const el = document.getElementById('trend-candle-countdown');
+  if (!el) return;
+  const now = new Date();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+  const remMinutes = 14 - (m % 15);
+  const remSeconds = 59 - s;
+  const mm = String(remMinutes).padStart(2, '0');
+  const ss = String(remSeconds).padStart(2, '0');
+  el.textContent = `M15: ${mm}:${ss}`;
+}, 1000);
