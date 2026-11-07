@@ -3174,86 +3174,195 @@
         <div id="news-macro-tiles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 transition-all duration-300">
           
           <!-- Tile 1: DXY -->
-          <div class="p-4 rounded-3xl liquid-glass space-y-2 relative overflow-hidden border border-emerald-500/20">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-300 font-bold flex items-center gap-1.5">
-                <span>🇺🇸</span> CHỈ SỐ USD (DXY)
-              </span>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                HỖ TRỢ VÀNG 📈
-              </span>
+          <div class="p-4 rounded-3xl liquid-glass space-y-2.5 relative overflow-hidden border border-emerald-500/30 flex flex-col justify-between hover:border-emerald-500/60 transition group">
+            <div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-200 font-bold flex items-center gap-1.5">
+                  <span class="text-base">🇺🇸</span> CHỈ SỐ USD (DXY)
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  HỖ TRỢ VÀNG 📈
+                </span>
+              </div>
+
+              <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-2xl font-black text-white font-mono tracking-tight">103.85</span>
+                <span class="text-xs font-bold text-emerald-400 font-mono">📉 -0.25%</span>
+              </div>
+
+              <!-- Thước đo trực quan dải giá DXY -->
+              <div class="space-y-1 my-2">
+                <div class="flex justify-between text-[9px] font-mono text-slate-400">
+                  <span>Yếu (Hỗ trợ Vàng)</span>
+                  <span>Mạnh (Đè Vàng)</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex">
+                  <div class="h-full bg-emerald-500" style="width: 45%"></div>
+                  <div class="h-full bg-amber-500" style="width: 25%"></div>
+                  <div class="h-full bg-rose-500" style="width: 30%"></div>
+                </div>
+              </div>
+
+              <!-- Giải thích cốt lõi: Xem là hiểu ngay -->
+              <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[10px] space-y-1">
+                <div class="font-bold text-amber-300 flex items-center gap-1">
+                  <span>💡</span> <span>Ý nghĩa đối với Trader:</span>
+                </div>
+                <p class="text-slate-300 leading-relaxed font-sans">
+                  USD và Vàng chạy <strong>nghịch đảo nhau</strong>. DXY đang giảm (-0.25%) làm Vàng rẻ hơn đối với nhà đầu tư quốc tế, tạo lực cầu đẩy giá Vàng và Bạc tăng.
+                </p>
+              </div>
             </div>
-            <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-black text-white font-mono">103.85</span>
-              <span class="text-xs font-bold text-emerald-400 font-mono">📉 -0.25%</span>
-            </div>
-            <p class="text-[10px] text-slate-300 leading-snug">Áp lực đồng USD suy yếu hỗ trợ sóng phục hồi kim loại quý (Vàng, Bạc).</p>
-            <div class="pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
+
+            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
               <span>Nguồn: <strong>TradingView / ICE</strong></span>
-              <span class="text-emerald-400">● Live GMT+7</span>
+              <button type="button" onclick="openMacroDetailModal('DXY')" class="text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer">
+                Chi tiết →
+              </button>
             </div>
           </div>
 
           <!-- Tile 2: FED RATE -->
-          <div class="p-4 rounded-3xl liquid-glass space-y-2 relative overflow-hidden border border-amber-500/20">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-300 font-bold flex items-center gap-1.5">
-                <span>🏛️</span> KỲ VỌNG LÃI SUẤT FED
-              </span>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                DOVISH
-              </span>
+          <div class="p-4 rounded-3xl liquid-glass space-y-2.5 relative overflow-hidden border border-amber-500/30 flex flex-col justify-between hover:border-amber-500/60 transition group">
+            <div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-200 font-bold flex items-center gap-1.5">
+                  <span class="text-base">🏛️</span> KỲ VỌNG LÃI SUẤT FED
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  DOVISH (ÔN HÒA)
+                </span>
+              </div>
+
+              <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-2xl font-black text-amber-400 font-mono tracking-tight">88.5%</span>
+                <span class="text-[10px] text-slate-300 font-mono">Ngừng tăng / Giảm lãi</span>
+              </div>
+
+              <!-- Thước đo phần trăm xác suất -->
+              <div class="space-y-1 my-2">
+                <div class="flex justify-between text-[9px] font-mono text-slate-400">
+                  <span>Hạ / Giữ: <strong class="text-amber-400">88.5%</strong></span>
+                  <span>Tăng: <strong class="text-slate-400">11.5%</strong></span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex">
+                  <div class="h-full bg-gradient-to-r from-amber-500 to-yellow-400" style="width: 88.5%"></div>
+                  <div class="h-full bg-slate-700" style="width: 11.5%"></div>
+                </div>
+              </div>
+
+              <!-- Giải thích cốt lõi -->
+              <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[10px] space-y-1">
+                <div class="font-bold text-amber-300 flex items-center gap-1">
+                  <span>💡</span> <span>Ý nghĩa đối với Trader:</span>
+                </div>
+                <p class="text-slate-300 leading-relaxed font-sans">
+                  88.5% dự báo Fed sắp hạ lãi suất. Khi lãi suất USD thấp, gửi tiền ngân hàng kém hấp dẫn, dòng tiền lớn dịch chuyển vào Vàng và Bitcoin để sinh lời.
+                </p>
+              </div>
             </div>
-            <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-black text-amber-400 font-mono">88.5%</span>
-              <span class="text-[10px] text-slate-400 font-mono">Giữ nguyên / Hạ lãi</span>
-            </div>
-            <p class="text-[10px] text-slate-300 leading-snug">Xác suất thị trường định giá Fed ngừng tăng và nới lỏng tiền tệ trong chu kỳ tới.</p>
-            <div class="pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
+
+            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
               <span>Nguồn: <strong>CME FedWatch Tool</strong></span>
-              <span class="text-amber-400">● Định giá FOMC</span>
+              <button type="button" onclick="openMacroDetailModal('FED')" class="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer">
+                Chi tiết →
+              </button>
             </div>
           </div>
 
           <!-- Tile 3: MARKET SENTIMENT -->
-          <div class="p-4 rounded-3xl liquid-glass space-y-2 relative overflow-hidden border border-emerald-500/20">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-300 font-bold flex items-center gap-1.5">
-                <span>🧭</span> TÂM LÝ THỊ TRƯỜNG
-              </span>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                LẠC QUAN
-              </span>
+          <div class="p-4 rounded-3xl liquid-glass space-y-2.5 relative overflow-hidden border border-emerald-500/30 flex flex-col justify-between hover:border-emerald-500/60 transition group">
+            <div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-200 font-bold flex items-center gap-1.5">
+                  <span class="text-base">🧭</span> TÂM LÝ THỊ TRƯỜNG
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  LẠC QUAN (GREED)
+                </span>
+              </div>
+
+              <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-2xl font-black text-emerald-400 font-mono tracking-tight">74 <span class="text-sm text-slate-400 font-normal">/ 100</span></span>
+                <span class="text-[10px] text-slate-300 font-mono">Dòng tiền sẵn sàng mua</span>
+              </div>
+
+              <!-- Thước đo nhiệt kế tâm lý (Sợ hãi 0 -> Hưng phấn 100) -->
+              <div class="space-y-1 my-2">
+                <div class="flex justify-between text-[9px] font-mono text-slate-400">
+                  <span>0 Sợ hãi</span>
+                  <span>50 Trung lập</span>
+                  <span>100 Hưng phấn</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden relative">
+                  <div class="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400" style="width: 100%"></div>
+                  <div class="absolute top-0 bottom-0 w-2 bg-white rounded-full shadow" style="left: calc(74% - 4px)"></div>
+                </div>
+              </div>
+
+              <!-- Giải thích cốt lõi: Tránh hiểu lầm xác suất -->
+              <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[10px] space-y-1">
+                <div class="font-bold text-amber-300 flex items-center gap-1">
+                  <span>💡</span> <span>Ý nghĩa đối với Trader:</span>
+                </div>
+                <p class="text-slate-300 leading-relaxed font-sans">
+                  Đo <strong>khẩu vị rủi ro</strong> của thị trường (KHÔNG PHẢI xác suất giá tăng). Điểm 74 cho thấy nhà đầu tư đang tự tin gom Vàng & BTC, xu hướng tăng áp đảo.
+                </p>
+              </div>
             </div>
-            <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-black text-emerald-400 font-mono">74 / 100</span>
-              <span class="text-[10px] text-slate-400 font-mono">Khẩu vị rủi ro cao</span>
-            </div>
-            <p class="text-[10px] text-slate-300 leading-snug">Đo lường mức độ hưng phấn dòng tiền toàn cầu (KHÔNG PHẢI xác suất giá tăng).</p>
-            <div class="pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
-              <span>Nguồn: <strong>VIX + Crypto Fear/Greed</strong></span>
-              <span class="text-emerald-400">● 24h Index</span>
+
+            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
+              <span>Nguồn: <strong>VIX + Fear & Greed</strong></span>
+              <button type="button" onclick="openMacroDetailModal('SENTIMENT')" class="text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer">
+                Chi tiết →
+              </button>
             </div>
           </div>
 
           <!-- Tile 4: SJC GOLD -->
-          <div class="p-4 rounded-3xl liquid-glass space-y-2 relative overflow-hidden border border-yellow-500/20">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-300 font-bold flex items-center gap-1.5">
-                <span>🪙</span> VÀNG SJC VIỆT NAM
-              </span>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-                THAM KHẢO
-              </span>
+          <div class="p-4 rounded-3xl liquid-glass space-y-2.5 relative overflow-hidden border border-yellow-500/30 flex flex-col justify-between hover:border-yellow-500/60 transition group">
+            <div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-200 font-bold flex items-center gap-1.5">
+                  <span class="text-base">🪙</span> VÀNG SJC VIỆT NAM
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">
+                  GIÁ THAM KHẢO
+                </span>
+              </div>
+
+              <div class="flex items-baseline gap-1.5 mt-2">
+                <span class="text-2xl font-black text-yellow-400 font-mono tracking-tight">89.20</span>
+                <span class="text-xs text-slate-300 font-sans">Tr/Lượng</span>
+              </div>
+
+              <!-- Thước đo so sánh giá nội và giá quy đổi thế giới -->
+              <div class="space-y-1 my-2">
+                <div class="flex justify-between text-[9px] font-mono text-slate-400">
+                  <span>Chênh lệch: <strong class="text-yellow-400">+3.5 Triệu</strong></span>
+                  <span>Mua-Bán: <strong class="text-slate-300">1.5 Tr</strong></span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full bg-gradient-to-r from-yellow-500 to-amber-300" style="width: 75%"></div>
+                </div>
+              </div>
+
+              <!-- Giải thích cốt lõi -->
+              <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[10px] space-y-1">
+                <div class="font-bold text-amber-300 flex items-center gap-1">
+                  <span>💡</span> <span>Ý nghĩa đối với Trader:</span>
+                </div>
+                <p class="text-slate-300 leading-relaxed font-sans">
+                  Giá bán lẻ tham khảo thị trường tự do. Giúp người giao dịch Vàng vật lý trong nước đối chiếu mức độ bám sát với đà tăng của giá Vàng thế giới XAU/USD.
+                </p>
+              </div>
             </div>
-            <div class="flex items-baseline gap-1.5">
-              <span class="text-2xl font-black text-yellow-400 font-mono">89.20</span>
-              <span class="text-xs text-slate-400 font-sans">Tr/Lượng</span>
-            </div>
-            <p class="text-[10px] text-slate-300 leading-snug">Giá tham khảo giao dịch trong nước, chênh lệch mua - bán ~1.5 triệu/lượng.</p>
-            <div class="pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
+
+            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-400 font-mono">
               <span>Nguồn: <strong>DOJI / SJC Tự Do</strong></span>
-              <span class="text-yellow-400">● Phiên hôm nay</span>
+              <button type="button" onclick="openMacroDetailModal('SJC')" class="text-yellow-400 hover:text-yellow-300 font-bold underline cursor-pointer">
+                Chi tiết →
+              </button>
             </div>
           </div>
 
@@ -5613,6 +5722,44 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       <span class="text-[10px] text-slate-400 font-mono">Nguồn dữ liệu: Investing.com & Thuật toán MA WAVE V8</span>
       <button onclick="GoldNewsCenter.closeNewsDetailModal()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition cursor-pointer">
         Đóng Cửa Sổ
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  MACRO INDICATOR DETAIL MODAL (PHÂN TÍCH CHỈ SỐ VĨ MÔ RÕ HIỂU)-->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="macro-detail-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md transition-all duration-300">
+  <div class="bg-[#0b0f19] border border-amber-500/40 rounded-3xl p-5 sm:p-6 max-w-2xl w-full shadow-2xl space-y-4 relative max-h-[90vh] overflow-y-auto sig-scroll animate-fade-in text-white">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="flex items-center gap-3">
+        <div id="macro-modal-icon" class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-black text-xl shadow">
+          📊
+        </div>
+        <div>
+          <h3 id="macro-modal-title" class="text-sm sm:text-base font-black text-white leading-snug">Chi Tiết Chỉ Số Vĩ Mô</h3>
+          <span id="macro-modal-subtitle" class="text-[10px] text-slate-400 font-mono">Giải mã cơ chế vận động & Tác động thị trường</span>
+        </div>
+      </div>
+      <button onclick="closeMacroDetailModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition">
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal Dynamic Body Content -->
+    <div id="macro-modal-body" class="space-y-4 text-xs">
+      <!-- Populated dynamically by openMacroDetailModal -->
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="pt-3 border-t border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs">
+      <span class="text-[10px] text-slate-400 font-mono">Dữ liệu tham chiếu chuẩn thị trường quốc tế GMT+7</span>
+      <button onclick="closeMacroDetailModal()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition cursor-pointer">
+        Đã Hiểu
       </button>
     </div>
 

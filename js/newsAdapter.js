@@ -1485,6 +1485,133 @@ window.setNewsImpactFilter = function(btn, impact) {
   GoldNewsCenter.setImpactFilter(impact);
 };
 
+// Macro Detail Modal Engine (Giải thích chi tiết 4 chỉ số Vĩ Mô trực quan, dễ hiểu)
+const MacroIndicatorsKnowledge = {
+  DXY: {
+    title: 'CHỈ SỐ ĐÔ LA MỸ — US DOLLAR INDEX (DXY)',
+    icon: '🇺🇸',
+    currentVal: '103.85 (-0.25%)',
+    source: 'TradingView / ICE Intercontinental Exchange (Live GMT+7)',
+    nature: 'Thước đo sức mạnh đồng bạc xanh so với rổ 6 đồng tiền chủ chốt (EUR, JPY, GBP, CAD, SEK, CHF). Trong đó EUR chiếm tỷ trọng lớn nhất (~57.6%).',
+    whyItMatters: 'Vàng thế giới (XAU/USD) được định giá bằng Đô la Mỹ. Khi đồng USD mạnh lên, nhà đầu tư nắm giữ các đồng tiền khác phải trả nhiều tiền hơn để mua cùng một lượng Vàng -> Lực cầu giảm -> Vàng giảm giá. Ngược lại, khi USD suy yếu, Vàng trở nên rẻ và hấp dẫn hơn -> Lực mua tăng mạnh.',
+    readingGuide: [
+      { range: 'DXY > 105.00', meaning: 'USD cực mạnh (Hawkish). Áp lực bán đè nặng lên Vàng và Bạc, ưu tiên canh Sell hồi hoặc đứng ngoài.' },
+      { range: 'DXY 102.50 – 104.50', meaning: 'USD tích lũy đi ngang (Sideway). Vàng chạy theo sóng kỹ thuật MA WAVE V8, giằng co theo phiên.' },
+      { range: 'DXY < 102.00', meaning: 'USD suy yếu rõ rệt (Dovish). Ngòi nổ bùng nổ sóng Tăng mạnh mẽ cho Vàng, Bạc và Bitcoin.' }
+    ],
+    actionForTrader: 'Trước khi vào lệnh Vàng (XAU/USD), luôn liếc nhìn nến DXY trên khung M15/H1: Nếu DXY đang phá đáy giảm, lệnh BUY Vàng có tỷ lệ thắng cao hơn gấp 2 lần!'
+  },
+  FED: {
+    title: 'KỲ VỌNG LÃI SUẤT LIÊN BANG MỸ (CME FEDWATCH)',
+    icon: '🏛️',
+    currentVal: '88.5% (Ngừng tăng / Cắt giảm lãi suất)',
+    source: 'CME Group 30-Day Fed Fund Futures Pricing Tool',
+    nature: 'Tỷ lệ phần trăm thể hiện kỳ vọng tập thể của hàng triệu nhà giao dịch và tổ chức tài chính toàn cầu về quyết định lãi suất trong kỳ họp FOMC kế tiếp.',
+    whyItMatters: 'Vàng là tài sản phi lãi suất (nắm giữ vàng không nhận được tiền lãi hàng tháng). Khi Fed duy trì lãi suất 5.5%, các quỹ lớn gửi tiền vào trái phiếu chính phủ Mỹ để nhận lãi an toàn. Nhưng khi Fed chuẩn bị giảm lãi suất, sức hấp dẫn của tiền gửi mất đi, dòng tiền ồ ạt rút ra và đổ vào Vàng để tích trữ tài sản.',
+    readingGuide: [
+      { range: '> 80% Giữ nguyên / Cắt giảm (Dovish)', meaning: 'Bối cảnh vĩ mô cực kỳ thuận lợi (Bullish) cho Vàng và Bitcoin trong trung và dài hạn.' },
+      { range: '50% – 70% Tranh chấp', meaning: 'Thị trường chưa đồng thuận, giá Vàng dễ quét nến 2 đầu giật mạnh mỗi khi có quan chức Fed phát biểu.' },
+      { range: '> 60% Tăng lãi suất (Hawkish)', meaning: 'Chính sách thắt chặt tiền tệ, dòng tiền hút về USD, bất lợi cho các tài sản trú ẩn.' }
+    ],
+    actionForTrader: 'Theo dõi các đợt công bố CPI và phát biểu của Jerome Powell. Khi tỷ lệ cắt giảm tăng vọt trên 85%, các vị thế BUY Vàng theo sóng MA WAVE V8 có độ tin cậy giữ lệnh dài hạn rất tốt.'
+  },
+  SENTIMENT: {
+    title: 'CHỈ SỐ TÂM LÝ THỊ TRƯỜNG & KHẨU VỊ RỦI RO',
+    icon: '🧭',
+    currentVal: '74 / 100 — Lạc Quan (Greed)',
+    source: 'Tổng hợp từ Chỉ số biến động S&P500 VIX + Alternative.me Fear & Greed Index (Cập nhật 24h)',
+    nature: 'Thang đo nhiệt kế tâm lý từ 0 (Sợ hãi tột cùng - Extreme Fear) đến 100 (Hưng phấn tột độ - Extreme Greed). Lưu ý: Đây là thước đo tâm lý dòng tiền, KHÔNG PHẢI xác suất giá tăng.',
+    whyItMatters: 'Giúp trader không bị hiệu ứng đám đông FOMO đu đỉnh hoặc hoảng loạn bán tháo ở đáy. Dòng tiền lớn thường tích lũy âm thầm khi đám đông Sợ Hãi và chốt lời dần khi đám đông quá Hưng Phấn.',
+    readingGuide: [
+      { range: '0 – 25 (Sợ hãi tột cùng)', meaning: 'Đám đông hoảng loạn tháo chạy. Đây thường là vùng đáy trung hạn lý tưởng để gom Vàng và BTC.' },
+      { range: '26 – 60 (Trung lập & Thận trọng)', meaning: 'Thị trường tích lũy lành mạnh, các lệnh giao dịch theo xu hướng MA WAVE có độ ổn định cao.' },
+      { range: '75 – 100 (Hưng phấn tột độ)', meaning: 'Cảnh báo rủi ro điều chỉnh quét râu nến (Bull trap), tránh đu lệnh Buy đuổi giá cao.' }
+    ],
+    actionForTrader: 'Với điểm số 74 hiện tại: Thị trường đang hưng phấn tích cực nhưng gần chạm ngưỡng quá mua. Trader nên tuân thủ kỷ luật chốt lời TP1/TP2 từng phần, tuyệt đối không nhồi lệnh Buy tại đỉnh cản.'
+  },
+  SJC: {
+    title: 'VÀNG MIẾNG SJC & THỊ TRƯỜNG VÀNG TRONG NƯỚC',
+    icon: '🪙',
+    currentVal: '89.20 Triệu Đồng / Lượng (Mua vào: 87.70 — Bán ra: 89.20)',
+    source: 'Khảo sát giá niêm yết DOJI, SJC Hà Nội & TP.HCM (Tham Khảo Phiên Hôm Nay)',
+    nature: 'Giá tham khảo mua - bán vàng miếng thương hiệu quốc gia SJC tại thị trường Việt Nam (tính theo đơn vị 1 lượng = 37.5 gram = 1.2056 troy ounce).',
+    whyItMatters: 'Giá vàng trong nước chịu tác động kép từ giá vàng thế giới (XAU/USD) và tỷ giá USD/VND ngân hàng. Do các chính sách quản lý thị trường vàng của Ngân hàng Nhà nước, giá SJC thường có độ chênh lệch (premium) từ 2 đến 5 triệu đồng/lượng so với giá thế giới quy đổi.',
+    readingGuide: [
+      { range: 'Chênh lệch < 3 Triệu/Lượng', meaning: 'Thị trường trong nước ổn định, bám sát nhịp tăng giảm của giá thế giới XAU/USD.' },
+      { range: 'Chênh lệch 4 – 7 Triệu/Lượng', meaning: 'Nhu cầu gom vàng vật lý trong dân tăng cao hoặc nguồn cung vàng miếng khan hiếm.' },
+      { range: 'Spread Mua-Bán dãn > 2 Triệu', meaning: 'Các tiệm vàng phòng vệ rủi ro biến động mạnh, mua vàng miếng lúc này chịu chi phí spread cao.' }
+    ],
+    actionForTrader: 'Dành cho anh em giao dịch vàng vật lý hoặc tích sản: Khi XAU/USD trên app báo tín hiệu Sóng Tăng MA WAVE V8, giá SJC trong nước thường sẽ điều chỉnh tăng theo sau 1-2 phiên làm việc.'
+  }
+};
+
+window.openMacroDetailModal = function(indicatorKey) {
+  const data = MacroIndicatorsKnowledge[indicatorKey];
+  if (!data) return;
+
+  const modal = document.getElementById('macro-detail-modal');
+  const titleEl = document.getElementById('macro-modal-title');
+  const subEl = document.getElementById('macro-modal-subtitle');
+  const iconEl = document.getElementById('macro-modal-icon');
+  const bodyEl = document.getElementById('macro-modal-body');
+
+  if (!modal || !bodyEl) return;
+
+  if (titleEl) titleEl.textContent = data.title;
+  if (subEl) subEl.textContent = `Giá trị hiện tại: ${data.currentVal} • Nguồn: ${data.source}`;
+  if (iconEl) iconEl.textContent = data.icon;
+
+  const readingRows = data.readingGuide.map(r => `
+    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-0.5">
+      <span class="text-amber-400 font-mono font-bold text-[11px] block">${r.range}</span>
+      <p class="text-slate-300 text-[10px] leading-relaxed font-sans">${r.meaning}</p>
+    </div>
+  `).join('');
+
+  bodyEl.innerHTML = `
+    <!-- Bản chất & Nguồn gốc -->
+    <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+      <div class="text-[11px] font-bold text-amber-300 uppercase flex items-center gap-1.5">
+        <span>📖</span> <span>Bản Chất Chỉ Số:</span>
+      </div>
+      <p class="text-xs text-slate-200 leading-relaxed font-sans">${data.nature}</p>
+    </div>
+
+    <!-- Vì sao quan trọng đối với Vàng -->
+    <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-1.5">
+      <div class="text-[11px] font-bold text-amber-400 uppercase flex items-center gap-1.5">
+        <span>🎯</span> <span>Tác Động Trực Tiếp Đến Giá Vàng & Thị Trường:</span>
+      </div>
+      <p class="text-xs text-amber-100/90 leading-relaxed font-sans">${data.whyItMatters}</p>
+    </div>
+
+    <!-- Hướng dẫn đọc thang đo -->
+    <div class="space-y-2">
+      <div class="text-[11px] font-bold text-slate-300 uppercase flex items-center gap-1.5">
+        <span>📊</span> <span>Thang Đo & Ý Nghĩa Từng Mức Điểm:</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        ${readingRows}
+      </div>
+    </div>
+
+    <!-- Hành động dành cho Trader -->
+    <div class="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 space-y-1.5">
+      <div class="text-[11px] font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+        <span>💡</span> <span>Kinh Nghiệm Thực Chiến MA WAVE V8:</span>
+      </div>
+      <p class="text-xs text-emerald-200 leading-relaxed font-sans">${data.actionForTrader}</p>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+};
+
+window.closeMacroDetailModal = function() {
+  const modal = document.getElementById('macro-detail-modal');
+  if (modal) modal.classList.add('hidden');
+};
+
 // DOM Initialization
 document.addEventListener('DOMContentLoaded', () => {
   GoldNewsCenter.fetchEvents();
