@@ -61,7 +61,7 @@ function loadJSON(filePath, defaultData) {
 
 function saveJSON(filePath, data) {
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFile(filePath, JSON.stringify(data), 'utf8', () => {});
   } catch (e) {}
 }
 
@@ -1433,17 +1433,30 @@ async function getNormalizedCalendarData(queryParams = {}) {
   };
 }
 
-// Body parser helper
+// Body parser helper with safety timeout and error protection
 function parseRequestBody(req) {
   return new Promise((resolve) => {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    const timer = setTimeout(() => resolve({}), 4000);
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > 2e6) {
+        clearTimeout(timer);
+        req.destroy();
+        resolve({});
+      }
+    });
     req.on('end', () => {
+      clearTimeout(timer);
       try {
         resolve(JSON.parse(body));
       } catch (e) {
         resolve({});
       }
+    });
+    req.on('error', () => {
+      clearTimeout(timer);
+      resolve({});
     });
   });
 }
@@ -2589,11 +2602,17 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/notifications/stream' && req.method === 'GET') {
     res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
       'Access-Control-Allow-Origin': '*'
     });
+    try {
+      res.write(': keep-alive\n\n');
+      res.write(`data: ${JSON.stringify({ type: 'CONNECTED', time: Date.now() })}\n\n`);
+    } catch(e) {}
+
     const client = { id: Date.now(), res };
     sseClients.push(client);
 
@@ -3025,16 +3044,39 @@ const server = http.createServer(async (req, res) => {
     let safePath = path.normalize(relativePath).replace(/^(\.\.[\/\\])+/, '');
     let filePath = path.join(__dirname, safePath);
 
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    // Siêu tốc: Phục vụ từ RAM cache nếu đã nạp
+    if (global._staticMemCache && global._staticMemCache.has(filePath)) {
+      const cached = global._staticMemCache.get(filePath);
+      res.writeHead(200, {
+        'Content-Type': cached.contentType,
+        'Cache-Control': 'public, max-age=300',
+        'Content-Length': cached.buffer.length
+      });
+      return res.end(cached.buffer);
+    }
+
+    fs.readFile(filePath, (err, data) => {
+      if (err || !data) {
+        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+        return res.end('<h1>404 - Không tìm thấy trang</h1>');
+      }
       const ext = path.extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': contentType });
-      fs.createReadStream(filePath).pipe(res);
-    } else {
-      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end('<h1>404 - Không tìm thấy trang</h1>');
-    }
-  } else {
+
+      if (!global._staticMemCache) global._staticMemCache = new Map();
+      if (data.length < 5 * 1024 * 1024) {
+        global._staticMemCache.set(filePath, { contentType, buffer: data });
+      }
+
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=300',
+        'Content-Length': data.length
+      });
+      res.end(data);
+    });
+  }
+ else {
     res.writeHead(404);
     res.end(JSON.stringify({ error: 'Endpoint not found' }));
   }
@@ -3721,10 +3763,21 @@ function startServerSignalEngine() {
   };
 
   setTimeout(evaluateServerSignal, 5000);
-  setInterval(evaluateServerSignal, 15000);
+  setInterval(evaluateServerSignal, 30000);
 }
 
 startServerSignalEngine();
+
+// SSE Heartbeat mỗi 20s để chống Cloudflare 524 Timeout
+setInterval(() => {
+  if (Array.isArray(sseClients) && sseClients.length > 0) {
+    sseClients.forEach(c => {
+      try {
+        c.res.write(': heartbeat\n\n');
+      } catch(e) {}
+    });
+  }
+}, 20000);
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[Gold News & Auth Server] Running on:`);
