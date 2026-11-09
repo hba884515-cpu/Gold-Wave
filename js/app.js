@@ -6155,75 +6155,14 @@ window.loadAccountAdminData = async function() {
       }
     }
 
-    // 2. Render Danh Sách Tất Cả Thành Viên Vừa Tham Gia & Hạn Sử Dụng
+    // 2. Render Danh Sách Tất Cả Thành Viên Vừa Tham Gia & Hạn Sử Dụng (Hỗ trợ 1.700+ thành viên)
+    window.adminUsersList = users;
     if (totalUsersBadge) {
-      totalUsersBadge.textContent = `${users.length} Thành viên`;
+      totalUsersBadge.textContent = `${users.length.toLocaleString('vi-VN')} Thành viên`;
     }
 
-    if (usersTbody) {
-      if (users.length === 0) {
-        usersTbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-500 font-sans">Chưa có người dùng nào đăng ký.</td></tr>';
-      } else {
-        usersTbody.innerHTML = users.map((u, i) => {
-          const emailLower = (u.email || '').toLowerCase();
-          const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
-          const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false, badgeText: 'DÙNG THỬ 14 NGÀY' };
-
-          const roleBadge = isUAdmin
-            ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 ADMIN</span>'
-            : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]">👤 USER</span>';
-
-          let subBadge = '';
-          if (sub.status === 'LIFETIME' || isUAdmin) {
-            subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 VIP VĨNH VIỄN</span>';
-          } else if (sub.isExpired) {
-            subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px]">🔒 HẾT HẠN</span>';
-          } else if (sub.status === 'ACTIVE') {
-            subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px]">✨ GÓI VIP 30N</span>';
-          } else {
-            subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px]">⏱️ DÙNG THỬ 14N</span>';
-          }
-
-          let remainStr = '';
-          if (sub.status === 'LIFETIME' || isUAdmin) {
-            remainStr = '<span class="text-emerald-400 font-bold">Không giới hạn</span>';
-          } else if (sub.isExpired) {
-            remainStr = '<span class="text-rose-400 font-bold">Đã hết hạn!</span>';
-          } else {
-            remainStr = `<span class="text-amber-300 font-bold">Còn ${sub.daysRemaining != null ? sub.daysRemaining : 14} ngày</span>`;
-          }
-
-          return `
-            <tr class="hover:bg-slate-900/60 transition">
-              <td class="py-2.5 px-3 text-slate-500">${i + 1}</td>
-              <td class="py-2.5 px-3">
-                <div class="font-bold text-white text-xs">${u.name || 'Trader'}</div>
-                <div class="text-amber-300/90 text-[11px] font-mono">${u.email}</div>
-              </td>
-              <td class="py-2.5 px-3">${roleBadge}</td>
-              <td class="py-2.5 px-3">${subBadge}</td>
-              <td class="py-2.5 px-3">${remainStr}</td>
-              <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
-                <button onclick="accountAdminExtendUser('${u.email}', 30)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 30 ngày (1 tháng)">
-                  +30 Ngày
-                </button>
-                <button onclick="accountAdminExtendUser('${u.email}', 60)" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 60 ngày">
-                  +60 Ngày
-                </button>
-                <button onclick="accountAdminExtendUser('${u.email}', 0, true)" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-bold text-[10px] transition cursor-pointer" title="Cấp quyền VIP Vĩnh Viễn">
-                  Vĩnh Viễn
-                </button>
-                <button onclick="accountAdminToggleRole('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer" title="Đổi quyền Admin/User">
-                  ${isUAdmin ? '⬇️ USER' : '👑 ADMIN'}
-                </button>
-                <button onclick="accountAdminDeleteUser('${u.email}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition cursor-pointer" title="Xóa tài khoản">
-                  🗑️
-                </button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      }
+    if (typeof window.renderAdminUsersTable === 'function') {
+      window.renderAdminUsersTable();
     }
 
     // 3. Render Danh Sách Đánh Giá & Góp Ý Nâng Cấp Của Khách Hàng (Bảng 3)
@@ -6282,6 +6221,188 @@ window.loadAccountAdminData = async function() {
   } catch (err) {
     console.warn('Lỗi tải dữ liệu bảng Admin tab tài khoản:', err);
   }
+};
+
+window.adminUsersList = [];
+window.adminUserFilter = 'ALL';
+window.adminUserSearch = '';
+window.adminUserPage = 1;
+window.adminUserPageSize = 50;
+
+window.filterAdminUsers = function(type) {
+  window.adminUserFilter = type;
+  window.adminUserPage = 1;
+  const btnAll = document.getElementById('acc-filter-user-all');
+  const btnVip = document.getElementById('acc-filter-user-vip');
+  const btnTrial = document.getElementById('acc-filter-user-trial');
+  const btnExp = document.getElementById('acc-filter-user-expired');
+
+  [btnAll, btnVip, btnTrial, btnExp].forEach(b => {
+    if (b) {
+      b.className = 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer';
+    }
+  });
+
+  const activeBtn = type === 'ALL' ? btnAll : (type === 'VIP' ? btnVip : (type === 'TRIAL' ? btnTrial : btnExp));
+  if (activeBtn) {
+    activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs transition cursor-pointer';
+  }
+
+  window.renderAdminUsersTable();
+};
+
+window.handleAdminUserSearch = function(query) {
+  window.adminUserSearch = (query || '').toLowerCase().trim();
+  window.adminUserPage = 1;
+  window.renderAdminUsersTable();
+};
+
+window.changeAdminUsersPage = function(delta) {
+  window.adminUserPage += delta;
+  window.renderAdminUsersTable();
+};
+
+window.renderAdminUsersTable = function() {
+  const usersTbody = document.getElementById('acc-admin-users-tbody');
+  if (!usersTbody) return;
+
+  const users = window.adminUsersList || [];
+  
+  let countVip = 0;
+  let countTrial = 0;
+  let countExpired = 0;
+
+  users.forEach(u => {
+    const emailLower = (u.email || '').toLowerCase();
+    const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false };
+    if (isUAdmin || sub.status === 'LIFETIME' || sub.status === 'ACTIVE') {
+      countVip++;
+    } else if (sub.isExpired) {
+      countExpired++;
+    } else {
+      countTrial++;
+    }
+  });
+
+  const elCntAll = document.getElementById('acc-cnt-all');
+  const elCntVip = document.getElementById('acc-cnt-vip');
+  const elCntTrial = document.getElementById('acc-cnt-trial');
+  const elCntExp = document.getElementById('acc-cnt-expired');
+  if (elCntAll) elCntAll.textContent = users.length.toLocaleString('vi-VN');
+  if (elCntVip) elCntVip.textContent = countVip.toLocaleString('vi-VN');
+  if (elCntTrial) elCntTrial.textContent = countTrial.toLocaleString('vi-VN');
+  if (elCntExp) elCntExp.textContent = countExpired.toLocaleString('vi-VN');
+
+  let filtered = users.filter(u => {
+    const emailLower = (u.email || '').toLowerCase();
+    const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false };
+    const isVip = isUAdmin || sub.status === 'LIFETIME' || sub.status === 'ACTIVE';
+
+    if (window.adminUserFilter === 'VIP' && !isVip) return false;
+    if (window.adminUserFilter === 'TRIAL' && (isVip || sub.isExpired)) return false;
+    if (window.adminUserFilter === 'EXPIRED' && !sub.isExpired) return false;
+
+    if (window.adminUserSearch) {
+      const q = window.adminUserSearch;
+      const name = (u.name || '').toLowerCase();
+      const email = emailLower;
+      const phone = (u.phone || '').toLowerCase();
+      if (!name.includes(q) && !email.includes(q) && !phone.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / window.adminUserPageSize));
+  if (window.adminUserPage > totalPages) window.adminUserPage = totalPages;
+  if (window.adminUserPage < 1) window.adminUserPage = 1;
+
+  const startIndex = (window.adminUserPage - 1) * window.adminUserPageSize;
+  const endIndex = Math.min(startIndex + window.adminUserPageSize, filtered.length);
+  const pageUsers = filtered.slice(startIndex, endIndex);
+
+  const pageInfoEl = document.getElementById('acc-users-page-info');
+  const curPageEl = document.getElementById('acc-user-current-page');
+  const prevBtn = document.getElementById('acc-user-prev-btn');
+  const nextBtn = document.getElementById('acc-user-next-btn');
+
+  if (pageInfoEl) {
+    if (filtered.length === 0) {
+      pageInfoEl.textContent = 'Không tìm thấy thành viên nào';
+    } else {
+      pageInfoEl.textContent = `Hiển thị ${(startIndex + 1).toLocaleString('vi-VN')} - ${endIndex.toLocaleString('vi-VN')} / ${filtered.length.toLocaleString('vi-VN')} thành viên`;
+    }
+  }
+  if (curPageEl) curPageEl.textContent = `Trang ${window.adminUserPage} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = window.adminUserPage <= 1;
+  if (nextBtn) nextBtn.disabled = window.adminUserPage >= totalPages;
+
+  if (pageUsers.length === 0) {
+    usersTbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-500 font-sans">Không tìm thấy người dùng phù hợp với bộ lọc.</td></tr>';
+    return;
+  }
+
+  usersTbody.innerHTML = pageUsers.map((u, idx) => {
+    const globalIndex = startIndex + idx + 1;
+    const emailLower = (u.email || '').toLowerCase();
+    const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false, badgeText: 'DÙNG THỬ 14 NGÀY' };
+
+    const roleBadge = isUAdmin
+      ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 ADMIN</span>'
+      : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]">👤 USER</span>';
+
+    let subBadge = '';
+    if (sub.status === 'LIFETIME' || isUAdmin) {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 VIP VĨNH VIỄN</span>';
+    } else if (sub.isExpired) {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px]">🔒 HẾT HẠN</span>';
+    } else if (sub.status === 'ACTIVE') {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px]">✨ GÓI VIP 30N</span>';
+    } else {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px]">⏱️ DÙNG THỬ 14N</span>';
+    }
+
+    let remainStr = '';
+    if (sub.status === 'LIFETIME' || isUAdmin) {
+      remainStr = '<span class="text-emerald-400 font-bold">Không giới hạn</span>';
+    } else if (sub.isExpired) {
+      remainStr = '<span class="text-rose-400 font-bold">Đã hết hạn!</span>';
+    } else {
+      remainStr = `<span class="text-amber-300 font-bold">Còn ${sub.daysRemaining != null ? sub.daysRemaining : 14} ngày</span>`;
+    }
+
+    return `
+      <tr class="hover:bg-slate-900/60 transition">
+        <td class="py-2.5 px-3 text-slate-500">${globalIndex}</td>
+        <td class="py-2.5 px-3">
+          <div class="font-bold text-white text-xs">${u.name || 'Trader'}</div>
+          <div class="text-amber-300/90 text-[11px] font-mono">${u.email}</div>
+        </td>
+        <td class="py-2.5 px-3">${roleBadge}</td>
+        <td class="py-2.5 px-3">${subBadge}</td>
+        <td class="py-2.5 px-3">${remainStr}</td>
+        <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+          <button onclick="accountAdminExtendUser('${u.email}', 30)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 30 ngày (1 tháng)">
+            +30 Ngày
+          </button>
+          <button onclick="accountAdminExtendUser('${u.email}', 60)" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 60 ngày">
+            +60 Ngày
+          </button>
+          <button onclick="accountAdminExtendUser('${u.email}', 0, true)" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-bold text-[10px] transition cursor-pointer" title="Cấp quyền VIP Vĩnh Viễn">
+            Vĩnh Viễn
+          </button>
+          <button onclick="accountAdminToggleRole('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer" title="Đổi quyền Admin/User">
+            ${isUAdmin ? '⬇️ USER' : '👑 ADMIN'}
+          </button>
+          <button onclick="accountAdminDeleteUser('${u.email}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition cursor-pointer" title="Xóa tài khoản">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 };
 
 window.refreshAccountAdminData = async function() {
