@@ -1666,39 +1666,50 @@
             </div>
           </div>
 
-          <!-- Time Period Filter Bar -->
-          <div class="px-3 sm:px-5 py-2 bg-[#0d1117]/80 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2 shrink-0">
-            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto py-0.5 touch-pan-x">
-              <span class="text-xs font-bold text-slate-400 mr-1 shrink-0 flex items-center gap-1">📅 Thời Gian:</span>
-              <button onclick="if(window.app) window.app.setHistoryFilter('today')" id="hist-filter-today" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 cursor-pointer">⚡ Hôm Nay</button>
-              <button onclick="if(window.app) window.app.setHistoryFilter('7d')" id="hist-filter-7d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">7 Ngày</button>
-              <button onclick="if(window.app) window.app.setHistoryFilter('30d')" id="hist-filter-30d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">30 Ngày</button>
-              <button onclick="if(window.app) window.app.setHistoryFilter('60d')" id="hist-filter-60d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">60 Ngày</button>
-              <button onclick="if(window.app) window.app.setHistoryFilter('90d')" id="hist-filter-90d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">90 Ngày</button>
-              <button onclick="if(window.app) window.app.setHistoryFilter('all')" id="hist-filter-all" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Toàn Bộ</button>
-              
-              <!-- Date Picker Chọn Ngày Cụ Thể -->
-              <div class="flex items-center gap-1 bg-slate-800/90 border border-slate-700/80 px-2 py-0.5 rounded-lg shrink-0">
-                <span class="text-[11px] text-amber-400 font-bold">📆 Chọn:</span>
-                <input type="date" id="hist-custom-datepicker" onchange="if(window.app) window.app.setHistoryDateFilter(this.value)" class="bg-slate-900 border border-slate-700 text-[11px] text-amber-300 font-mono rounded px-1.5 py-0.5 focus:outline-none focus:border-amber-400 cursor-pointer">
-                <button onclick="if(window.app) window.app.clearHistoryDateFilter()" class="text-[10px] text-slate-400 hover:text-rose-400 px-1 font-bold transition" title="Xóa lọc ngày">✕</button>
+              <!-- Time Period Filter Bar -->
+              <div class="px-3 sm:px-5 py-2 bg-[#0d1117]/80 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2 shrink-0">
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto py-0.5 touch-pan-x">
+                  <span class="text-xs font-bold text-slate-400 mr-1 shrink-0 flex items-center gap-1">📅 Thời Gian:</span>
+                  <button onclick="if(window.app) window.app.setHistoryFilter('today')" id="hist-filter-today" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 cursor-pointer">⚡ Hôm Nay</button>
+                  <button onclick="if(window.app) window.app.setHistoryFilter('7d')" id="hist-filter-7d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">7 Ngày</button>
+                  <button onclick="if(window.app) window.app.setHistoryFilter('30d')" id="hist-filter-30d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">30 Ngày</button>
+                  <button onclick="if(window.app) window.app.setHistoryFilter('60d')" id="hist-filter-60d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">60 Ngày</button>
+                  <button onclick="if(window.app) window.app.setHistoryFilter('90d')" id="hist-filter-90d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">90 Ngày</button>
+                  <button onclick="if(window.app) window.app.setHistoryFilter('all')" id="hist-filter-all" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Toàn Bộ (1.626+)</button>
+                  
+                  <!-- Date Picker Chọn Ngày Cụ Thể -->
+                  <div class="flex items-center gap-1 bg-slate-800/90 border border-slate-700/80 px-2 py-0.5 rounded-lg shrink-0">
+                    <span class="text-[11px] text-amber-400 font-bold">📆 Chọn:</span>
+                    <input type="date" id="hist-custom-datepicker" onchange="if(window.app) window.app.setHistoryDateFilter(this.value)" class="bg-slate-900 border border-slate-700 text-[11px] text-amber-300 font-mono rounded px-1.5 py-0.5 focus:outline-none focus:border-amber-400 cursor-pointer">
+                    <button onclick="if(window.app) window.app.clearHistoryDateFilter()" class="text-[10px] text-slate-400 hover:text-rose-400 px-1 font-bold transition" title="Xóa lọc ngày">✕</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 3. THANH CÔNG CỤ DANH SÁCH LỆNH & NÚT CHUYỂN DẠNG XEM (THẺ LỆNH / BẢNG 11 CỘT) -->
-      <div class="px-3 sm:px-5 py-2.5 bg-[#0a1b14] border-b border-slate-800 flex items-center justify-between flex-wrap gap-2 shrink-0">
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-black text-white flex items-center gap-1.5">
-            <span>📋</span> DANH SÁCH LỆNH VÀO:
-          </span>
-          <span id="hist-order-count-badge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono font-bold">
-            0 Lệnh
-          </span>
-          <span class="text-[10px] text-slate-400 font-mono hidden sm:inline">• Khung giờ 06:00 - 24:00</span>
-        </div>
+          <!-- Banner Hướng Dẫn Bộ Lọc Khi Đang Xem Hôm Nay -->
+          <div id="hist-filter-hint-banner" class="mx-3 sm:mx-5 mt-2.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between flex-wrap gap-2 text-xs">
+            <div class="flex items-center gap-2 text-amber-300 font-sans">
+              <span>💡</span>
+              <span>Lịch sử <strong>1.626+ lệnh</strong> vẫn được lưu trữ đầy đủ. Bạn đang chọn bộ lọc <strong>Hôm Nay</strong> nên danh sách chỉ hiển thị các lệnh của ngày hôm nay. Bấm nút <strong>[Toàn Bộ (1.626+)]</strong> hoặc <strong>[7 Ngày]</strong> để xem toàn bộ lịch sử các ngày trước.</span>
+            </div>
+            <button onclick="if(window.app) window.app.setHistoryFilter('all')" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] shadow hover:bg-amber-400 transition cursor-pointer shrink-0">
+              Xem Toàn Bộ 1.626 Lệnh ➔
+            </button>
+          </div>
+
+          <!-- 3. THANH CÔNG CỤ DANH SÁCH LỆNH & NÚT CHUYỂN DẠNG XEM (THẺ LỆNH / BẢNG 11 CỘT) -->
+          <div class="px-3 sm:px-5 py-2.5 bg-[#0a1b14] border-b border-slate-800 flex items-center justify-between flex-wrap gap-2 shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black text-white flex items-center gap-1.5">
+                <span>📋</span> DANH SÁCH LỆNH VÀO:
+              </span>
+              <span id="hist-order-count-badge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono font-bold">
+                0 Lệnh
+              </span>
+              <span class="text-[10px] text-slate-400 font-mono hidden sm:inline">• Khung giờ 06:00 - 24:00</span>
+            </div>
 
         <!-- Chuyển đổi hiển thị: Dạng Thẻ (Gọn gàng cho Mobile) vs Dạng Bảng 11 Cột -->
         <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-700/80">

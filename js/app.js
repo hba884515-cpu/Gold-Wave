@@ -2085,6 +2085,31 @@ class GoldTradingApp {
         : `Đang xem: [${activeAssetName}] ${labelText} (${signals.length} tín hiệu)`;
     }
 
+    // Cập nhật số lượng lệnh lên nút Toàn Bộ
+    const btnAll = document.getElementById('hist-filter-all');
+    if (btnAll) {
+      btnAll.textContent = `Toàn Bộ (${filteredByAsset.length.toLocaleString('en-US')})`;
+    }
+
+    // Cập nhật Banner hướng dẫn bộ lọc
+    const hintBanner = document.getElementById('hist-filter-hint-banner');
+    if (hintBanner) {
+      if (filterKey === 'today') {
+        hintBanner.classList.remove('hidden');
+        hintBanner.innerHTML = `
+          <div class="flex items-center gap-2 text-amber-300 font-sans">
+            <span>💡</span>
+            <span>Bạn đang chọn xem các lệnh phát sinh trong <strong>Hôm Nay (${signals.length} lệnh)</strong>. Toàn bộ <strong>${filteredByAsset.length.toLocaleString('en-US')} lệnh lịch sử</strong> từ trước đến nay vẫn được bảo toàn nguyên vẹn trong hệ thống.</span>
+          </div>
+          <button onclick="if(window.app) window.app.setHistoryFilter('all')" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] shadow hover:bg-amber-400 transition cursor-pointer shrink-0">
+            Xem Toàn Bộ ${filteredByAsset.length.toLocaleString('en-US')} Lệnh ➔
+          </button>
+        `;
+      } else {
+        hintBanner.classList.add('hidden');
+      }
+    }
+
     // Calculate Summary KPIs
     const totalSignals = signals.length;
     const buyCount = signals.filter(s => s.type === 'BUY').length;
