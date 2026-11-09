@@ -4912,9 +4912,9 @@ window.updateSubscriptionBadgeUI = function() {
 
   if (isAdmin) {
     badgeEl.classList.remove('hidden');
-    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[10px] sm:text-[11px] font-bold text-emerald-300 cursor-pointer hover:bg-emerald-500/20 transition shadow-sm';
+    badgeEl.className = 'flex items-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[10px] sm:text-[11px] font-bold text-emerald-300 cursor-pointer hover:bg-emerald-500/20 transition shadow-sm flex-shrink-0';
     if (iconEl) iconEl.textContent = '👑';
-    if (textEl) textEl.textContent = 'ADMIN VIP';
+    if (textEl) textEl.innerHTML = '<span class="hidden sm:inline">ADMIN </span>VIP';
     return;
   }
 
@@ -4937,17 +4937,17 @@ window.updateSubscriptionBadgeUI = function() {
 
   badgeEl.classList.remove('hidden');
   if (sub.isExpired) {
-    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-[10px] sm:text-[11px] font-bold text-rose-300 cursor-pointer hover:bg-rose-500/20 transition animate-pulse shadow-sm';
+    badgeEl.className = 'flex items-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-rose-500/10 border border-rose-500/30 text-[10px] sm:text-[11px] font-bold text-rose-300 cursor-pointer hover:bg-rose-500/20 transition animate-pulse shadow-sm flex-shrink-0';
     if (iconEl) iconEl.textContent = '🔒';
-    if (textEl) textEl.textContent = 'Hết hạn dùng thử';
+    if (textEl) textEl.innerHTML = '<span class="hidden sm:inline">Hết hạn </span>Hết hạn';
   } else if (sub.status === 'ACTIVE') {
-    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[10px] sm:text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition shadow-sm';
+    badgeEl.className = 'flex items-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-amber-500/10 border border-amber-500/30 text-[10px] sm:text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition shadow-sm flex-shrink-0';
     if (iconEl) iconEl.textContent = '✨';
-    if (textEl) textEl.textContent = `VIP: Còn ${sub.daysRemaining} ngày`;
+    if (textEl) textEl.innerHTML = `<span class="hidden sm:inline">VIP: Còn </span>${sub.daysRemaining}N`;
   } else {
-    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[10px] sm:text-[11px] font-bold text-sky-300 cursor-pointer hover:bg-sky-500/20 transition shadow-sm';
+    badgeEl.className = 'flex items-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-sky-500/10 border border-sky-500/30 text-[10px] sm:text-[11px] font-bold text-sky-300 cursor-pointer hover:bg-sky-500/20 transition shadow-sm flex-shrink-0';
     if (iconEl) iconEl.textContent = '⏱️';
-    if (textEl) textEl.textContent = `Dùng thử: Còn ${sub.daysRemaining} ngày`;
+    if (textEl) textEl.innerHTML = `<span class="hidden sm:inline">Dùng thử: </span>${sub.daysRemaining}N`;
   }
 };
 
