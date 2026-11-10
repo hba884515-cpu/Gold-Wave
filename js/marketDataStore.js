@@ -9,12 +9,12 @@ class MarketDataStore {
     this.symbol = 'XAU/USD';
     this.source = 'TVC:GOLD';
     this.timezone = 'Asia/Ho_Chi_Minh';
-    this.currentPrice = 4097.20;
-    this.prevPrice = 4064.14;
-    this.priceChange = 33.06;
-    this.priceChangePercent = 0.81;
-    this.high = 4146.92;
-    this.low = 4057.83;
+    this.currentPrice = 4048.90;
+    this.prevPrice = 4050.10;
+    this.priceChange = -86.50;
+    this.priceChangePercent = -2.09;
+    this.high = 4146.74;
+    this.low = 4033.91;
     this.currentTimeframe = '15m';
     this.connectionStatus = this.isGoldMarketOpen() ? 'LIVE' : 'CLOSED';
     this.lastUpdate = Date.now();
@@ -27,12 +27,12 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 4097.20,
-        prevPrice: 4064.14,
-        change: 33.06,
-        changePercent: 0.81,
-        high: 4146.92,
-        low: 4057.83,
+        price: 4048.90,
+        prevPrice: 4050.10,
+        change: -86.50,
+        changePercent: -2.09,
+        high: 4146.74,
+        low: 4033.91,
         icon: '🪙',
         tag: 'GOLD'
       },
@@ -40,12 +40,12 @@ class MarketDataStore {
         symbol: 'BTC/USD',
         name: 'Bitcoin (Crypto)',
         source: 'BINANCE:BTCUSDT',
-        price: 77028.00,
-        prevPrice: 78013.63,
-        change: -985.62,
-        changePercent: -1.26,
-        high: 78254.17,
-        low: 76388.88,
+        price: 73974.00,
+        prevPrice: 75257.00,
+        change: -1288.00,
+        changePercent: -1.71,
+        high: 75340.00,
+        low: 73400.00,
         icon: '₿',
         tag: 'CRYPTO'
       },
@@ -53,12 +53,12 @@ class MarketDataStore {
         symbol: 'XAG/USD',
         name: 'Bạc Thế Giới',
         source: 'TVC:SILVER',
-        price: 49.05,
-        prevPrice: 52.14,
-        change: -3.09,
-        changePercent: -5.93,
-        high: 51.27,
-        low: 48.95,
+        price: 52.10,
+        prevPrice: 53.38,
+        change: -1.28,
+        changePercent: -2.40,
+        high: 53.72,
+        low: 51.47,
         icon: '🥈',
         tag: 'SILVER'
       }
@@ -479,10 +479,11 @@ class MarketDataStore {
 
       try {
         // Query đồng thời CFD (Gold, Silver) và Crypto (BTC)
+        // Dùng 'text/plain' để tránh CORS OPTIONS preflight theo chuẩn CORS safelisted headers
         const [cfdRes, cryptoRes] = await Promise.all([
           fetch('https://scanner.tradingview.com/cfd/scan', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
               symbols: { tickers: ['TVC:GOLD', 'OANDA:XAUUSD', 'TVC:SILVER'] },
               columns: ['close', 'change', 'change_abs', 'high', 'low', 'open']
@@ -490,7 +491,7 @@ class MarketDataStore {
           }).catch(() => null),
           fetch('https://scanner.tradingview.com/crypto/scan', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
               symbols: { tickers: ['BINANCE:BTCUSDT'] },
               columns: ['close', 'change', 'change_abs', 'high', 'low', 'open']
@@ -501,7 +502,14 @@ class MarketDataStore {
         if (cfdRes && cfdRes.ok) {
           const cfdJson = await cfdRes.json();
           if (cfdJson && Array.isArray(cfdJson.data)) {
-            cfdJson.data.forEach(item => {
+            // Sắp xếp ưu tiên TVC:GOLD lên trước OANDA:XAUUSD
+            const sortedItems = [...cfdJson.data].sort((a, b) => {
+              if (a?.s === 'TVC:GOLD') return -1;
+              if (b?.s === 'TVC:GOLD') return 1;
+              return 0;
+            });
+
+            sortedItems.forEach(item => {
               if (!item || !item.s || !Array.isArray(item.d) || item.d.length < 5) return;
               const close = parseFloat(item.d[0]);
               const chgPct = parseFloat(item.d[1]);
@@ -510,7 +518,7 @@ class MarketDataStore {
               const low = parseFloat(item.d[4]);
               if (isNaN(close) || close <= 0) return;
 
-              if (item.s.includes('GOLD') || item.s.includes('XAUUSD')) {
+              if (item.s === 'TVC:GOLD' || (!tickSuccess && (item.s.includes('GOLD') || item.s.includes('XAUUSD')))) {
                 this.assetsData['XAU'].price = +close.toFixed(2);
                 this.assetsData['XAU'].change = +chgAbs.toFixed(2);
                 this.assetsData['XAU'].changePercent = +chgPct.toFixed(2);
@@ -672,8 +680,9 @@ class MarketDataStore {
       isFetchingProxy = false;
     };
 
-    // Chạy tức thì lần đầu
+    // Chạy tức thì lần đầu đồng thời cả Direct Edge và Server Proxy
     fetchDirectTradingViewTicks();
+    fetchProxyFallback();
 
     // Vòng lặp tick siêu tốc: 800ms / lần từ TradingView Scanner
     setInterval(fetchDirectTradingViewTicks, 800);

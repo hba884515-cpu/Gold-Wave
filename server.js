@@ -3105,13 +3105,18 @@ const server = http.createServer(async (req, res) => {
     let relativePath = urlPath === '/' ? '/index.html' : urlPath;
     let safePath = path.normalize(relativePath).replace(/^(\.\.[\/\\])+/, '');
     let filePath = path.join(__dirname, safePath);
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    // Siêu tốc: Phục vụ từ RAM cache nếu đã nạp
-    if (global._staticMemCache && global._staticMemCache.has(filePath)) {
+    const isCodeFile = ext === '.js' || ext === '.css' || ext === '.html' || ext === '.json';
+    const cacheHeader = isCodeFile ? 'no-cache, no-store, must-revalidate' : 'public, max-age=86400';
+
+    // Phục vụ từ RAM cache nếu đã nạp (ngoại trừ code files để luôn tải mới nhất)
+    if (!isCodeFile && global._staticMemCache && global._staticMemCache.has(filePath)) {
       const cached = global._staticMemCache.get(filePath);
       res.writeHead(200, {
         'Content-Type': cached.contentType,
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': cacheHeader,
         'Content-Length': cached.buffer.length
       });
       return res.end(cached.buffer);
@@ -3122,17 +3127,17 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
         return res.end('<h1>404 - Không tìm thấy trang</h1>');
       }
-      const ext = path.extname(filePath).toLowerCase();
-      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-      if (!global._staticMemCache) global._staticMemCache = new Map();
-      if (data.length < 5 * 1024 * 1024) {
-        global._staticMemCache.set(filePath, { contentType, buffer: data });
+      if (!isCodeFile) {
+        if (!global._staticMemCache) global._staticMemCache = new Map();
+        if (data.length < 5 * 1024 * 1024) {
+          global._staticMemCache.set(filePath, { contentType, buffer: data });
+        }
       }
 
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': cacheHeader,
         'Content-Length': data.length
       });
       res.end(data);
