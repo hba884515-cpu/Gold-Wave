@@ -1076,6 +1076,10 @@
           <span class="text-[9px] text-violet-400 font-medium">BREAKOUT</span>
           <div id="v8-card-breakout" class="text-[11px] font-black text-slate-300">AN TOÀN 🛡️</div>
         </div>
+        <div class="v8-card-mini cursor-pointer hover:border-indigo-500/50 transition" onclick="switchView('trend')" title="Module 05: MTF Conflict Detector — Nhấp để xem phân tích đa khung thời gian">
+          <span class="text-[9px] text-indigo-400 font-medium">MTF ALIGN</span>
+          <div id="v8-card-mtf" class="text-[11px] font-black text-slate-300">ĐỒNG THUẬN ⚡</div>
+        </div>
         <div class="v8-card-mini border-l border-amber-500/30 pl-3 ml-2" style="min-width:180px;">
           <span class="text-[9px] text-amber-400 font-bold">Thị trường Vàng Hàng Hải (US$/OZ)</span>
           <div id="v8-card-spread-val" class="text-[9px] text-slate-500">Phân tích MA WAVE V8</div>
@@ -4245,6 +4249,181 @@
           </div>
         </div>
 
+        <!-- ========================================================================== -->
+        <!--  MODULE 05: MTF CONFLICT DETECTOR (MA WAVE MARKET INTELLIGENCE)            -->
+        <!-- ========================================================================== -->
+        <div id="module-05-mtf-panel" class="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-[#0c162d]/90 via-slate-900/95 to-[#0f1d38]/90 border border-indigo-500/30 shadow-2xl space-y-4 relative overflow-hidden backdrop-blur-md">
+          <div class="absolute -right-16 -top-16 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <!-- Header & Controls -->
+          <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-800/80 pb-3 relative z-10">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 text-slate-950 font-black flex items-center justify-center text-base shadow-lg shadow-indigo-500/30 shrink-0">
+                🌐
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-black text-white tracking-wide flex items-center gap-1.5 uppercase font-sans">
+                    MODULE 05: MTF CONFLICT DETECTOR
+                  </h3>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    OBSERVE-ONLY
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400 font-sans">
+                  Đồng thuận & Xung đột đa khung thời gian (5M • 15M • 30M • 1H) • Độc lập V8 Core
+                </p>
+              </div>
+            </div>
+
+            <!-- Controls: Asset Badge & Toggle Bật/Tắt -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Asset badge -->
+              <span id="mod05-asset-badge" class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-slate-800 border border-slate-700 text-amber-300 font-mono">
+                XAU/USD
+              </span>
+
+              <!-- Status Toggle -->
+              <button type="button" onclick="app.toggleMTFConflictDetector()" id="btn-toggle-mod05" class="px-3 py-1 rounded-xl text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                <span id="mod05-toggle-text">BẬT (OBSERVE)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Status Summary Grid (8 Factors + MTF Alignment Score) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 relative z-10 text-xs">
+            
+            <!-- 1. Trạng Thái MTF Alignment -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">TRẠNG THÁI MTF</span>
+              <div id="mod05-status-val" class="font-black text-slate-300 text-xs truncate">
+                ĐỒNG THUẬN MTF
+              </div>
+              <span id="mod05-status-sub" class="text-[9px] text-slate-400 block font-sans truncate">4/4 Khung</span>
+            </div>
+
+            <!-- 2. Điểm Đồng Thuận (Score 0-100) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">ĐIỂM ĐỒNG THUẬN</span>
+                <span id="mod05-score-val" class="text-[10px] font-mono font-black text-slate-400">50/100</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div id="mod05-score-bar" class="bg-gradient-to-r from-indigo-500 to-cyan-400 h-full rounded-full transition-all duration-500" style="width: 50%;"></div>
+              </div>
+              <span id="mod05-score-sub" class="text-[9px] text-slate-400 block font-sans truncate">Độ liên kết</span>
+            </div>
+
+            <!-- 3. Xung Đột Hướng (Direction Conflict) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">XUNG ĐỘT HƯỚNG</span>
+              <div id="mod05-conflict-val" class="font-bold text-emerald-400 text-xs truncate">
+                KHÔNG XUNG ĐỘT 🛡️
+              </div>
+              <span id="mod05-conflict-sub" class="text-[9px] text-slate-400 block font-sans truncate">Cùng hướng</span>
+            </div>
+
+            <!-- 4. Ngắn Hạn (5M) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">NGẮN HẠN (5M)</span>
+              <div id="mod05-short-val" class="font-bold text-slate-300 text-xs truncate">
+                SIDEWAY ⚪
+              </div>
+              <span id="mod05-short-sub" class="text-[9px] text-slate-400 block font-sans truncate">Nhịp vi mô</span>
+            </div>
+
+            <!-- 5. Trung Hạn (15M / 30M) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">TRUNG HẠN (15M-30M)</span>
+              <div id="mod05-mid-val" class="font-bold text-slate-300 text-xs truncate">
+                SIDEWAY ⚪
+              </div>
+              <span id="mod05-mid-sub" class="text-[9px] text-slate-400 block font-sans truncate">Cấu trúc nền</span>
+            </div>
+
+            <!-- 6. Dài Hạn (1H / 4H) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">DÀI HẠN (HTF 1H)</span>
+              <div id="mod05-htf-val" class="font-bold text-slate-300 text-xs truncate">
+                SIDEWAY ⚪
+              </div>
+              <span id="mod05-htf-sub" class="text-[9px] text-slate-400 block font-sans truncate">Sóng chủ</span>
+            </div>
+
+            <!-- 7. Xác Nhận Nến HTF (Confirmed vs Live) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">XÁC NHẬN NẾN HTF</span>
+              <div id="mod05-confirm-val" class="font-bold text-cyan-400 text-xs truncate">
+                CONFIRMED 🔒
+              </div>
+              <span id="mod05-confirm-sub" class="text-[9px] text-slate-400 block font-sans truncate">Nến đóng</span>
+            </div>
+
+            <!-- 8. Toàn Vẹn Dữ Liệu -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">TOÀN VẸN DATA</span>
+              <div id="mod05-complete-val" class="font-bold text-emerald-400 text-xs truncate">
+                ĐẦY ĐỦ (4/4) ✅
+              </div>
+              <span id="mod05-complete-sub" class="text-[9px] text-slate-400 block font-sans truncate">Đồng bộ chuẩn</span>
+            </div>
+
+          </div>
+
+          <!-- Timeframe Matrix Table (Bảng MTF chi tiết từng khung giờ) -->
+          <div class="overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/60 p-1 relative z-10">
+            <table class="w-full text-left text-xs font-mono">
+              <thead>
+                <tr class="text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800/80 bg-slate-900/50">
+                  <th class="py-2 px-3 font-bold font-sans">TIMEFRAME</th>
+                  <th class="py-2 px-3 font-bold font-sans">VAI TRÒ</th>
+                  <th class="py-2 px-3 font-bold font-sans">XU HƯỚNG</th>
+                  <th class="py-2 px-3 font-bold font-sans">EMA20 / EMA50</th>
+                  <th class="py-2 px-3 font-bold font-sans">SPREAD (ATR)</th>
+                  <th class="py-2 px-3 font-bold font-sans">ĐỘNG LƯỢNG</th>
+                  <th class="py-2 px-3 font-bold font-sans">CẤU TRÚC</th>
+                  <th class="py-2 px-3 font-bold font-sans">TRẠNG THÁI</th>
+                  <th class="py-2 px-3 font-bold font-sans">GIÁ CLOSE</th>
+                </tr>
+              </thead>
+              <tbody id="mod05-table-body" class="divide-y divide-slate-800/40 text-[11px]">
+                <!-- Rows populated dynamically via app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Warning Reason Banner & Objective Advice -->
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 space-y-2 relative z-10 text-xs">
+            <div class="flex items-start gap-2.5">
+              <div id="mod05-banner-icon" class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5">
+                🌐
+              </div>
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center justify-between flex-wrap gap-1">
+                  <span class="text-[10px] uppercase font-bold text-slate-400 font-sans">ĐÁNH GIÁ ĐỒNG THUẬN ĐA KHUNG (MTF ALIGNMENT):</span>
+                  <div class="flex items-center gap-2">
+                    <span id="mod05-warning-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-bold">CẢNH BÁO: KHÔNG</span>
+                    <span id="mod05-align-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-emerald-400">ĐỒNG THUẬN: CAO</span>
+                    <span id="mod05-candle-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">HTF CONFIRMED</span>
+                  </div>
+                </div>
+                <p id="mod05-reason-text" class="text-slate-300 leading-relaxed font-sans text-xs">
+                  Đang phân tích sự đồng thuận và xung đột đa khung: 5M (Ngắn hạn), 15M (Nền tảng), 30M (Trung hạn) và 1H (Khung lớn)...
+                </p>
+              </div>
+            </div>
+
+            <!-- Objective Advice Notice (Nguyên tắc khách quan: MTF alignment không phải xác suất thắng, không khẳng định giá chắc chắn đi tiếp) -->
+            <div class="pt-2 border-t border-slate-800/60 flex items-start gap-2 text-[11px] text-slate-400 leading-relaxed font-sans">
+              <span class="text-indigo-400 font-bold shrink-0">💡 KHUYẾN NGHỊ:</span>
+              <span id="mod05-advice-text">
+                MTF Alignment (đồng thuận đa khung) là điều kiện thuận lợi hỗ trợ vào lệnh nhưng tuyệt đối không đồng nghĩa với xác suất thắng 100%. Khi có xung đột khung ngắn ngược khung lớn, nguy cơ dính bẫy giá là rất cao. Luôn tuân thủ SL/TP cố định.
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- PANE 1: VÀNG XAU/USD -->
         <div id="trend-content-xau" class="space-y-5">
 
@@ -6792,6 +6971,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 <script src="./js/trendExhaustionDetector.js?v=8.1"></script>
 <script src="./js/pullbackQualityDetector.js?v=8.1"></script>
 <script src="./js/falseBreakoutDetector.js?v=8.1"></script>
+<script src="./js/mtfConflictDetector.js?v=8.1"></script>
 <script src="./js/app.js?v=8.0"></script>
 
 
