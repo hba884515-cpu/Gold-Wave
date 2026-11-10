@@ -1131,6 +1131,9 @@ class GoldTradingApp {
     // Cập nhật Module 03: Pullback Quality Detector
     this.updatePullbackQualityDetectorUI();
 
+    // Cập nhật Module 04: False Breakout Detector
+    this.updateFalseBreakoutDetectorUI();
+
     // Cập nhật Small On-Chart Dashboard (Section 12)
     const mTrend = document.getElementById('mini-dash-trend');
     const mWave = document.getElementById('mini-dash-wave');
@@ -2648,6 +2651,9 @@ class GoldTradingApp {
 
     // Cập nhật MODULE 03: PULLBACK QUALITY DETECTOR (MA WAVE V8 PRO)
     this.updatePullbackQualityDetectorUI();
+
+    // Cập nhật MODULE 04: FALSE BREAKOUT DETECTOR (MA WAVE V8 PRO)
+    this.updateFalseBreakoutDetectorUI();
   }
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -3351,6 +3357,271 @@ class GoldTradingApp {
       } else {
         bannerIcon.textContent = '💎';
         bannerIcon.className = 'w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // MODULE 04: FALSE BREAKOUT DETECTOR (MA WAVE V8 PRO) — OBSERVE ONLY
+  // ════════════════════════════════════════════════════════════════════════════
+  toggleFalseBreakoutDetector() {
+    if (!window.falseBreakoutDetector) return;
+    const newState = window.falseBreakoutDetector.toggle();
+    const toggleText = document.getElementById('mod04-toggle-text');
+    const toggleBtn = document.getElementById('btn-toggle-mod04');
+    if (toggleText) {
+      toggleText.textContent = newState ? 'BẬT (OBSERVE)' : 'TẮT (PAUSED)';
+    }
+    if (toggleBtn) {
+      toggleBtn.className = newState
+        ? 'px-3 py-1 rounded-xl text-[10px] font-black bg-violet-500/20 text-violet-300 border border-violet-500/40 hover:bg-violet-500/30 transition cursor-pointer flex items-center gap-1.5 shadow-sm'
+        : 'px-3 py-1 rounded-xl text-[10px] font-black bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-sm';
+    }
+    this.updateFalseBreakoutDetectorUI();
+  }
+
+  changeBreakoutTF(tf) {
+    this.breakoutTF = tf;
+    this.updateFalseBreakoutDetectorUI();
+  }
+
+  updateFalseBreakoutDetectorUI() {
+    if (!window.falseBreakoutDetector) return;
+
+    const activeAsset = window.currentTrendAsset || (this.currentSymbol ? (this.currentSymbol.includes('BTC') ? 'btc' : (this.currentSymbol.includes('SILVER') || this.currentSymbol.includes('XAG')) ? 'xag' : 'xau') : 'xau');
+    const tf = this.breakoutTF || this.currentTimeframe || '15m';
+
+    // Cập nhật nút timeframe active
+    ['5m', '15m', '30m', '1h', '4h'].forEach(t => {
+      const btn = document.getElementById(`btn-breakout-tf-${t}`);
+      if (btn) {
+        if (t === tf) {
+          btn.className = 'px-2 py-1 rounded-lg bg-violet-500 text-slate-950 font-bold shadow';
+        } else {
+          btn.className = 'px-2 py-1 rounded-lg text-slate-400 hover:text-white transition';
+        }
+      }
+    });
+
+    const assetBadge = document.getElementById('mod04-asset-badge');
+    if (assetBadge) {
+      assetBadge.textContent = activeAsset === 'btc' ? 'BTC/USD' : activeAsset === 'xag' ? 'XAG/USD (BẠC)' : 'XAU/USD (VÀNG)';
+    }
+
+    // Lấy chuỗi nến OHLC thực tế từ MarketDataStore
+    let bars = null;
+    if (window.marketDataStore && typeof window.marketDataStore.getBars === 'function') {
+      bars = window.marketDataStore.getBars(tf);
+    }
+    if ((!bars || !bars.length) && this.bars && this.bars.length) {
+      bars = this.bars;
+    }
+
+    // Giá hiện tại theo mã tài sản
+    let currentPrice = 0;
+    if (window.marketDataStore && window.marketDataStore.assetsData) {
+      const assetKey = activeAsset.toUpperCase();
+      if (window.marketDataStore.assetsData[assetKey]) {
+        currentPrice = window.marketDataStore.assetsData[assetKey].price;
+      }
+    }
+    if (!currentPrice || isNaN(currentPrice)) {
+      currentPrice = this.currentPrice || 0;
+    }
+
+    // Thực hiện phân tích thuần túy (Read-Only Observer)
+    const analysis = window.falseBreakoutDetector.analyze(bars, {
+      timeframe: tf,
+      isBarClosed: false,
+      asset: activeAsset,
+      livePrice: currentPrice
+    });
+
+    // 1. CẬP NHẬT MINI CARD TRÊN V8 DASHBOARD STRIP (#v8-card-breakout)
+    const cardMini = document.getElementById('v8-card-breakout');
+    if (cardMini) {
+      if (analysis.status === 'DISABLED') {
+        cardMini.textContent = 'TẮT ⏸️';
+        cardMini.className = 'text-[11px] font-bold text-slate-500';
+      } else if (analysis.status === 'CONFIRMED_BREAKOUT') {
+        cardMini.textContent = analysis.direction === 'BULLISH' ? 'BREAKOUT 🚀' : 'BREAKDOWN 💥';
+        cardMini.className = analysis.direction === 'BULLISH' ? 'text-[11px] font-black text-emerald-400' : 'text-[11px] font-black text-rose-400';
+      } else if (analysis.status === 'FAILED_BREAKOUT_CONFIRMED') {
+        cardMini.textContent = 'BẪY GIÁ 🚨';
+        cardMini.className = 'text-[11px] font-black text-rose-400 animate-pulse';
+      } else if (analysis.status === 'FAILED_BREAKOUT_WARNING' || analysis.warning === 'BREAKOUT_WEAKNESS') {
+        cardMini.textContent = 'CẢNH BÁO ⚠️';
+        cardMini.className = 'text-[11px] font-black text-amber-400';
+      } else if (analysis.status === 'WICK_BREAKOUT') {
+        cardMini.textContent = 'RÂU QUÉT ⚡';
+        cardMini.className = 'text-[11px] font-bold text-yellow-300';
+      } else if (analysis.status === 'BREAKOUT_RETEST') {
+        cardMini.textContent = 'RETEST 🔄';
+        cardMini.className = 'text-[11px] font-black text-cyan-400';
+      } else if (analysis.status === 'BREAKOUT_PENDING') {
+        cardMini.textContent = 'CHỜ ĐÓNG ⏳';
+        cardMini.className = 'text-[11px] font-bold text-violet-300';
+      } else if (analysis.status === 'NO_BREAKOUT') {
+        cardMini.textContent = 'AN TOÀN 🛡️';
+        cardMini.className = 'text-[11px] font-bold text-slate-300';
+      } else {
+        cardMini.textContent = 'CHỜ ⏳';
+        cardMini.className = 'text-[11px] font-bold text-slate-400';
+      }
+    }
+
+    // 2. CẬP NHẬT PANEL CHI TIẾT TRONG MA WAVE MARKET INTELLIGENCE
+    const statusVal = document.getElementById('mod04-status-val');
+    const statusSub = document.getElementById('mod04-status-sub');
+    const dirVal = document.getElementById('mod04-direction-val');
+    const dirSub = document.getElementById('mod04-direction-sub');
+    const scoreVal = document.getElementById('mod04-score-val');
+    const scoreBar = document.getElementById('mod04-score-bar');
+    const scoreSub = document.getElementById('mod04-score-sub');
+    const levelVal = document.getElementById('mod04-level-val');
+    const closeSub = document.getElementById('mod04-close-sub');
+    const typeVal = document.getElementById('mod04-type-val');
+    const typeSub = document.getElementById('mod04-type-sub');
+    const strengthVal = document.getElementById('mod04-strength-val');
+    const strengthSub = document.getElementById('mod04-strength-sub');
+    const followVal = document.getElementById('mod04-follow-val');
+    const followSub = document.getElementById('mod04-follow-sub');
+    const riskVal = document.getElementById('mod04-risk-val');
+    const riskSub = document.getElementById('mod04-risk-sub');
+
+    const warningTag = document.getElementById('mod04-warning-tag');
+    const riskTag = document.getElementById('mod04-risk-tag');
+    const candleTag = document.getElementById('mod04-candle-tag');
+    const reasonText = document.getElementById('mod04-reason-text');
+    const adviceText = document.getElementById('mod04-advice-text');
+    const bannerIcon = document.getElementById('mod04-banner-icon');
+
+    // 1. Status
+    if (statusVal) {
+      statusVal.textContent = analysis.status;
+      if (analysis.status === 'CONFIRMED_BREAKOUT') {
+        statusVal.className = 'font-black text-emerald-400 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Xác nhận đóng nến qua cản';
+      } else if (analysis.status === 'FAILED_BREAKOUT_CONFIRMED') {
+        statusVal.className = 'font-black text-rose-400 text-xs truncate animate-pulse';
+        if (statusSub) statusSub.textContent = 'Bẫy giá xác nhận (Quay lại range)';
+      } else if (analysis.status === 'FAILED_BREAKOUT_WARNING') {
+        statusVal.className = 'font-black text-amber-400 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Cảnh báo nguy cơ thất bại';
+      } else if (analysis.status === 'WICK_BREAKOUT') {
+        statusVal.className = 'font-black text-yellow-300 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Phá vỡ râu nến (Chưa đóng)';
+      } else if (analysis.status === 'BREAKOUT_RETEST') {
+        statusVal.className = 'font-black text-cyan-400 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Đang kiểm tra lại vùng cản';
+      } else if (analysis.status === 'BREAKOUT_PENDING') {
+        statusVal.className = 'font-black text-violet-300 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Đang vượt cản, chờ đóng nến';
+      } else if (analysis.status === 'NO_BREAKOUT') {
+        statusVal.className = 'font-black text-slate-300 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Giá nằm gọn trong range';
+      } else {
+        statusVal.className = 'font-black text-slate-400 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Chưa xác định';
+      }
+    }
+
+    // 2. Direction
+    if (dirVal) {
+      dirVal.textContent = analysis.direction === 'BULLISH' ? 'BULLISH 🟢' : analysis.direction === 'BEARISH' ? 'BEARISH 🔴' : 'NONE ⚪';
+      dirVal.className = analysis.direction === 'BULLISH' ? 'font-black text-emerald-400 text-xs truncate' : analysis.direction === 'BEARISH' ? 'font-black text-rose-400 text-xs truncate' : 'font-black text-slate-400 text-xs truncate';
+      if (dirSub) {
+        dirSub.textContent = analysis.direction === 'BULLISH' ? 'Phá vỡ Kháng cự' : analysis.direction === 'BEARISH' ? 'Phá vỡ Hỗ trợ' : 'Chưa phá vỡ';
+      }
+    }
+
+    // 3. Quality Score
+    if (scoreVal) {
+      scoreVal.textContent = `${analysis.breakoutQualityScore}/100`;
+      scoreVal.className = analysis.breakoutQualityScore >= 70 ? 'text-[10px] font-mono font-black text-emerald-400' : analysis.breakoutQualityScore >= 45 ? 'text-[10px] font-mono font-black text-amber-400' : 'text-[10px] font-mono font-black text-rose-400';
+    }
+    if (scoreBar) {
+      scoreBar.style.width = `${analysis.breakoutQualityScore}%`;
+      scoreBar.className = analysis.breakoutQualityScore >= 70 ? 'bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500' : analysis.breakoutQualityScore >= 45 ? 'bg-gradient-to-r from-yellow-500 to-amber-500 h-full rounded-full transition-all duration-500' : 'bg-gradient-to-r from-orange-500 to-rose-500 h-full rounded-full transition-all duration-500';
+    }
+    if (scoreSub) {
+      scoreSub.textContent = analysis.breakoutQualityScore >= 70 ? 'Chất lượng cao' : analysis.breakoutQualityScore >= 45 ? 'Chất lượng vừa' : 'Chất lượng kém';
+    }
+
+    // 4. Level & Close
+    if (levelVal) {
+      levelVal.textContent = `$${(analysis.referenceLevel || currentPrice).toFixed(2)}`;
+      if (closeSub) closeSub.textContent = `Close: $${currentPrice.toFixed(2)}`;
+    }
+
+    // 5. Type (Râu vs Đóng Nến)
+    if (typeVal) {
+      typeVal.textContent = analysis.breakoutType;
+      typeVal.className = analysis.breakoutType === 'CLOSE_BREAKOUT' ? 'font-bold text-emerald-400 text-xs truncate' : analysis.breakoutType === 'WICK_BREAKOUT' ? 'font-bold text-yellow-300 text-xs truncate' : 'font-bold text-slate-300 text-xs truncate';
+      if (typeSub) {
+        typeSub.textContent = analysis.breakoutType === 'CLOSE_BREAKOUT' ? 'Đóng nến dứt khoát' : analysis.breakoutType === 'WICK_BREAKOUT' ? 'Râu quét cản' : 'Chưa chạm cản';
+      }
+    }
+
+    // 6. Strength
+    if (strengthVal) {
+      strengthVal.textContent = analysis.strength;
+      strengthVal.className = analysis.strength === 'STRONG' ? 'font-bold text-emerald-400 text-xs truncate' : analysis.strength === 'MODERATE' ? 'font-bold text-yellow-300 text-xs truncate' : 'font-bold text-rose-400 text-xs truncate';
+      if (strengthSub) strengthSub.textContent = analysis.breakoutDistance_ATR ? `${analysis.breakoutDistance_ATR}x ATR` : '0.0x ATR';
+    }
+
+    // 7. Follow-Through / Retest
+    if (followVal) {
+      const followTxt = analysis.retestStatus !== 'NONE' ? analysis.retestStatus : analysis.followThrough;
+      followVal.textContent = followTxt;
+      followVal.className = (followTxt.includes('HOLDING') || followTxt === 'EXPANDING') ? 'font-bold text-emerald-400 text-xs truncate' : followTxt.includes('FAILED') ? 'font-bold text-rose-400 text-xs truncate' : 'font-bold text-slate-300 text-xs truncate';
+      if (followSub) {
+        followSub.textContent = analysis.retestStatus !== 'NONE' ? (analysis.retestStatus === 'RETEST_HOLDING' ? 'Retest thành công' : 'Retest thất bại') : (analysis.followThrough === 'EXPANDING' ? 'Đang mở rộng đà' : 'Chưa tiếp diễn');
+      }
+    }
+
+    // 8. Failure Risk
+    if (riskVal) {
+      riskVal.textContent = `${analysis.failureRisk} ${analysis.failureRisk === 'LOW' ? '🛡️' : analysis.failureRisk === 'MODERATE' ? '⚠️' : '🚨'}`;
+      riskVal.className = analysis.failureRisk === 'LOW' ? 'font-bold text-emerald-400 text-xs truncate' : analysis.failureRisk === 'MODERATE' ? 'font-bold text-amber-400 text-xs truncate' : 'font-bold text-rose-400 text-xs truncate';
+      if (riskSub) {
+        riskSub.textContent = analysis.failureRisk === 'LOW' ? 'Rủi ro thấp' : analysis.failureRisk === 'MODERATE' ? 'Cần cẩn trọng' : 'Nguy cơ bẫy cao';
+      }
+    }
+
+    // Tags & Advice
+    if (warningTag) {
+      warningTag.textContent = `CẢNH BÁO: ${analysis.warning}`;
+      warningTag.className = analysis.warning.includes('CONFIRMED') ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold' : analysis.warning === 'NONE' ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400' : 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold';
+    }
+    if (riskTag) {
+      riskTag.textContent = `RỦI RO: ${analysis.failureRisk}`;
+      riskTag.className = analysis.failureRisk === 'LOW' ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold' : analysis.failureRisk === 'MODERATE' ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold' : 'text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold';
+    }
+    if (candleTag) {
+      candleTag.textContent = analysis.isBarClosed ? 'NẾN ĐÃ ĐÓNG' : 'NẾN REALTIME';
+      candleTag.className = analysis.isBarClosed ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400';
+    }
+
+    if (reasonText) reasonText.textContent = analysis.reason;
+    if (adviceText) adviceText.textContent = analysis.objectiveAdvice;
+
+    if (bannerIcon) {
+      if (analysis.status === 'FAILED_BREAKOUT_CONFIRMED' || analysis.failureRisk === 'HIGH') {
+        bannerIcon.textContent = '🚨';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else if (analysis.status === 'FAILED_BREAKOUT_WARNING' || analysis.status === 'WICK_BREAKOUT' || analysis.failureRisk === 'ELEVATED') {
+        bannerIcon.textContent = '⚠️';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else if (analysis.status === 'BREAKOUT_RETEST') {
+        bannerIcon.textContent = '🔄';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else if (analysis.status === 'CONFIRMED_BREAKOUT') {
+        bannerIcon.textContent = '🚀';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else {
+        bannerIcon.textContent = '🛡️';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-violet-500/20 text-violet-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
       }
     }
   }

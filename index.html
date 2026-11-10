@@ -1072,6 +1072,10 @@
           <span class="text-[9px] text-emerald-400 font-medium">PULLBACK</span>
           <div id="v8-card-pullback" class="text-[11px] font-black text-emerald-400">HEALTHY 💎</div>
         </div>
+        <div class="v8-card-mini cursor-pointer hover:border-violet-500/50 transition" onclick="switchView('trend')" title="Module 04: False Breakout Detector — Nhấp để xem phân tích chi tiết">
+          <span class="text-[9px] text-violet-400 font-medium">BREAKOUT</span>
+          <div id="v8-card-breakout" class="text-[11px] font-black text-slate-300">AN TOÀN 🛡️</div>
+        </div>
         <div class="v8-card-mini border-l border-amber-500/30 pl-3 ml-2" style="min-width:180px;">
           <span class="text-[9px] text-amber-400 font-bold">Thị trường Vàng Hàng Hải (US$/OZ)</span>
           <div id="v8-card-spread-val" class="text-[9px] text-slate-500">Phân tích MA WAVE V8</div>
@@ -4079,6 +4083,168 @@
           </div>
         </div>
 
+        <!-- ========================================================================== -->
+        <!--  MODULE 04: FALSE BREAKOUT DETECTOR (MA WAVE MARKET INTELLIGENCE)          -->
+        <!-- ========================================================================== -->
+        <div id="module-04-breakout-panel" class="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-[#160c28]/90 via-slate-900/95 to-[#120724]/90 border border-violet-500/30 shadow-2xl space-y-4 relative overflow-hidden backdrop-blur-md">
+          <div class="absolute -right-16 -top-16 w-56 h-56 bg-violet-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <!-- Header & Controls -->
+          <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-800/80 pb-3 relative z-10">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-violet-500 to-fuchsia-400 text-slate-950 font-black flex items-center justify-center text-base shadow-lg shadow-violet-500/30 shrink-0">
+                🛡️
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-black text-white tracking-wide flex items-center gap-1.5 uppercase font-sans">
+                    MODULE 04: FALSE BREAKOUT DETECTOR
+                  </h3>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    OBSERVE-ONLY
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400 font-sans">
+                  Phát hiện phá vỡ giả (Bull/Bear Trap) • Phân biệt Râu nến vs Đóng nến • Độc lập V8 Core
+                </p>
+              </div>
+            </div>
+
+            <!-- Controls: Timeframe & Toggle Bật/Tắt -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Timeframe selector -->
+              <div class="flex items-center bg-slate-950/80 p-0.5 rounded-xl border border-slate-800 text-[10px] font-mono">
+                <button type="button" onclick="app.changeBreakoutTF('5m')" id="btn-breakout-tf-5m" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">5M</button>
+                <button type="button" onclick="app.changeBreakoutTF('15m')" id="btn-breakout-tf-15m" class="px-2 py-1 rounded-lg bg-violet-500 text-slate-950 font-bold shadow">15M</button>
+                <button type="button" onclick="app.changeBreakoutTF('30m')" id="btn-breakout-tf-30m" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">30M</button>
+                <button type="button" onclick="app.changeBreakoutTF('1h')" id="btn-breakout-tf-1h" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">1H</button>
+                <button type="button" onclick="app.changeBreakoutTF('4h')" id="btn-breakout-tf-4h" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">4H</button>
+              </div>
+
+              <!-- Asset badge -->
+              <span id="mod04-asset-badge" class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-slate-800 border border-slate-700 text-amber-300 font-mono">
+                XAU/USD
+              </span>
+
+              <!-- Status Toggle -->
+              <button type="button" onclick="app.toggleFalseBreakoutDetector()" id="btn-toggle-mod04" class="px-3 py-1 rounded-xl text-[10px] font-black bg-violet-500/20 text-violet-300 border border-violet-500/40 hover:bg-violet-500/30 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span>
+                <span id="mod04-toggle-text">BẬT (OBSERVE)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Status Summary Grid (8 Factors + Quality Score) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 relative z-10 text-xs">
+            
+            <!-- 1. Trạng Thái Breakout -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">TRẠNG THÁI</span>
+              <div id="mod04-status-val" class="font-black text-slate-300 text-xs truncate">
+                NO BREAKOUT
+              </div>
+              <span id="mod04-status-sub" class="text-[9px] text-slate-400 block font-sans truncate">Trong range</span>
+            </div>
+
+            <!-- 2. Hướng Phá Vỡ (Direction) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">HƯỚNG BREAKOUT</span>
+              <div id="mod04-direction-val" class="font-black text-slate-400 text-xs truncate">
+                NONE ⚪
+              </div>
+              <span id="mod04-direction-sub" class="text-[9px] text-slate-400 block font-sans truncate">Chưa phá vỡ</span>
+            </div>
+
+            <!-- 3. Quality Score (0-100) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">ĐIỂM CHẤT LƯỢNG</span>
+                <span id="mod04-score-val" class="text-[10px] font-mono font-black text-slate-400">50/100</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div id="mod04-score-bar" class="bg-gradient-to-r from-violet-500 to-fuchsia-400 h-full rounded-full transition-all duration-500" style="width: 50%;"></div>
+              </div>
+              <span id="mod04-score-sub" class="text-[9px] text-slate-400 block font-sans truncate">Độ tin cậy</span>
+            </div>
+
+            <!-- 4. Mức Giá Swing Level & Close -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">VÙNG THAM CHIẾU</span>
+              <div id="mod04-level-val" class="font-bold text-amber-300 text-xs truncate">
+                $0.00
+              </div>
+              <span id="mod04-close-sub" class="text-[9px] text-slate-400 block font-sans truncate">Close: $0.00</span>
+            </div>
+
+            <!-- 5. Phân Biệt Râu vs Đóng Nến -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">RÂU VS ĐÓNG NẾN</span>
+              <div id="mod04-type-val" class="font-bold text-slate-300 text-xs truncate">
+                NONE
+              </div>
+              <span id="mod04-type-sub" class="text-[9px] text-slate-400 block font-sans truncate">Chưa chạm cản</span>
+            </div>
+
+            <!-- 6. Sức Mạnh Breakout (Strength) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">SỨC MẠNH PHÁ VỠ</span>
+              <div id="mod04-strength-val" class="font-bold text-slate-300 text-xs truncate">
+                MODERATE
+              </div>
+              <span id="mod04-strength-sub" class="text-[9px] text-slate-400 block font-sans truncate">0.0x ATR</span>
+            </div>
+
+            <!-- 7. Follow-Through / Retest -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">TIẾP DIỄN / RETEST</span>
+              <div id="mod04-follow-val" class="font-bold text-slate-300 text-xs truncate">
+                NONE
+              </div>
+              <span id="mod04-follow-sub" class="text-[9px] text-slate-400 block font-sans truncate">Chưa retest</span>
+            </div>
+
+            <!-- 8. Rủi Ro Bẫy Giá (Failure Risk) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">RỦI RO THẤT BẠI</span>
+              <div id="mod04-risk-val" class="font-bold text-emerald-400 text-xs truncate">
+                LOW 🛡️
+              </div>
+              <span id="mod04-risk-sub" class="text-[9px] text-slate-400 block font-sans truncate">An toàn</span>
+            </div>
+
+          </div>
+
+          <!-- Warning Reason Banner & Objective Advice -->
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 space-y-2 relative z-10 text-xs">
+            <div class="flex items-start gap-2.5">
+              <div id="mod04-banner-icon" class="w-6 h-6 rounded-lg bg-violet-500/20 text-violet-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5">
+                🛡️
+              </div>
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center justify-between flex-wrap gap-1">
+                  <span class="text-[10px] uppercase font-bold text-slate-400 font-sans">ĐÁNH GIÁ PHÁ VỠ GIẢ (FALSE BREAKOUT):</span>
+                  <div class="flex items-center gap-2">
+                    <span id="mod04-warning-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-bold">CẢNH BÁO: KHÔNG</span>
+                    <span id="mod04-risk-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-emerald-400">RỦI RO: THẤP</span>
+                    <span id="mod04-candle-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">NẾN REALTIME</span>
+                  </div>
+                </div>
+                <p id="mod04-reason-text" class="text-slate-300 leading-relaxed font-sans text-xs">
+                  Đang phân tích hành vi Breakout: Phân biệt râu nến vs đóng nến, sức mạnh phá vỡ, đà tiếp diễn và phản ứng retest quanh các mốc Swing...
+                </p>
+              </div>
+            </div>
+
+            <!-- Objective Advice Notice (Nguyên tắc khách quan: Wick breakout không đồng nghĩa breakout thật, failed breakout warning không đồng nghĩa đảo chiều) -->
+            <div class="pt-2 border-t border-slate-800/60 flex items-start gap-2 text-[11px] text-slate-400 leading-relaxed font-sans">
+              <span class="text-violet-400 font-bold shrink-0">💡 KHUYẾN NGHỊ:</span>
+              <span id="mod04-advice-text">
+                Wick Breakout (phá vỡ râu nến) không đồng nghĩa là Breakout thật. Đóng nến vượt cản cũng không đảm bảo giá tiếp tục bứt phá nếu thiếu động lượng. Luôn kiên nhẫn quan sát phản ứng retest và quản trị rủi ro nghiêm ngặt.
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- PANE 1: VÀNG XAU/USD -->
         <div id="trend-content-xau" class="space-y-5">
 
@@ -6625,6 +6791,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 <script src="./js/overextendedDetector.js?v=8.1"></script>
 <script src="./js/trendExhaustionDetector.js?v=8.1"></script>
 <script src="./js/pullbackQualityDetector.js?v=8.1"></script>
+<script src="./js/falseBreakoutDetector.js?v=8.1"></script>
 <script src="./js/app.js?v=8.0"></script>
 
 
