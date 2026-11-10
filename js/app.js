@@ -748,9 +748,6 @@ class GoldTradingApp {
       this.updatePineDashboardUI(result.snapshot);
       this.updateTrendViewUI();
     }
-
-    // Tự động cập nhật giao diện Lịch Sử Tín Hiệu
-    this.renderSignalHistory();
   }
 
   // Cập nhật các mức giá mục tiêu TP1, TP2, TP3, SL trên thang đo trục giá phải
@@ -1435,36 +1432,31 @@ class GoldTradingApp {
 
   startSimulatedMarketTicks() {
     if (window.marketDataStore) {
+      let lastHeavyCalculationTime = 0;
+
       window.marketDataStore.subscribe((event, payload) => {
         if (event === 'tick') {
+          // 1. Luồng Siêu Tốc (Mỗi 800ms): Cập nhật giá Header và nến thời gian thực cực mượt
           this.updatePriceHeader();
-          if (this.replayMode === 'live') {
-            const tf = this.currentTimeframe || '15m';
-            const prevCount = this.bars ? this.bars.length : 0;
-            this.bars = window.marketDataStore.getBars(tf);
-            const lastBar = (this.bars && this.bars.length) ? this.bars[this.bars.length - 1] : null;
-            if (this.candleSeries && lastBar) {
-              if (this.bars && this.bars.length !== prevCount) {
-                this.candleSeries.setData(this.bars);
-              } else {
-                this.candleSeries.update(lastBar);
-              }
-            }
-            this.renderIndicators();
-            this.updateReplayUI();
-          }
-          if (window.v8Engine) {
-            const currentSnap = window.v8Engine.getV8MarketSnap ? window.v8Engine.getV8MarketSnap() : null;
-            if (currentSnap) {
-              this.updateV8DashboardUI(currentSnap);
+
+          const now = Date.now();
+          const tf = this.currentTimeframe || '15m';
+          const prevCount = this.bars ? this.bars.length : 0;
+          this.bars = window.marketDataStore.getBars(tf);
+          const lastBar = (this.bars && this.bars.length) ? this.bars[this.bars.length - 1] : null;
+
+          if (this.replayMode === 'live' && this.candleSeries && lastBar) {
+            if (this.bars && this.bars.length !== prevCount) {
+              this.candleSeries.setData(this.bars);
+            } else {
+              this.candleSeries.update(lastBar);
             }
           }
+
+          // Kiểm tra khớp lệnh mở (Open Orders) tại mỗi tick giá tức thời
           if (window.signalEngine) {
             const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
-            window.signalEngine.evaluateMarket(this.bars, activeAsset);
             window.signalEngine.updateOpenOrders(payload.price, activeAsset);
-
-            // Quét tức thời cho cả các tài sản khác (Vàng, Bitcoin, Bạc) theo giá live chuẩn xác
             if (window.marketDataStore && window.marketDataStore.assetsData) {
               ['XAU', 'BTC', 'XAG'].forEach(symKey => {
                 const sym = symKey.toLowerCase();
@@ -1475,6 +1467,29 @@ class GoldTradingApp {
                   }
                 }
               });
+            }
+          }
+
+          // 2. Luồng Nặng (Throttled 3.0s hoặc khi sinh nến mới): Cập nhật chỉ báo & phân tích thị trường
+          const isNewBar = this.bars && this.bars.length !== prevCount;
+          if (isNewBar || (now - lastHeavyCalculationTime >= 3000)) {
+            lastHeavyCalculationTime = now;
+
+            if (this.replayMode === 'live') {
+              this.renderIndicators();
+              this.updateReplayUI();
+            }
+
+            if (window.v8Engine) {
+              const currentSnap = window.v8Engine.getV8MarketSnap ? window.v8Engine.getV8MarketSnap() : null;
+              if (currentSnap) {
+                this.updateV8DashboardUI(currentSnap);
+              }
+            }
+
+            if (window.signalEngine) {
+              const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
+              window.signalEngine.evaluateMarket(this.bars, activeAsset);
             }
           }
         } else if (event === 'timeframeChange') {
