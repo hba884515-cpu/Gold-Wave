@@ -1060,6 +1060,10 @@
           <span class="text-[9px] text-slate-500 font-medium">REVERSAL</span>
           <div id="v8-card-reversal" class="text-[11px] font-bold text-slate-300">CHƯA XÁC NHẬN</div>
         </div>
+        <div class="v8-card-mini cursor-pointer hover:border-cyan-500/50 transition" onclick="switchView('trend')" title="Module 01: Overextended Detector — Nhấp để xem phân tích chi tiết">
+          <span class="text-[9px] text-cyan-400 font-medium">OVEREXTENSION</span>
+          <div id="v8-card-overextended" class="text-[11px] font-black text-emerald-400">NORMAL 🎯</div>
+        </div>
         <div class="v8-card-mini border-l border-amber-500/30 pl-3 ml-2" style="min-width:180px;">
           <span class="text-[9px] text-amber-400 font-bold">Thị trường Vàng Hàng Hải (US$/OZ)</span>
           <div id="v8-card-spread-val" class="text-[9px] text-slate-500">Phân tích MA WAVE V8</div>
@@ -3623,7 +3627,145 @@
 
       <!-- Main Scroll View Area -->
       <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 sig-scroll font-sans">
-        
+
+        <!-- ════════════════════════════════════════════════════════════════════════════ -->
+        <!--  MODULE 01: OVEREXTENDED DETECTOR (MA WAVE MARKET INTELLIGENCE)              -->
+        <!-- ════════════════════════════════════════════════════════════════════════════ -->
+        <div id="module-01-overextended-panel" class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#0a1525] via-[#08101a] to-[#0a1525] border border-cyan-500/30 shadow-2xl space-y-4 font-sans relative overflow-hidden">
+          <!-- Glowing aura background -->
+          <div class="absolute -right-20 -top-20 w-48 h-48 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none"></div>
+          <div class="absolute -left-20 -bottom-20 w-48 h-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none"></div>
+
+          <!-- Header -->
+          <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 flex-wrap gap-2 relative z-10">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 via-sky-500 to-teal-400 flex items-center justify-center text-slate-950 font-black text-base shadow-md shadow-cyan-500/20">
+                🧭
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="text-xs sm:text-sm font-black text-white tracking-wide">
+                    MODULE 01: OVEREXTENDED DETECTOR
+                  </h3>
+                  <span class="text-[9px] px-2 py-0.5 rounded font-black tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                    MA WAVE V8 INTELLIGENCE
+                  </span>
+                  <span id="mod01-mode-badge" class="text-[9px] px-2 py-0.5 rounded font-bold font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                    OBSERVE_ONLY
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400">Phát hiện giá chạy quá xa dải EMA20/EMA50 • Cảnh báo nguy cơ Mua/Bán đuổi (Late Entry Risk)</p>
+              </div>
+            </div>
+
+            <!-- Controls: Bật/Tắt module & Timeframe selector -->
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-[11px]">
+                <span class="text-slate-400 font-bold">Khung:</span>
+                <select id="mod01-tf-select" onchange="if(window.app) window.app.changeOverextendedTF(this.value)" class="bg-transparent text-amber-300 font-mono font-bold focus:outline-none cursor-pointer">
+                  <option value="5m">5M</option>
+                  <option value="15m" selected>15M</option>
+                  <option value="35m">30M</option>
+                  <option value="1h">1H</option>
+                  <option value="4h">4H</option>
+                  <option value="1d">1D</option>
+                </select>
+              </div>
+
+              <!-- Toggle Switch -->
+              <button id="mod01-toggle-btn" onclick="if(window.app) window.app.toggleOverextendedDetector()" class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition cursor-pointer">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" id="mod01-toggle-led"></span>
+                <span id="mod01-toggle-label">ĐANG BẬT</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Main Metrics Grid (6 thẻ chỉ số) -->
+          <div id="mod01-metrics-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs font-mono relative z-10">
+            
+            <!-- 1. Trạng thái dãn giá (Overextension Status) -->
+            <div class="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
+              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block font-sans">STATUS</span>
+              <div id="mod01-status-val" class="text-xs sm:text-sm font-black text-emerald-400 truncate">
+                NORMAL 🎯
+              </div>
+              <span id="mod01-status-sub" class="text-[9px] text-slate-400 block font-sans">Vùng dao động chuẩn</span>
+            </div>
+
+            <!-- 2. Nguy cơ vào lệnh (Risk Category) -->
+            <div class="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
+              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block font-sans">RISK RATING</span>
+              <div id="mod01-risk-val" class="text-xs sm:text-sm font-black text-slate-300 truncate">
+                NONE (AN TOÀN)
+              </div>
+              <span id="mod01-risk-sub" class="text-[9px] text-slate-400 block font-sans">Không có cảnh báo trễ</span>
+            </div>
+
+            <!-- 3. Khoảng cách tới EMA20 -->
+            <div class="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
+              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block font-sans">DIST. TO EMA20</span>
+              <div id="mod01-dist-ema20" class="text-xs sm:text-sm font-black text-cyan-300">
+                --
+              </div>
+              <span id="mod01-dist-ema20-atr" class="text-[9px] text-slate-400 block font-sans">-- x ATR</span>
+            </div>
+
+            <!-- 4. Khoảng cách tới EMA50 -->
+            <div class="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
+              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block font-sans">DIST. TO EMA50</span>
+              <div id="mod01-dist-ema50" class="text-xs sm:text-sm font-black text-indigo-300">
+                --
+              </div>
+              <span id="mod01-dist-ema50-atr" class="text-[9px] text-slate-400 block font-sans">-- x ATR</span>
+            </div>
+
+            <!-- 5. Hướng & Độ dốc MA (Direction & Slope) -->
+            <div class="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
+              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block font-sans">DIRECTION</span>
+              <div id="mod01-dir-val" class="text-xs sm:text-sm font-black text-amber-400 truncate">
+                --
+              </div>
+              <span id="mod01-slope-sub" class="text-[9px] text-slate-400 block font-sans">Dốc EMA: --</span>
+            </div>
+
+            <!-- 6. Xác nhận nến & Cập nhật -->
+            <div class="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
+              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block font-sans">CẬP NHẬT</span>
+              <div id="mod01-time-val" class="text-xs sm:text-sm font-bold text-slate-200">
+                --:--:--
+              </div>
+              <span id="mod01-candle-confirm-sub" class="text-[9px] text-emerald-400 block font-sans font-bold">Xác nhận nến đóng</span>
+            </div>
+
+          </div>
+
+          <!-- Warning Reason Banner & Objective Advice -->
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 space-y-2 relative z-10 text-xs">
+            <div class="flex items-start gap-2.5">
+              <div id="mod01-banner-icon" class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5">
+                ✓
+              </div>
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center justify-between flex-wrap gap-1">
+                  <span class="text-[10px] uppercase font-bold text-slate-400 font-sans">LÝ DO & ĐÁNH GIÁ KỸ THUẬT:</span>
+                  <span id="mod01-atr-value-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-amber-300">ATR(14): --</span>
+                </div>
+                <p id="mod01-reason-text" class="text-slate-300 leading-relaxed font-sans text-xs">
+                  Đang tính toán khoảng cách giá thực tế so với dải trung bình động EMA20 và EMA50...
+                </p>
+              </div>
+            </div>
+
+            <!-- Objective Advice Notice (Nguyên tắc khách quan: không phán đoán chắc chắn đảo chiều) -->
+            <div class="pt-2 border-t border-slate-800/60 flex items-start gap-2 text-[11px] text-slate-400 leading-relaxed font-sans">
+              <span class="text-amber-400 font-bold shrink-0">💡 KHUYẾN NGHỊ:</span>
+              <span id="mod01-advice-text">
+                Giá chạy xa MA không đồng nghĩa xu hướng đã kết thúc. Nhà giao dịch nên kiên nhẫn chờ nhịp hồi phục (pullback) về sát vùng EMA20 thay vì BUY/SELL đuổi theo cảm xúc.
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- PANE 1: VÀNG XAU/USD -->
         <div id="trend-content-xau" class="space-y-5">
 
@@ -6167,6 +6309,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 <script src="./js/signalEngine.js?v=3.0"></script>
 <script src="./js/newsData.js?v=3.0"></script>
 <script src="./js/newsAdapter.js?v=8.0"></script>
+<script src="./js/overextendedDetector.js?v=8.1"></script>
 <script src="./js/app.js?v=8.0"></script>
 
 

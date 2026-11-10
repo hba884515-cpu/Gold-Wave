@@ -1122,6 +1122,9 @@ class GoldTradingApp {
       cardReversal.className = isRev ? 'text-xs font-black text-[#f23645] mt-1' : isWarn ? 'text-xs font-black text-amber-400 mt-1' : 'text-xs font-bold text-slate-400 mt-1';
     }
 
+    // Cập nhật Module 01: Overextended Detector
+    this.updateOverextendedDetectorUI();
+
     // Cập nhật Small On-Chart Dashboard (Section 12)
     const mTrend = document.getElementById('mini-dash-trend');
     const mWave = document.getElementById('mini-dash-wave');
@@ -2630,6 +2633,236 @@ class GoldTradingApp {
     this.updateTrendArticleUI(m15Snap, h1Snap, h3Snap, d1Snap);
     this.updateBTCTrendArticleUI();
     this.updateSilverTrendArticleUI();
+
+    // Cập nhật MODULE 01: OVEREXTENDED DETECTOR (MA WAVE V8 PRO)
+    this.updateOverextendedDetectorUI();
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // MODULE 01: OVEREXTENDED DETECTOR (MA WAVE V8 PRO) — OBSERVE ONLY
+  // ════════════════════════════════════════════════════════════════════════════
+  toggleOverextendedDetector() {
+    if (!window.overextendedDetector) return;
+    const currentState = window.overextendedDetector.config.enabled;
+    const newState = window.overextendedDetector.setEnabled(!currentState);
+
+    const toggleBtn = document.getElementById('mod01-toggle-btn');
+    const toggleLed = document.getElementById('mod01-toggle-led');
+    const toggleLabel = document.getElementById('mod01-toggle-label');
+
+    if (toggleLabel) toggleLabel.textContent = newState ? 'ĐANG BẬT' : 'ĐÃ TẮT';
+    if (toggleLed) {
+      toggleLed.className = newState 
+        ? 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse' 
+        : 'w-2 h-2 rounded-full bg-slate-500';
+    }
+    if (toggleBtn) {
+      toggleBtn.className = newState
+        ? 'flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition cursor-pointer'
+        : 'flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 text-xs font-bold transition cursor-pointer';
+    }
+
+    this.updateOverextendedDetectorUI();
+  }
+
+  changeOverextendedTF(tf) {
+    this.overextendedTF = tf;
+    this.updateOverextendedDetectorUI();
+  }
+
+  updateOverextendedDetectorUI() {
+    if (!window.overextendedDetector) return;
+
+    const activeAsset = window.currentTrendAsset || (this.currentSymbol ? (this.currentSymbol.includes('BTC') ? 'btc' : (this.currentSymbol.includes('SILVER') || this.currentSymbol.includes('XAG')) ? 'xag' : 'xau') : 'xau');
+    const tf = this.overextendedTF || this.currentTimeframe || '15m';
+
+    // Lấy chuỗi nến OHLC thực tế từ MarketDataStore
+    let bars = null;
+    if (window.marketDataStore && typeof window.marketDataStore.getBars === 'function') {
+      bars = window.marketDataStore.getBars(tf);
+    }
+    if ((!bars || !bars.length) && this.bars && this.bars.length) {
+      bars = this.bars;
+    }
+
+    // Giá hiện tại theo mã tài sản
+    let currentPrice = 0;
+    if (window.marketDataStore && window.marketDataStore.assetsData) {
+      const assetKey = activeAsset.toUpperCase();
+      if (window.marketDataStore.assetsData[assetKey]) {
+        currentPrice = window.marketDataStore.assetsData[assetKey].price;
+      }
+    }
+    if (!currentPrice || isNaN(currentPrice)) {
+      currentPrice = this.currentPrice || 0;
+    }
+
+    // Thực hiện phân tích thuần túy (Read-Only Observer)
+    const analysis = window.overextendedDetector.analyze(bars, {
+      timeframe: tf,
+      isBarClosed: false,
+      asset: activeAsset,
+      livePrice: currentPrice
+    });
+
+    // 1. CẬP NHẬT MINI CARD TRÊN V8 DASHBOARD STRIP (#v8-card-overextended)
+    const cardMini = document.getElementById('v8-card-overextended');
+    if (cardMini) {
+      if (analysis.status === 'DISABLED') {
+        cardMini.textContent = 'TẮT ⏸️';
+        cardMini.className = 'text-[11px] font-bold text-slate-500';
+      } else if (analysis.status === 'HIGHLY_EXTENDED') {
+        cardMini.textContent = 'CỰC XA ⚠️';
+        cardMini.className = 'text-[11px] font-black text-rose-400 animate-pulse';
+      } else if (analysis.status === 'EXTENDED') {
+        cardMini.textContent = 'DÃN XA ⚡';
+        cardMini.className = 'text-[11px] font-black text-amber-400';
+      } else if (analysis.status === 'NORMAL') {
+        cardMini.textContent = 'CHUẨN 🎯';
+        cardMini.className = 'text-[11px] font-black text-emerald-400';
+      } else {
+        cardMini.textContent = 'CHỜ ⏳';
+        cardMini.className = 'text-[11px] font-bold text-slate-400';
+      }
+    }
+
+    // 2. CẬP NHẬT PANEL CHI TIẾT TRONG MA WAVE MARKET INTELLIGENCE
+    const statusVal = document.getElementById('mod01-status-val');
+    const statusSub = document.getElementById('mod01-status-sub');
+    const riskVal = document.getElementById('mod01-risk-val');
+    const riskSub = document.getElementById('mod01-risk-sub');
+    const distEma20 = document.getElementById('mod01-dist-ema20');
+    const distEma20ATR = document.getElementById('mod01-dist-ema20-atr');
+    const distEma50 = document.getElementById('mod01-dist-ema50');
+    const distEma50ATR = document.getElementById('mod01-dist-ema50-atr');
+    const dirVal = document.getElementById('mod01-dir-val');
+    const slopeSub = document.getElementById('mod01-slope-sub');
+    const timeVal = document.getElementById('mod01-time-val');
+    const candleConfirmSub = document.getElementById('mod01-candle-confirm-sub');
+    const reasonText = document.getElementById('mod01-reason-text');
+    const adviceText = document.getElementById('mod01-advice-text');
+    const atrBadge = document.getElementById('mod01-atr-value-badge');
+    const bannerIcon = document.getElementById('mod01-banner-icon');
+
+    if (!statusVal) return; // Panel chưa render
+
+    if (analysis.status === 'DISABLED') {
+      statusVal.textContent = 'ĐÃ TẮT ⏸️';
+      statusVal.className = 'text-xs sm:text-sm font-bold text-slate-500';
+      if (statusSub) statusSub.textContent = 'Chế độ tạm ngưng';
+      if (riskVal) {
+        riskVal.textContent = 'OFF';
+        riskVal.className = 'text-xs sm:text-sm font-bold text-slate-500';
+      }
+      if (reasonText) reasonText.textContent = 'Module Overextended Detector đang tắt. Nhấn nút ĐANG BẬT ở trên để kích hoạt lại.';
+      return;
+    }
+
+    if (analysis.status === 'UNKNOWN') {
+      statusVal.textContent = 'CHƯA ĐỦ DỮ LIỆU ⏳';
+      statusVal.className = 'text-xs sm:text-sm font-bold text-slate-400';
+      if (statusSub) statusSub.textContent = 'Đang đồng bộ nến...';
+      if (riskVal) {
+        riskVal.textContent = 'ĐANG ĐỒNG BỘ';
+        riskVal.className = 'text-xs sm:text-sm font-bold text-slate-400';
+      }
+      if (distEma20) distEma20.textContent = '--';
+      if (distEma20ATR) distEma20ATR.textContent = '-- x ATR';
+      if (distEma50) distEma50.textContent = '--';
+      if (distEma50ATR) distEma50ATR.textContent = '-- x ATR';
+      if (dirVal) dirVal.textContent = '--';
+      if (slopeSub) slopeSub.textContent = 'Chờ nến';
+      if (reasonText) reasonText.textContent = analysis.reason;
+      if (adviceText) adviceText.textContent = analysis.objectiveAdvice;
+      return;
+    }
+
+    // Định dạng giá trị
+    const sign20 = analysis.distanceEMA20 > 0 ? '+' : '';
+    const sign50 = analysis.distanceEMA50 > 0 ? '+' : '';
+
+    if (statusVal) {
+      if (analysis.status === 'HIGHLY_EXTENDED') {
+        statusVal.textContent = 'HIGHLY EXTENDED ⚠️';
+        statusVal.className = 'text-xs sm:text-sm font-black text-rose-400 animate-pulse';
+        if (statusSub) statusSub.textContent = 'Dãn xa vượt ngưỡng cao';
+      } else if (analysis.status === 'EXTENDED') {
+        statusVal.textContent = 'EXTENDED ⚡';
+        statusVal.className = 'text-xs sm:text-sm font-black text-amber-400';
+        if (statusSub) statusSub.textContent = 'Độ dãn giá đáng chú ý';
+      } else {
+        statusVal.textContent = 'NORMAL 🎯';
+        statusVal.className = 'text-xs sm:text-sm font-black text-emerald-400';
+        if (statusSub) statusSub.textContent = 'Vùng dao động chuẩn';
+      }
+    }
+
+    if (riskVal) {
+      if (analysis.risk === 'LATE_BUY_RISK') {
+        riskVal.textContent = 'LATE BUY RISK 🚨';
+        riskVal.className = 'text-xs sm:text-sm font-black text-rose-400';
+        if (riskSub) riskSub.textContent = 'Cảnh báo mua đuổi vùng đỉnh';
+      } else if (analysis.risk === 'LATE_SELL_RISK') {
+        riskVal.textContent = 'LATE SELL RISK 🚨';
+        riskVal.className = 'text-xs sm:text-sm font-black text-rose-400';
+        if (riskSub) riskSub.textContent = 'Cảnh báo bán tháo vùng đáy';
+      } else {
+        riskVal.textContent = 'NONE (AN TOÀN)';
+        riskVal.className = 'text-xs sm:text-sm font-black text-emerald-300';
+        if (riskSub) riskSub.textContent = 'Biên độ an toàn quanh MA';
+      }
+    }
+
+    if (distEma20) {
+      distEma20.textContent = `${sign20}$${analysis.distanceEMA20.toFixed(2)}`;
+      distEma20.className = analysis.distanceEMA20_ATR >= 2.0 ? 'text-xs sm:text-sm font-black text-amber-300' : 'text-xs sm:text-sm font-black text-cyan-300';
+    }
+    if (distEma20ATR) {
+      distEma20ATR.textContent = `${analysis.distanceEMA20_ATR}x ATR (${analysis.priceVsEMA20 === 'ABOVE' ? 'TRÊN' : analysis.priceVsEMA20 === 'BELOW' ? 'DƯỚI' : 'SÁT'})`;
+    }
+
+    if (distEma50) {
+      distEma50.textContent = `${sign50}$${analysis.distanceEMA50.toFixed(2)}`;
+      distEma50.className = analysis.distanceEMA50_ATR >= 3.5 ? 'text-xs sm:text-sm font-black text-amber-300' : 'text-xs sm:text-sm font-black text-indigo-300';
+    }
+    if (distEma50ATR) {
+      distEma50ATR.textContent = `${analysis.distanceEMA50_ATR}x ATR (${analysis.priceVsEMA50 === 'ABOVE' ? 'TRÊN' : analysis.priceVsEMA50 === 'BELOW' ? 'DƯỚI' : 'SÁT'})`;
+    }
+
+    if (dirVal) {
+      const dirText = analysis.priceVsEMA20 === 'ABOVE' ? 'TRÊN EMA20 ▲' : analysis.priceVsEMA20 === 'BELOW' ? 'DƯỚI EMA20 ▼' : 'CHẠM EMA20 ▬';
+      dirVal.textContent = dirText;
+      dirVal.className = analysis.priceVsEMA20 === 'ABOVE' ? 'text-xs sm:text-sm font-black text-emerald-400' : analysis.priceVsEMA20 === 'BELOW' ? 'text-xs sm:text-sm font-black text-rose-400' : 'text-xs sm:text-sm font-black text-amber-400';
+    }
+    if (slopeSub) {
+      slopeSub.textContent = `Dốc EMA20: ${analysis.ema20Direction === 'UP' ? 'DỐC LÊN ↗' : analysis.ema20Direction === 'DOWN' ? 'DỐC XUỐNG ↘' : 'ĐI NGANG ➔'}`;
+    }
+
+    if (timeVal) {
+      const now = new Date();
+      timeVal.textContent = now.toLocaleTimeString('vi-VN', { hour12: false });
+    }
+    if (candleConfirmSub) {
+      candleConfirmSub.textContent = analysis.isBarClosed ? 'Nến đã đóng (Confirmed)' : 'Nến đang chạy (Realtime)';
+      candleConfirmSub.className = analysis.isBarClosed ? 'text-[9px] text-emerald-400 block font-sans font-bold' : 'text-[9px] text-amber-400 block font-sans font-bold';
+    }
+
+    if (reasonText) reasonText.textContent = analysis.reason;
+    if (adviceText) adviceText.textContent = analysis.objectiveAdvice;
+    if (atrBadge) atrBadge.textContent = `ATR(14): $${analysis.atr ? analysis.atr.toFixed(2) : '--'}`;
+
+    if (bannerIcon) {
+      if (analysis.status === 'HIGHLY_EXTENDED') {
+        bannerIcon.textContent = '⚠️';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else if (analysis.status === 'EXTENDED') {
+        bannerIcon.textContent = '⚡';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else {
+        bannerIcon.textContent = '✓';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      }
+    }
   }
 
   getCalculatedKeyLevels() {
