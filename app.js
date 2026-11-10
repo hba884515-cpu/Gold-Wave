@@ -2335,6 +2335,13 @@ class GoldTradingApp {
     if (typeof window.applyHistoryDisplayMode === 'function') {
       window.applyHistoryDisplayMode();
     }
+
+    // Tự động đồng bộ an toàn Module 06: Signal Performance Analytics
+    try {
+      this.updateSignalPerformanceAnalyticsUI();
+    } catch (e) {
+      console.warn('Error updating Module 06 in renderSignalHistory:', e);
+    }
   }
 
   renderNewsAndCalendar() {
@@ -2361,9 +2368,6 @@ class GoldTradingApp {
         `;
       }).join('');
     }
-
-    // Tự động đồng bộ Module 06: Signal Performance Analytics
-    this.updateSignalPerformanceAnalyticsUI();
   }
 
   updateGiDashboardUI(snap) {
@@ -3968,187 +3972,205 @@ class GoldTradingApp {
   }
 
   updateSignalPerformanceAnalyticsUI() {
-    if (!window.signalPerformanceAnalytics) return;
+    try {
+      if (!window.signalPerformanceAnalytics) return;
 
-    if (!this.mod06FilterOpts) {
-      this.mod06FilterOpts = { dateRange: 'all', asset: 'all', type: 'all', timeframe: 'all', session: 'all', result: 'all' };
-    }
-
-    // Lấy toàn bộ danh sách tín hiệu từ signalEngine
-    const rawSignals = window.signalEngine ? (window.signalEngine.signals || []) : [];
-
-    // Phân tích hiệu suất thuần túy (Read-only Observer)
-    const report = window.signalPerformanceAnalytics.analyze(rawSignals, this.mod06FilterOpts);
-
-    // 1. CẬP NHẬT MINI CARD TRÊN V8 DASHBOARD STRIP (#v8-card-perf-winrate)
-    const cardMini = document.getElementById('v8-card-perf-winrate');
-    if (cardMini) {
-      if (report.status === 'DISABLED') {
-        cardMini.textContent = 'TẮT ⏸️';
-        cardMini.className = 'text-[11px] font-bold text-slate-500';
-      } else if (report.winRate !== null) {
-        cardMini.textContent = `${report.winRate}% 🏆`;
-        cardMini.className = report.winRate >= 70 ? 'text-[11px] font-black text-amber-400' : 'text-[11px] font-bold text-slate-300';
-      } else {
-        cardMini.textContent = 'N/A ⏳';
-        cardMini.className = 'text-[11px] font-bold text-slate-400';
+      if (!this.mod06FilterOpts) {
+        this.mod06FilterOpts = { dateRange: 'all', asset: 'all', type: 'all', timeframe: 'all', session: 'all', result: 'all' };
       }
-    }
 
-    // 2. CẬP NHẬT DATA QUALITY BADGE
-    const dqBadge = document.getElementById('mod06-data-quality-badge');
-    if (dqBadge) {
-      if (report.dataQualityStatus === 'VERIFIED') {
-        dqBadge.textContent = `DATA: VERIFIED (${report.totalSignals.toLocaleString('en-US')} LỆNH)`;
-        dqBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-      } else if (report.dataQualityStatus === 'PARTIAL') {
-        dqBadge.textContent = 'DATA: PARTIAL';
-        dqBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
-      } else {
-        dqBadge.textContent = 'DATA: INSUFFICIENT';
-        dqBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700';
-      }
-    }
+      // Lấy toàn bộ danh sách tín hiệu từ signalEngine
+      const rawSignals = window.signalEngine ? (window.signalEngine.signals || []) : [];
 
-    // 3. CẬP NHẬT 8 THẺ KPI CHÍNH
-    const winrateVal = document.getElementById('mod06-winrate-val');
-    const winrateFormula = document.getElementById('mod06-winrate-formula');
-    const pfVal = document.getElementById('mod06-pf-val');
-    const pfSub = document.getElementById('mod06-pf-sub');
-    const totalVal = document.getElementById('mod06-total-val');
-    const totalSub = document.getElementById('mod06-total-sub');
-    const tpVal = document.getElementById('mod06-tp-val');
-    const tpSub = document.getElementById('mod06-tp-sub');
-    const slVal = document.getElementById('mod06-sl-val');
-    const slSub = document.getElementById('mod06-sl-sub');
-    const expVal = document.getElementById('mod06-expectancy-val');
-    const expSub = document.getElementById('mod06-expectancy-sub');
-    const ddVal = document.getElementById('mod06-dd-val');
-    const ddSub = document.getElementById('mod06-dd-sub');
-    const pnlVal = document.getElementById('mod06-pnl-val');
-    const pnlSub = document.getElementById('mod06-pnl-sub');
+      // Phân tích hiệu suất thuần túy (Read-only Observer)
+      const report = window.signalPerformanceAnalytics.analyze(rawSignals, this.mod06FilterOpts);
+      if (!report) return;
 
-    if (winrateVal) {
-      winrateVal.textContent = report.winRate !== null ? `${report.winRate}%` : 'INSUFFICIENT';
-      winrateVal.className = report.winRate !== null && report.winRate >= 70 ? 'font-black text-amber-400 text-sm truncate' : 'font-black text-slate-300 text-sm truncate';
-    }
-    if (winrateFormula && report.verifiedDenominator !== undefined) {
-      winrateFormula.textContent = report.verifiedDenominator > 0 ? `${report.totalTpHit}W / ${report.verifiedDenominator} (TP+SL)` : 'Chưa đủ mẫu';
-    }
-
-    if (pfVal) {
-      pfVal.textContent = report.profitFactorStr || 'N/A';
-      pfVal.className = report.profitFactor >= 2.0 ? 'font-black text-emerald-400 text-sm truncate' : report.profitFactor >= 1.0 ? 'font-black text-yellow-300 text-sm truncate' : 'font-black text-slate-400 text-sm truncate';
-    }
-    if (pfSub) {
-      pfSub.textContent = report.pnlCount > 0 ? `Gross +$${report.grossProfitUsd.toLocaleString('en-US')}` : 'PnL Data';
-    }
-
-    if (totalVal) totalVal.textContent = report.totalSignals.toLocaleString('en-US');
-    if (totalSub) totalSub.textContent = `${report.buyCount} BUY • ${report.sellCount} SELL`;
-
-    if (tpVal) tpVal.textContent = report.totalTpHit.toLocaleString('en-US');
-    if (tpSub) tpSub.textContent = `TP1: ${report.tp1Count} | TP2: ${report.tp2Count} | TP3: ${report.tp3Count}`;
-
-    if (slVal) slVal.textContent = report.slHitCount.toLocaleString('en-US');
-    if (slSub) slSub.textContent = `Tỷ lệ SL: ${report.slHitRate !== null ? report.slHitRate + '%' : '0%'}`;
-
-    if (expVal) expVal.textContent = report.expectancyStr || 'N/A';
-    if (expSub) expSub.textContent = 'Expectancy/Signal';
-
-    if (ddVal && report.maxDrawdown) {
-      ddVal.textContent = report.maxDrawdown.maxDrawdownUsd > 0 ? `-$${report.maxDrawdown.maxDrawdownUsd.toLocaleString('en-US')}` : '$0.00';
-    }
-    if (ddSub && report.maxDrawdown) {
-      ddSub.textContent = report.maxDrawdown.maxDrawdownPips > 0 ? `-${report.maxDrawdown.maxDrawdownPips.toLocaleString('en-US')} pips` : 'Peak-to-Trough';
-    }
-
-    if (pnlVal) {
-      const sign = report.totalPnlUsd > 0 ? '+' : '';
-      pnlVal.textContent = `${sign}$${report.totalPnlUsd.toLocaleString('en-US')}`;
-      pnlVal.className = report.totalPnlUsd >= 0 ? 'font-black text-emerald-400 text-sm truncate' : 'font-black text-rose-400 text-sm truncate';
-    }
-    if (pnlSub) {
-      const sign = report.totalPnlPips > 0 ? '+' : '';
-      pnlSub.textContent = `${sign}${report.totalPnlPips.toLocaleString('en-US')} Pips`;
-    }
-
-    // 4. CẬP NHẬT PHÂN TÍCH PHIÊN GIAO DỊCH (SESSION LIST)
-    const sessionList = document.getElementById('mod06-session-list');
-    if (sessionList && report.sessionAnalytics) {
-      const sessNames = {
-        ASIA: 'Phiên Á (Asia)',
-        LONDON: 'Phiên Âu (London)',
-        OVERLAP: 'Âu - Mỹ (Overlap)',
-        NEW_YORK: 'Phiên Mỹ (New York)'
-      };
-      const colors = {
-        ASIA: 'text-amber-300',
-        LONDON: 'text-emerald-400',
-        OVERLAP: 'text-cyan-300',
-        NEW_YORK: 'text-teal-300'
-      };
-      let sHtml = '';
-      ['ASIA', 'LONDON', 'OVERLAP', 'NEW_YORK'].forEach(sKey => {
-        const sMetrics = report.sessionAnalytics[sKey] || { total: 0, winRate: null };
-        const wrText = sMetrics.winRate !== null ? `${sMetrics.winRate}%` : 'N/A';
-        sHtml += `
-          <div class="flex items-center justify-between text-[11px]">
-            <span class="text-slate-400 font-semibold">${sessNames[sKey]}</span>
-            <span class="font-mono font-bold ${colors[sKey]}">${wrText} (${sMetrics.total} lệnh)</span>
-          </div>
-        `;
-      });
-      sessionList.innerHTML = sHtml;
-    }
-
-    // 5. CẬP NHẬT SO SÁNH BUY VS SELL
-    const buyMetricsEl = document.getElementById('mod06-buy-metrics');
-    const buyBarEl = document.getElementById('mod06-buy-bar');
-    const sellMetricsEl = document.getElementById('mod06-sell-metrics');
-    const sellBarEl = document.getElementById('mod06-sell-bar');
-    const dirDiffEl = document.getElementById('mod06-direction-diff');
-
-    if (report.buyMetrics && report.sellMetrics) {
-      const bWr = report.buyMetrics.winRate !== null ? `${report.buyMetrics.winRate}%` : 'N/A';
-      const sWr = report.sellMetrics.winRate !== null ? `${report.sellMetrics.winRate}%` : 'N/A';
-      if (buyMetricsEl) buyMetricsEl.textContent = `${bWr} (${report.buyMetrics.total} lệnh)`;
-      if (sellMetricsEl) sellMetricsEl.textContent = `${sWr} (${report.sellMetrics.total} lệnh)`;
-      if (buyBarEl) buyBarEl.style.width = `${report.buyMetrics.winRate || 50}%`;
-      if (sellBarEl) sellBarEl.style.width = `${report.sellMetrics.winRate || 50}%`;
-
-      if (dirDiffEl) {
-        if (report.buyMetrics.winRate !== null && report.sellMetrics.winRate !== null) {
-          const diff = +(report.buyMetrics.winRate - report.sellMetrics.winRate).toFixed(1);
-          if (diff > 0) {
-            dirDiffEl.textContent = `+${diff}% BUY cao hơn`;
-            dirDiffEl.className = 'font-mono text-emerald-400 font-bold';
-          } else if (diff < 0) {
-            dirDiffEl.textContent = `+${Math.abs(diff)}% SELL cao hơn`;
-            dirDiffEl.className = 'font-mono text-rose-400 font-bold';
-          } else {
-            dirDiffEl.textContent = 'Cân bằng 0.0%';
-            dirDiffEl.className = 'font-mono text-slate-300 font-bold';
-          }
+      // 1. CẬP NHẬT MINI CARD TRÊN V8 DASHBOARD STRIP (#v8-card-perf-winrate)
+      const cardMini = document.getElementById('v8-card-perf-winrate');
+      if (cardMini) {
+        if (report.status === 'DISABLED') {
+          cardMini.textContent = 'TẮT ⏸️';
+          cardMini.className = 'text-[11px] font-bold text-slate-500';
+        } else if (report.winRate !== null && report.winRate !== undefined) {
+          cardMini.textContent = `${report.winRate}% 🏆`;
+          cardMini.className = report.winRate >= 70 ? 'text-[11px] font-black text-amber-400' : 'text-[11px] font-bold text-slate-300';
         } else {
-          dirDiffEl.textContent = 'Chưa đủ dữ liệu';
+          cardMini.textContent = 'N/A ⏳';
+          cardMini.className = 'text-[11px] font-bold text-slate-400';
         }
       }
+
+      // 2. CẬP NHẬT DATA QUALITY BADGE
+      const dqBadge = document.getElementById('mod06-data-quality-badge');
+      if (dqBadge) {
+        const total = Number(report.totalSignals || 0);
+        if (report.dataQualityStatus === 'VERIFIED') {
+          dqBadge.textContent = `DATA: VERIFIED (${total.toLocaleString('en-US')} LỆNH)`;
+          dqBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        } else if (report.dataQualityStatus === 'PARTIAL') {
+          dqBadge.textContent = 'DATA: PARTIAL';
+          dqBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        } else {
+          dqBadge.textContent = 'DATA: INSUFFICIENT';
+          dqBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700';
+        }
+      }
+
+      // 3. CẬP NHẬT 8 THẺ KPI CHÍNH
+      const winrateVal = document.getElementById('mod06-winrate-val');
+      const winrateFormula = document.getElementById('mod06-winrate-formula');
+      const pfVal = document.getElementById('mod06-pf-val');
+      const pfSub = document.getElementById('mod06-pf-sub');
+      const totalVal = document.getElementById('mod06-total-val');
+      const totalSub = document.getElementById('mod06-total-sub');
+      const tpVal = document.getElementById('mod06-tp-val');
+      const tpSub = document.getElementById('mod06-tp-sub');
+      const slVal = document.getElementById('mod06-sl-val');
+      const slSub = document.getElementById('mod06-sl-sub');
+      const expVal = document.getElementById('mod06-expectancy-val');
+      const expSub = document.getElementById('mod06-expectancy-sub');
+      const ddVal = document.getElementById('mod06-dd-val');
+      const ddSub = document.getElementById('mod06-dd-sub');
+      const pnlVal = document.getElementById('mod06-pnl-val');
+      const pnlSub = document.getElementById('mod06-pnl-sub');
+
+      if (winrateVal) {
+        winrateVal.textContent = (report.winRate !== null && report.winRate !== undefined) ? `${report.winRate}%` : 'INSUFFICIENT';
+        winrateVal.className = (report.winRate !== null && report.winRate !== undefined && report.winRate >= 70) ? 'font-black text-amber-400 text-sm truncate' : 'font-black text-slate-300 text-sm truncate';
+      }
+      if (winrateFormula) {
+        const denom = Number(report.verifiedDenominator || 0);
+        winrateFormula.textContent = denom > 0 ? `${Number(report.totalTpHit || 0)}W / ${denom} (TP+SL)` : 'Chưa đủ mẫu';
+      }
+
+      if (pfVal) {
+        pfVal.textContent = report.profitFactorStr || 'N/A';
+        pfVal.className = (report.profitFactor && report.profitFactor >= 2.0) ? 'font-black text-emerald-400 text-sm truncate' : (report.profitFactor && report.profitFactor >= 1.0) ? 'font-black text-yellow-300 text-sm truncate' : 'font-black text-slate-400 text-sm truncate';
+      }
+      if (pfSub) {
+        pfSub.textContent = (report.pnlCount && report.pnlCount > 0) ? `Gross +$${Number(report.grossProfitUsd || 0).toLocaleString('en-US')}` : 'PnL Data';
+      }
+
+      if (totalVal) totalVal.textContent = Number(report.totalSignals || 0).toLocaleString('en-US');
+      if (totalSub) totalSub.textContent = `${Number(report.buyCount || 0)} BUY • ${Number(report.sellCount || 0)} SELL`;
+
+      if (tpVal) tpVal.textContent = Number(report.totalTpHit || 0).toLocaleString('en-US');
+      if (tpSub) tpSub.textContent = `TP1: ${report.tp1Count || 0} | TP2: ${report.tp2Count || 0} | TP3: ${report.tp3Count || 0}`;
+
+      if (slVal) slVal.textContent = Number(report.slHitCount || 0).toLocaleString('en-US');
+      if (slSub) slSub.textContent = `Tỷ lệ SL: ${report.slHitRate !== null && report.slHitRate !== undefined ? report.slHitRate + '%' : '0%'}`;
+
+      if (expVal) expVal.textContent = report.expectancyStr || 'N/A';
+      if (expSub) expSub.textContent = 'Expectancy/Signal';
+
+      if (ddVal) {
+        const maxDdUsd = Number(report.maxDrawdown?.maxDrawdownUsd || 0);
+        ddVal.textContent = maxDdUsd > 0 ? `-$${maxDdUsd.toLocaleString('en-US')}` : '$0.00';
+      }
+      if (ddSub) {
+        const maxDdPips = Number(report.maxDrawdown?.maxDrawdownPips || 0);
+        ddSub.textContent = maxDdPips > 0 ? `-${maxDdPips.toLocaleString('en-US')} pips` : 'Peak-to-Trough';
+      }
+
+      if (pnlVal) {
+        const pnlUsd = Number(report.totalPnlUsd || 0);
+        const sign = pnlUsd > 0 ? '+' : '';
+        pnlVal.textContent = `${sign}$${pnlUsd.toLocaleString('en-US')}`;
+        pnlVal.className = pnlUsd >= 0 ? 'font-black text-emerald-400 text-sm truncate' : 'font-black text-rose-400 text-sm truncate';
+      }
+      if (pnlSub) {
+        const pnlPips = Number(report.totalPnlPips || 0);
+        const sign = pnlPips > 0 ? '+' : '';
+        pnlSub.textContent = `${sign}${pnlPips.toLocaleString('en-US')} Pips`;
+      }
+
+      // 4. CẬP NHẬT PHÂN TÍCH PHIÊN GIAO DỊCH (SESSION LIST)
+      const sessionList = document.getElementById('mod06-session-list');
+      if (sessionList && report.sessionAnalytics) {
+        const sessNames = {
+          ASIA: 'Phiên Á (Asia)',
+          LONDON: 'Phiên Âu (London)',
+          OVERLAP: 'Âu - Mỹ (Overlap)',
+          NEW_YORK: 'Phiên Mỹ (New York)'
+        };
+        const colors = {
+          ASIA: 'text-amber-300',
+          LONDON: 'text-emerald-400',
+          OVERLAP: 'text-cyan-300',
+          NEW_YORK: 'text-teal-300'
+        };
+        let sHtml = '';
+        ['ASIA', 'LONDON', 'OVERLAP', 'NEW_YORK'].forEach(sKey => {
+          const sMetrics = report.sessionAnalytics[sKey] || { total: 0, winRate: null };
+          const wrText = (sMetrics.winRate !== null && sMetrics.winRate !== undefined) ? `${sMetrics.winRate}%` : 'N/A';
+          sHtml += `
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-slate-400 font-semibold">${sessNames[sKey]}</span>
+              <span class="font-mono font-bold ${colors[sKey]}">${wrText} (${sMetrics.total || 0} lệnh)</span>
+            </div>
+          `;
+        });
+        sessionList.innerHTML = sHtml;
+      }
+
+      // 5. CẬP NHẬT SO SÁNH BUY VS SELL
+      const buyMetricsEl = document.getElementById('mod06-buy-metrics');
+      const buyBarEl = document.getElementById('mod06-buy-bar');
+      const sellMetricsEl = document.getElementById('mod06-sell-metrics');
+      const sellBarEl = document.getElementById('mod06-sell-bar');
+      const dirDiffEl = document.getElementById('mod06-direction-diff');
+
+      if (report.buyMetrics && report.sellMetrics) {
+        const bWr = (report.buyMetrics.winRate !== null && report.buyMetrics.winRate !== undefined) ? `${report.buyMetrics.winRate}%` : 'N/A';
+        const sWr = (report.sellMetrics.winRate !== null && report.sellMetrics.winRate !== undefined) ? `${report.sellMetrics.winRate}%` : 'N/A';
+        if (buyMetricsEl) buyMetricsEl.textContent = `${bWr} (${report.buyMetrics.total || 0} lệnh)`;
+        if (sellMetricsEl) sellMetricsEl.textContent = `${sWr} (${report.sellMetrics.total || 0} lệnh)`;
+        if (buyBarEl) buyBarEl.style.width = `${report.buyMetrics.winRate || 50}%`;
+        if (sellBarEl) sellBarEl.style.width = `${report.sellMetrics.winRate || 50}%`;
+
+        if (dirDiffEl) {
+          if (report.buyMetrics.winRate !== null && report.sellMetrics.winRate !== null && report.buyMetrics.winRate !== undefined && report.sellMetrics.winRate !== undefined) {
+            const diff = +(report.buyMetrics.winRate - report.sellMetrics.winRate).toFixed(1);
+            if (diff > 0) {
+              dirDiffEl.textContent = `+${diff}% BUY cao hơn`;
+              dirDiffEl.className = 'font-mono text-emerald-400 font-bold';
+            } else if (diff < 0) {
+              dirDiffEl.textContent = `+${Math.abs(diff)}% SELL cao hơn`;
+              dirDiffEl.className = 'font-mono text-rose-400 font-bold';
+            } else {
+              dirDiffEl.textContent = 'Cân bằng 0.0%';
+              dirDiffEl.className = 'font-mono text-slate-300 font-bold';
+            }
+          } else {
+            dirDiffEl.textContent = 'Chưa đủ dữ liệu';
+          }
+        }
+      }
+
+      // 6. CẬP NHẬT PHÂN BỔ KẾT QUẢ
+      const tp1Dist = document.getElementById('mod06-tp1-dist');
+      const tp2Dist = document.getElementById('mod06-tp2-dist');
+      const tp3Dist = document.getElementById('mod06-tp3-dist');
+      const slDist = document.getElementById('mod06-sl-dist');
+      const beDist = document.getElementById('mod06-be-dist');
+
+      const total = Number(report.totalSignals || 0) || 1;
+      const tp1C = Number(report.tp1Count || 0);
+      const tp2C = Number(report.tp2Count || 0);
+      const tp3C = Number(report.tp3Count || 0);
+      const slC = Number(report.slHitCount || 0);
+      const beC = Number(report.beCount || 0);
+      const openC = Number(report.openCount || 0);
+
+      if (tp1Dist) tp1Dist.textContent = `${tp1C} (${Math.round(tp1C / total * 1000) / 10}%)`;
+      if (tp2Dist) tp2Dist.textContent = `${tp2C} (${Math.round(tp2C / total * 1000) / 10}%)`;
+      if (tp3Dist) tp3Dist.textContent = `${tp3C} (${Math.round(tp3C / total * 1000) / 10}%)`;
+      if (slDist) slDist.textContent = `${slC} (${Math.round(slC / total * 1000) / 10}%)`;
+      if (beDist) beDist.textContent = `${beC} BE • ${openC} Open`;
+    } catch (err) {
+      console.warn('SignalPerformanceAnalytics UI safe handled:', err);
     }
-
-    // 6. CẬP NHẬT PHÂN BỔ KẾT QUẢ
-    const tp1Dist = document.getElementById('mod06-tp1-dist');
-    const tp2Dist = document.getElementById('mod06-tp2-dist');
-    const tp3Dist = document.getElementById('mod06-tp3-dist');
-    const slDist = document.getElementById('mod06-sl-dist');
-    const beDist = document.getElementById('mod06-be-dist');
-
-    const total = report.totalSignals || 1;
-    if (tp1Dist) tp1Dist.textContent = `${report.tp1Count} (${Math.round(report.tp1Count / total * 1000) / 10}%)`;
-    if (tp2Dist) tp2Dist.textContent = `${report.tp2Count} (${Math.round(report.tp2Count / total * 1000) / 10}%)`;
-    if (tp3Dist) tp3Dist.textContent = `${report.tp3Count} (${Math.round(report.tp3Count / total * 1000) / 10}%)`;
-    if (slDist) slDist.textContent = `${report.slHitCount} (${Math.round(report.slHitCount / total * 1000) / 10}%)`;
-    if (beDist) beDist.textContent = `${report.beCount} BE • ${report.openCount} Open`;
   }
 
   getCalculatedKeyLevels() {

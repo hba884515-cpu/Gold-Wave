@@ -366,48 +366,96 @@ class SignalPerformanceAnalytics {
   }
 
   /**
+   * Tạo báo cáo rỗng an toàn với đầy đủ tất cả các trường mặc định
+   */
+  getEmptyReport(status = 'EMPTY', reason = '', filterOpts = {}) {
+    return {
+      status,
+      totalSignals: 0,
+      buyCount: 0,
+      sellCount: 0,
+      openCount: 0,
+      closedCount: 0,
+      unknownCount: 0,
+
+      tp1Count: 0,
+      tp2Count: 0,
+      tp3Count: 0,
+      totalTpHit: 0,
+      slHitCount: 0,
+      beCount: 0,
+      cancelledCount: 0,
+      expiredCount: 0,
+      ambiguousCount: 0,
+
+      verifiedDenominator: 0,
+      winRate: null,
+      winRateStr: 'INSUFFICIENT DATA',
+      winRateFormula: 'TP Hit / (TP Hit + SL Hit) * 100%',
+      tp1HitRate: null,
+      tp2HitRate: null,
+      tp3HitRate: null,
+      slHitRate: null,
+
+      totalPnlUsd: 0,
+      totalPnlPips: 0,
+      grossProfitUsd: 0,
+      grossLossUsd: 0,
+      profitFactor: null,
+      profitFactorStr: 'N/A',
+      expectancyUsd: null,
+      expectancyStr: 'N/A',
+      pnlCount: 0,
+
+      maxDrawdown: { maxDrawdownUsd: 0, maxDrawdownPips: 0 },
+      pnlCurve: [],
+
+      buyMetrics: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 },
+      sellMetrics: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 },
+      sessionAnalytics: {
+        ASIA: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 },
+        LONDON: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 },
+        OVERLAP: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 },
+        NEW_YORK: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 }
+      },
+      timeframeAnalytics: {},
+      assetAnalytics: {
+        xau: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 },
+        btc: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 },
+        xag: { total: 0, winRate: null, tpHit: 0, slHit: 0, pnlUsd: 0 }
+      },
+      dataQuality: {
+        status: 'INSUFFICIENT_DATA',
+        duplicateIdCount: 0,
+        missingEntryCount: 0,
+        missingTpSlCount: 0,
+        missingTimestampCount: 0,
+        ambiguousCount: 0
+      },
+      dataQualityStatus: 'INSUFFICIENT_DATA',
+      filterApplied: filterOpts,
+      reason: reason || 'Không có dữ liệu tín hiệu để phân tích.',
+      timestamp: Date.now()
+    };
+  }
+
+  /**
    * Phân tích tổng thể hiệu suất tín hiệu (Signal Performance Analytics Engine)
    */
   analyze(signals, filterOpts = {}) {
     if (!this.config.enabled) {
-      return {
-        status: 'DISABLED',
-        totalSignals: 0,
-        winRate: null,
-        profitFactor: null,
-        expectancy: null,
-        maxDrawdown: null,
-        reason: 'Module Signal Performance Analytics đang tạm tắt.'
-      };
+      return this.getEmptyReport('DISABLED', 'Module Signal Performance Analytics đang tạm tắt.', filterOpts);
     }
 
     if (!Array.isArray(signals)) {
-      return {
-        status: 'EMPTY',
-        totalSignals: 0,
-        winRate: null,
-        profitFactor: null,
-        expectancy: null,
-        maxDrawdown: null,
-        dataQualityStatus: 'UNKNOWN',
-        reason: 'Không có dữ liệu tín hiệu để phân tích.'
-      };
+      return this.getEmptyReport('EMPTY', 'Không có dữ liệu tín hiệu để phân tích.', filterOpts);
     }
 
     // 1. Áp dụng bộ lọc
     const filtered = this.filterSignals(signals, filterOpts);
 
     if (filtered.length === 0) {
-      return {
-        status: 'EMPTY',
-        totalSignals: 0,
-        winRate: null,
-        profitFactor: null,
-        expectancy: null,
-        maxDrawdown: { maxDrawdownUsd: 0, maxDrawdownPips: 0 },
-        dataQualityStatus: 'INSUFFICIENT_DATA',
-        reason: 'Không có tín hiệu nào khớp với bộ lọc hiện tại.'
-      };
+      return this.getEmptyReport('EMPTY', 'Không có tín hiệu nào khớp với bộ lọc hiện tại.', filterOpts);
     }
 
     // 2. Thống kê Số lượng (Signal Counts) & Kết quả (Outcomes)
