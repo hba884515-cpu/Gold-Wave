@@ -1128,6 +1128,9 @@ class GoldTradingApp {
     // Cập nhật Module 02: Trend Exhaustion Detector
     this.updateTrendExhaustionDetectorUI();
 
+    // Cập nhật Module 03: Pullback Quality Detector
+    this.updatePullbackQualityDetectorUI();
+
     // Cập nhật Small On-Chart Dashboard (Section 12)
     const mTrend = document.getElementById('mini-dash-trend');
     const mWave = document.getElementById('mini-dash-wave');
@@ -2642,6 +2645,9 @@ class GoldTradingApp {
 
     // Cập nhật MODULE 02: TREND EXHAUSTION DETECTOR (MA WAVE V8 PRO)
     this.updateTrendExhaustionDetectorUI();
+
+    // Cập nhật MODULE 03: PULLBACK QUALITY DETECTOR (MA WAVE V8 PRO)
+    this.updatePullbackQualityDetectorUI();
   }
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -3101,6 +3107,249 @@ class GoldTradingApp {
         bannerIcon.className = 'w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
       } else {
         bannerIcon.textContent = '✓';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      }
+    }
+  }
+
+  togglePullbackQualityDetector() {
+    if (!window.pullbackQualityDetector) return;
+    const newState = window.pullbackQualityDetector.toggle();
+    const toggleBtn = document.getElementById('btn-toggle-mod03');
+    const toggleText = document.getElementById('mod03-toggle-text');
+    if (toggleText) {
+      toggleText.textContent = newState ? 'BẬT (OBSERVE)' : 'TẮT (PAUSED)';
+    }
+    if (toggleBtn) {
+      toggleBtn.className = newState
+        ? 'px-3 py-1 rounded-xl text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition cursor-pointer flex items-center gap-1.5 shadow-sm'
+        : 'px-3 py-1 rounded-xl text-[10px] font-black bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-sm';
+    }
+    this.updatePullbackQualityDetectorUI();
+  }
+
+  changePullbackTF(tf) {
+    this.pullbackTF = tf;
+    this.updatePullbackQualityDetectorUI();
+  }
+
+  updatePullbackQualityDetectorUI() {
+    if (!window.pullbackQualityDetector) return;
+
+    const activeAsset = window.currentTrendAsset || (this.currentSymbol ? (this.currentSymbol.includes('BTC') ? 'btc' : (this.currentSymbol.includes('SILVER') || this.currentSymbol.includes('XAG')) ? 'xag' : 'xau') : 'xau');
+    const tf = this.pullbackTF || this.currentTimeframe || '15m';
+
+    // Cập nhật nút timeframe active
+    ['5m', '15m', '30m', '1h', '4h'].forEach(t => {
+      const btn = document.getElementById(`btn-pullback-tf-${t}`);
+      if (btn) {
+        if (t === tf) {
+          btn.className = 'px-2 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold shadow';
+        } else {
+          btn.className = 'px-2 py-1 rounded-lg text-slate-400 hover:text-white transition';
+        }
+      }
+    });
+
+    const assetBadge = document.getElementById('mod03-asset-badge');
+    if (assetBadge) {
+      assetBadge.textContent = activeAsset === 'btc' ? 'BTC/USD' : activeAsset === 'xag' ? 'XAG/USD (BẠC)' : 'XAU/USD (VÀNG)';
+    }
+
+    // Lấy chuỗi nến OHLC thực tế từ MarketDataStore
+    let bars = null;
+    if (window.marketDataStore && typeof window.marketDataStore.getBars === 'function') {
+      bars = window.marketDataStore.getBars(tf);
+    }
+    if ((!bars || !bars.length) && this.bars && this.bars.length) {
+      bars = this.bars;
+    }
+
+    // Giá hiện tại theo mã tài sản
+    let currentPrice = 0;
+    if (window.marketDataStore && window.marketDataStore.assetsData) {
+      const assetKey = activeAsset.toUpperCase();
+      if (window.marketDataStore.assetsData[assetKey]) {
+        currentPrice = window.marketDataStore.assetsData[assetKey].price;
+      }
+    }
+    if (!currentPrice || isNaN(currentPrice)) {
+      currentPrice = this.currentPrice || 0;
+    }
+
+    // Thực hiện phân tích thuần túy (Read-Only Observer)
+    const analysis = window.pullbackQualityDetector.analyze(bars, {
+      timeframe: tf,
+      isBarClosed: false,
+      asset: activeAsset,
+      livePrice: currentPrice
+    });
+
+    // 1. CẬP NHẬT MINI CARD TRÊN V8 DASHBOARD STRIP (#v8-card-pullback)
+    const cardMini = document.getElementById('v8-card-pullback');
+    if (cardMini) {
+      if (analysis.status === 'DISABLED') {
+        cardMini.textContent = 'TẮT ⏸️';
+        cardMini.className = 'text-[11px] font-bold text-slate-500';
+      } else if (analysis.status === 'HEALTHY_PULLBACK') {
+        cardMini.textContent = 'HEALTHY 💎';
+        cardMini.className = 'text-[11px] font-black text-emerald-400';
+      } else if (analysis.status === 'DEEP_PULLBACK') {
+        cardMini.textContent = 'HỒI SÂU 🌊';
+        cardMini.className = 'text-[11px] font-black text-cyan-400';
+      } else if (analysis.status === 'PULLBACK_AT_RISK') {
+        cardMini.textContent = 'RỦI RO ⚠️';
+        cardMini.className = 'text-[11px] font-black text-amber-400';
+      } else if (analysis.status === 'WEAK_PULLBACK') {
+        cardMini.textContent = 'HỒI YẾU ⚡';
+        cardMini.className = 'text-[11px] font-bold text-yellow-300';
+      } else if (analysis.status === 'POSSIBLE_REVERSAL') {
+        cardMini.textContent = 'ĐẢO CHIỀU 🚨';
+        cardMini.className = 'text-[11px] font-black text-rose-400 animate-pulse';
+      } else if (analysis.status === 'NO_PULLBACK') {
+        cardMini.textContent = 'SÓNG ĐẨY 🚀';
+        cardMini.className = 'text-[11px] font-bold text-slate-300';
+      } else {
+        cardMini.textContent = 'CHỜ ⏳';
+        cardMini.className = 'text-[11px] font-bold text-slate-400';
+      }
+    }
+
+    // 2. CẬP NHẬT PANEL CHI TIẾT TRONG MA WAVE MARKET INTELLIGENCE
+    const statusVal = document.getElementById('mod03-status-val');
+    const statusSub = document.getElementById('mod03-status-sub');
+    const trendVal = document.getElementById('mod03-trend-val');
+    const dirSub = document.getElementById('mod03-direction-sub');
+    const scoreVal = document.getElementById('mod03-score-val');
+    const scoreBar = document.getElementById('mod03-score-bar');
+    const scoreSub = document.getElementById('mod03-score-sub');
+    const depthVal = document.getElementById('mod03-depth-val');
+    const depthSub = document.getElementById('mod03-depth-sub');
+    const speedVal = document.getElementById('mod03-speed-val');
+    const speedSub = document.getElementById('mod03-speed-sub');
+    const emaVal = document.getElementById('mod03-ema-val');
+    const emaSub = document.getElementById('mod03-ema-sub');
+    const momVal = document.getElementById('mod03-momentum-val');
+    const momSub = document.getElementById('mod03-momentum-sub');
+    const structVal = document.getElementById('mod03-struct-val');
+    const structSub = document.getElementById('mod03-struct-sub');
+
+    const warningTag = document.getElementById('mod03-warning-tag');
+    const recoveryTag = document.getElementById('mod03-recovery-tag');
+    const candleTag = document.getElementById('mod03-candle-tag');
+    const reasonText = document.getElementById('mod03-reason-text');
+    const adviceText = document.getElementById('mod03-advice-text');
+    const bannerIcon = document.getElementById('mod03-banner-icon');
+
+    // 1. Status
+    if (statusVal) {
+      statusVal.textContent = analysis.status;
+      if (analysis.status === 'HEALTHY_PULLBACK') {
+        statusVal.className = 'font-black text-emerald-400 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Nhịp hồi vàng chuẩn MA';
+      } else if (analysis.status === 'DEEP_PULLBACK') {
+        statusVal.className = 'font-black text-cyan-400 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Hồi sâu tựa EMA50';
+      } else if (analysis.status === 'PULLBACK_AT_RISK') {
+        statusVal.className = 'font-black text-amber-400 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Rủi ro cấu trúc/Wick';
+      } else if (analysis.status === 'POSSIBLE_REVERSAL') {
+        statusVal.className = 'font-black text-rose-400 text-xs truncate animate-pulse';
+        if (statusSub) statusSub.textContent = 'Đóng nến gãy cấu trúc';
+      } else if (analysis.status === 'NO_PULLBACK') {
+        statusVal.className = 'font-black text-slate-300 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Đang trong sóng đẩy';
+      } else {
+        statusVal.className = 'font-black text-slate-400 text-xs truncate';
+        if (statusSub) statusSub.textContent = 'Chưa xác định';
+      }
+    }
+
+    // 2. Trend & Direction
+    if (trendVal) {
+      trendVal.textContent = analysis.originalTrend === 'UPTREND' ? 'UPTREND 🟢' : analysis.originalTrend === 'DOWNTREND' ? 'DOWNTREND 🔴' : 'SIDEWAY ⚪';
+      trendVal.className = analysis.originalTrend === 'UPTREND' ? 'font-black text-emerald-400 text-xs truncate' : analysis.originalTrend === 'DOWNTREND' ? 'font-black text-rose-400 text-xs truncate' : 'font-black text-slate-400 text-xs truncate';
+      if (dirSub) {
+        dirSub.textContent = analysis.pullbackDirection === 'RETRACEMENT_DOWN' ? 'Hồi Giảm (Down)' : analysis.pullbackDirection === 'RETRACEMENT_UP' ? 'Hồi Tăng (Up)' : 'Chưa Hồi';
+      }
+    }
+
+    // 3. Quality Score
+    if (scoreVal) {
+      scoreVal.textContent = `${analysis.qualityScore}/100`;
+      scoreVal.className = analysis.qualityScore >= 70 ? 'text-[10px] font-mono font-black text-emerald-400' : analysis.qualityScore >= 45 ? 'text-[10px] font-mono font-black text-amber-400' : 'text-[10px] font-mono font-black text-rose-400';
+    }
+    if (scoreBar) {
+      scoreBar.style.width = `${analysis.qualityScore}%`;
+      scoreBar.className = analysis.qualityScore >= 70 ? 'bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500' : analysis.qualityScore >= 45 ? 'bg-gradient-to-r from-yellow-500 to-amber-500 h-full rounded-full transition-all duration-500' : 'bg-gradient-to-r from-orange-500 to-rose-500 h-full rounded-full transition-all duration-500';
+    }
+    if (scoreSub) {
+      scoreSub.textContent = analysis.qualityScore >= 70 ? 'Chất lượng cao' : analysis.qualityScore >= 45 ? 'Chất lượng vừa' : 'Chất lượng kém';
+    }
+
+    // 4. Depth
+    if (depthVal) {
+      depthVal.textContent = `${analysis.depth_ATR}x ATR`;
+      if (depthSub) depthSub.textContent = analysis.depthStatus || 'Biên độ nến';
+    }
+
+    // 5. Speed
+    if (speedVal) {
+      speedVal.textContent = analysis.speedStatus;
+      speedVal.className = analysis.speedStatus === 'ORDERLY' ? 'font-bold text-emerald-400 text-xs truncate' : analysis.speedStatus === 'FAST' ? 'font-bold text-yellow-300 text-xs truncate' : 'font-bold text-rose-400 text-xs truncate';
+      if (speedSub) speedSub.textContent = analysis.factors ? `${analysis.factors.pullbackBarsCount} nến hồi` : 'Số nến';
+    }
+
+    // 6. EMA Reaction
+    if (emaVal) {
+      emaVal.textContent = analysis.emaReaction;
+      emaVal.className = (analysis.emaReaction && analysis.emaReaction.includes('SUPPORT')) ? 'font-bold text-emerald-400 text-xs truncate' : (analysis.emaReaction && analysis.emaReaction.includes('RESISTANCE')) ? 'font-bold text-cyan-400 text-xs truncate' : 'font-bold text-amber-400 text-xs truncate';
+      if (emaSub) emaSub.textContent = analysis.factors && analysis.factors.emaReaction ? (analysis.factors.emaReaction.reason.length > 22 ? analysis.factors.emaReaction.reason.slice(0, 22) + '...' : analysis.factors.emaReaction.reason) : 'Vùng MA Wave';
+    }
+
+    // 7. Momentum
+    if (momVal) {
+      momVal.textContent = analysis.momentumStatus;
+      momVal.className = analysis.momentumStatus === 'WEAK_RETRACEMENT' ? 'font-bold text-emerald-400 text-xs truncate' : analysis.momentumStatus === 'MODERATE' ? 'font-bold text-yellow-300 text-xs truncate' : 'font-bold text-rose-400 text-xs truncate';
+      if (momSub) momSub.textContent = analysis.momentumStatus === 'WEAK_RETRACEMENT' ? 'Lực cạn kiệt' : analysis.momentumStatus === 'MODERATE' ? 'Lực trung bình' : 'Lực đối kháng lớn';
+    }
+
+    // 8. Structure
+    if (structVal) {
+      structVal.textContent = analysis.structureStatus;
+      structVal.className = analysis.structureStatus === 'INTACT' ? 'font-bold text-emerald-400 text-xs truncate' : analysis.structureStatus === 'WICK_TEST' ? 'font-bold text-amber-400 text-xs truncate' : 'font-bold text-rose-400 text-xs truncate';
+      if (structSub) structSub.textContent = analysis.structureStatus === 'INTACT' ? 'Đáy HL bảo toàn' : analysis.structureStatus === 'WICK_TEST' ? 'Quét râu thanh khoản' : 'Gãy đáy cấu trúc';
+    }
+
+    // Tags & Advice
+    if (warningTag) {
+      warningTag.textContent = analysis.warning;
+      warningTag.className = analysis.warning.includes('HEALTHY') ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold' : analysis.warning === 'NONE' ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400' : 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold';
+    }
+    if (recoveryTag) {
+      recoveryTag.textContent = `PHỤC HỒI: ${analysis.recoveryStatus}`;
+      recoveryTag.className = analysis.recoveryStatus === 'CONFIRMED' ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold' : analysis.recoveryStatus === 'IN_PROGRESS' ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold' : 'text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400';
+    }
+    if (candleTag) {
+      candleTag.textContent = analysis.isBarClosed ? 'NẾN ĐÃ ĐÓNG' : 'NẾN REALTIME';
+      candleTag.className = analysis.isBarClosed ? 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400';
+    }
+
+    if (reasonText) reasonText.textContent = analysis.reason;
+    if (adviceText) adviceText.textContent = analysis.objectiveAdvice;
+
+    if (bannerIcon) {
+      if (analysis.status === 'POSSIBLE_REVERSAL') {
+        bannerIcon.textContent = '🚨';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else if (analysis.status === 'PULLBACK_AT_RISK' || analysis.status === 'WEAK_PULLBACK') {
+        bannerIcon.textContent = '⚠️';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else if (analysis.status === 'DEEP_PULLBACK') {
+        bannerIcon.textContent = '🌊';
+        bannerIcon.className = 'w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
+      } else {
+        bannerIcon.textContent = '💎';
         bannerIcon.className = 'w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5';
       }
     }

@@ -1068,6 +1068,10 @@
           <span class="text-[9px] text-amber-400 font-medium">EXHAUSTION</span>
           <div id="v8-card-exhaustion" class="text-[11px] font-black text-emerald-400">HEALTHY ⚡</div>
         </div>
+        <div class="v8-card-mini cursor-pointer hover:border-emerald-500/50 transition" onclick="switchView('trend')" title="Module 03: Pullback Quality Detector — Nhấp để xem phân tích chi tiết">
+          <span class="text-[9px] text-emerald-400 font-medium">PULLBACK</span>
+          <div id="v8-card-pullback" class="text-[11px] font-black text-emerald-400">HEALTHY 💎</div>
+        </div>
         <div class="v8-card-mini border-l border-amber-500/30 pl-3 ml-2" style="min-width:180px;">
           <span class="text-[9px] text-amber-400 font-bold">Thị trường Vàng Hàng Hải (US$/OZ)</span>
           <div id="v8-card-spread-val" class="text-[9px] text-slate-500">Phân tích MA WAVE V8</div>
@@ -3913,6 +3917,168 @@
           </div>
         </div>
 
+        <!-- ========================================================================== -->
+        <!--  MODULE 03: PULLBACK QUALITY DETECTOR (MA WAVE MARKET INTELLIGENCE)        -->
+        <!-- ========================================================================== -->
+        <div id="module-03-pullback-panel" class="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-[#071d18]/90 via-slate-900/95 to-[#052119]/90 border border-emerald-500/30 shadow-2xl space-y-4 relative overflow-hidden backdrop-blur-md">
+          <div class="absolute -right-16 -top-16 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <!-- Header & Controls -->
+          <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-800/80 pb-3 relative z-10">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-black flex items-center justify-center text-base shadow-lg shadow-emerald-500/30 shrink-0">
+                💎
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-black text-white tracking-wide flex items-center gap-1.5 uppercase font-sans">
+                    MODULE 03: PULLBACK QUALITY DETECTOR
+                  </h3>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    OBSERVE-ONLY
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400 font-sans">
+                  Đánh giá chất lượng nhịp hồi sóng • Phân biệt Pullback lành mạnh vs Đảo chiều rủi ro • Độc lập V8 Core
+                </p>
+              </div>
+            </div>
+
+            <!-- Controls: Timeframe & Toggle Bật/Tắt -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Timeframe selector -->
+              <div class="flex items-center bg-slate-950/80 p-0.5 rounded-xl border border-slate-800 text-[10px] font-mono">
+                <button type="button" onclick="app.changePullbackTF('5m')" id="btn-pullback-tf-5m" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">5M</button>
+                <button type="button" onclick="app.changePullbackTF('15m')" id="btn-pullback-tf-15m" class="px-2 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold shadow">15M</button>
+                <button type="button" onclick="app.changePullbackTF('30m')" id="btn-pullback-tf-30m" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">30M</button>
+                <button type="button" onclick="app.changePullbackTF('1h')" id="btn-pullback-tf-1h" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">1H</button>
+                <button type="button" onclick="app.changePullbackTF('4h')" id="btn-pullback-tf-4h" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">4H</button>
+              </div>
+
+              <!-- Asset badge -->
+              <span id="mod03-asset-badge" class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-slate-800 border border-slate-700 text-amber-300 font-mono">
+                XAU/USD
+              </span>
+
+              <!-- Status Toggle -->
+              <button type="button" onclick="app.togglePullbackQualityDetector()" id="btn-toggle-mod03" class="px-3 py-1 rounded-xl text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="mod03-toggle-text">BẬT (OBSERVE)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Status Summary Grid (8 Factors + Quality Score) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 relative z-10 text-xs">
+            
+            <!-- 1. Trạng Thái Pullback -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">TRẠNG THÁI</span>
+              <div id="mod03-status-val" class="font-black text-emerald-400 text-xs truncate">
+                HEALTHY
+              </div>
+              <span id="mod03-status-sub" class="text-[9px] text-slate-400 block font-sans truncate">Nhịp hồi chuẩn</span>
+            </div>
+
+            <!-- 2. Xu Hướng Gốc & Chiều Hồi -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">XU HƯỚNG GỐC</span>
+              <div id="mod03-trend-val" class="font-black text-cyan-400 text-xs truncate">
+                UPTREND 🟢
+              </div>
+              <span id="mod03-direction-sub" class="text-[9px] text-slate-400 block font-sans truncate">Hồi Giảm (Down)</span>
+            </div>
+
+            <!-- 3. Quality Score (0-100) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">ĐIỂM CHẤT LƯỢNG</span>
+                <span id="mod03-score-val" class="text-[10px] font-mono font-black text-emerald-400">86/100</span>
+              </div>
+              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div id="mod03-score-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500" style="width: 86%;"></div>
+              </div>
+              <span id="mod03-score-sub" class="text-[9px] text-slate-400 block font-sans truncate">Chất lượng cao</span>
+            </div>
+
+            <!-- 4. Độ Sâu (Depth) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">ĐỘ SÂU / ATR</span>
+              <div id="mod03-depth-val" class="font-bold text-slate-200 text-xs truncate">
+                1.15x ATR
+              </div>
+              <span id="mod03-depth-sub" class="text-[9px] text-emerald-400 block font-sans truncate">Hồi chuẩn EMA20</span>
+            </div>
+
+            <!-- 5. Tốc Độ (Speed) -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">TỐC ĐỘ HỒI</span>
+              <div id="mod03-speed-val" class="font-bold text-slate-200 text-xs truncate">
+                ORDERLY ⏱️
+              </div>
+              <span id="mod03-speed-sub" class="text-[9px] text-slate-400 block font-sans truncate">Hồi từ tốn (3 nến)</span>
+            </div>
+
+            <!-- 6. Phản Ứng EMA -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">PHẢN ỨNG EMA</span>
+              <div id="mod03-ema-val" class="font-bold text-emerald-400 text-xs truncate">
+                EMA20 SUPPORT
+              </div>
+              <span id="mod03-ema-sub" class="text-[9px] text-slate-400 block font-sans truncate">Giữ trên EMA20</span>
+            </div>
+
+            <!-- 7. Động Lượng Nến Hồi -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">ĐỘNG LƯỢNG HỒI</span>
+              <div id="mod03-momentum-val" class="font-bold text-slate-200 text-xs truncate">
+                WEAK RETRACE
+              </div>
+              <span id="mod03-momentum-sub" class="text-[9px] text-emerald-400 block font-sans truncate">Lực bán cạn kiệt</span>
+            </div>
+
+            <!-- 8. Bảo Toàn Cấu Trúc Đỉnh/Đáy -->
+            <div class="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block font-sans">CẤU TRÚC HL/LH</span>
+              <div id="mod03-struct-val" class="font-bold text-emerald-400 text-xs truncate">
+                INTACT 🛡️
+              </div>
+              <span id="mod03-struct-sub" class="text-[9px] text-slate-400 block font-sans truncate">Đáy HL bảo toàn</span>
+            </div>
+
+          </div>
+
+          <!-- Warning Reason Banner & Objective Advice -->
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 space-y-2 relative z-10 text-xs">
+            <div class="flex items-start gap-2.5">
+              <div id="mod03-banner-icon" class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center shrink-0 text-xs mt-0.5">
+                ✓
+              </div>
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center justify-between flex-wrap gap-1">
+                  <span class="text-[10px] uppercase font-bold text-slate-400 font-sans">ĐÁNH GIÁ CHẤT LƯỢNG SÓNG HỒI (PULLBACK QUALITY):</span>
+                  <div class="flex items-center gap-2">
+                    <span id="mod03-warning-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-emerald-400 font-bold">HEALTHY_BUY_PULLBACK</span>
+                    <span id="mod03-recovery-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-cyan-300">PHỤC HỒI: WAITING</span>
+                    <span id="mod03-candle-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">NẾN REALTIME</span>
+                  </div>
+                </div>
+                <p id="mod03-reason-text" class="text-slate-300 leading-relaxed font-sans text-xs">
+                  Đang phân tích 5 yếu tố chất lượng nhịp hồi: Độ sâu Pullback, Tốc độ hồi, Động lượng thân nến, Phản ứng tại EMA và Bảo toàn cấu trúc Swing...
+                </p>
+              </div>
+            </div>
+
+            <!-- Objective Advice Notice (Nguyên tắc khách quan: Pullback sâu không đồng nghĩa chắc chắn đảo chiều) -->
+            <div class="pt-2 border-t border-slate-800/60 flex items-start gap-2 text-[11px] text-slate-400 leading-relaxed font-sans">
+              <span class="text-emerald-400 font-bold shrink-0">💡 KHUYẾN NGHỊ:</span>
+              <span id="mod03-advice-text">
+                Nhịp hồi đang diễn ra chuẩn mực theo sóng MA Wave. Kiên nhẫn chờ nến phục hồi (Recovery) xác nhận để vào lệnh thuận xu hướng. Tuyệt đối không bắt đỉnh/đáy hấp tấp khi chưa có nến xác nhận.
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- PANE 1: VÀNG XAU/USD -->
         <div id="trend-content-xau" class="space-y-5">
 
@@ -6458,6 +6624,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 <script src="./js/newsAdapter.js?v=8.0"></script>
 <script src="./js/overextendedDetector.js?v=8.1"></script>
 <script src="./js/trendExhaustionDetector.js?v=8.1"></script>
+<script src="./js/pullbackQualityDetector.js?v=8.1"></script>
 <script src="./js/app.js?v=8.0"></script>
 
 
