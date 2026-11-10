@@ -1687,7 +1687,7 @@ function queryTvScanner(path, tickers) {
 
 async function fetchTradingViewAllPrices() {
   const now = Date.now();
-  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 2500) {
+  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 800) {
     return tvMarketPricesCache;
   }
 
@@ -1835,6 +1835,11 @@ async function fetchTradingViewAllPrices() {
   tvMarketPricesCache.lastUpdated = now;
   return tvMarketPricesCache;
 }
+
+// Background high-frequency prefetch loop (800ms) để server luôn giữ cache giá mới nhất
+setInterval(() => {
+  fetchTradingViewAllPrices().catch(() => {});
+}, 800);
 
 function fetchTradingViewGoldPrice() {
   return new Promise(async (resolve) => {
