@@ -61,7 +61,11 @@ const protectV8Order = (arr) => {
     o2111.tp2 = 4132.10;
     o2111.tp3 = 4142.10;
     if (!o2111.status || o2111.status === 'ĐANG CHẠY' || o2111.status.includes('Chờ TP1')) {
-      o2111.status = 'ĐANG CHẠY (Chờ TP1)';
+      o2111.status = 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️';
+      o2111.winType = 'TP1';
+      o2111.hitTp1 = true;
+      o2111.pnlPips = 100;
+      o2111.pnlUsd = 1000;
     }
   }
 

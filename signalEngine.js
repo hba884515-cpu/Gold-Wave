@@ -84,15 +84,8 @@ class SignalEngine {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length >= 1000) {
-          const hasBTC = parsed.some(s => s && (s.asset === 'btc' || (s.pair && s.pair.includes('BTC'))));
-          const hasXAG = parsed.some(s => s && (s.asset === 'xag' || (s.pair && s.pair.includes('XAG'))));
-          const hasCorrectTopGold = parsed.some(s => s && s.asset === 'xau' && (s.id === 'V8-02096' || s.id === 'V8-02091' || s.id === 'V8-02083'));
-          const hasWeekendGold = parsed.some(s => s && s.asset === 'xau' && s.time && (s.time.includes('- T7') || s.time.includes('- CN')));
-          if (hasBTC && hasXAG && hasCorrectTopGold && !hasWeekendGold) {
-            return parsed;
-          }
-          localStorage.removeItem(this.STORAGE_KEY);
+        if (Array.isArray(parsed) && parsed.length >= 100) {
+          return parsed;
         }
       }
     } catch (e) {}
@@ -1142,16 +1135,55 @@ class SignalEngine {
       const res = await fetch('/api/signals', { cache: 'no-store' });
       if (!res.ok) return;
       const data = await res.json();
-      if (data && data.status === 'SUCCESS' && Array.isArray(data.signals) && data.signals.length >= 1000) {
-        const topLocal = this.signals && this.signals.length > 0 ? this.signals[0] : null;
-        const topServer = data.signals[0];
-        const isDifferent = !topLocal || 
-          topLocal.id !== topServer?.id || 
-          topLocal.status !== topServer?.status || 
-          this.signals.length !== data.signals.length;
+      if (data && data.status === 'SUCCESS' && Array.isArray(data.signals) && data.signals.length >= 100) {
+        let hasChanges = false;
+        const currentSignals = Array.isArray(this.signals) ? [...this.signals] : [];
+        const localMap = new Map();
+        currentSignals.forEach(s => {
+          if (s && s.id) localMap.set(String(s.id), s);
+        });
 
-        if (isDifferent) {
-          this.signals = data.signals;
+        // 1. Duyệt qua tín hiệu máy chủ: Cập nhật trạng thái hoặc thêm mới an toàn
+        for (const sSig of data.signals) {
+          if (!sSig || !sSig.id) continue;
+          const sId = String(sSig.id);
+          const lSig = localMap.get(sId);
+          if (!lSig) {
+            // Máy khách chưa có lệnh này -> Bổ sung an toàn
+            currentSignals.push(sSig);
+            localMap.set(sId, sSig);
+            hasChanges = true;
+          } else {
+            // Đã có -> Chỉ cập nhật nếu máy chủ có thông tin mới hơn (ví dụ đã chốt TP/SL)
+            if (sSig.status && sSig.status !== lSig.status) {
+              lSig.status = sSig.status;
+              if (sSig.hitTp1 !== undefined) lSig.hitTp1 = sSig.hitTp1;
+              if (sSig.hitTp2 !== undefined) lSig.hitTp2 = sSig.hitTp2;
+              if (sSig.hitTp3 !== undefined) lSig.hitTp3 = sSig.hitTp3;
+              if (sSig.winType !== undefined) lSig.winType = sSig.winType;
+              if (sSig.pnlPips !== undefined) lSig.pnlPips = sSig.pnlPips;
+              if (sSig.pnlUsd !== undefined) lSig.pnlUsd = sSig.pnlUsd;
+              if (sSig.sl !== undefined) lSig.sl = sSig.sl;
+              hasChanges = true;
+            }
+          }
+        }
+
+        // 2. BẢO VỆ TUYỆT ĐỐI: Mọi lệnh máy khách đã có mà máy chủ chưa kịp lưu ĐỀU ĐƯỢC GIỮ NGUYÊN 100%!
+        // Tuyệt đối không xóa bất kỳ lệnh nào đã phát sinh trên máy khách.
+
+        if (hasChanges) {
+          // Sắp xếp lại theo thời gian giảm dần (lệnh mới nhất luôn ở trên đầu)
+          currentSignals.sort((a, b) => {
+            const timeA = a.timestamp ? (a.timestamp > 2000000000 ? a.timestamp : a.timestamp * 1000) : 0;
+            const timeB = b.timestamp ? (b.timestamp > 2000000000 ? b.timestamp : b.timestamp * 1000) : 0;
+            if (timeB !== timeA) return timeB - timeA;
+            const numA = parseInt(String(a.id || '').replace(/\D/g, ''), 10) || 0;
+            const numB = parseInt(String(b.id || '').replace(/\D/g, ''), 10) || 0;
+            return numB - numA;
+          });
+
+          this.signals = currentSignals;
           this.saveHistory();
           this.triggerSignalUpdate();
           this.triggerMetricsUpdate();
