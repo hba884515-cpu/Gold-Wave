@@ -535,9 +535,9 @@ class MarketDataStore {
 
         let liveP = anc.price;
         if (isMarketActive) {
-          // Vi dao động tick-by-tick tự nhiên theo sàn
-          const scale = asset === 'XAU' ? 0.16 : (asset === 'BTC' ? 9.0 : 0.04);
-          const jitter = (Math.sin(tickCount * 0.7 + (asset === 'XAU' ? 0 : 1.5)) * (scale * 0.6)) + ((Math.random() - 0.49) * (scale * 0.4));
+          // Vi dao động tick-by-tick tự nhiên theo nhịp sàn thật (Vàng +-0.65 USD rõ rệt)
+          const scale = asset === 'XAU' ? 0.65 : (asset === 'BTC' ? 28.0 : 0.18);
+          const jitter = (Math.sin(tickCount * 0.75 + (asset === 'XAU' ? 0 : 1.5)) * (scale * 0.65)) + ((Math.random() - 0.49) * (scale * 0.35));
           liveP = +(anc.price + jitter).toFixed(2);
         }
 

@@ -1651,15 +1651,24 @@ class GoldTradingApp {
     const highEl = document.getElementById('ohlc-high');
     const lowEl = document.getElementById('ohlc-low');
     const closeEl = document.getElementById('ohlc-close');
-    if (!closeEl) return;
-    if (timeEl && bar.time) {
-      const d = new Date(bar.time * 1000);
-      timeEl.innerText = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    const tickBadge = document.getElementById('live-tick-counter');
+
+    if (timeEl) {
+      const now = new Date();
+      timeEl.innerText = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
-    if (openEl) openEl.innerText = `$${Number(bar.open).toFixed(2)}`;
-    if (highEl) highEl.innerText = `$${Number(bar.high).toFixed(2)}`;
-    if (lowEl) lowEl.innerText = `$${Number(bar.low).toFixed(2)}`;
-    if (closeEl) closeEl.innerText = `$${Number(bar.close).toFixed(2)}`;
+    if (tickBadge) {
+      const now = new Date();
+      tickBadge.innerText = 'LIVE ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    if (openEl && typeof bar.open === 'number') openEl.innerText = `$${bar.open.toFixed(2)}`;
+    if (highEl && typeof bar.high === 'number') highEl.innerText = `$${bar.high.toFixed(2)}`;
+    if (lowEl && typeof bar.low === 'number') lowEl.innerText = `$${bar.low.toFixed(2)}`;
+    if (closeEl && typeof bar.close === 'number') {
+      const isUp = bar.close >= (bar.open || bar.close);
+      closeEl.innerText = `$${bar.close.toFixed(2)}`;
+      closeEl.style.color = isUp ? '#34d399' : '#f87171';
+    }
   }
 
   listenToSignalEngine() {
