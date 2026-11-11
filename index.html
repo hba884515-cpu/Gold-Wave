@@ -893,8 +893,9 @@
             <span id="top-bar-symbol-sub" class="text-[10px] text-slate-400 font-medium">Gold Intelligence Terminal</span>
           </div>
           <div class="flex items-center gap-2 mt-0.5 flex-wrap">
-            <span id="live-gold-price" class="text-xl font-black price-font text-emerald-400 transition-colors">$4,059.10</span>
-            <span id="live-gold-change" class="text-xs font-bold text-emerald-400 price-font">+11.10 (+0.27%)</span>
+            <span id="live-gold-price" class="text-xl font-black price-font text-emerald-400 transition-colors">$4,064.50</span>
+            <span id="live-gold-change" class="text-xs font-bold text-emerald-400 price-font">+31.90 (+0.79%)</span>
+            <span id="live-gold-delta" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 animate-pulse">▲ +0.45</span>
             <span id="top-bar-live-badge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-500/40 text-emerald-300">
               <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               <span>LIVE</span>
@@ -1136,7 +1137,7 @@
                     <div class="text-[10px] text-slate-400 font-normal">Vàng Thế Giới (Spot Gold)</div>
                   </div>
                 </div>
-                <span class="text-amber-400 font-mono text-[11px] font-bold">$3,875.64</span>
+                <span class="text-amber-400 font-mono text-[11px] font-bold" id="dropdown-price-xau">$4,064.50</span>
               </button>
               <button type="button" onclick="selectChartAsset('BTC')" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/15 text-left text-white font-bold transition cursor-pointer">
                 <div class="flex items-center gap-2.5">
@@ -1146,7 +1147,7 @@
                     <div class="text-[10px] text-slate-400 font-normal">Bitcoin (Digital Gold)</div>
                   </div>
                 </div>
-                <span class="text-orange-400 font-mono text-[11px] font-bold">$77,142</span>
+                <span class="text-orange-400 font-mono text-[11px] font-bold" id="dropdown-price-btc">$73,850</span>
               </button>
               <button type="button" onclick="selectChartAsset('XAG')" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-500/15 text-left text-white font-bold transition cursor-pointer">
                 <div class="flex items-center gap-2.5">
@@ -1156,7 +1157,7 @@
                     <div class="text-[10px] text-slate-400 font-normal">Bạc Thế Giới (Silver)</div>
                   </div>
                 </div>
-                <span class="text-slate-300 font-mono text-[11px] font-bold">$49.12</span>
+                <span class="text-slate-300 font-mono text-[11px] font-bold" id="dropdown-price-xag">$53.15</span>
               </button>
             </div>
           </div>

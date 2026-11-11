@@ -501,6 +501,20 @@ class GoldTradingApp {
     });
     this.lineSeries = null;
 
+    // Đường giá Live chạy trực tiếp theo nhịp sàn TradingView
+    try {
+      this.livePriceLine = this.candleSeries.createPriceLine({
+        price: this.currentPrice || 4064.50,
+        color: '#10b981',
+        lineWidth: 2,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: 'LIVE'
+      });
+    } catch(e) {
+      this.livePriceLine = null;
+    }
+
     // Đường EMA 20: Aqua #00e5ff (Dày 2px)
     this.fastEmaSeries = this.chart.addLineSeries({
       color: '#00e5ff',
@@ -1483,8 +1497,20 @@ class GoldTradingApp {
                   this.lineSeries.update({ time: lastBar.time, value: lastBar.close });
                 }
               }
+              if (this.livePriceLine && typeof lastBar.close === 'number') {
+                const isUp = lastBar.close >= (this.prevPrice || lastBar.close);
+                this.livePriceLine.applyOptions({
+                  price: lastBar.close,
+                  color: isUp ? '#10b981' : '#f43f5e',
+                  title: `LIVE $${lastBar.close.toFixed(2)}`
+                });
+              }
               this.updateOhlcTooltip(lastBar);
-            } catch (e) {}
+            } catch (e) {
+              try {
+                if (this.candleSeries && this.bars) this.candleSeries.setData(this.bars);
+              } catch(err) {}
+            }
           }
 
           // Kiểm tra khớp lệnh mở (Open Orders) tại mỗi tick giá tức thời
@@ -1565,20 +1591,32 @@ class GoldTradingApp {
 
     priceElem.textContent = `$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    if (curPrice > prevPrice) {
-      priceElem.classList.remove('flash-down');
+    priceElem.classList.remove('flash-down', 'flash-up');
+    void priceElem.offsetWidth; // Trigger DOM reflow để animation chớp xanh/đỏ luôn chạy mượt
+    if (curPrice >= prevPrice) {
       priceElem.classList.add('flash-up');
-    } else if (curPrice < prevPrice) {
-      priceElem.classList.remove('flash-up');
+    } else {
       priceElem.classList.add('flash-down');
     }
 
     if (changeElem) {
-      const diff = (store && store.priceChange !== undefined) ? store.priceChange : -16.32;
-      const pct = (store && store.priceChangePercent !== undefined) ? store.priceChangePercent : -0.40;
+      const diff = (store && store.priceChange !== undefined) ? store.priceChange : 31.90;
+      const pct = (store && store.priceChangePercent !== undefined) ? store.priceChangePercent : 0.79;
       const isPos = diff >= 0;
       changeElem.textContent = `${isPos ? '+' : ''}${diff.toFixed(2)} (${isPos ? '+' : ''}${pct.toFixed(2)}%)`;
       changeElem.className = `text-xs font-semibold price-font ${isPos ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    const deltaElem = document.getElementById('live-gold-delta');
+    if (deltaElem) {
+      const diffFromPrev = +(curPrice - prevPrice).toFixed(2);
+      if (diffFromPrev > 0) {
+        deltaElem.textContent = `▲ +${diffFromPrev.toFixed(2)}`;
+        deltaElem.className = 'text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 animate-pulse';
+      } else if (diffFromPrev < 0) {
+        deltaElem.textContent = `▼ ${diffFromPrev.toFixed(2)}`;
+        deltaElem.className = 'text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 animate-pulse';
+      }
     }
 
     const topBarTickSec = document.getElementById('top-bar-tick-sec');
@@ -1594,8 +1632,16 @@ class GoldTradingApp {
       statLowElem.textContent = store.low.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    // Cập nhật giá multi-asset trên top-bar ticker
+    // Cập nhật giá multi-asset trên dropdown selector
     if (store && store.assetsData) {
+      const dropXau = document.getElementById('dropdown-price-xau');
+      const dropBtc = document.getElementById('dropdown-price-btc');
+      const dropXag = document.getElementById('dropdown-price-xag');
+      if (dropXau && store.assetsData['XAU']) dropXau.textContent = `$${store.assetsData['XAU'].price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      if (dropBtc && store.assetsData['BTC']) dropBtc.textContent = `$${store.assetsData['BTC'].price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      if (dropXag && store.assetsData['XAG']) dropXag.textContent = `$${store.assetsData['XAG'].price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      // Cập nhật giá multi-asset trên top-bar ticker
       const topXau = document.getElementById('top-ticker-xau');
       const topBtc = document.getElementById('top-ticker-btc');
       const topXag = document.getElementById('top-ticker-xag');

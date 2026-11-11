@@ -1520,32 +1520,32 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 4044.50,
-    change: -3.50,
-    changePercent: -0.09,
-    high: 4050.00,
-    low: 4038.00,
-    open: 4048.00,
+    price: 4064.50,
+    change: 31.90,
+    changePercent: 0.79,
+    high: 4066.90,
+    low: 4026.70,
+    open: 4032.60,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
   BTC: {
-    price: 80414.96,
-    change: 564.96,
-    changePercent: 0.71,
-    high: 81200.00,
-    low: 79150.00,
-    open: 79850.00,
+    price: 73850.00,
+    change: 54.00,
+    changePercent: 0.07,
+    high: 74034.00,
+    low: 73209.00,
+    open: 73796.00,
     symbol: 'BINANCE:BTCUSDT',
     lastUpdated: Date.now()
   },
   XAG: {
-    price: 52.67,
-    change: 0.57,
-    changePercent: 1.09,
-    high: 53.40,
-    low: 51.80,
-    open: 52.10,
+    price: 53.15,
+    change: 1.63,
+    changePercent: 3.16,
+    high: 53.19,
+    low: 51.45,
+    open: 51.52,
     symbol: 'TVC:SILVER',
     lastUpdated: Date.now()
   },
@@ -1623,20 +1623,59 @@ function fetchSilverApiPriceDirect() {
 
 function fetchBtcPriceDirect() {
   return new Promise((resolve) => {
-    const req = https.get('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
+    // 1. Coinbase API (chạy hoàn hảo trên toàn bộ server US như Render)
+    const req = https.get('https://api.coinbase.com/v2/prices/BTC-USD/spot', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 3500 }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
         try {
           const j = JSON.parse(body);
-          if (j && j.lastPrice) {
+          if (j && j.data && j.data.amount) {
+            const curP = parseFloat(j.data.amount);
+            const openP = tvMarketPricesCache.BTC.open || 73796.00;
+            const diff = +(curP - openP).toFixed(2);
+            const pct = +((diff / openP) * 100).toFixed(2);
             return resolve({
-              price: parseFloat(j.lastPrice),
-              change: parseFloat(j.priceChange),
-              changePercent: parseFloat(j.priceChangePercent),
-              high: parseFloat(j.highPrice),
-              low: parseFloat(j.lowPrice),
-              open: parseFloat(j.prevClosePrice)
+              price: curP,
+              change: diff,
+              changePercent: pct,
+              high: Math.max(tvMarketPricesCache.BTC.high || curP, curP),
+              low: Math.min(tvMarketPricesCache.BTC.low || curP, curP),
+              open: openP
+            });
+          }
+        } catch (e) {}
+        fetchKrakenBtc().then(resolve);
+      });
+    });
+    req.on('timeout', () => { req.destroy(); fetchKrakenBtc().then(resolve); });
+    req.on('error', () => fetchKrakenBtc().then(resolve));
+  });
+}
+
+function fetchKrakenBtc() {
+  return new Promise((resolve) => {
+    const req = https.get('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 3000 }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(body);
+          if (j && j.result && j.result.XXBTZUSD) {
+            const pair = j.result.XXBTZUSD;
+            const curP = parseFloat(pair.c[0]);
+            const highP = parseFloat(pair.h[0]);
+            const lowP = parseFloat(pair.l[0]);
+            const openP = parseFloat(pair.o);
+            const diff = +(curP - openP).toFixed(2);
+            const pct = +((diff / openP) * 100).toFixed(2);
+            return resolve({
+              price: curP,
+              change: diff,
+              changePercent: pct,
+              high: highP,
+              low: lowP,
+              open: openP
             });
           }
         } catch (e) {}
