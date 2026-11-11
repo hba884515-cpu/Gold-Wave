@@ -643,14 +643,14 @@ class MarketDataStore {
     fetchProxyFallback();
     liveDynamicPulse();
 
-    // 1. Nhịp đập thị trường: 800ms / lần (giá và nến nhảy liên tục sống động)
-    setInterval(liveDynamicPulse, 800);
+    // 1. Nhịp đập thị trường: 500ms / lần (giá và nến nhảy liên tục sống động)
+    setInterval(liveDynamicPulse, 500);
 
-    // 2. Đồng bộ giá sàn TradingView thật: cứ 2.500ms làm mới anchor
-    setInterval(fetchDirectTradingViewTicks, 2500);
+    // 2. Đồng bộ giá sàn TradingView thật: cứ 2.000ms làm mới anchor
+    setInterval(fetchDirectTradingViewTicks, 2000);
 
-    // 3. Đồng bộ server metadata: mỗi 4.000ms
-    setInterval(fetchProxyFallback, 4000);
+    // 3. Đồng bộ server metadata: mỗi 2.000ms
+    setInterval(fetchProxyFallback, 2000);
   }
 
   setTimeframe(tf) {

@@ -490,14 +490,16 @@ class GoldTradingApp {
       },
     });
 
-    // Biểu đồ đường màu Xanh dương rực rỡ #00b0ff chuẩn TradingView theo yêu cầu người dùng
-    this.lineSeries = this.chart.addLineSeries({
-      color: '#00b0ff',
-      lineWidth: 2,
-      priceLineVisible: true,
-      title: 'Giá XAU/USD',
+    // Mặc định khởi tạo nến Nhật (Candlestick) chuẩn TradingView MA Wave V8
+    this.candleSeries = this.chart.addCandlestickSeries({
+      upColor: '#089981',
+      downColor: '#f23645',
+      borderUpColor: '#089981',
+      borderDownColor: '#f23645',
+      wickUpColor: '#089981',
+      wickDownColor: '#f23645',
     });
-    this.candleSeries = null;
+    this.lineSeries = null;
 
     // Đường EMA 20: Aqua #00e5ff (Dày 2px)
     this.fastEmaSeries = this.chart.addLineSeries({
@@ -650,17 +652,22 @@ class GoldTradingApp {
     }
   }
 
-  // 2. Tạo nến lịch sử phản ánh chính xác 100% hình ảnh thực tế của người dùng
   loadInitialBars() {
     const tf = this.currentTimeframe || '15m';
     if (window.marketDataStore) {
       this.bars = window.marketDataStore.getBars(tf);
       this.currentPrice = window.marketDataStore.getCurrentPrice();
     }
-    if (this.candleSeries && this.bars) {
+    if (this.candleSeries && this.bars && this.bars.length > 0) {
       this.candleSeries.setData(this.bars);
     }
+    if (this.lineSeries && this.bars && this.bars.length > 0) {
+      this.lineSeries.setData(this.bars.map(b => ({ time: b.time, value: b.close })));
+    }
     this.updatePriceHeader();
+    if (this.bars && this.bars.length > 0) {
+      this.updateOhlcTooltip(this.bars[this.bars.length - 1]);
+    }
   }
 
   switchChartAsset(assetKey) {
@@ -1445,12 +1452,22 @@ class GoldTradingApp {
           this.bars = window.marketDataStore.getBars(tf);
           const lastBar = (this.bars && this.bars.length) ? this.bars[this.bars.length - 1] : null;
 
-          if (this.replayMode === 'live' && this.candleSeries && lastBar) {
-            if (this.bars && this.bars.length !== prevCount) {
-              this.candleSeries.setData(this.bars);
-            } else {
-              this.candleSeries.update(lastBar);
+          if (this.replayMode === 'live' && lastBar) {
+            if (this.candleSeries) {
+              if (this.bars && this.bars.length !== prevCount) {
+                this.candleSeries.setData(this.bars);
+              } else {
+                this.candleSeries.update(lastBar);
+              }
             }
+            if (this.lineSeries) {
+              if (this.bars && this.bars.length !== prevCount) {
+                this.lineSeries.setData(this.bars.map(b => ({ time: b.time, value: b.close })));
+              } else {
+                this.lineSeries.update({ time: lastBar.time, value: lastBar.close });
+              }
+            }
+            this.updateOhlcTooltip(lastBar);
           }
 
           // Kiểm tra khớp lệnh mở (Open Orders) tại mỗi tick giá tức thời
@@ -1577,6 +1594,12 @@ class GoldTradingApp {
         replayPrice.textContent = `$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       }
 
+      // Cập nhật giá Live trên Tab Xu Hướng
+      const trendPrice = document.getElementById('trend-live-price');
+      if (trendPrice) {
+        trendPrice.textContent = `$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+
       // Đồng bộ giá vào danh sách tín hiệu RADAR_SIGNALS
       if (window.RADAR_SIGNALS && Array.isArray(window.RADAR_SIGNALS)) {
         window.RADAR_SIGNALS.forEach(s => {
@@ -1615,6 +1638,24 @@ class GoldTradingApp {
         feedStatusText.textContent = activeAsset === 'btc' ? 'BTC 24/7 AI Active' : 'MA WAVE V8 AI Active';
       }
     }
+  }
+
+  updateOhlcTooltip(bar) {
+    if (!bar) return;
+    const timeEl = document.getElementById('ohlc-time');
+    const openEl = document.getElementById('ohlc-open');
+    const highEl = document.getElementById('ohlc-high');
+    const lowEl = document.getElementById('ohlc-low');
+    const closeEl = document.getElementById('ohlc-close');
+    if (!closeEl) return;
+    if (timeEl && bar.time) {
+      const d = new Date(bar.time * 1000);
+      timeEl.innerText = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    }
+    if (openEl) openEl.innerText = `$${Number(bar.open).toFixed(2)}`;
+    if (highEl) highEl.innerText = `$${Number(bar.high).toFixed(2)}`;
+    if (lowEl) lowEl.innerText = `$${Number(bar.low).toFixed(2)}`;
+    if (closeEl) closeEl.innerText = `$${Number(bar.close).toFixed(2)}`;
   }
 
   listenToSignalEngine() {
