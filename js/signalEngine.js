@@ -757,14 +757,14 @@ class SignalEngine {
         this.updateOpenOrders(lastBar.close, asset, highestCandle, lowestCandle);
       }
 
-      // 2. PHONG CÁCH 1 (SNIPER): Giãn cách bắn tỉa tối thiểu 2 tiếng giữa 2 lệnh để lọc nhiễu, kiên nhẫn chờ điểm đẹp
-      if ((snap.buySignal || snap.sellSignal) && (nowMs - lastEmittedTime > 120 * 60 * 1000)) {
+      // 2. PHONG CÁCH 1 NĂNG ĐỘNG (HYBRID SNIPER): Giãn cách tối ưu 45 phút giữa 2 lệnh để bắt trọn các nhịp sóng trong ngày
+      if ((snap.buySignal || snap.sellSignal) && (nowMs - lastEmittedTime > 45 * 60 * 1000)) {
         // Kiểm tra chống đu đỉnh / đu đáy (Anti-Overextended):
-        // Nếu giá dãn cách quá xa dải MA (> 1.8 * ATR) -> KHÔNG MỞ LỆNH, chờ pullback!
+        // Nếu giá dãn cách quá xa dải MA (> 2.0 * ATR) -> KHÔNG MỞ LỆNH, chờ pullback!
         const fastEmaVal = snap.fastEMA || snap.ema20 || lastBar.close;
         const atrVal = snap.atr || (asset === 'btc' ? 350 : (asset === 'xag' ? 0.35 : 3.5));
         const distFromEma = Math.abs(lastBar.close - fastEmaVal);
-        if (distFromEma > atrVal * 1.8) {
+        if (distFromEma > atrVal * 2.0) {
           return snap; // Giá đang quá đà, tránh đu đỉnh/đu đáy!
         }
 
@@ -832,10 +832,10 @@ class SignalEngine {
       status: 'ĐANG CHẠY (Chờ TP1)',
       pnlPips: 0,
       pnlUsd: 0,
-      strategy: `MA WAVE V8 PRO: ${type} ENTRY (SNIPER)`,
+      strategy: `MA WAVE V8 PRO: ${type} ENTRY (HYBRID SNIPER)`,
       reason: isBuy 
-        ? `Mô hình Bắn Tỉa: Retest dải hỗ trợ M15 + Xác nhận đà tăng, bảo vệ SL an toàn sau đáy nến tại $${sl}` 
-        : `Mô hình Bắn Tỉa: Retest cản động M15 + Xác nhận áp lực bán dốc xuống, bảo vệ SL an toàn sau đỉnh nến tại $${sl}`
+        ? `Mô hình Bắn Tỉa Năng Động: Retest dải hỗ trợ M15 + Xác nhận nhịp sóng tăng, bảo vệ SL an toàn sau đáy nến tại $${sl}` 
+        : `Mô hình Bắn Tỉa Năng Động: Retest cản động M15 + Xác nhận áp lực bán dốc xuống, bảo vệ SL an toàn sau đỉnh nến tại $${sl}`
     };
 
     this.signals.unshift(newSignal);

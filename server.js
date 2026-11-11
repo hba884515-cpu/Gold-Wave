@@ -3814,9 +3814,9 @@ function startServerSignalEngine() {
             serverActiveTrades[cfg.key] = null;
           }
         } else {
-          // 2. PHONG CÁCH 1 (SNIPER): BẮN TỈA CHUẨN XÁC, CHẤT LƯỢNG CAO, CHỐNG ĐU ĐỈNH/ĐÁY
-          // Giãn cách bắn tỉa tối thiểu 2.5 - 3 tiếng giữa 2 lệnh để lọc nhiễu và kiên nhẫn chờ điểm đẹp
-          const sniperCooldown = (cfg.key === 'btc') ? 180 * 60 * 1000 : 150 * 60 * 1000;
+          // 2. PHONG CÁCH 1 NĂNG ĐỘNG (HYBRID SNIPER): BẮN TỈA CHUẨN XÁC, TẦN SUẤT ĐỀU ĐẶN
+          // Giãn cách tối ưu 45 - 60 phút giữa 2 đợt sóng để bắt trọn các nhịp sóng đẹp trong ngày
+          const sniperCooldown = (cfg.key === 'btc') ? 60 * 60 * 1000 : 45 * 60 * 1000;
           const lastTime = lastSignalTimes[cfg.key] || 0;
           if (now - lastTime >= sniperCooldown) {
             const pHist = serverPriceHistory[cfg.key] || [];
@@ -3827,15 +3827,14 @@ function startServerSignalEngine() {
             const priceDelta = price - oldestPrice;
             const distFromAvg = Math.abs(price - avgPrice);
 
-            // BỘ LỌC 1: XÁC ĐỊNH XU HƯỚNG RÕ RÀNG (Loại bỏ hoàn toàn thị trường đi ngang Sideway/Chop)
-            const minTrendMove = (cfg.key === 'btc') ? 250 : (cfg.key === 'xag' ? 0.25 : 3.0);
+            // BỘ LỌC 1: XÁC ĐỊNH XU HƯỚNG RÕ RÀNG (Độ nhạy tối ưu: Vàng sóng 2.0 giá, BTC 180 USD, Bạc 0.18 USD)
+            const minTrendMove = (cfg.key === 'btc') ? 180 : (cfg.key === 'xag' ? 0.18 : 2.0);
             if (Math.abs(priceDelta) < minTrendMove) {
-              continue; // Thị trường đang đi ngang giằng co -> KIÊN QUYẾT ĐỨNG NGOÀI!
+              continue; // Thị trường đi ngang quá hẹp -> Đứng ngoài bảo vệ vốn
             }
 
             // BỘ LỌC 2: CHỐNG ĐU ĐỈNH / ĐU ĐÁY (Anti-Overextended Filter)
-            // Nếu giá đã phóng đi quá xa so với mức trung bình -> CẤM VÀO LỆNH, chờ nhịp hồi!
-            const maxStretch = (cfg.key === 'btc') ? 1200 : (cfg.key === 'xag' ? 0.80 : 10.0);
+            const maxStretch = (cfg.key === 'btc') ? 1400 : (cfg.key === 'xag' ? 0.90 : 12.0);
             if (distFromAvg > maxStretch) {
               continue; // Giá dãn cách quá đà -> Chặn tuyệt đối để không đu đỉnh/đáy!
             }
@@ -3903,10 +3902,10 @@ function startServerSignalEngine() {
               status: 'ĐANG CHẠY (Chờ TP1)',
               pnlPips: 0,
               pnlUsd: 0,
-              strategy: `MA WAVE V8 PRO: ${sigType} ENTRY (SNIPER)`,
+              strategy: `MA WAVE V8 PRO: ${sigType} ENTRY (HYBRID SNIPER)`,
               reason: isBuy 
-                ? `Mô hình Bắn Tỉa: Retest dải hỗ trợ M15 + Xác nhận đà tăng, bảo vệ SL an toàn sau đáy nến tại $${sl}`
-                : `Mô hình Bắn Tỉa: Retest cản động M15 + Xác nhận áp lực bán dốc xuống, bảo vệ SL an toàn sau đỉnh nến tại $${sl}`
+                ? `Mô hình Bắn Tỉa Năng Động: Retest dải hỗ trợ M15 + Xác nhận nhịp sóng tăng, bảo vệ SL an toàn sau đáy nến tại $${sl}`
+                : `Mô hình Bắn Tỉa Năng Động: Retest cản động M15 + Xác nhận áp lực bán dốc xuống, bảo vệ SL an toàn sau đỉnh nến tại $${sl}`
             };
 
             signalsDB.unshift(newSignal);
