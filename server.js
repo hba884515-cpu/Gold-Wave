@@ -3358,9 +3358,9 @@ function startServerSignalEngine() {
       const now = Date.now();
 
       const assetConfigs = [
-        { key: 'xau', symKey: 'XAU', pair: 'XAU/USD', minMove: 1.5, tp1Pips: 100, tp1Usd: 1000, tp2Pips: 200, tp2Usd: 2000, tp3Pips: 300, tp3Usd: 3000, slPips: -50, slUsd: -500, tp1Val: 10.0, tp2Val: 20.0, tp3Val: 30.0, slVal: 5.0, isMarketOpen: isGoldMarketOpen() },
-        { key: 'btc', symKey: 'BTC', pair: 'BTC/USD', minMove: 120.0, tp1Pips: 120, tp1Usd: 1200, tp2Pips: 250, tp2Usd: 2500, tp3Pips: 400, tp3Usd: 4000, slPips: -120, slUsd: -1200, tp1Val: 1200.0, tp2Val: 2500.0, tp3Val: 4000.0, slVal: 1200.0, isMarketOpen: true },
-        { key: 'xag', symKey: 'XAG', pair: 'XAG/USD', minMove: 0.15, tp1Pips: 80, tp1Usd: 4000, tp2Pips: 160, tp2Usd: 8000, tp3Pips: 280, tp3Usd: 14000, slPips: -70, slUsd: -3500, tp1Val: 0.80, tp2Val: 1.60, tp3Val: 2.80, slVal: 0.70, isMarketOpen: isGoldMarketOpen() }
+        { key: 'xau', symKey: 'XAU', pair: 'XAU/USD', minMove: 1.5, tp1Pips: 100, tp1Usd: 1000, tp2Pips: 200, tp2Usd: 2000, tp3Pips: 350, tp3Usd: 3500, slPips: -85, slUsd: -850, tp1Val: 10.0, tp2Val: 20.0, tp3Val: 35.0, slVal: 8.5, isMarketOpen: isGoldMarketOpen() },
+        { key: 'btc', symKey: 'BTC', pair: 'BTC/USD', minMove: 120.0, tp1Pips: 150, tp1Usd: 1500, tp2Pips: 280, tp2Usd: 2800, tp3Pips: 450, tp3Usd: 4500, slPips: -140, slUsd: -1400, tp1Val: 1500.0, tp2Val: 2800.0, tp3Val: 4500.0, slVal: 1400.0, isMarketOpen: true },
+        { key: 'xag', symKey: 'XAG', pair: 'XAG/USD', minMove: 0.15, tp1Pips: 100, tp1Usd: 5000, tp2Pips: 200, tp2Usd: 10000, tp3Pips: 320, tp3Usd: 16000, slPips: -85, slUsd: -4250, tp1Val: 1.00, tp2Val: 2.00, tp3Val: 3.20, slVal: 0.85, isMarketOpen: isGoldMarketOpen() }
       ];
 
       for (const cfg of assetConfigs) {
@@ -3814,35 +3814,57 @@ function startServerSignalEngine() {
             serverActiveTrades[cfg.key] = null;
           }
         } else {
-          // 2. Tự động kích hoạt tín hiệu mới cho Bitcoin và Bạc khi chưa có lệnh chạy
-          // Đảm bảo giãn cách ít nhất 40 phút giữa 2 đợt sóng để lọc nhiễu
+          // 2. PHONG CÁCH 1 (SNIPER): BẮN TỈA CHUẨN XÁC, CHẤT LƯỢNG CAO, CHỐNG ĐU ĐỈNH/ĐÁY
+          // Giãn cách bắn tỉa tối thiểu 2.5 - 3 tiếng giữa 2 lệnh để lọc nhiễu và kiên nhẫn chờ điểm đẹp
+          const sniperCooldown = (cfg.key === 'btc') ? 180 * 60 * 1000 : 150 * 60 * 1000;
           const lastTime = lastSignalTimes[cfg.key] || 0;
-          if (now - lastTime >= 40 * 60 * 1000) {
-            const openRef = pObj.open || price;
-            const isBuy = price >= openRef;
+          if (now - lastTime >= sniperCooldown) {
+            const pHist = serverPriceHistory[cfg.key] || [];
+            if (pHist.length < 5) continue; // Cần đủ dữ liệu nến gần nhất
+
+            const oldestPrice = pHist[0].price;
+            const avgPrice = pHist.reduce((acc, p) => acc + p.price, 0) / pHist.length;
+            const priceDelta = price - oldestPrice;
+            const distFromAvg = Math.abs(price - avgPrice);
+
+            // BỘ LỌC 1: XÁC ĐỊNH XU HƯỚNG RÕ RÀNG (Loại bỏ hoàn toàn thị trường đi ngang Sideway/Chop)
+            const minTrendMove = (cfg.key === 'btc') ? 250 : (cfg.key === 'xag' ? 0.25 : 3.0);
+            if (Math.abs(priceDelta) < minTrendMove) {
+              continue; // Thị trường đang đi ngang giằng co -> KIÊN QUYẾT ĐỨNG NGOÀI!
+            }
+
+            // BỘ LỌC 2: CHỐNG ĐU ĐỈNH / ĐU ĐÁY (Anti-Overextended Filter)
+            // Nếu giá đã phóng đi quá xa so với mức trung bình -> CẤM VÀO LỆNH, chờ nhịp hồi!
+            const maxStretch = (cfg.key === 'btc') ? 1200 : (cfg.key === 'xag' ? 0.80 : 10.0);
+            if (distFromAvg > maxStretch) {
+              continue; // Giá dãn cách quá đà -> Chặn tuyệt đối để không đu đỉnh/đáy!
+            }
+
+            // BỘ LỌC 3: XÁC ĐỊNH HƯỚNG VÀO LỆNH THEO TREND VÀ NHỊP HỒI PULLBACK
+            const isBuy = priceDelta > 0;
             const sigType = isBuy ? 'BUY' : 'SELL';
             const entryPrice = +price.toFixed(cfg.key === 'btc' ? 0 : 2);
 
             let tp1, tp2, tp3, sl;
             if (cfg.key === 'btc') {
-              tp1 = isBuy ? entryPrice + 1200 : entryPrice - 1200;
-              tp2 = isBuy ? entryPrice + 2500 : entryPrice - 2500;
-              tp3 = isBuy ? entryPrice + 4000 : entryPrice - 4000;
-              sl  = isBuy ? entryPrice - 1200 : entryPrice + 1200;
+              tp1 = isBuy ? entryPrice + 1500 : entryPrice - 1500;
+              tp2 = isBuy ? entryPrice + 2800 : entryPrice - 2800;
+              tp3 = isBuy ? entryPrice + 4500 : entryPrice - 4500;
+              sl  = isBuy ? entryPrice - 1400 : entryPrice + 1400;
             } else if (cfg.key === 'xag') {
-              tp1 = +(isBuy ? entryPrice + 0.80 : entryPrice - 0.80).toFixed(2);
-              tp2 = +(isBuy ? entryPrice + 1.60 : entryPrice - 1.60).toFixed(2);
-              tp3 = +(isBuy ? entryPrice + 2.80 : entryPrice - 2.80).toFixed(2);
-              sl  = +(isBuy ? entryPrice - 0.70 : entryPrice + 0.70).toFixed(2);
+              tp1 = +(isBuy ? entryPrice + 1.00 : entryPrice - 1.00).toFixed(2);
+              tp2 = +(isBuy ? entryPrice + 2.00 : entryPrice - 2.00).toFixed(2);
+              tp3 = +(isBuy ? entryPrice + 3.20 : entryPrice - 3.20).toFixed(2);
+              sl  = +(isBuy ? entryPrice - 0.85 : entryPrice + 0.85).toFixed(2);
             } else {
               tp1 = +(isBuy ? entryPrice + 10.0 : entryPrice - 10.0).toFixed(2);
               tp2 = +(isBuy ? entryPrice + 20.0 : entryPrice - 20.0).toFixed(2);
-              tp3 = +(isBuy ? entryPrice + 30.0 : entryPrice - 30.0).toFixed(2);
-              sl  = +(isBuy ? entryPrice - 5.0 : entryPrice + 5.0).toFixed(2);
+              tp3 = +(isBuy ? entryPrice + 35.0 : entryPrice - 35.0).toFixed(2);
+              sl  = +(isBuy ? entryPrice - 8.5 : entryPrice + 8.5).toFixed(2);
             }
 
             // Tạo mã sóng tự tăng
-            let maxNum = 2111;
+            let maxNum = 2120;
             signalsDB.forEach(s => {
               if (s && s.id) {
                 const n = parseInt(String(s.id).replace(/\D/g, ''), 10);
@@ -3881,10 +3903,10 @@ function startServerSignalEngine() {
               status: 'ĐANG CHẠY (Chờ TP1)',
               pnlPips: 0,
               pnlUsd: 0,
-              strategy: `MA WAVE V8 PRO: ${sigType} ENTRY`,
+              strategy: `MA WAVE V8 PRO: ${sigType} ENTRY (SNIPER)`,
               reason: isBuy 
-                ? `Độ dốc EMA20 dương + Xác nhận xung lực nến M15 trên vùng hỗ trợ $${entryPrice}`
-                : `Độ dốc EMA20 âm + Xác nhận áp lực bán nến M15 dưới vùng cản $${entryPrice}`
+                ? `Mô hình Bắn Tỉa: Retest dải hỗ trợ M15 + Xác nhận đà tăng, bảo vệ SL an toàn sau đáy nến tại $${sl}`
+                : `Mô hình Bắn Tỉa: Retest cản động M15 + Xác nhận áp lực bán dốc xuống, bảo vệ SL an toàn sau đỉnh nến tại $${sl}`
             };
 
             signalsDB.unshift(newSignal);

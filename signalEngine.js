@@ -757,8 +757,17 @@ class SignalEngine {
         this.updateOpenOrders(lastBar.close, asset, highestCandle, lowestCandle);
       }
 
-      // 2. Giãn cách an toàn 25 phút giữa 2 đợt sóng để lọc nhiễu, chống spam và tránh quét SL liên tiếp
-      if ((snap.buySignal || snap.sellSignal) && (nowMs - lastEmittedTime > 25 * 60 * 1000)) {
+      // 2. PHONG CÁCH 1 (SNIPER): Giãn cách bắn tỉa tối thiểu 2 tiếng giữa 2 lệnh để lọc nhiễu, kiên nhẫn chờ điểm đẹp
+      if ((snap.buySignal || snap.sellSignal) && (nowMs - lastEmittedTime > 120 * 60 * 1000)) {
+        // Kiểm tra chống đu đỉnh / đu đáy (Anti-Overextended):
+        // Nếu giá dãn cách quá xa dải MA (> 1.8 * ATR) -> KHÔNG MỞ LỆNH, chờ pullback!
+        const fastEmaVal = snap.fastEMA || snap.ema20 || lastBar.close;
+        const atrVal = snap.atr || (asset === 'btc' ? 350 : (asset === 'xag' ? 0.35 : 3.5));
+        const distFromEma = Math.abs(lastBar.close - fastEmaVal);
+        if (distFromEma > atrVal * 1.8) {
+          return snap; // Giá đang quá đà, tránh đu đỉnh/đu đáy!
+        }
+
         const stillRunning = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
         if (!stillRunning) {
           const type = snap.buySignal ? 'BUY' : 'SELL';
@@ -782,22 +791,22 @@ class SignalEngine {
     let tp1, tp2, tp3, sl, pairName;
     if (asset === 'btc') {
       pairName = 'BTC/USD';
-      tp1 = isBuy ? entryPrice + 1200 : entryPrice - 1200;
-      tp2 = isBuy ? entryPrice + 2500 : entryPrice - 2500;
-      tp3 = isBuy ? entryPrice + 4000 : entryPrice - 4000;
-      sl  = isBuy ? entryPrice - 1200 : entryPrice + 1200;
+      tp1 = isBuy ? entryPrice + 1500 : entryPrice - 1500;
+      tp2 = isBuy ? entryPrice + 2800 : entryPrice - 2800;
+      tp3 = isBuy ? entryPrice + 4500 : entryPrice - 4500;
+      sl  = isBuy ? entryPrice - 1400 : entryPrice + 1400;
     } else if (asset === 'xag') {
       pairName = 'XAG/USD';
-      tp1 = isBuy ? entryPrice + 0.80 : entryPrice - 0.80;
-      tp2 = isBuy ? entryPrice + 1.60 : entryPrice - 1.60;
-      tp3 = isBuy ? entryPrice + 2.80 : entryPrice - 2.80;
-      sl  = isBuy ? entryPrice - 0.70 : entryPrice + 0.70;
+      tp1 = +(isBuy ? entryPrice + 1.00 : entryPrice - 1.00).toFixed(2);
+      tp2 = +(isBuy ? entryPrice + 2.00 : entryPrice - 2.00).toFixed(2);
+      tp3 = +(isBuy ? entryPrice + 3.20 : entryPrice - 3.20).toFixed(2);
+      sl  = +(isBuy ? entryPrice - 0.85 : entryPrice + 0.85).toFixed(2);
     } else {
       pairName = 'XAU/USD';
-      tp1 = isBuy ? entryPrice + 10.0 : entryPrice - 10.0;
-      tp2 = isBuy ? entryPrice + 20.0 : entryPrice - 20.0;
-      tp3 = isBuy ? entryPrice + 30.0 : entryPrice - 30.0;
-      sl  = isBuy ? entryPrice - 5.0 : entryPrice + 5.0;
+      tp1 = +(isBuy ? entryPrice + 10.0 : entryPrice - 10.0).toFixed(2);
+      tp2 = +(isBuy ? entryPrice + 20.0 : entryPrice - 20.0).toFixed(2);
+      tp3 = +(isBuy ? entryPrice + 35.0 : entryPrice - 35.0).toFixed(2);
+      sl  = +(isBuy ? entryPrice - 8.5 : entryPrice + 8.5).toFixed(2);
     }
 
     const currentCount = (this.signals && this.signals.length > 0) 
@@ -823,10 +832,10 @@ class SignalEngine {
       status: 'ĐANG CHẠY (Chờ TP1)',
       pnlPips: 0,
       pnlUsd: 0,
-      strategy: `MA WAVE V8 PRO: ${type} ENTRY`,
+      strategy: `MA WAVE V8 PRO: ${type} ENTRY (SNIPER)`,
       reason: isBuy 
-        ? 'Trend Tăng + SlopeOK + SpreadOK + Nến Xác Nhận trên EMA20' 
-        : 'Trend Giảm + SlopeOK + SpreadOK + Nến Xác Nhận dưới EMA20'
+        ? `Mô hình Bắn Tỉa: Retest dải hỗ trợ M15 + Xác nhận đà tăng, bảo vệ SL an toàn sau đáy nến tại $${sl}` 
+        : `Mô hình Bắn Tỉa: Retest cản động M15 + Xác nhận áp lực bán dốc xuống, bảo vệ SL an toàn sau đỉnh nến tại $${sl}`
     };
 
     this.signals.unshift(newSignal);
