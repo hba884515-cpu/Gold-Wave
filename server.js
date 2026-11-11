@@ -1648,6 +1648,8 @@ function fetchBtcPriceDirect() {
   });
 }
 
+let isFetchingTvPrices = false;
+
 function queryTvScanner(path, tickers) {
   return new Promise((resolve) => {
     const postData = JSON.stringify({
@@ -1666,7 +1668,7 @@ function queryTvScanner(path, tickers) {
         'Origin': 'https://www.tradingview.com',
         'Referer': 'https://www.tradingview.com/'
       },
-      timeout: 4500
+      timeout: 2500
     }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
@@ -1687,9 +1689,10 @@ function queryTvScanner(path, tickers) {
 
 async function fetchTradingViewAllPrices() {
   const now = Date.now();
-  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 800) {
+  if (isFetchingTvPrices || (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 1200)) {
     return tvMarketPricesCache;
   }
+  isFetchingTvPrices = true;
 
   let goldUpdated = false;
   let silverUpdated = false;
@@ -1830,16 +1833,18 @@ async function fetchTradingViewAllPrices() {
         lastUpdated: now
       };
     }
-  } catch(e) {}
+  } catch(e) {} finally {
+    isFetchingTvPrices = false;
+  }
 
   tvMarketPricesCache.lastUpdated = now;
   return tvMarketPricesCache;
 }
 
-// Background high-frequency prefetch loop (800ms) để server luôn giữ cache giá mới nhất
+// Background high-frequency prefetch loop (1200ms) để server luôn giữ cache giá mới nhất
 setInterval(() => {
   fetchTradingViewAllPrices().catch(() => {});
-}, 800);
+}, 1200);
 
 function fetchTradingViewGoldPrice() {
   return new Promise(async (resolve) => {
@@ -2542,16 +2547,19 @@ const server = http.createServer(async (req, res) => {
     }));
   }
   else if (urlPath === '/api/market-prices') {
-    const allPrices = await fetchTradingViewAllPrices();
     const marketOpen = isGoldMarketOpen();
-    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Access-Control-Allow-Origin': '*'
+    });
     res.end(JSON.stringify({
       status: 'SUCCESS',
       isMarketOpen: marketOpen,
       marketStatus: marketOpen ? 'OPEN' : 'CLOSED',
       marketStatusText: marketOpen ? 'Đang giao dịch' : 'Thị trường đóng cửa (Nghỉ cuối tuần)',
       onlineUsers: getSimulatedOnlineUsers(),
-      prices: allPrices,
+      prices: tvMarketPricesCache,
       timestamp: new Date().toISOString()
     }));
   }

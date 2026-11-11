@@ -1443,8 +1443,10 @@ class GoldTradingApp {
 
       window.marketDataStore.subscribe((event, payload) => {
         if (event === 'tick') {
-          // 1. Luồng Siêu Tốc (Mỗi 800ms): Cập nhật giá Header và nến thời gian thực cực mượt
-          this.updatePriceHeader();
+          // 1. Luồng Siêu Tốc (Mỗi 400ms): Cập nhật giá Header và nến thời gian thực cực mượt
+          try {
+            this.updatePriceHeader();
+          } catch (e) {}
 
           const now = Date.now();
           const tf = this.currentTimeframe || '15m';
@@ -1453,21 +1455,23 @@ class GoldTradingApp {
           const lastBar = (this.bars && this.bars.length) ? this.bars[this.bars.length - 1] : null;
 
           if (this.replayMode === 'live' && lastBar) {
-            if (this.candleSeries) {
-              if (this.bars && this.bars.length !== prevCount) {
-                this.candleSeries.setData(this.bars);
-              } else {
-                this.candleSeries.update(lastBar);
+            try {
+              if (this.candleSeries) {
+                if (this.bars && this.bars.length !== prevCount) {
+                  this.candleSeries.setData(this.bars);
+                } else {
+                  this.candleSeries.update(lastBar);
+                }
               }
-            }
-            if (this.lineSeries) {
-              if (this.bars && this.bars.length !== prevCount) {
-                this.lineSeries.setData(this.bars.map(b => ({ time: b.time, value: b.close })));
-              } else {
-                this.lineSeries.update({ time: lastBar.time, value: lastBar.close });
+              if (this.lineSeries) {
+                if (this.bars && this.bars.length !== prevCount) {
+                  this.lineSeries.setData(this.bars.map(b => ({ time: b.time, value: b.close })));
+                } else {
+                  this.lineSeries.update({ time: lastBar.time, value: lastBar.close });
+                }
               }
-            }
-            this.updateOhlcTooltip(lastBar);
+              this.updateOhlcTooltip(lastBar);
+            } catch (e) {}
           }
 
           // Kiểm tra khớp lệnh mở (Open Orders) tại mỗi tick giá tức thời
@@ -8627,7 +8631,7 @@ function sendWebPushNotification(title, body, tag = 'goldwave_alert') {
 }
 
 // Global initialization call for App, Account & Notifs
-window.addEventListener('DOMContentLoaded', () => {
+function initGoldAppInstance() {
   try {
     if (!window.app) {
       window.app = new GoldTradingApp();
@@ -8636,10 +8640,16 @@ window.addEventListener('DOMContentLoaded', () => {
     console.error('Error instantiating GoldTradingApp:', e);
   }
   if (typeof checkAuthOnLoad === 'function') checkAuthOnLoad();
-  updateUserUI();
-  renderNotifDropdown();
-  checkPushPermissionOnLoad();
-});
+  if (typeof updateUserUI === 'function') updateUserUI();
+  if (typeof renderNotifDropdown === 'function') renderNotifDropdown();
+  if (typeof checkPushPermissionOnLoad === 'function') checkPushPermissionOnLoad();
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initGoldAppInstance);
+} else {
+  initGoldAppInstance();
+}
 
 // Handler cho thanh công cụ bên phải (Vertical Right Toolbar Strip)
 window.toggleRightSidebarSection = function(sectionName) {
