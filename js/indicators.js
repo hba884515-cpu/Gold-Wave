@@ -81,8 +81,8 @@ const Indicators = {
     return { swingHighs, swingLows };
   },
 
-  // 4. Toàn bộ cỗ máy logic MA WAVE V8 PRO (24 Module Engine)
-  runPineScriptLogic(bars) {
+  // 4. Toàn bộ cỗ máy logic MA WAVE V8 PRO (24 Module Engine + EMA50 Market State Engine)
+  runPineScriptLogic(bars, options = {}) {
     if (!bars || bars.length < 50) return null;
 
     // Các tham số kỹ thuật chuẩn V8 PRO (Đã nhạy bén tối đa theo TradingView)
@@ -680,37 +680,48 @@ const Indicators = {
           waveStrength = isWeakening ? 'SUY YẾU' : momentumState === 'MẠNH' && spreadState === 'MỞ RỘNG' ? 'MẠNH' : 'BÌNH THƯỜNG';
         }
 
+        const ema50State = (typeof window !== 'undefined' && window.EMA50Engine && typeof window.EMA50Engine.analyze === 'function')
+          ? window.EMA50Engine.analyze(bars, {
+              asset: options.asset || 'xau',
+              livePrice: bar.close,
+              mtfContext: options.mtfContext || null,
+              useClosedBar: true
+            })
+          : null;
+
         latestV8Snapshot = {
-          buySignal: !!buySignal,
-          sellSignal: !!sellSignal,
+          buySignal: ema50State && ema50State.ready ? (ema50State.shouldEmit && ema50State.direction === 'BUY') : !!buySignal,
+          sellSignal: ema50State && ema50State.ready ? (ema50State.shouldEmit && ema50State.direction === 'SELL') : !!sellSignal,
           barTime: bar.time,
           // 8 Thông số cốt lõi Dashboard V8 PRO (Module 20)
           trend: trendStateText,
           wave: waveStrength,
           spread: spreadState,
           spreadValue: +spreadStrength.toFixed(2),
-          structure: currentStructure,
+          structure: ema50State && ema50State.ready ? ema50State.structure : currentStructure,
           momentum: momentumState,
-          sw: marketState === 1 ? 'ĐANG SW' : 'KHÔNG SW',
+          sw: (ema50State && ema50State.marketState === 'SIDEWAY') || marketState === 1 ? 'ĐANG SW' : 'KHÔNG SW',
           swRange: swRange.toFixed(1),
-          weakening: (buyWeakDone || sellWeakDone) ? 'CÓ' : 'KHÔNG',
+          weakening: (ema50State && ema50State.pullbackType === 'WEAKENING') || buyWeakDone || sellWeakDone ? 'CÓ' : 'KHÔNG',
           reversal: reversalStatus,
           endState: activeDirection === null ? 'KẾT THÚC' : 'CHƯA',
 
-          // Chi tiết kỹ thuật
+          // Chi tiết kỹ thuật + EMA20-EMA50 Market State Engine
           fastEMA: +fastEMA.toFixed(2),
           slowEMA: +slowEMA.toFixed(2),
+          atr: +atr.toFixed(2),
           fastSlope: +fastSlope.toFixed(3),
           entryPrice,
           tp1Price,
           tp2Price,
           tp3Price,
-          slPrice: null, // Tuyệt đối KHÔNG có SL
+          slPrice: ema50State && ema50State.ready ? ema50State.sl : null,
           tp1Done,
           tp2Done,
           tp3Done,
           currentPrice: bar.close,
-          tradeState: marketState === 1 ? 'SW' : activeDirection === 'BUY' ? 'BUY' : activeDirection === 'SELL' ? 'SELL' : 'WAIT'
+          tradeState: ema50State && ema50State.ready ? ema50State.marketState : (marketState === 1 ? 'SW' : activeDirection === 'BUY' ? 'BUY' : activeDirection === 'SELL' ? 'SELL' : 'WAIT'),
+          ema50State
         };
       }
     }

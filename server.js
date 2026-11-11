@@ -10,6 +10,7 @@ const { URL } = require('url');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const EMA50Engine = require('./js/ema50Engine.js');
 
 const PORT = process.env.PORT || 8080;
 
@@ -1847,6 +1848,279 @@ function fetchTradingViewGoldPrice() {
   });
 }
 
+// ============================================================================
+// REAL OHLC CANDLES & TRADINGVIEW MTF (EMA20/EMA50/ATR) ENGINE
+// ============================================================================
+const serverCandlesCache = {
+  xau: { bars5m: [], lastFetch: 0 },
+  btc: { bars5m: [], lastFetch: 0 },
+  xag: { bars5m: [], lastFetch: 0 }
+};
+
+const serverMtfCache = {
+  xau: null,
+  btc: null,
+  xag: null,
+  lastFetch: 0
+};
+
+function fetchJsonHttps(url, timeoutMs = 5500) {
+  return new Promise((resolve) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: timeoutMs }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(body));
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    });
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+    req.on('error', () => resolve(null));
+  });
+}
+
+function queryTvMtfScanner(apiPath, tickers) {
+  return new Promise((resolve) => {
+    const cols = [
+      'close',
+      'EMA20|5', 'EMA50|5', 'ATR|5',
+      'EMA20|15', 'EMA50|15', 'ATR|15',
+      'EMA20|30', 'EMA50|30',
+      'EMA20|60', 'EMA50|60'
+    ];
+    const postData = JSON.stringify({ symbols: { tickers }, columns: cols });
+    const req = https.request({
+      hostname: 'scanner.tradingview.com',
+      port: 443,
+      path: apiPath,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData),
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Origin': 'https://www.tradingview.com',
+        'Referer': 'https://www.tradingview.com/'
+      },
+      timeout: 5000
+    }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(body)); } catch (e) { resolve(null); }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+    req.write(postData);
+    req.end();
+  });
+}
+
+async function fetchTradingViewMTF() {
+  const now = Date.now();
+  if (serverMtfCache.lastFetch > 0 && now - serverMtfCache.lastFetch < 15000) {
+    return serverMtfCache;
+  }
+  try {
+    const [cfdRes, cryptoRes] = await Promise.all([
+      queryTvMtfScanner('/cfd/scan', ['TVC:GOLD', 'OANDA:XAUUSD', 'TVC:SILVER', 'OANDA:XAGUSD']),
+      queryTvMtfScanner('/crypto/scan', ['BINANCE:BTCUSDT', 'COINBASE:BTCUSD'])
+    ]);
+
+    const parseRow = (d) => ({
+      price: Number(d[0]),
+      m5:  { price: Number(d[0]), ema20: Number(d[1]), ema50: Number(d[2]), atr: Number(d[3]) },
+      m15: { price: Number(d[0]), ema20: Number(d[4]), ema50: Number(d[5]), atr: Number(d[6]) },
+      m30: { price: Number(d[0]), ema20: Number(d[7]), ema50: Number(d[8]) },
+      h1:  { price: Number(d[0]), ema20: Number(d[9]), ema50: Number(d[10]) }
+    });
+
+    if (cfdRes && Array.isArray(cfdRes.data)) {
+      cfdRes.data.forEach(item => {
+        if (!item || !item.s || !Array.isArray(item.d) || item.d.length < 11) return;
+        if (item.s === 'TVC:GOLD' || (item.s === 'OANDA:XAUUSD' && !serverMtfCache.xau)) {
+          serverMtfCache.xau = parseRow(item.d);
+        }
+        if (item.s === 'TVC:SILVER' || (item.s === 'OANDA:XAGUSD' && !serverMtfCache.xag)) {
+          serverMtfCache.xag = parseRow(item.d);
+        }
+      });
+    }
+    if (cryptoRes && Array.isArray(cryptoRes.data)) {
+      cryptoRes.data.forEach(item => {
+        if (!item || !item.s || !Array.isArray(item.d) || item.d.length < 11) return;
+        if (item.s === 'BINANCE:BTCUSDT' || (item.s === 'COINBASE:BTCUSD' && !serverMtfCache.btc)) {
+          serverMtfCache.btc = parseRow(item.d);
+        }
+      });
+    }
+    serverMtfCache.lastFetch = now;
+  } catch (e) {}
+  return serverMtfCache;
+}
+
+function aggregateOHLCByBucket(bars5m, bucketSec) {
+  if (!Array.isArray(bars5m) || bars5m.length === 0) return [];
+  const buckets = new Map();
+  for (const b of bars5m) {
+    const t = Math.floor(b.time / bucketSec) * bucketSec;
+    if (!buckets.has(t)) {
+      buckets.set(t, { time: t, open: b.open, high: b.high, low: b.low, close: b.close });
+    } else {
+      const cur = buckets.get(t);
+      cur.high = Math.max(cur.high, b.high);
+      cur.low = Math.min(cur.low, b.low);
+      cur.close = b.close;
+    }
+  }
+  return Array.from(buckets.values()).sort((a, b) => a.time - b.time);
+}
+
+async function getServerOHLCBars(assetKey, liveSpotPrice) {
+  const key = String(assetKey || 'xau').toLowerCase();
+  const cache = serverCandlesCache[key] || { bars5m: [], lastFetch: 0 };
+  serverCandlesCache[key] = cache;
+  const now = Date.now();
+  const spot = Number(liveSpotPrice || 0);
+
+  // Refresh historical 5m candles every 3 minutes
+  if (cache.bars5m.length < 100 || now - cache.lastFetch > 180000) {
+    let fetched = [];
+    if (key === 'btc') {
+      const klines = await fetchJsonHttps('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=400');
+      if (Array.isArray(klines) && klines.length > 50) {
+        fetched = klines.map(k => ({
+          time: Math.floor(Number(k[0]) / 1000),
+          open: +Number(k[1]).toFixed(2),
+          high: +Number(k[2]).toFixed(2),
+          low: +Number(k[3]).toFixed(2),
+          close: +Number(k[4]).toFixed(2)
+        }));
+      }
+    } else {
+      const yahooSym = key === 'xag' ? 'SI=F' : 'GC=F';
+      const yJson = await fetchJsonHttps(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=5m&range=5d`);
+      const res = yJson && yJson.chart && yJson.chart.result && yJson.chart.result[0];
+      if (res && Array.isArray(res.timestamp) && res.indicators && res.indicators.quote && res.indicators.quote[0]) {
+        const ts = res.timestamp;
+        const q = res.indicators.quote[0];
+        const rawBars = [];
+        for (let i = 0; i < ts.length; i++) {
+          if (q.open[i] != null && q.high[i] != null && q.low[i] != null && q.close[i] != null) {
+            rawBars.push({
+              time: Math.floor(ts[i] / 300) * 300,
+              open: Number(q.open[i]),
+              high: Number(q.high[i]),
+              low: Number(q.low[i]),
+              close: Number(q.close[i])
+            });
+          }
+        }
+        if (rawBars.length > 50) {
+          // Spot-normalize futures basis so EMA levels & swing prices match exact TVC:GOLD / TVC:SILVER spot
+          const lastFutClose = rawBars[rawBars.length - 1].close;
+          const basisOffset = (spot > 0 && Math.abs(spot - lastFutClose) < (key === 'xag' ? 5 : 120)) ? (spot - lastFutClose) : 0;
+          const dec = key === 'xag' ? 3 : 2;
+          // Deduplicate same 5m timestamps keeping latest
+          const dedup = new Map();
+          for (const rb of rawBars) {
+            dedup.set(rb.time, {
+              time: rb.time,
+              open: +(rb.open + basisOffset).toFixed(dec),
+              high: +(rb.high + basisOffset).toFixed(dec),
+              low: +(rb.low + basisOffset).toFixed(dec),
+              close: +(rb.close + basisOffset).toFixed(dec)
+            });
+          }
+          fetched = Array.from(dedup.values()).sort((a, b) => a.time - b.time);
+        }
+      }
+    }
+
+    if (fetched.length >= 60) {
+      cache.bars5m = fetched.slice(-500);
+      cache.lastFetch = now;
+    }
+  }
+
+  // Update / append live 5m bar with latest spot tick
+  if (spot > 0 && cache.bars5m.length > 0) {
+    const curBucket = Math.floor(now / 1000 / 300) * 300;
+    const lastBar = cache.bars5m[cache.bars5m.length - 1];
+    const dec = key === 'btc' ? 2 : (key === 'xag' ? 3 : 2);
+    if (curBucket > lastBar.time) {
+      cache.bars5m.push({
+        time: curBucket,
+        open: lastBar.close,
+        high: +Math.max(lastBar.close, spot).toFixed(dec),
+        low: +Math.min(lastBar.close, spot).toFixed(dec),
+        close: +spot.toFixed(dec)
+      });
+      if (cache.bars5m.length > 600) cache.bars5m.shift();
+    } else {
+      lastBar.close = +spot.toFixed(dec);
+      lastBar.high = +Math.max(lastBar.high, spot).toFixed(dec);
+      lastBar.low = +Math.min(lastBar.low, spot).toFixed(dec);
+    }
+  }
+
+  const bars5m = cache.bars5m;
+  const bars15m = aggregateOHLCByBucket(bars5m, 900);
+  const bars30m = aggregateOHLCByBucket(bars5m, 1800);
+  const bars1h = aggregateOHLCByBucket(bars5m, 3600);
+
+  return { bars5m, bars15m, bars30m, bars1h };
+}
+
+async function evaluateAssetMarketState(assetKey) {
+  const key = String(assetKey || 'xau').toLowerCase();
+  const symKey = key.toUpperCase();
+  const [allPrices, tvMtf] = await Promise.all([
+    fetchTradingViewAllPrices(),
+    fetchTradingViewMTF()
+  ]);
+  const spotObj = allPrices && allPrices[symKey];
+  const livePrice = spotObj ? Number(spotObj.price) : null;
+  const ohlc = await getServerOHLCBars(key, livePrice);
+
+  // Build MTF context preferring live TradingView MTF EMAs, with aggregated bar fallback
+  let mtfContext = tvMtf ? tvMtf[key] : null;
+  if (!mtfContext && ohlc.bars15m.length >= 55) {
+    const getLastPair = (arr) => {
+      if (!arr || arr.length < 52) return null;
+      const e20 = EMA50Engine.calculateEMAArray(arr, 20);
+      const e50 = EMA50Engine.calculateEMAArray(arr, 50);
+      const idx = Math.max(0, arr.length - 2);
+      return { price: arr[idx].close, ema20: e20[idx], ema50: e50[idx] };
+    };
+    mtfContext = {
+      m5: getLastPair(ohlc.bars5m),
+      m15: getLastPair(ohlc.bars15m),
+      m30: getLastPair(ohlc.bars30m),
+      h1: getLastPair(ohlc.bars1h)
+    };
+  }
+
+  // Primary evaluation on M15 (and M5 fallback if M15 < 55 bars)
+  const primaryBars = ohlc.bars15m.length >= 56 ? ohlc.bars15m : ohlc.bars5m;
+  const analysis = EMA50Engine.analyze(primaryBars, {
+    asset: key,
+    livePrice,
+    mtfContext,
+    useClosedBar: true
+  });
+
+  return {
+    analysis,
+    ohlc,
+    mtfContext,
+    livePrice
+  };
+}
+
 // HTTP Server Routing
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -2571,6 +2845,58 @@ const server = http.createServer(async (req, res) => {
       marketStatus: marketOpen ? 'OPEN' : 'CLOSED',
       marketStatusText: marketOpen ? 'Đang giao dịch' : 'Thị trường đóng cửa (Nghỉ cuối tuần)',
       timestamp: new Date().toISOString()
+    }));
+  }
+  else if (urlPath === '/api/market-state') {
+    const reqAsset = queryParams.asset ? String(queryParams.asset).toLowerCase() : null;
+    if (reqAsset && ['xau', 'btc', 'xag'].includes(reqAsset)) {
+      const stateRes = await evaluateAssetMarketState(reqAsset);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        status: 'SUCCESS',
+        asset: reqAsset,
+        state: stateRes.analysis,
+        mtf: stateRes.mtfContext,
+        timestamp: new Date().toISOString()
+      }));
+    } else {
+      const [xauRes, btcRes, xagRes] = await Promise.all([
+        evaluateAssetMarketState('xau'),
+        evaluateAssetMarketState('btc'),
+        evaluateAssetMarketState('xag')
+      ]);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        status: 'SUCCESS',
+        states: {
+          xau: xauRes.analysis,
+          btc: btcRes.analysis,
+          xag: xagRes.analysis
+        },
+        mtf: {
+          xau: xauRes.mtfContext,
+          btc: btcRes.mtfContext,
+          xag: xagRes.mtfContext
+        },
+        timestamp: new Date().toISOString()
+      }));
+    }
+  }
+  else if (urlPath === '/api/candles') {
+    const reqAsset = String(queryParams.asset || 'xau').toLowerCase();
+    const tf = String(queryParams.tf || '5m').toLowerCase();
+    const allPrices = await fetchTradingViewAllPrices();
+    const spotObj = allPrices && allPrices[reqAsset.toUpperCase()];
+    const liveSpot = spotObj ? Number(spotObj.price) : null;
+    const ohlc = await getServerOHLCBars(reqAsset, liveSpot);
+    const bars = tf === '15m' ? ohlc.bars15m : tf === '30m' ? ohlc.bars30m : tf === '1h' ? ohlc.bars1h : ohlc.bars5m;
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({
+      status: 'SUCCESS',
+      asset: reqAsset,
+      timeframe: tf,
+      count: bars.length,
+      bars
     }));
   }
   else if (urlPath === '/api/ai/chat' && req.method === 'POST') {
@@ -3814,53 +4140,26 @@ function startServerSignalEngine() {
             serverActiveTrades[cfg.key] = null;
           }
         } else {
-          // 2. PHONG CÁCH 1 NĂNG ĐỘNG (HYBRID SNIPER): BẮN TỈA CHUẨN XÁC, TẦN SUẤT ĐỀU ĐẶN
-          // Giãn cách tối ưu 45 - 60 phút giữa 2 đợt sóng để bắt trọn các nhịp sóng đẹp trong ngày
+          // 2. HỆ THỐNG GIAO DỊCH EMA20 – EMA50 TOÀN DIỆN (HYBRID SNIPER v9.2)
+          // Luôn cập nhật nến OHLC thực tế mỗi chu kỳ 30s
+          await getServerOHLCBars(cfg.key, price);
+
           const sniperCooldown = (cfg.key === 'btc') ? 60 * 60 * 1000 : 45 * 60 * 1000;
           const lastTime = lastSignalTimes[cfg.key] || 0;
           if (now - lastTime >= sniperCooldown) {
-            const pHist = serverPriceHistory[cfg.key] || [];
-            if (pHist.length < 5) continue; // Cần đủ dữ liệu nến gần nhất
-
-            const oldestPrice = pHist[0].price;
-            const avgPrice = pHist.reduce((acc, p) => acc + p.price, 0) / pHist.length;
-            const priceDelta = price - oldestPrice;
-            const distFromAvg = Math.abs(price - avgPrice);
-
-            // BỘ LỌC 1: XÁC ĐỊNH XU HƯỚNG RÕ RÀNG (Độ nhạy tối ưu: Vàng sóng 2.0 giá, BTC 180 USD, Bạc 0.18 USD)
-            const minTrendMove = (cfg.key === 'btc') ? 180 : (cfg.key === 'xag' ? 0.18 : 2.0);
-            if (Math.abs(priceDelta) < minTrendMove) {
-              continue; // Thị trường đi ngang quá hẹp -> Đứng ngoài bảo vệ vốn
+            const stateRes = await evaluateAssetMarketState(cfg.key);
+            const analysis = stateRes && stateRes.analysis;
+            if (!analysis || !analysis.ready || !analysis.shouldEmit) {
+              continue; // Chưa đạt CONFIRMED (>=75 điểm), hoặc đang CHOP / SIDEWAY / Overextended -> Đứng ngoài bảo vệ vốn
             }
 
-            // BỘ LỌC 2: CHỐNG ĐU ĐỈNH / ĐU ĐÁY (Anti-Overextended Filter)
-            const maxStretch = (cfg.key === 'btc') ? 1400 : (cfg.key === 'xag' ? 0.90 : 12.0);
-            if (distFromAvg > maxStretch) {
-              continue; // Giá dãn cách quá đà -> Chặn tuyệt đối để không đu đỉnh/đáy!
-            }
-
-            // BỘ LỌC 3: XÁC ĐỊNH HƯỚNG VÀO LỆNH THEO TREND VÀ NHỊP HỒI PULLBACK
-            const isBuy = priceDelta > 0;
-            const sigType = isBuy ? 'BUY' : 'SELL';
+            const sigType = analysis.direction;
+            const isBuy = sigType === 'BUY';
             const entryPrice = +price.toFixed(cfg.key === 'btc' ? 0 : 2);
-
-            let tp1, tp2, tp3, sl;
-            if (cfg.key === 'btc') {
-              tp1 = isBuy ? entryPrice + 1500 : entryPrice - 1500;
-              tp2 = isBuy ? entryPrice + 2800 : entryPrice - 2800;
-              tp3 = isBuy ? entryPrice + 4500 : entryPrice - 4500;
-              sl  = isBuy ? entryPrice - 1400 : entryPrice + 1400;
-            } else if (cfg.key === 'xag') {
-              tp1 = +(isBuy ? entryPrice + 1.00 : entryPrice - 1.00).toFixed(2);
-              tp2 = +(isBuy ? entryPrice + 2.00 : entryPrice - 2.00).toFixed(2);
-              tp3 = +(isBuy ? entryPrice + 3.20 : entryPrice - 3.20).toFixed(2);
-              sl  = +(isBuy ? entryPrice - 0.85 : entryPrice + 0.85).toFixed(2);
-            } else {
-              tp1 = +(isBuy ? entryPrice + 10.0 : entryPrice - 10.0).toFixed(2);
-              tp2 = +(isBuy ? entryPrice + 20.0 : entryPrice - 20.0).toFixed(2);
-              tp3 = +(isBuy ? entryPrice + 35.0 : entryPrice - 35.0).toFixed(2);
-              sl  = +(isBuy ? entryPrice - 8.5 : entryPrice + 8.5).toFixed(2);
-            }
+            const tp1 = analysis.tp1;
+            const tp2 = analysis.tp2;
+            const tp3 = analysis.tp3;
+            const sl = analysis.sl;
 
             // Tạo mã sóng tự tăng
             let maxNum = 2120;
@@ -3902,10 +4201,13 @@ function startServerSignalEngine() {
               status: 'ĐANG CHẠY (Chờ TP1)',
               pnlPips: 0,
               pnlUsd: 0,
-              strategy: `MA WAVE V8 PRO: ${sigType} ENTRY (HYBRID SNIPER)`,
-              reason: isBuy 
-                ? `Mô hình Bắn Tỉa Năng Động: Retest dải hỗ trợ M15 + Xác nhận nhịp sóng tăng, bảo vệ SL an toàn sau đáy nến tại $${sl}`
-                : `Mô hình Bắn Tỉa Năng Động: Retest cản động M15 + Xác nhận áp lực bán dốc xuống, bảo vệ SL an toàn sau đỉnh nến tại $${sl}`
+              score: analysis.score,
+              qualityState: analysis.signalQualityState,
+              marketState: analysis.marketState,
+              dRatio: analysis.dRatio,
+              invalidationPrice: analysis.invalidationPrice,
+              strategy: `MA WAVE V8 PRO: ${sigType} [${analysis.signalQualityState} ${analysis.score}/100]`,
+              reason: analysis.reason
             };
 
             signalsDB.unshift(newSignal);
@@ -3939,8 +4241,8 @@ function startServerSignalEngine() {
               } catch(e) {}
             });
 
-            addNotification('SIGNAL', `🚨 TÍN HIỆU MA WAVE V8: ${sigType} ${cfg.pair}`, `🔔 Mở vị thế ${sigType} tại $${entryPrice}. TP1: ${tp1}, SL: ${sl}`);
-            console.log(`[Auto Engine] Phát tín hiệu tự động thành công: ${newId} [${sigType} ${cfg.pair} @ ${entryPrice}]`);
+            addNotification('SIGNAL', `🚨 TÍN HIỆU MA WAVE V8 (${analysis.score}/100): ${sigType} ${cfg.pair}`, `🔔 ${analysis.marketStateLabel} | Vào ${sigType} tại $${entryPrice}. TP1: ${tp1}, SL cấu trúc: ${sl}`);
+            console.log(`[Auto Engine] Phát tín hiệu EMA20-50 [${analysis.score}/100 ${analysis.signalQualityState}]: ${newId} [${sigType} ${cfg.pair} @ ${entryPrice}, SL=${sl}]`);
           }
         }
       }

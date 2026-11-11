@@ -1122,6 +1122,29 @@ class GoldTradingApp {
       cardReversal.className = isRev ? 'text-xs font-black text-[#f23645] mt-1' : isWarn ? 'text-xs font-black text-amber-400 mt-1' : 'text-xs font-bold text-slate-400 mt-1';
     }
 
+    const cardMarketState = document.getElementById('v8-card-market-state');
+    const cardQualityScore = document.getElementById('v8-card-quality-score');
+    if (snap.ema50State && snap.ema50State.ready) {
+      const eState = snap.ema50State;
+      if (cardMarketState) {
+        const ms = eState.marketState;
+        cardMarketState.textContent = eState.overextended ? `${ms} (DÃN XA)` : ms;
+        cardMarketState.title = eState.marketStateLabel || ms;
+        cardMarketState.className = ms === 'UPTREND' ? 'text-[11px] font-black text-[#089981]'
+          : ms === 'DOWNTREND' ? 'text-[11px] font-black text-[#f23645]'
+          : ms === 'PULLBACK' ? 'text-[11px] font-black text-cyan-400'
+          : ms === 'CHOP' ? 'text-[11px] font-black text-orange-400'
+          : 'text-[11px] font-black text-amber-400';
+      }
+      if (cardQualityScore) {
+        cardQualityScore.textContent = `${eState.score}/100 (${eState.signalQualityState}) • D=${eState.dRatio}`;
+        cardQualityScore.title = eState.reason || '';
+        cardQualityScore.className = eState.score >= 75 ? 'text-[11px] font-black text-emerald-400'
+          : eState.score >= 60 ? 'text-[11px] font-black text-amber-300'
+          : 'text-[11px] font-bold text-slate-400';
+      }
+    }
+
     // Cập nhật Small On-Chart Dashboard (Section 12)
     const mTrend = document.getElementById('mini-dash-trend');
     const mWave = document.getElementById('mini-dash-wave');

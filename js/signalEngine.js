@@ -726,9 +726,30 @@ class SignalEngine {
     }
   }
 
-  // Đánh giá và cập nhật trạng thái theo Pine Script
+  // Đánh giá và cập nhật trạng thái theo Hệ thống EMA20 - EMA50 Toàn Diện
   evaluateMarket(bars, asset = 'xau') {
-    const result = window.Indicators.runPineScriptLogic(bars);
+    let mtfContext = null;
+    if (typeof window !== 'undefined' && window.marketDataStore && typeof window.Indicators !== 'undefined') {
+      const getClosedTf = (tfName) => {
+        const tfBars = window.marketDataStore.getBars(tfName);
+        if (!tfBars || tfBars.length < 52) return null;
+        const e20 = window.Indicators.calculateEMA(tfBars, 20);
+        const e50 = window.Indicators.calculateEMA(tfBars, 50);
+        if (e20.length < 2 || e50.length < 2) return null;
+        const closedBar = tfBars[tfBars.length - 2];
+        const e20Closed = e20[e20.length - 2] || e20[e20.length - 1];
+        const e50Closed = e50[e50.length - 2] || e50[e50.length - 1];
+        return { price: closedBar.close, ema20: e20Closed.value, ema50: e50Closed.value };
+      };
+      mtfContext = {
+        h1: getClosedTf('1h'),
+        m30: getClosedTf('30m'),
+        m15: getClosedTf('15m'),
+        m5: getClosedTf('5m')
+      };
+    }
+
+    const result = window.Indicators.runPineScriptLogic(bars, { asset, mtfContext });
     if (!result || !result.snapshot) return null;
 
     const snap = result.snapshot;
@@ -737,7 +758,7 @@ class SignalEngine {
     // Sync full historical trades into signals array
     this.syncTradeLines(result, bars);
 
-    // Kích hoạt phát hiện tín hiệu Realtime tự động khi có sóng mới
+    // Kích hoạt phát hiện tín hiệu Realtime tự động khi đạt chuẩn CONFIRMED (>= 75 điểm)
     if (bars && bars.length > 0) {
       const lastBar = bars[bars.length - 1];
       const nowMs = Date.now();
@@ -757,22 +778,21 @@ class SignalEngine {
         this.updateOpenOrders(lastBar.close, asset, highestCandle, lowestCandle);
       }
 
-      // 2. PHONG CÁCH 1 NĂNG ĐỘNG (HYBRID SNIPER): Giãn cách tối ưu 45 phút giữa 2 lệnh để bắt trọn các nhịp sóng trong ngày
-      if ((snap.buySignal || snap.sellSignal) && (nowMs - lastEmittedTime > 45 * 60 * 1000)) {
-        // Kiểm tra chống đu đỉnh / đu đáy (Anti-Overextended):
-        // Nếu giá dãn cách quá xa dải MA (> 2.0 * ATR) -> KHÔNG MỞ LỆNH, chờ pullback!
-        const fastEmaVal = snap.fastEMA || snap.ema20 || lastBar.close;
-        const atrVal = snap.atr || (asset === 'btc' ? 350 : (asset === 'xag' ? 0.35 : 3.5));
-        const distFromEma = Math.abs(lastBar.close - fastEmaVal);
-        if (distFromEma > atrVal * 2.0) {
-          return snap; // Giá đang quá đà, tránh đu đỉnh/đu đáy!
+      // 2. HỆ THỐNG EMA20 - EMA50 TOÀN DIỆN (HYBRID SNIPER v9.2): Giãn cách 45 - 60 phút, chỉ vào khi CONFIRMED (>= 75đ)
+      const cooldownMs = asset === 'btc' ? 60 * 60 * 1000 : 45 * 60 * 1000;
+      const ema50State = snap.ema50State;
+      const canEmitFromEngine = ema50State && ema50State.ready ? ema50State.shouldEmit : (snap.buySignal || snap.sellSignal);
+
+      if (canEmitFromEngine && (nowMs - lastEmittedTime > cooldownMs)) {
+        if (ema50State && ema50State.overextended) {
+          return snap; // Giá đang quá xa EMA20, chặn đu đỉnh/đu đáy!
         }
 
         const stillRunning = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
         if (!stillRunning) {
-          const type = snap.buySignal ? 'BUY' : 'SELL';
+          const type = (ema50State && ema50State.direction) ? ema50State.direction : (snap.buySignal ? 'BUY' : 'SELL');
           this.lastEmittedSignals[asset] = nowMs;
-          this.emitPineSignal(type, lastBar.close, lastBar, false, asset);
+          this.emitPineSignal(type, lastBar.close, lastBar, false, asset, ema50State);
         }
       }
     }
@@ -780,7 +800,7 @@ class SignalEngine {
     return snap;
   }
 
-  emitPineSignal(type, currentPrice, currentBar, isManualTest = false, asset = 'xau') {
+  emitPineSignal(type, currentPrice, currentBar, isManualTest = false, asset = 'xau', ema50State = null) {
     const isAssetMarketOpen = this.isAssetMarketOpen(asset);
     if (!isManualTest && (!isAssetMarketOpen || !this.isTradingHoursActive())) {
       return;
@@ -789,20 +809,24 @@ class SignalEngine {
     const entryPrice = currentPrice;
 
     let tp1, tp2, tp3, sl, pairName;
-    if (asset === 'btc') {
-      pairName = 'BTC/USD';
+    pairName = asset === 'btc' ? 'BTC/USD' : (asset === 'xag' ? 'XAG/USD' : 'XAU/USD');
+
+    if (ema50State && ema50State.ready && ema50State.sl && ema50State.tp1) {
+      sl = ema50State.sl;
+      tp1 = ema50State.tp1;
+      tp2 = ema50State.tp2;
+      tp3 = ema50State.tp3;
+    } else if (asset === 'btc') {
       tp1 = isBuy ? entryPrice + 1500 : entryPrice - 1500;
       tp2 = isBuy ? entryPrice + 2800 : entryPrice - 2800;
       tp3 = isBuy ? entryPrice + 4500 : entryPrice - 4500;
       sl  = isBuy ? entryPrice - 1400 : entryPrice + 1400;
     } else if (asset === 'xag') {
-      pairName = 'XAG/USD';
       tp1 = +(isBuy ? entryPrice + 1.00 : entryPrice - 1.00).toFixed(2);
       tp2 = +(isBuy ? entryPrice + 2.00 : entryPrice - 2.00).toFixed(2);
       tp3 = +(isBuy ? entryPrice + 3.20 : entryPrice - 3.20).toFixed(2);
       sl  = +(isBuy ? entryPrice - 0.85 : entryPrice + 0.85).toFixed(2);
     } else {
-      pairName = 'XAU/USD';
       tp1 = +(isBuy ? entryPrice + 10.0 : entryPrice - 10.0).toFixed(2);
       tp2 = +(isBuy ? entryPrice + 20.0 : entryPrice - 20.0).toFixed(2);
       tp3 = +(isBuy ? entryPrice + 35.0 : entryPrice - 35.0).toFixed(2);
@@ -813,6 +837,7 @@ class SignalEngine {
       ? (parseInt(String(this.signals[0].id).replace(/^V8-?/i, ''), 10) || 2083) + 1 
       : 2084;
 
+    const scoreBadge = ema50State && ema50State.ready ? `[${ema50State.signalQualityState} ${ema50State.score}/100]` : '(HYBRID SNIPER)';
     const newSignal = {
       id: `V8-${String(currentCount).padStart(5, '0')}`,
       time: this.formatSignalTime(new Date()),
@@ -832,10 +857,14 @@ class SignalEngine {
       status: 'ĐANG CHẠY (Chờ TP1)',
       pnlPips: 0,
       pnlUsd: 0,
-      strategy: `MA WAVE V8 PRO: ${type} ENTRY (HYBRID SNIPER)`,
-      reason: isBuy 
-        ? `Mô hình Bắn Tỉa Năng Động: Retest dải hỗ trợ M15 + Xác nhận nhịp sóng tăng, bảo vệ SL an toàn sau đáy nến tại $${sl}` 
-        : `Mô hình Bắn Tỉa Năng Động: Retest cản động M15 + Xác nhận áp lực bán dốc xuống, bảo vệ SL an toàn sau đỉnh nến tại $${sl}`
+      score: ema50State && ema50State.ready ? ema50State.score : undefined,
+      marketState: ema50State && ema50State.ready ? ema50State.marketState : undefined,
+      strategy: `MA WAVE V8 PRO: ${type} ${scoreBadge}`,
+      reason: (ema50State && ema50State.ready && ema50State.reason)
+        ? ema50State.reason
+        : (isBuy 
+            ? `Mô hình EMA20-EMA50 Toàn Diện: Retest hỗ trợ + Xác nhận nến đóng tăng, SL cấu trúc tại $${sl}` 
+            : `Mô hình EMA20-EMA50 Toàn Diện: Retest cản động + Xác nhận nến đóng giảm, SL cấu trúc tại $${sl}`)
     };
 
     this.signals.unshift(newSignal);

@@ -105,11 +105,44 @@ class MarketDataStore {
     this.rebuildAllTimeframesFromBase();
     this.assetCandles['XAU'] = JSON.parse(JSON.stringify(this.candles));
 
-    // Khởi tạo dataset nến độc lập cho Bitcoin và Bạc Thế Giới
+    this.hasRealCandlesLoaded = { XAU: false, BTC: false, XAG: false };
     this.initAssetCandles('BTC', 80642.33, 79200.00, 81900.00, 150.0);
     this.initAssetCandles('XAG', 53.76, 52.80, 54.80, 0.25);
 
+    this.hydrateRealCandlesFromServer();
+    setInterval(() => this.hydrateRealCandlesFromServer(), 180000);
     this.startRealtimeTicks();
+  }
+
+  async hydrateRealCandlesFromServer() {
+    const assets = ['XAU', 'BTC', 'XAG'];
+    for (const assetKey of assets) {
+      try {
+        const res = await fetch(`/api/candles?asset=${assetKey.toLowerCase()}&tf=5m`);
+        if (!res.ok) continue;
+        const json = await res.json();
+        if (json && json.status === 'SUCCESS' && Array.isArray(json.bars) && json.bars.length >= 60) {
+          const clean5m = json.bars.filter(b => b && typeof b.open === 'number' && typeof b.close === 'number');
+          clean5m.forEach(b => this.validateCandle(b));
+          const map = {
+            '5m': clean5m,
+            '15m': this.aggregateCandles(clean5m, 3),
+            '30m': this.aggregateCandles(clean5m, 6),
+            '35m': this.aggregateCandles(clean5m, 7),
+            '1h':  this.aggregateCandles(clean5m, 12),
+            '4h':  this.aggregateCandles(clean5m, 48),
+            '1d':  this.aggregateCandles(clean5m, 288)
+          };
+          this.assetCandles[assetKey] = map;
+          this.hasRealCandlesLoaded[assetKey] = true;
+          if (this.currentAsset === assetKey) {
+            this.candles = map;
+            this.hasRealPriceLoaded = true;
+            this.notifyListeners('candlesHydrated', { asset: assetKey, count: clean5m.length });
+          }
+        }
+      } catch (e) {}
+    }
   }
 
   initAssetCandles(assetKey, targetPrice, minP, maxP, scale) {
