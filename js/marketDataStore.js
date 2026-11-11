@@ -9,12 +9,12 @@ class MarketDataStore {
     this.symbol = 'XAU/USD';
     this.source = 'TVC:GOLD';
     this.timezone = 'Asia/Ho_Chi_Minh';
-    this.currentPrice = 4064.50;
-    this.prevPrice = 4063.20;
-    this.priceChange = 31.90;
-    this.priceChangePercent = 0.79;
-    this.high = 4066.90;
-    this.low = 4026.70;
+    this.currentPrice = 4097.20;
+    this.prevPrice = 4064.14;
+    this.priceChange = 33.06;
+    this.priceChangePercent = 0.81;
+    this.high = 4146.92;
+    this.low = 4057.83;
     this.currentTimeframe = '15m';
     this.connectionStatus = this.isGoldMarketOpen() ? 'LIVE' : 'CLOSED';
     this.lastUpdate = Date.now();
@@ -27,25 +27,25 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 4064.50,
-        prevPrice: 4063.20,
-        change: 31.90,
-        changePercent: 0.79,
-        high: 4066.90,
-        low: 4026.70,
+        price: 4097.20,
+        prevPrice: 4064.14,
+        change: 33.06,
+        changePercent: 0.81,
+        high: 4146.92,
+        low: 4057.83,
         icon: '🪙',
         tag: 'GOLD'
       },
       'BTC': {
         symbol: 'BTC/USD',
         name: 'Bitcoin (Crypto)',
-        source: 'COINBASE:BTCUSD',
-        price: 73850.00,
-        prevPrice: 73796.00,
-        change: 54.00,
-        changePercent: 0.07,
-        high: 74034.00,
-        low: 73209.00,
+        source: 'BINANCE:BTCUSDT',
+        price: 77028.00,
+        prevPrice: 78013.63,
+        change: -985.62,
+        changePercent: -1.26,
+        high: 78254.17,
+        low: 76388.88,
         icon: '₿',
         tag: 'CRYPTO'
       },
@@ -53,12 +53,12 @@ class MarketDataStore {
         symbol: 'XAG/USD',
         name: 'Bạc Thế Giới',
         source: 'TVC:SILVER',
-        price: 53.15,
-        prevPrice: 51.52,
-        change: 1.63,
-        changePercent: 3.16,
-        high: 53.19,
-        low: 51.45,
+        price: 49.05,
+        prevPrice: 52.14,
+        change: -3.09,
+        changePercent: -5.93,
+        high: 51.27,
+        low: 48.95,
         icon: '🥈',
         tag: 'SILVER'
       }
@@ -106,8 +106,8 @@ class MarketDataStore {
     this.assetCandles['XAU'] = JSON.parse(JSON.stringify(this.candles));
 
     // Khởi tạo dataset nến độc lập cho Bitcoin và Bạc Thế Giới
-    this.initAssetCandles('BTC', 73850.00, 72000.00, 75500.00, 120.0);
-    this.initAssetCandles('XAG', 53.15, 51.00, 54.50, 0.20);
+    this.initAssetCandles('BTC', 80642.33, 79200.00, 81900.00, 150.0);
+    this.initAssetCandles('XAG', 53.76, 52.80, 54.80, 0.25);
 
     this.startRealtimeTicks();
   }
@@ -466,33 +466,14 @@ class MarketDataStore {
     });
   }
 
-  // Realtime tick poller with Ultra Low Latency TradingView Edge Engine & Dynamic Micro-Ticks
+  // Realtime tick poller with connection status management
   startRealtimeTicks() {
-    let isSyncing = false;
-    let tickCount = 0;
+    const fetchLivePrice = async () => {
+      let success = false;
 
-    // Anchor prices neo từ sàn thật TradingView
-    const anchor = {
-      'XAU': { price: this.assetsData['XAU'].price, change: this.assetsData['XAU'].change, pct: this.assetsData['XAU'].changePercent, high: this.high, low: this.low },
-      'BTC': { price: this.assetsData['BTC'].price, change: this.assetsData['BTC'].change, pct: this.assetsData['BTC'].changePercent, high: this.assetsData['BTC'].high, low: this.assetsData['BTC'].low },
-      'XAG': { price: this.assetsData['XAG'].price, change: this.assetsData['XAG'].change, pct: this.assetsData['XAG'].changePercent, high: this.assetsData['XAG'].high, low: this.assetsData['XAG'].low }
-    };
-
-    // A. Đồng bộ trực tiếp từ /api/market-prices (siêu tốc 1ms từ RAM cache TradingView của server)
-    const syncMarketPrices = async () => {
-      if (isSyncing) return;
-      isSyncing = true;
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-
+      // 1. Backend proxy endpoint for all market assets (Gold, BTC, Silver)
       try {
-        const res = await fetch('/api/market-prices', {
-          signal: controller.signal,
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-        clearTimeout(timeoutId);
-
+        const res = await fetch('/api/market-prices');
         if (res.ok) {
           const data = await res.json();
           if (data && data.prices) {
@@ -500,83 +481,82 @@ class MarketDataStore {
             const pBTC = data.prices.BTC;
             const pXAG = data.prices.XAG;
 
-            if (pXAU && pXAU.price && !isNaN(pXAU.price) && pXAU.price > 0) {
-              anchor['XAU'] = { price: +pXAU.price.toFixed(2), change: +(pXAU.change || 0).toFixed(2), pct: +(pXAU.changePercent || 0).toFixed(2), high: +(pXAU.high || pXAU.price).toFixed(2), low: +(pXAU.low || pXAU.price).toFixed(2) };
+            if (pXAU && pXAU.price) {
+              this.assetsData['XAU'].price = pXAU.price;
+              this.assetsData['XAU'].change = pXAU.change;
+              this.assetsData['XAU'].changePercent = pXAU.changePercent;
+              this.assetsData['XAU'].high = pXAU.high;
+              this.assetsData['XAU'].low = pXAU.low;
             }
-            if (pBTC && pBTC.price && !isNaN(pBTC.price) && pBTC.price > 0) {
-              anchor['BTC'] = { price: +pBTC.price.toFixed(2), change: +(pBTC.change || 0).toFixed(2), pct: +(pBTC.changePercent || 0).toFixed(2), high: +(pBTC.high || pBTC.price).toFixed(2), low: +(pBTC.low || pBTC.price).toFixed(2) };
+            if (pBTC && pBTC.price) {
+              this.assetsData['BTC'].price = pBTC.price;
+              this.assetsData['BTC'].change = pBTC.change;
+              this.assetsData['BTC'].changePercent = pBTC.changePercent;
+              this.assetsData['BTC'].high = pBTC.high;
+              this.assetsData['BTC'].low = pBTC.low;
             }
-            if (pXAG && pXAG.price && !isNaN(pXAG.price) && pXAG.price > 0) {
-              anchor['XAG'] = { price: +pXAG.price.toFixed(2), change: +(pXAG.change || 0).toFixed(2), pct: +(pXAG.changePercent || 0).toFixed(2), high: +(pXAG.high || pXAG.price).toFixed(2), low: +(pXAG.low || pXAG.price).toFixed(2) };
+            if (pXAG && pXAG.price) {
+              this.assetsData['XAG'].price = pXAG.price;
+              this.assetsData['XAG'].change = pXAG.change;
+              this.assetsData['XAG'].changePercent = pXAG.changePercent;
+              this.assetsData['XAG'].high = pXAG.high;
+              this.assetsData['XAG'].low = pXAG.low;
+            }
+
+            const activeAssetData = this.assetsData[this.currentAsset];
+            if (activeAssetData) {
+              this.updateRealtimePrice(
+                activeAssetData.price,
+                activeAssetData.change,
+                activeAssetData.changePercent,
+                activeAssetData.high,
+                activeAssetData.low
+              );
             }
 
             this.connectionStatus = (data.marketStatus === 'CLOSED' || !this.isGoldMarketOpen()) ? 'CLOSED' : 'LIVE';
             if (data.onlineUsers && typeof window.updateOnlineUsersFromServer === 'function') {
               window.updateOnlineUsersFromServer(data.onlineUsers);
             }
-            this.failedFetchCount = 0;
-            // Áp dụng nhịp xung giá sàn thật tức thì
-            liveDynamicPulse();
+            success = true;
           }
         }
-      } catch (e) {
-        clearTimeout(timeoutId);
-      } finally {
-        isSyncing = false;
+      } catch (e) {}
+
+      // 2. Direct client fallback for Gold
+      if (!success) {
+        try {
+          const res2 = await fetch('https://api.gold-api.com/price/XAU');
+          if (res2.ok) {
+            const data2 = await res2.json();
+            if (data2 && data2.price && !isNaN(data2.price) && data2.price > 0) {
+              const liveGold = parseFloat(data2.price);
+              const openP = 3946.32;
+              const chg = +(liveGold - openP).toFixed(2);
+              const chgPct = +((chg / openP) * 100).toFixed(2);
+              this.assetsData['XAU'].price = liveGold;
+              this.assetsData['XAU'].change = chg;
+              this.assetsData['XAU'].changePercent = chgPct;
+              if (this.currentAsset === 'XAU') {
+                this.updateRealtimePrice(liveGold, chg, chgPct, Math.max(this.high, liveGold), Math.min(this.low, liveGold));
+              }
+              success = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!success) {
+        this.failedFetchCount++;
+        if (this.failedFetchCount >= 3) {
+          this.connectionStatus = 'STALE';
+          this.notifyListeners('statusChange', { status: this.connectionStatus });
+        }
       }
     };
 
-    // B. Live Dynamic Pulse: Nhảy giá và nến liên tục mỗi 400ms cực mượt
-    const liveDynamicPulse = () => {
-      try {
-        tickCount++;
-        const isGoldOpen = this.isGoldMarketOpen();
-
-        ['XAU', 'BTC', 'XAG'].forEach(asset => {
-          const anc = anchor[asset];
-          if (!anc || !anc.price) return;
-
-          let liveP = anc.price;
-          // BTC chạy 24/7, Vàng & Bạc theo lịch mở sàn
-          const isAssetActive = (asset === 'BTC') ? true : isGoldOpen;
-
-          if (isAssetActive) {
-            // Vi dao động tick-by-tick tự nhiên theo nhịp sàn thật TradingView (Vàng +-0.75 USD, BTC +-28 USD, Bạc +-0.18 USD)
-            const scale = asset === 'XAU' ? 0.75 : (asset === 'BTC' ? 28.0 : 0.18);
-            const jitter = (Math.sin(tickCount * 0.75 + (asset === 'XAU' ? 0 : (asset === 'BTC' ? 1.4 : 2.7))) * (scale * 0.65)) + ((Math.random() - 0.49) * (scale * 0.35));
-            liveP = +(anc.price + jitter).toFixed(2);
-          }
-
-          const liveChange = +(anc.change + (liveP - anc.price)).toFixed(2);
-          const livePct = anc.pct;
-          const liveHigh = Math.max(anc.high, liveP);
-          const liveLow = Math.min(anc.low, liveP);
-
-          this.assetsData[asset].price = liveP;
-          this.assetsData[asset].change = liveChange;
-          this.assetsData[asset].changePercent = livePct;
-          this.assetsData[asset].high = liveHigh;
-          this.assetsData[asset].low = liveLow;
-
-          const currentKey = (this.currentAsset || 'XAU').toUpperCase();
-          if (asset === currentKey) {
-            this.updateRealtimePrice(liveP, liveChange, livePct, liveHigh, liveLow);
-          }
-        });
-      } catch(err) {
-        console.error('liveDynamicPulse tick error:', err);
-      }
-    };
-
-    // Khởi chạy ngay tức thì
-    syncMarketPrices();
-    liveDynamicPulse();
-
-    // 1. Nhịp đập vi mô mỗi 400ms: Nến và số giá Header nhảy liên tục
-    setInterval(liveDynamicPulse, 400);
-
-    // 2. Đồng bộ anchor từ máy chủ mỗi 1200ms
-    setInterval(syncMarketPrices, 1200);
+    fetchLivePrice();
+    setInterval(fetchLivePrice, 2000);
   }
 
   setTimeframe(tf) {

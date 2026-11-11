@@ -1520,32 +1520,32 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 4064.50,
-    change: 31.90,
-    changePercent: 0.79,
-    high: 4066.90,
-    low: 4026.70,
-    open: 4032.60,
+    price: 4044.50,
+    change: -3.50,
+    changePercent: -0.09,
+    high: 4050.00,
+    low: 4038.00,
+    open: 4048.00,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
   BTC: {
-    price: 73850.00,
-    change: 54.00,
-    changePercent: 0.07,
-    high: 74034.00,
-    low: 73209.00,
-    open: 73796.00,
+    price: 80414.96,
+    change: 564.96,
+    changePercent: 0.71,
+    high: 81200.00,
+    low: 79150.00,
+    open: 79850.00,
     symbol: 'BINANCE:BTCUSDT',
     lastUpdated: Date.now()
   },
   XAG: {
-    price: 53.15,
-    change: 1.63,
-    changePercent: 3.16,
-    high: 53.19,
-    low: 51.45,
-    open: 51.52,
+    price: 52.67,
+    change: 0.57,
+    changePercent: 1.09,
+    high: 53.40,
+    low: 51.80,
+    open: 52.10,
     symbol: 'TVC:SILVER',
     lastUpdated: Date.now()
   },
@@ -1623,59 +1623,20 @@ function fetchSilverApiPriceDirect() {
 
 function fetchBtcPriceDirect() {
   return new Promise((resolve) => {
-    // 1. Coinbase API (chạy hoàn hảo trên toàn bộ server US như Render)
-    const req = https.get('https://api.coinbase.com/v2/prices/BTC-USD/spot', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 3500 }, (res) => {
+    const req = https.get('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
         try {
           const j = JSON.parse(body);
-          if (j && j.data && j.data.amount) {
-            const curP = parseFloat(j.data.amount);
-            const openP = tvMarketPricesCache.BTC.open || 73796.00;
-            const diff = +(curP - openP).toFixed(2);
-            const pct = +((diff / openP) * 100).toFixed(2);
+          if (j && j.lastPrice) {
             return resolve({
-              price: curP,
-              change: diff,
-              changePercent: pct,
-              high: Math.max(tvMarketPricesCache.BTC.high || curP, curP),
-              low: Math.min(tvMarketPricesCache.BTC.low || curP, curP),
-              open: openP
-            });
-          }
-        } catch (e) {}
-        fetchKrakenBtc().then(resolve);
-      });
-    });
-    req.on('timeout', () => { req.destroy(); fetchKrakenBtc().then(resolve); });
-    req.on('error', () => fetchKrakenBtc().then(resolve));
-  });
-}
-
-function fetchKrakenBtc() {
-  return new Promise((resolve) => {
-    const req = https.get('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 3000 }, (res) => {
-      let body = '';
-      res.on('data', chunk => body += chunk);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(body);
-          if (j && j.result && j.result.XXBTZUSD) {
-            const pair = j.result.XXBTZUSD;
-            const curP = parseFloat(pair.c[0]);
-            const highP = parseFloat(pair.h[0]);
-            const lowP = parseFloat(pair.l[0]);
-            const openP = parseFloat(pair.o);
-            const diff = +(curP - openP).toFixed(2);
-            const pct = +((diff / openP) * 100).toFixed(2);
-            return resolve({
-              price: curP,
-              change: diff,
-              changePercent: pct,
-              high: highP,
-              low: lowP,
-              open: openP
+              price: parseFloat(j.lastPrice),
+              change: parseFloat(j.priceChange),
+              changePercent: parseFloat(j.priceChangePercent),
+              high: parseFloat(j.highPrice),
+              low: parseFloat(j.lowPrice),
+              open: parseFloat(j.prevClosePrice)
             });
           }
         } catch (e) {}
@@ -1686,8 +1647,6 @@ function fetchKrakenBtc() {
     req.on('error', () => resolve(null));
   });
 }
-
-let isFetchingTvPrices = false;
 
 function queryTvScanner(path, tickers) {
   return new Promise((resolve) => {
@@ -1707,7 +1666,7 @@ function queryTvScanner(path, tickers) {
         'Origin': 'https://www.tradingview.com',
         'Referer': 'https://www.tradingview.com/'
       },
-      timeout: 2500
+      timeout: 4500
     }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
@@ -1728,10 +1687,9 @@ function queryTvScanner(path, tickers) {
 
 async function fetchTradingViewAllPrices() {
   const now = Date.now();
-  if (isFetchingTvPrices || (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 1200)) {
+  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 2500) {
     return tvMarketPricesCache;
   }
-  isFetchingTvPrices = true;
 
   let goldUpdated = false;
   let silverUpdated = false;
@@ -1872,18 +1830,11 @@ async function fetchTradingViewAllPrices() {
         lastUpdated: now
       };
     }
-  } catch(e) {} finally {
-    isFetchingTvPrices = false;
-  }
+  } catch(e) {}
 
   tvMarketPricesCache.lastUpdated = now;
   return tvMarketPricesCache;
 }
-
-// Background high-frequency prefetch loop (1200ms) để server luôn giữ cache giá mới nhất
-setInterval(() => {
-  fetchTradingViewAllPrices().catch(() => {});
-}, 1200);
 
 function fetchTradingViewGoldPrice() {
   return new Promise(async (resolve) => {
@@ -2586,19 +2537,16 @@ const server = http.createServer(async (req, res) => {
     }));
   }
   else if (urlPath === '/api/market-prices') {
+    const allPrices = await fetchTradingViewAllPrices();
     const marketOpen = isGoldMarketOpen();
-    res.writeHead(200, {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Access-Control-Allow-Origin': '*'
-    });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       status: 'SUCCESS',
       isMarketOpen: marketOpen,
       marketStatus: marketOpen ? 'OPEN' : 'CLOSED',
       marketStatusText: marketOpen ? 'Đang giao dịch' : 'Thị trường đóng cửa (Nghỉ cuối tuần)',
       onlineUsers: getSimulatedOnlineUsers(),
-      prices: tvMarketPricesCache,
+      prices: allPrices,
       timestamp: new Date().toISOString()
     }));
   }
@@ -3152,18 +3100,13 @@ const server = http.createServer(async (req, res) => {
     let relativePath = urlPath === '/' ? '/index.html' : urlPath;
     let safePath = path.normalize(relativePath).replace(/^(\.\.[\/\\])+/, '');
     let filePath = path.join(__dirname, safePath);
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    const isCodeFile = ext === '.js' || ext === '.css' || ext === '.html' || ext === '.json';
-    const cacheHeader = isCodeFile ? 'no-cache, no-store, must-revalidate' : 'public, max-age=86400';
-
-    // Phục vụ từ RAM cache nếu đã nạp (ngoại trừ code files để luôn tải mới nhất)
-    if (!isCodeFile && global._staticMemCache && global._staticMemCache.has(filePath)) {
+    // Siêu tốc: Phục vụ từ RAM cache nếu đã nạp
+    if (global._staticMemCache && global._staticMemCache.has(filePath)) {
       const cached = global._staticMemCache.get(filePath);
       res.writeHead(200, {
         'Content-Type': cached.contentType,
-        'Cache-Control': cacheHeader,
+        'Cache-Control': 'public, max-age=300',
         'Content-Length': cached.buffer.length
       });
       return res.end(cached.buffer);
@@ -3174,17 +3117,17 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
         return res.end('<h1>404 - Không tìm thấy trang</h1>');
       }
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-      if (!isCodeFile) {
-        if (!global._staticMemCache) global._staticMemCache = new Map();
-        if (data.length < 5 * 1024 * 1024) {
-          global._staticMemCache.set(filePath, { contentType, buffer: data });
-        }
+      if (!global._staticMemCache) global._staticMemCache = new Map();
+      if (data.length < 5 * 1024 * 1024) {
+        global._staticMemCache.set(filePath, { contentType, buffer: data });
       }
 
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': cacheHeader,
+        'Cache-Control': 'public, max-age=300',
         'Content-Length': data.length
       });
       res.end(data);
