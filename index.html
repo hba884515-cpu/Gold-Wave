@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GOLD TREND ANALYSIS TERMINAL (MA WAVE V8 PRO)</title>
 
+  <!-- Auto-bust Cache & PWA Service Worker on new version -->
+  <script>
+    (function() {
+      const CURRENT_APP_VERSION = '8.7.0';
+      const storedVer = localStorage.getItem('gold_app_version');
+      if (storedVer !== CURRENT_APP_VERSION) {
+        localStorage.setItem('gold_app_version', CURRENT_APP_VERSION);
+        if ('caches' in window) {
+          caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+        }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(r => r.unregister());
+          });
+        }
+        console.log('[AUTO-CACHE-BUSTER] Upgraded to v' + CURRENT_APP_VERSION + ' - Cleared old caches & workers');
+      }
+    })();
+  </script>
+
   <!-- iOS Safari PWA & Web Push Support -->
   <link rel="manifest" href="./manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -872,9 +892,14 @@
             <span id="top-bar-symbol-name" class="text-base font-black text-white tracking-wide">XAU/USD</span>
             <span id="top-bar-symbol-sub" class="text-[10px] text-slate-400 font-medium">Gold Intelligence Terminal</span>
           </div>
-          <div class="flex items-baseline gap-2 mt-0.5">
-            <span id="live-gold-price" class="text-xl font-black price-font text-emerald-400 transition-colors">$4,058.30</span>
-            <span id="live-gold-change" class="text-xs font-bold text-emerald-400 price-font">+10.30 (+0.25%)</span>
+          <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+            <span id="live-gold-price" class="text-xl font-black price-font text-emerald-400 transition-colors">$4,059.10</span>
+            <span id="live-gold-change" class="text-xs font-bold text-emerald-400 price-font">+11.10 (+0.27%)</span>
+            <span id="top-bar-live-badge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-500/40 text-emerald-300">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>LIVE</span>
+              <span id="top-bar-tick-sec" class="text-emerald-400 font-extrabold text-[11px]">--:--:--</span>
+            </span>
           </div>
         </div>
 
@@ -1577,7 +1602,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!--  VIEW 6: 📊 LỊCH SỬ PHÂN TÍCH & TÍN HIỆU SÓNG (MA WAVE V8)  -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="view-history" class="flex-1 flex flex-col min-h-0 overflow-y-auto bg-[#081410] pb-24 md:pb-6 sig-scroll">
+    <div id="view-history" class="flex-1 flex flex-col min-h-0 overflow-y-auto bg-[#081410] pb-24 md:pb-6 sig-scroll hidden">
       
       <!-- Header -->
       <div class="px-3 sm:px-5 py-3 border-b border-slate-800 bg-[#0d1117] flex items-center justify-between flex-shrink-0 flex-wrap gap-2.5">
@@ -7290,22 +7315,22 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 </script>
 
 <!-- External System JS Files -->
-<script src="./js/config.js?v=8.6.0"></script>
-<script src="./js/marketDataStore.js?v=8.6.0"></script>
-<script src="./js/v8Engine.js?v=8.6.0"></script>
-<script src="./js/eventEngine.js?v=8.6.0"></script>
-<script src="./js/soundAlert.js?v=8.6.0"></script>
-<script src="./js/indicators.js?v=8.6.0"></script>
-<script src="./js/signalEngine.js?v=8.6.0"></script>
-<script src="./js/newsData.js?v=8.6.0"></script>
-<script src="./js/newsAdapter.js?v=8.6.0"></script>
-<script src="./js/overextendedDetector.js?v=8.6.0"></script>
-<script src="./js/trendExhaustionDetector.js?v=8.6.0"></script>
-<script src="./js/pullbackQualityDetector.js?v=8.6.0"></script>
-<script src="./js/falseBreakoutDetector.js?v=8.6.0"></script>
-<script src="./js/mtfConflictDetector.js?v=8.6.0"></script>
-<script src="./js/signalPerformanceAnalytics.js?v=8.6.0"></script>
-<script src="./js/app.js?v=8.6.0"></script>
+<script src="./js/config.js?v=8.7.0"></script>
+<script src="./js/marketDataStore.js?v=8.7.0"></script>
+<script src="./js/v8Engine.js?v=8.7.0"></script>
+<script src="./js/eventEngine.js?v=8.7.0"></script>
+<script src="./js/soundAlert.js?v=8.7.0"></script>
+<script src="./js/indicators.js?v=8.7.0"></script>
+<script src="./js/signalEngine.js?v=8.7.0"></script>
+<script src="./js/newsData.js?v=8.7.0"></script>
+<script src="./js/newsAdapter.js?v=8.7.0"></script>
+<script src="./js/overextendedDetector.js?v=8.7.0"></script>
+<script src="./js/trendExhaustionDetector.js?v=8.7.0"></script>
+<script src="./js/pullbackQualityDetector.js?v=8.7.0"></script>
+<script src="./js/falseBreakoutDetector.js?v=8.7.0"></script>
+<script src="./js/mtfConflictDetector.js?v=8.7.0"></script>
+<script src="./js/signalPerformanceAnalytics.js?v=8.7.0"></script>
+<script src="./js/app.js?v=8.7.0"></script>
 
 
 

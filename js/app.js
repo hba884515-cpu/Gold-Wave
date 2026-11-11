@@ -1438,6 +1438,19 @@ class GoldTradingApp {
   }
 
   startSimulatedMarketTicks() {
+    if (!this._liveClockInterval) {
+      this._liveClockInterval = setInterval(() => {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const topBarTickSec = document.getElementById('top-bar-tick-sec');
+        if (topBarTickSec) topBarTickSec.textContent = timeStr;
+        const ohlcTime = document.getElementById('ohlc-time');
+        if (ohlcTime) ohlcTime.textContent = timeStr;
+        const tickBadge = document.getElementById('live-tick-counter');
+        if (tickBadge) tickBadge.textContent = 'LIVE ' + timeStr;
+      }, 1000);
+    }
+
     if (window.marketDataStore) {
       let lastHeavyCalculationTime = 0;
 
@@ -1566,6 +1579,12 @@ class GoldTradingApp {
       const isPos = diff >= 0;
       changeElem.textContent = `${isPos ? '+' : ''}${diff.toFixed(2)} (${isPos ? '+' : ''}${pct.toFixed(2)}%)`;
       changeElem.className = `text-xs font-semibold price-font ${isPos ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    const topBarTickSec = document.getElementById('top-bar-tick-sec');
+    if (topBarTickSec) {
+      const now = new Date();
+      topBarTickSec.textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
     if (statHighElem && store && store.high) {
