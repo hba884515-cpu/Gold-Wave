@@ -2020,6 +2020,15 @@ async function getServerOHLCBars(assetKey, liveSpotPrice) {
             });
           }
         }
+        // Loại bỏ nến snapshot phẳng (open === high === low === close) ở cuối của Yahoo
+        while (rawBars.length > 55) {
+          const tail = rawBars[rawBars.length - 1];
+          if (tail.open === tail.high && tail.high === tail.low && tail.low === tail.close) {
+            rawBars.pop();
+          } else {
+            break;
+          }
+        }
         if (rawBars.length > 50) {
           // Spot-normalize futures/yahoo basis so EMA levels & swing prices match exact TVC spot
           const lastFutClose = rawBars[rawBars.length - 1].close;
@@ -2043,7 +2052,9 @@ async function getServerOHLCBars(assetKey, liveSpotPrice) {
     }
 
     if (fetched.length >= 60) {
-      cache.bars5m = fetched.slice(-500);
+      const lastFetchedTime = fetched[fetched.length - 1].time;
+      const existingNewer = (cache.bars5m || []).filter(b => b && b.time > lastFetchedTime);
+      cache.bars5m = fetched.concat(existingNewer).slice(-500);
       cache.lastFetch = now;
     }
   }
