@@ -138,12 +138,14 @@
         key: 'btc',
         decimals: 0,
         defaultAtr: 280,
-        minSl: 950,
-        maxSl: 2400,
-        defaultSl: 1400,
-        minTp1: 1500,
-        minTp2: 2800,
-        minTp3: 4500,
+        minD: 0.35,
+        minBoxWidth: 1100,
+        minSl: 850,
+        maxSl: 2200,
+        defaultSl: 1200,
+        minTp1: 1000,
+        minTp2: 2000,
+        minTp3: 3500,
         maxStretchAtr: 1.85
       };
     }
@@ -152,6 +154,8 @@
         key: 'xag',
         decimals: 2,
         defaultAtr: 0.22,
+        minD: 0.32,
+        minBoxWidth: 0.90,
         minSl: 0.65,
         maxSl: 1.40,
         defaultSl: 0.85,
@@ -165,6 +169,8 @@
       key: 'xau',
       decimals: 2,
       defaultAtr: 6.0,
+      minD: 0.35,
+      minBoxWidth: 12.0,
       minSl: 6.5,
       maxSl: 14.0,
       defaultSl: 8.5,
@@ -589,32 +595,78 @@
       marketStateLabel = `${marketState} (Dãn xa EMA20 — Chờ hồi)`;
     }
 
+    // Kiểm tra Đảo chiều 2 biên trong hộp Sideway đủ rộng (Mục 6: Không đánh giữa hộp!)
+    const dec = assetCfg.decimals;
+    const minValidBox = Math.max(atr * 2.2, assetCfg.minBoxWidth);
+    let rangeReversal = null;
+    if (isSideway && !isChop && !isBreakoutUp && !isBreakoutDown && swRange >= minValidBox) {
+      const body = Math.abs(bar.close - bar.open);
+      const lowerWick = Math.min(bar.open, bar.close) - bar.low;
+      const upperWick = bar.high - Math.max(bar.open, bar.close);
+      const nearBottom = bar.low <= swBottom + swRange * 0.22 && livePrice <= swBottom + swRange * 0.35 && bar.close > swBottom;
+      const nearTop = bar.high >= swTop - swRange * 0.22 && livePrice >= swTop - swRange * 0.35 && bar.close < swTop;
+
+      if (nearBottom && bar.close > bar.open && (lowerWick >= body * 0.5 || body >= atr * 0.3)) {
+        rangeReversal = { direction: 'BUY', edge: swBottom, target: swBottom + swRange * 0.75 };
+      } else if (nearTop && bar.close < bar.open && (upperWick >= body * 0.5 || body >= atr * 0.3)) {
+        rangeReversal = { direction: 'SELL', edge: swTop, target: swTop - swRange * 0.75 };
+      }
+    }
+
+    const newsGuard = options.newsGuard && options.newsGuard.active ? options.newsGuard : null;
+    const activeDirection = rangeReversal ? rangeReversal.direction : best.direction;
+    const dirIsBuy = activeDirection === 'BUY';
+
+    if (rangeReversal) {
+      finalScore = 78;
+      signalQualityState = 'CONFIRMED';
+      marketState = 'SIDEWAY';
+      marketStateLabel = `SIDEWAY (Đảo chiều biên ${dirIsBuy ? 'dưới' : 'trên'} [${swBottom.toFixed(dec)}-${swTop.toFixed(dec)}])`;
+    }
+
     // Kiểm tra điều kiện phát tín hiệu vào lệnh (Chỉ bắn khi CONFIRMED >= 75 và vượt qua mọi chốt an toàn)
-    const dirIsBuy = best.direction === 'BUY';
     const invalidationBroken = dirIsBuy
       ? (structure.choch === 'CHOCH_BEAR' || (structure.lastSwingLow && livePrice < structure.lastSwingLow))
       : (structure.choch === 'CHOCH_BULL' || (structure.lastSwingHigh && livePrice > structure.lastSwingHigh));
 
     // Đảm bảo giá live cũng không quay đầu xuyên ngược cản EMA20 (hoặc EMA50 khi hồi sâu khỏe)
     const activeGuardEma = (pullbackType === 'DEEP_EMA50_HEALTHY') ? ema50 : ema20;
-    const liveConfirmsDir = dirIsBuy ? (livePrice > activeGuardEma - atr * 0.20) : (livePrice < activeGuardEma + atr * 0.20);
+    const liveConfirmsDir = rangeReversal
+      ? true
+      : (dirIsBuy ? (livePrice > activeGuardEma - atr * 0.20) : (livePrice < activeGuardEma + atr * 0.20));
 
-    const shouldEmit =
+    const dRatioOK = rangeReversal ? true : (dRatio >= assetCfg.minD);
+
+    const trendEmitOK =
       !isChop &&
       (!isSideway || isBreakoutUp || isBreakoutDown) &&
       finalScore >= 75 &&
       !overextended &&
+      dRatioOK &&
       best.crossGuardPassed &&
       best.breakdown.candleConfirm >= 8 &&
       best.breakdown.emaOrder >= 20 &&
       !invalidationBroken &&
       liveConfirmsDir;
 
+    const shouldEmit = !newsGuard && (trendEmitOK || !!rangeReversal);
+
+    if (newsGuard) {
+      signalQualityState = 'WAIT';
+    }
+
     // Tính Stop Loss & TP theo Cấu trúc giá + khoảng đệm ATR (Section 11)
     let slPrice, tp1Price, tp2Price, tp3Price, invalidationPrice;
-    const dec = assetCfg.decimals;
 
-    if (dirIsBuy) {
+    if (rangeReversal) {
+      const boxSlDist = Math.min(assetCfg.maxSl, Math.max(assetCfg.minSl, Math.abs(livePrice - rangeReversal.edge) + atr * 0.35));
+      slPrice = +(dirIsBuy ? livePrice - boxSlDist : livePrice + boxSlDist).toFixed(dec);
+      invalidationPrice = +(rangeReversal.edge).toFixed(dec);
+      const boxTp1 = Math.max(assetCfg.minTp1 * 0.85, Math.abs(rangeReversal.target - livePrice));
+      tp1Price = +(dirIsBuy ? livePrice + boxTp1 : livePrice - boxTp1).toFixed(dec);
+      tp2Price = +(dirIsBuy ? livePrice + boxTp1 * 1.6 : livePrice - boxTp1 * 1.6).toFixed(dec);
+      tp3Price = +(dirIsBuy ? livePrice + boxTp1 * 2.4 : livePrice - boxTp1 * 2.4).toFixed(dec);
+    } else if (dirIsBuy) {
       const structLow = structure.lastSwingLow || (ema50 - atr * 0.8);
       const rawSlDist = (livePrice - structLow) + atr * 0.35;
       const clampedSlDist = Math.min(assetCfg.maxSl, Math.max(assetCfg.minSl, rawSlDist));
@@ -643,18 +695,22 @@
     }
 
     const blockReasons = [];
+    if (newsGuard) blockReasons.push(`🛡️ Khóa an toàn quanh Tin Đỏ (±15p): ${newsGuard.eventTitle} lúc ${newsGuard.timeStr}`);
     if (isChop) blockReasons.push(`Thị trường nhiễu CHOP (${chopSigns}/5 dấu hiệu, D=${dRatio})`);
-    if (isSideway && !isBreakoutUp && !isBreakoutDown) blockReasons.push(`Đang Sideway biên [${swBottom.toFixed(dec)}-${swTop.toFixed(dec)}]`);
+    if (isSideway && !isBreakoutUp && !isBreakoutDown && !rangeReversal) blockReasons.push(`Đang Sideway biên [${swBottom.toFixed(dec)}-${swTop.toFixed(dec)}] (Chờ chạm biên rõ hoặc Breakout)`);
+    if (!dRatioOK) blockReasons.push(`Khoảng cách EMA hẹp (D=${dRatio} < ${assetCfg.minD} chuẩn ${assetCfg.key.toUpperCase()})`);
     if (overextended) blockReasons.push(`Giá cách EMA20 quá xa (${stretchATR}x ATR > ${assetCfg.maxStretchAtr}x) -> Chặn đu đỉnh/đáy`);
-    if (!best.crossGuardPassed) blockReasons.push('Giao cắt EMA20/50 chưa qua kiểm chứng 5 bước');
-    if (best.breakdown.candleConfirm < 8) blockReasons.push('Chờ nến đóng xác nhận rõ ràng');
-    if (invalidationBroken) blockReasons.push(`Đã phá cấu trúc vô hiệu hóa tại $${invalidationPrice}`);
+    if (!best.crossGuardPassed && !rangeReversal) blockReasons.push('Giao cắt EMA20/50 chưa qua kiểm chứng 5 bước');
+    if (best.breakdown.candleConfirm < 8 && !rangeReversal) blockReasons.push('Chờ nến đóng xác nhận rõ ràng');
+    if (invalidationBroken && !rangeReversal) blockReasons.push(`Đã phá cấu trúc vô hiệu hóa tại $${invalidationPrice}`);
     if (!liveConfirmsDir) blockReasons.push(`Giá live ($${livePrice.toFixed(dec)}) chưa giữ vững đúng phía EMA bảo vệ ($${activeGuardEma.toFixed(dec)})`);
-    if (best.mtf.conflict) blockReasons.push(`Xung đột đa khung (${best.mtf.summary})`);
+    if (best.mtf.conflict && !rangeReversal) blockReasons.push(`Xung đột đa khung (${best.mtf.summary})`);
     if (finalScore < 75) blockReasons.push(`Điểm chất lượng ${finalScore}/100 (< 75 CONFIRMED)`);
 
     const reasonText = shouldEmit
-      ? `[${signalQualityState} ${finalScore}/100] • Trạng thái: ${marketStateLabel} • Cấu trúc: ${structure.label} • D=${dRatio} • ${best.mtf.summary} • SL đặt theo cấu trúc sau mốc vô hiệu hóa $${invalidationPrice}`
+      ? (rangeReversal
+          ? `[SIDEWAY RANGE ${finalScore}/100] • Đảo chiều biên ${dirIsBuy ? 'dưới' : 'trên'} [${swBottom.toFixed(dec)}-${swTop.toFixed(dec)}] • Nến từ chối biên rõ • SL ngoài biên $${slPrice}`
+          : `[${signalQualityState} ${finalScore}/100] • Trạng thái: ${marketStateLabel} • Cấu trúc: ${structure.label} • D=${dRatio} • ${best.mtf.summary} • SL đặt theo cấu trúc sau mốc vô hiệu hóa $${invalidationPrice}`)
       : `[${signalQualityState} ${finalScore}/100] • ${marketStateLabel} • ${blockReasons[0] || 'Đang chờ hội tụ đủ điều kiện'}`;
 
     return {
@@ -667,8 +723,10 @@
       pullbackType,
       signalQualityState,
       score: finalScore,
-      direction: best.direction,
+      direction: activeDirection,
       shouldEmit,
+      newsGuard,
+      rangeReversal: !!rangeReversal,
       overextended,
       stretchATR,
       dRatio,

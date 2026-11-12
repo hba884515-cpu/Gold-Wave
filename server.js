@@ -2107,6 +2107,53 @@ async function getServerOHLCBars(assetKey, liveSpotPrice) {
   return { bars5m, bars15m, bars30m, bars1h };
 }
 
+const newsGuardNotifiedIds = new Set();
+
+function getActiveNewsGuard(assetKey) {
+  try {
+    if (!Array.isArray(newsEventsDB) || newsEventsDB.length === 0) return { active: false };
+    const nowMs = Date.now();
+    const windowMs = 15 * 60 * 1000; // ±15 phút quanh giờ ra Tin Đỏ
+
+    for (const ev of newsEventsDB) {
+      if (!ev || !ev.timestamp) continue;
+      if (String(ev.impact || '').toUpperCase() !== 'HIGH') continue;
+      const currency = String(ev.currency || '').toUpperCase();
+      if (currency && currency !== 'USD' && currency !== 'EUR' && currency !== 'GLOBAL') continue;
+
+      const evMs = new Date(ev.timestamp).getTime();
+      if (isNaN(evMs)) continue;
+      const diffMs = evMs - nowMs;
+
+      if (Math.abs(diffMs) <= windowMs) {
+        const minsDiff = Math.round(diffMs / 60000);
+        const evId = ev.id || ev.eventId || `${ev.time}-${ev.title}`;
+        const title = ev.title_vn || ev.title || 'Tin Kinh Tế Mạnh (USD)';
+
+        if (!newsGuardNotifiedIds.has(evId)) {
+          newsGuardNotifiedIds.add(evId);
+          const timeMsg = minsDiff > 0 ? `Còn ${minsDiff} phút nữa` : `Đã ra tin ${Math.abs(minsDiff)} phút trước`;
+          addNotification(
+            'NEWS',
+            `🛡️ TẠM KHÓA MỞ LỆNH MỚI QUANH TIN ĐỎ (±15p): ${ev.time}`,
+            `⚠️ ${timeMsg} công bố tin Đỏ: "${title}".\nHệ thống tạm khóa phát tín hiệu BUY/SELL mới trong ±15 phút để tránh quét râu & giãn spread. Hãy kéo SL về hòa vốn cho các lệnh đang có lãi!`,
+            { newsGuard: true, eventId: evId, time: ev.time }
+          );
+        }
+
+        return {
+          active: true,
+          eventId: evId,
+          eventTitle: title,
+          timeStr: ev.time || '',
+          minutesToEvent: minsDiff
+        };
+      }
+    }
+  } catch (e) {}
+  return { active: false };
+}
+
 async function evaluateAssetMarketState(assetKey) {
   const key = String(assetKey || 'xau').toLowerCase();
   const symKey = key.toUpperCase();
@@ -2117,6 +2164,7 @@ async function evaluateAssetMarketState(assetKey) {
   const spotObj = allPrices && allPrices[symKey];
   const livePrice = spotObj ? Number(spotObj.price) : null;
   const ohlc = await getServerOHLCBars(key, livePrice);
+  const newsGuard = getActiveNewsGuard(key);
 
   // Build MTF context preferring live TradingView MTF EMAs, with aggregated bar fallback
   let mtfContext = tvMtf ? tvMtf[key] : null;
@@ -2142,14 +2190,16 @@ async function evaluateAssetMarketState(assetKey) {
     asset: key,
     livePrice,
     mtfContext,
+    newsGuard,
     useClosedBar: true
   });
 
-  if (ohlc.bars5m.length >= 56 && (!analysis.shouldEmit)) {
+  if (ohlc.bars5m.length >= 56 && (!analysis.shouldEmit) && !newsGuard.active) {
     const analysis5m = EMA50Engine.analyze(ohlc.bars5m, {
       asset: key,
       livePrice,
       mtfContext,
+      newsGuard,
       useClosedBar: true
     });
     // Cho phép M5 kích hoạt nếu đạt CONFIRMED (>=75), đồng thuận >=3 khung HTF và không xung đột H1
