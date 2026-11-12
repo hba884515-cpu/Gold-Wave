@@ -2106,14 +2106,31 @@ async function evaluateAssetMarketState(assetKey) {
     };
   }
 
-  // Primary evaluation on M15 (and M5 fallback if M15 < 55 bars)
+  // Đánh giá đa khung theo Mục 10: M15 cấu trúc/vùng hồi + M5 quan sát tín hiệu ngắn hạn
   const primaryBars = ohlc.bars15m.length >= 56 ? ohlc.bars15m : ohlc.bars5m;
-  const analysis = EMA50Engine.analyze(primaryBars, {
+  let analysis = EMA50Engine.analyze(primaryBars, {
     asset: key,
     livePrice,
     mtfContext,
     useClosedBar: true
   });
+
+  if (ohlc.bars5m.length >= 56 && (!analysis.shouldEmit)) {
+    const analysis5m = EMA50Engine.analyze(ohlc.bars5m, {
+      asset: key,
+      livePrice,
+      mtfContext,
+      useClosedBar: true
+    });
+    // Cho phép M5 kích hoạt nếu đạt CONFIRMED (>=75), đồng thuận >=3 khung HTF và không xung đột H1
+    if (analysis5m.ready && analysis5m.shouldEmit && analysis5m.mtf && analysis5m.mtf.alignedCount >= 3 && !analysis5m.mtf.conflict) {
+      analysis = {
+        ...analysis5m,
+        triggerTimeframe: 'M5',
+        reason: `[M5 TRIGGER] ${analysis5m.reason}`
+      };
+    }
+  }
 
   return {
     analysis,
@@ -3647,12 +3664,18 @@ function formatServerSignalTime(d = new Date()) {
 // 24/7 Server-Side BUY/SELL & TP1/2/3/SL Signal Notification Engine (Đa Tài Sản: VÀNG, BTC, BẠC)
 let serverActiveTrades = { xau: null, btc: null, xag: null };
 let serverPriceHistory = { xau: [], btc: [], xag: [] };
-let lastSignalTimes = { xau: Date.now() - 15 * 60 * 1000, btc: Date.now() - 15 * 60 * 1000, xag: Date.now() - 15 * 60 * 1000 };
+let lastSignalTimes = { xau: 0, btc: 0, xag: 0 };
 
 function startServerSignalEngine() {
-  // Khôi phục các lệnh đang chạy từ signalsDB nếu có (khi server restart)
+  // Khôi phục các lệnh đang chạy và thời điểm tín hiệu gần nhất từ signalsDB (tránh bị khóa cooldown oan khi server restart)
   if (signalsDB && signalsDB.length > 0) {
     ['xau', 'btc', 'xag'].forEach(assetKey => {
+      const latestAny = signalsDB.find(s => s && s.asset === assetKey && s.timestamp);
+      if (latestAny && latestAny.timestamp) {
+        const tsMs = latestAny.timestamp > 2000000000 ? latestAny.timestamp : latestAny.timestamp * 1000;
+        lastSignalTimes[assetKey] = tsMs;
+      }
+
       const running = signalsDB.find(s => s && s.asset === assetKey && s.status && s.status.includes('ĐANG CHẠY'));
       if (running) {
         serverActiveTrades[assetKey] = {

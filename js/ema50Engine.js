@@ -473,13 +473,15 @@
       const upperWick = bar.high - Math.max(bar.open, bar.close);
       const isBullCandle = bar.close > bar.open;
       const isBearCandle = bar.close < bar.open;
-      const bullishRejection = lowerWick > Math.max(body * 1.2, atr * 0.25) && bar.close > ema20;
-      const bearishRejection = upperWick > Math.max(body * 1.2, atr * 0.25) && bar.close < ema20;
+      const bullishRejection = lowerWick > Math.max(body * 1.2, atr * 0.25) && (bar.close > ema20 || (recentTouchEma50Buy && bar.close > ema50));
+      const bearishRejection = upperWick > Math.max(body * 1.2, atr * 0.25) && (bar.close < ema20 || (recentTouchEma50Sell && bar.close < ema50));
+      const strongEma50RejBuy = recentTouchEma50Buy && ema50Sloped && isBullCandle && body >= atr * 0.45 && bar.close > ema50;
+      const strongEma50RejSell = recentTouchEma50Sell && ema50Sloped && isBearCandle && body >= atr * 0.45 && bar.close < ema50;
 
       if (isBuy) {
         if (isBullCandle && bar.close > ema20 && (bar.close > prevBar.high || body >= atr * 0.35 || bullishRejection)) {
           breakdown.candleConfirm = 10;
-        } else if ((isBullCandle && bar.close > ema20) || bullishRejection) {
+        } else if ((isBullCandle && bar.close > ema20) || bullishRejection || strongEma50RejBuy) {
           breakdown.candleConfirm = 8;
         } else if (bar.close > ema20) {
           breakdown.candleConfirm = 4;
@@ -487,7 +489,7 @@
       } else {
         if (isBearCandle && bar.close < ema20 && (bar.close < prevBar.low || body >= atr * 0.35 || bearishRejection)) {
           breakdown.candleConfirm = 10;
-        } else if ((isBearCandle && bar.close < ema20) || bearishRejection) {
+        } else if ((isBearCandle && bar.close < ema20) || bearishRejection || strongEma50RejSell) {
           breakdown.candleConfirm = 8;
         } else if (bar.close < ema20) {
           breakdown.candleConfirm = 4;
