@@ -595,8 +595,9 @@
       ? (structure.choch === 'CHOCH_BEAR' || (structure.lastSwingLow && livePrice < structure.lastSwingLow))
       : (structure.choch === 'CHOCH_BULL' || (structure.lastSwingHigh && livePrice > structure.lastSwingHigh));
 
-    // Đảm bảo giá live cũng không quay đầu xuyên ngược cản vô hiệu hóa
-    const liveConfirmsDir = dirIsBuy ? (livePrice > ema20 - atr * 0.15) : (livePrice < ema20 + atr * 0.15);
+    // Đảm bảo giá live cũng không quay đầu xuyên ngược cản EMA20 (hoặc EMA50 khi hồi sâu khỏe)
+    const activeGuardEma = (pullbackType === 'DEEP_EMA50_HEALTHY') ? ema50 : ema20;
+    const liveConfirmsDir = dirIsBuy ? (livePrice > activeGuardEma - atr * 0.20) : (livePrice < activeGuardEma + atr * 0.20);
 
     const shouldEmit =
       !isChop &&
@@ -648,6 +649,7 @@
     if (!best.crossGuardPassed) blockReasons.push('Giao cắt EMA20/50 chưa qua kiểm chứng 5 bước');
     if (best.breakdown.candleConfirm < 8) blockReasons.push('Chờ nến đóng xác nhận rõ ràng');
     if (invalidationBroken) blockReasons.push(`Đã phá cấu trúc vô hiệu hóa tại $${invalidationPrice}`);
+    if (!liveConfirmsDir) blockReasons.push(`Giá live ($${livePrice.toFixed(dec)}) chưa giữ vững đúng phía EMA bảo vệ ($${activeGuardEma.toFixed(dec)})`);
     if (best.mtf.conflict) blockReasons.push(`Xung đột đa khung (${best.mtf.summary})`);
     if (finalScore < 75) blockReasons.push(`Điểm chất lượng ${finalScore}/100 (< 75 CONFIRMED)`);
 
