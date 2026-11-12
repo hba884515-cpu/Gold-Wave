@@ -2000,8 +2000,9 @@ async function getServerOHLCBars(assetKey, liveSpotPrice) {
           close: +Number(k[4]).toFixed(2)
         }));
       }
-    } else {
-      const yahooSym = key === 'xag' ? 'SI=F' : 'GC=F';
+    }
+    if (fetched.length < 60) {
+      const yahooSym = key === 'btc' ? 'BTC-USD' : (key === 'xag' ? 'SI=F' : 'GC=F');
       const yJson = await fetchJsonHttps(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=5m&range=5d`);
       const res = yJson && yJson.chart && yJson.chart.result && yJson.chart.result[0];
       if (res && Array.isArray(res.timestamp) && res.indicators && res.indicators.quote && res.indicators.quote[0]) {
@@ -2020,9 +2021,10 @@ async function getServerOHLCBars(assetKey, liveSpotPrice) {
           }
         }
         if (rawBars.length > 50) {
-          // Spot-normalize futures basis so EMA levels & swing prices match exact TVC:GOLD / TVC:SILVER spot
+          // Spot-normalize futures/yahoo basis so EMA levels & swing prices match exact TVC spot
           const lastFutClose = rawBars[rawBars.length - 1].close;
-          const basisOffset = (spot > 0 && Math.abs(spot - lastFutClose) < (key === 'xag' ? 5 : 120)) ? (spot - lastFutClose) : 0;
+          const maxBasis = key === 'btc' ? 1200 : (key === 'xag' ? 5 : 120);
+          const basisOffset = (spot > 0 && Math.abs(spot - lastFutClose) < maxBasis) ? (spot - lastFutClose) : 0;
           const dec = key === 'xag' ? 3 : 2;
           // Deduplicate same 5m timestamps keeping latest
           const dedup = new Map();
