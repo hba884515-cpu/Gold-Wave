@@ -13,7 +13,7 @@
   <!-- iOS Safari PWA & Web Push Support -->
   <link rel="manifest" href="./manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Gold Wave">
 
   <!-- Tailwind CSS CDN -->
@@ -149,33 +149,40 @@
       #mobile-bottom-nav {
         display: flex !important;
         position: fixed;
-        bottom: 6px;
+        bottom: max(6px, env(safe-area-inset-bottom));
         left: 6px;
         right: 6px;
         height: 56px;
-        background: linear-gradient(180deg, rgba(13, 20, 30, 0.96) 0%, rgba(8, 12, 20, 0.98) 100%) !important;
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(245, 158, 11, 0.28) !important;
-        border-radius: 24px !important;
-        z-index: 40;
+        background: rgba(10, 17, 24, 0.98) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: 1px solid rgba(245, 158, 11, 0.3) !important;
+        border-radius: 22px !important;
+        z-index: 90 !important;
+        pointer-events: auto !important;
         justify-content: space-around;
         align-items: center;
         padding: 2px 4px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 15px -3px rgba(245, 158, 11, 0.22) !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85) !important;
+      }
+      .liquid-glass, .glass-gold {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
       }
       #center-area {
-        padding-bottom: 72px;
+        padding-bottom: calc(68px + env(safe-area-inset-bottom));
       }
       #btn-floating-show-gi {
         bottom: 80px !important;
       }
       #top-bar {
-        padding: 0 8px !important;
+        padding: calc(4px + env(safe-area-inset-top)) 10px 6px 10px !important;
         gap: 6px !important;
-        height: 50px !important;
+        min-height: 52px !important;
+        height: auto !important;
         flex-wrap: nowrap !important;
-        overflow-x: hidden !important;
+        overflow: hidden !important;
+        justify-content: space-between !important;
       }
       #top-bar-online-badge {
         padding: 2px 6px !important;
@@ -188,12 +195,12 @@
         font-size: 10px !important;
         gap: 3px !important;
         flex-shrink: 0 !important;
-        max-width: 80px !important;
+        max-width: 68px !important;
       }
       #notif-bell-btn {
         flex-shrink: 0 !important;
-        min-width: 32px !important;
-        height: 32px !important;
+        min-width: 30px !important;
+        height: 30px !important;
         padding: 0 !important;
         display: inline-flex !important;
         align-items: center !important;
@@ -201,17 +208,17 @@
         z-index: 30 !important;
       }
       #header-user-btn {
-        padding: 2px 6px !important;
+        padding: 2px 5px !important;
         flex-shrink: 0 !important;
       }
       #notif-dropdown-panel {
         position: fixed !important;
-        top: 54px !important;
+        top: calc(58px + env(safe-area-inset-top)) !important;
         left: 8px !important;
         right: 8px !important;
         width: auto !important;
-        max-height: 80vh !important;
-        z-index: 60 !important;
+        max-height: 78vh !important;
+        z-index: 95 !important;
         box-shadow: 0 10px 30px rgba(2, 10, 7, 0.9) !important;
       }
     }
@@ -237,6 +244,7 @@
     #app-shell {
       display: flex;
       flex-direction: row;
+      height: 100dvh;
       height: 100vh;
       overflow: hidden;
       background: radial-gradient(ellipse at 50% 0%, #153327 0%, #0d221a 45%, #07120e 100%);
@@ -871,15 +879,15 @@
     <div id="top-bar">
 
       <!-- Symbol + Price -->
-      <div class="flex items-center gap-4 flex-shrink-0">
-        <div>
-          <div class="flex items-baseline gap-2">
-            <span id="top-bar-symbol-name" class="text-base font-black text-white tracking-wide">XAU/USD</span>
-            <span id="top-bar-symbol-sub" class="text-[10px] text-slate-400 font-medium">Gold Intelligence Terminal</span>
+      <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0 min-w-0">
+        <div class="min-w-0">
+          <div class="flex items-baseline gap-1.5 sm:gap-2">
+            <span id="top-bar-symbol-name" class="text-xs sm:text-base font-black text-white tracking-wide">XAU/USD</span>
+            <span id="top-bar-symbol-sub" class="hidden sm:inline text-[10px] text-slate-400 font-medium">Gold Intelligence Terminal</span>
           </div>
-          <div class="flex items-baseline gap-2 mt-0.5">
-            <span id="live-gold-price" class="text-xl font-black price-font text-emerald-400 transition-colors">$3,875.64</span>
-            <span id="live-gold-change" class="text-xs font-bold text-rose-400 price-font">-144.92 (-3.60%)</span>
+          <div class="flex items-baseline gap-1.5 sm:gap-2 mt-0.5">
+            <span id="live-gold-price" class="text-base sm:text-xl font-black price-font text-emerald-400 transition-colors">$3,903.36</span>
+            <span id="live-gold-change" class="text-[10px] sm:text-xs font-bold text-rose-400 price-font">-0.00 (0.00%)</span>
           </div>
         </div>
 
@@ -1562,7 +1570,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!--  VIEW 6: 📊 LỊCH SỬ PHÂN TÍCH & TÍN HIỆU SÓNG (MA WAVE V8)  -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="view-history" class="flex-1 flex flex-col min-h-0 overflow-y-auto bg-[#081410] pb-24 md:pb-6 sig-scroll">
+    <div id="view-history" class="flex-1 flex flex-col min-h-0 overflow-y-auto bg-[#081410] pb-24 md:pb-6 sig-scroll hidden">
       
       <!-- Header -->
       <div class="px-3 sm:px-5 py-3 border-b border-slate-800 bg-[#0d1117] flex items-center justify-between flex-shrink-0 flex-wrap gap-2.5">
@@ -5785,6 +5793,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
     }
 
     // Show target view explicitly with display flex
+    window.currentActiveView = targetView;
     const targetEl = document.getElementById('view-' + targetView);
     if (targetEl) {
       targetEl.style.display = 'flex';
@@ -6171,17 +6180,17 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 </script>
 
 <!-- External System JS Files -->
-<script src="./js/config.js?v=9.2.0"></script>
-<script src="./js/marketDataStore.js?v=9.2.0"></script>
-<script src="./js/v8Engine.js?v=9.2.0"></script>
-<script src="./js/eventEngine.js?v=9.2.0"></script>
-<script src="./js/soundAlert.js?v=9.2.0"></script>
-<script src="./js/ema50Engine.js?v=9.2.0"></script>
-<script src="./js/indicators.js?v=9.2.0"></script>
-<script src="./js/signalEngine.js?v=9.2.0"></script>
-<script src="./js/newsData.js?v=9.2.0"></script>
-<script src="./js/newsAdapter.js?v=9.2.0"></script>
-<script src="./js/app.js?v=9.2.0"></script>
+<script src="./js/config.js?v=9.3.2"></script>
+<script src="./js/marketDataStore.js?v=9.3.2"></script>
+<script src="./js/v8Engine.js?v=9.3.2"></script>
+<script src="./js/eventEngine.js?v=9.3.2"></script>
+<script src="./js/soundAlert.js?v=9.3.2"></script>
+<script src="./js/ema50Engine.js?v=9.3.2"></script>
+<script src="./js/indicators.js?v=9.3.2"></script>
+<script src="./js/signalEngine.js?v=9.3.2"></script>
+<script src="./js/newsData.js?v=9.3.2"></script>
+<script src="./js/newsAdapter.js?v=9.3.2"></script>
+<script src="./js/app.js?v=9.3.2"></script>
 
 
 

@@ -1443,50 +1443,58 @@ class GoldTradingApp {
 
   startSimulatedMarketTicks() {
     if (window.marketDataStore) {
+      this._lastHeavyEvalMs = 0;
       window.marketDataStore.subscribe((event, payload) => {
         if (event === 'tick') {
           this.updatePriceHeader();
+          const nowTickMs = Date.now();
+          const activeView = window.currentActiveView || 'chart';
+          const isChartOrTrendVisible = (activeView === 'chart' || activeView === 'trend');
+          let barCountChanged = false;
+
           if (this.replayMode === 'live') {
             const tf = this.currentTimeframe || '15m';
             const prevCount = this.bars ? this.bars.length : 0;
             this.bars = window.marketDataStore.getBars(tf);
+            barCountChanged = !!(this.bars && this.bars.length !== prevCount);
             const lastBar = (this.bars && this.bars.length) ? this.bars[this.bars.length - 1] : null;
-            if (this.candleSeries && lastBar) {
-              if (this.bars && this.bars.length !== prevCount) {
+            if (isChartOrTrendVisible && this.candleSeries && lastBar) {
+              if (barCountChanged) {
                 this.candleSeries.setData(this.bars);
               } else {
                 this.candleSeries.update(lastBar);
               }
             }
-            this.renderIndicators();
-            this.updateReplayUI();
           }
-          if (window.v8Engine) {
-            const currentSnap = window.v8Engine.getV8MarketSnap ? window.v8Engine.getV8MarketSnap() : null;
-            if (currentSnap) {
-              this.updateV8DashboardUI(currentSnap);
-            }
-          }
-          if (window.signalEngine) {
-            const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
-            window.signalEngine.evaluateMarket(this.bars, activeAsset);
-            window.signalEngine.updateOpenOrders(payload.price, activeAsset);
 
-            // Quét tức thời cho cả các tài sản khác (Vàng, Bitcoin, Bạc) theo giá live chuẩn xác
-            if (window.marketDataStore && window.marketDataStore.assetsData) {
-              ['XAU', 'BTC', 'XAG'].forEach(symKey => {
-                const sym = symKey.toLowerCase();
-                if (sym !== activeAsset) {
-                  const assetObj = window.marketDataStore.assetsData[symKey];
-                  if (assetObj && assetObj.price) {
-                    window.signalEngine.updateOpenOrders(assetObj.price, sym);
-                  }
-                }
-              });
+          const shouldRunHeavy = barCountChanged || (nowTickMs - (this._lastHeavyEvalMs || 0) >= 8000);
+          if (shouldRunHeavy) {
+            this._lastHeavyEvalMs = nowTickMs;
+            if (this.replayMode === 'live' && isChartOrTrendVisible) {
+              this.renderIndicators();
+              this.updateReplayUI();
+            }
+            if (window.v8Engine && isChartOrTrendVisible) {
+              const currentSnap = window.v8Engine.getV8MarketSnap ? window.v8Engine.getV8MarketSnap() : null;
+              if (currentSnap) {
+                this.updateV8DashboardUI(currentSnap);
+              }
+            }
+            if (window.signalEngine) {
+              const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
+              window.signalEngine.evaluateMarket(this.bars, activeAsset);
             }
           }
-        } else if (event === 'timeframeChange') {
-          this.currentTimeframe = payload.timeframe;
+
+          if (window.signalEngine && payload && payload.price) {
+            const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
+            window.signalEngine.updateOpenOrders(payload.price, activeAsset);
+          }
+        } else if (event === 'timeframeChange' || event === 'candlesHydrated' || event === 'assetChange') {
+          this._lastHeavyEvalMs = Date.now();
+          if (event === 'timeframeChange' && payload && payload.timeframe) {
+            this.currentTimeframe = payload.timeframe;
+          }
           this.loadInitialBars();
           this.renderIndicators();
           this.updateReplayUI();
@@ -2225,9 +2233,17 @@ class GoldTradingApp {
         : `<span class="text-slate-500 text-[11px]">${valStr}</span>`;
     };
 
+    // Giới hạn số lượng node DOM render mỗi lần (50 lệnh mới nhất) để app điện thoại mượt mà 60fps
+    this.historyDisplayLimit = this.historyDisplayLimit || 50;
+    const displaySignals = signals.slice(0, this.historyDisplayLimit);
+    const hasMoreHistory = signals.length > displaySignals.length;
+    const loadMoreBtnHtml = hasMoreHistory
+      ? `<div class="col-span-full flex justify-center py-4"><button onclick="if(window.app){ window.app.historyDisplayLimit = (window.app.historyDisplayLimit || 50) + 50; window.app.renderSignalHistory(); }" class="px-5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs transition cursor-pointer">📜 Xem thêm 50 lệnh cũ hơn (Đang hiển thị ${displaySignals.length}/${signals.length})</button></div>`
+      : '';
+
     // 1. Render Table Rows (Cho Dạng Bảng 11 Cột)
     if (tbody) {
-      tbody.innerHTML = signals.map(sig => {
+      tbody.innerHTML = displaySignals.map(sig => {
         const isBuy = sig.type === 'BUY';
         const isBtc = sig.asset === 'btc';
         const isXag = sig.asset === 'xag';
@@ -2266,12 +2282,12 @@ class GoldTradingApp {
             </td>
           </tr>
         `;
-      }).join('');
+      }).join('') + (hasMoreHistory ? `<tr><td colspan="11">${loadMoreBtnHtml}</td></tr>` : '');
     }
 
     // 2. Render Cards View (Dạng Thẻ Lệnh Thông Minh - Cực kỳ trực quan, xem trọn vẹn mọi lệnh trên điện thoại)
     if (cardsContainer) {
-      cardsContainer.innerHTML = signals.map(sig => {
+      cardsContainer.innerHTML = displaySignals.map(sig => {
         const isBuy = sig.type === 'BUY';
         const isBtc = sig.asset === 'btc';
         const isXag = sig.asset === 'xag';
@@ -2336,7 +2352,7 @@ class GoldTradingApp {
             </div>
           </div>
         `;
-      }).join('');
+      }).join('') + loadMoreBtnHtml;
     }
 
     // Auto apply saved or default display mode (Cards for mobile, Table for PC)
