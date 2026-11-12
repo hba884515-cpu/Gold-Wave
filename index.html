@@ -2,8 +2,13 @@
 <html lang="vi" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>GOLD TREND ANALYSIS TERMINAL (MA WAVE V8 PRO)</title>
+  <script>
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('gesturechange', function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('gestureend', function (e) { e.preventDefault(); }, { passive: false });
+  </script>
 
   <!-- iOS Safari PWA & Web Push Support -->
   <link rel="manifest" href="./manifest.json">
@@ -26,7 +31,7 @@
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="./css/style.css?v=3.0">
+  <link rel="stylesheet" href="./css/style.css?v=9.3.1">
 
   <script>
     tailwind.config = {
@@ -841,7 +846,7 @@
     <div class="px-1.5 py-1 mb-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center cursor-default select-none" title="Traders đang hoạt động trực tuyến">
       <div class="flex items-center justify-center gap-1">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="sidebar-online-count" class="text-[9px] font-black text-emerald-300 price-font">1,718</span>
+        <span id="sidebar-online-count" class="text-[9px] font-black text-emerald-300 price-font">3,108</span>
       </div>
       <span class="text-[7px] text-slate-400 block font-bold leading-none mt-0.5">ONLINE</span>
     </div>
@@ -944,7 +949,7 @@
           <span class="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500"></span>
         </span>
         <span class="hidden md:inline text-slate-300 font-semibold">Traders:</span>
-        <span id="top-online-count" class="font-black text-white price-font text-[10px] sm:text-xs">1,718</span>
+        <span id="top-online-count" class="font-black text-white price-font text-[10px] sm:text-xs">3,108</span>
         <span class="hidden sm:inline text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Online</span>
       </div>
 
@@ -1270,7 +1275,7 @@
           <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300" title="Cộng đồng Trader đang theo dõi trực tuyến">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span class="font-bold text-slate-300">Online:</span>
-            <strong id="radar-online-users-count" class="text-white font-black price-font">1,718 Traders</strong>
+            <strong id="radar-online-users-count" class="text-white font-black price-font">3,108 Traders</strong>
           </div>
         </div>
       </div>

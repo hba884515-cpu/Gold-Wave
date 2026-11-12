@@ -7773,13 +7773,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// ─── Live Online Traders Counter Engine (Mô phỏng ~1700 Traders hoạt động thực tế) ───
+// ─── Live Online Traders Counter Engine (Mô phỏng ~3100 Traders hoạt động thực tế) ───
 (function initOnlineUsersEngine() {
-  // Bắt đầu quanh mốc 1718 người dùng
-  let currentCount = 1718;
+  // Bắt đầu quanh mốc 3108 người dùng
+  let currentCount = 3108;
 
   function updateDisplay(count) {
     currentCount = count;
+    const formatted = Number(count).toLocaleString('en-US');
     const els = [
       document.getElementById('top-online-count'),
       document.getElementById('sidebar-online-count'),
@@ -7788,19 +7789,19 @@ document.addEventListener('DOMContentLoaded', function() {
     els.forEach(el => {
       if (!el) return;
       if (el.id === 'radar-online-users-count') {
-        el.textContent = `${count} Traders`;
+        el.textContent = `${formatted} Traders`;
       } else {
-        el.textContent = count;
+        el.textContent = formatted;
       }
     });
   }
 
-  // Biến thiên tự nhiên nhẹ nhàng (mỗi 7 - 14 giây thay đổi ±1 đến ±4 người, dao động quanh 1685 - 1745)
+  // Biến thiên tự nhiên nhẹ nhàng (mỗi 7 - 14 giây thay đổi ±1 đến ±5 người, dao động quanh 3060 - 3165)
   function stepFluctuation() {
-    const change = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 4) + 1);
+    const change = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 5) + 1);
     let newCount = currentCount + change;
-    if (newCount < 1685) newCount = 1696;
-    if (newCount > 1745) newCount = 1735;
+    if (newCount < 3060) newCount = 3078;
+    if (newCount > 3165) newCount = 3148;
     updateDisplay(newCount);
     const nextInterval = Math.floor(Math.random() * 7000) + 7000;
     setTimeout(stepFluctuation, nextInterval);

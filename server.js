@@ -148,13 +148,13 @@ function saveJSON(filePath, data) {
 
 let deviceTrialsDB = loadJSON(DEVICE_TRIALS_FILE, []);
 
-// ─── Giả Lập Số Người Dùng Đang Online (~1700 Traders, Dao Động Tự Nhiên 1685 - 1745) ───
-let simulatedOnlineUsers = 1718;
+// ─── Giả Lập Số Người Dùng Đang Online (~3100 Traders, Dao Động Tự Nhiên 3060 - 3165) ───
+let simulatedOnlineUsers = 3108;
 function getSimulatedOnlineUsers() {
-  const delta = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 4) + 1);
+  const delta = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 5) + 1);
   simulatedOnlineUsers += delta;
-  if (simulatedOnlineUsers < 1685) simulatedOnlineUsers = 1696;
-  if (simulatedOnlineUsers > 1745) simulatedOnlineUsers = 1735;
+  if (simulatedOnlineUsers < 3060) simulatedOnlineUsers = 3078;
+  if (simulatedOnlineUsers > 3165) simulatedOnlineUsers = 3148;
   return simulatedOnlineUsers;
 }
 setInterval(() => {
