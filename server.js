@@ -24,6 +24,25 @@ let serverSignalsDB = loadJSON(SERVER_SIGNALS_FILE, []);
 const SIGNALS_DB_FILE = path.join(__dirname, 'signals_db.json');
 let signalsDB = loadJSON(SIGNALS_DB_FILE, []);
 
+function generateNextSignalId() {
+  let maxNum = 2120;
+  if (Array.isArray(signalsDB)) {
+    signalsDB.forEach(s => {
+      if (s && s.id) {
+        const cleanStr = String(s.id).replace(/^V8-?/i, '').replace(/\D/g, '');
+        let n = parseInt(cleanStr, 10);
+        if (!isNaN(n) && n >= 100000) {
+          n = n % 100000;
+        }
+        if (!isNaN(n) && n > maxNum && n < 90000) {
+          maxNum = n;
+        }
+      }
+    });
+  }
+  return `V8-${String(maxNum + 1).padStart(5, '0')}`;
+}
+
 // Bảo vệ tuyệt đối: Các lệnh Vàng quan trọng V8-02111 (@ $4,112.10) và V8-02101 (@ $4,112.40) luôn được giữ vĩnh viễn
 const protectV8Order = (arr) => {
   if (!Array.isArray(arr)) return;
@@ -2932,14 +2951,30 @@ const server = http.createServer(async (req, res) => {
   else if (urlPath === '/api/ai/chat' && req.method === 'POST') {
     const body = await parseRequestBody(req);
     const userPrompt = (body.prompt || body.message || '').trim();
-    const tvData = await fetchTradingViewGoldPrice();
-    let rawPrice = body.price || (tvData && tvData.price ? tvData.price : 3995.54);
-    if (typeof rawPrice === 'number') {
-      rawPrice = rawPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-    const currentGoldPrice = String(rawPrice).replace('$', '').trim();
-    
-    // Natural Language Intent Engine
+    const [tvData, xauStateRes] = await Promise.all([
+      fetchTradingViewGoldPrice(),
+      evaluateAssetMarketState('xau').catch(() => null)
+    ]);
+    const st = xauStateRes && xauStateRes.analysis;
+    const liveNum = (st && st.ready && st.livePrice) ? st.livePrice : ((tvData && tvData.price) ? tvData.price : 3980.00);
+    const currentGoldPrice = Number(liveNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const ema20Str = st && st.ema20 ? `$${st.ema20.toFixed(2)}` : 'N/A';
+    const ema50Str = st && st.ema50 ? `$${st.ema50.toFixed(2)}` : 'N/A';
+    const atrStr = st && st.atr ? `$${st.atr.toFixed(2)}` : 'N/A';
+    const mtfStr = st && st.mtf ? st.mtf.summary : 'Đang đồng bộ';
+    const stateDesc = st && st.ready ? `${st.marketStateLabel} (${st.score}/100 - ${st.signalQualityState})` : 'Đang đồng bộ nến';
+    const structSl = st && st.sl ? `$${st.sl.toFixed(2)}` : 'Theo đáy/đỉnh cấu trúc + ATR';
+    const structTp1 = st && st.tp1 ? `$${st.tp1.toFixed(2)}` : 'Theo R:R 1.2+';
+
+    const nowMs = Date.now();
+    const upcomingNews = (Array.isArray(newsEventsDB) ? newsEventsDB : [])
+      .filter(ev => ev && ev.timestamp && new Date(ev.timestamp).getTime() > nowMs)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .slice(0, 3);
+    const newsSummaryHtml = upcomingNews.length > 0
+      ? upcomingNews.map(ev => `• <strong>${ev.time}</strong>: ${ev.title_vn || ev.title} (${ev.impact === 'HIGH' ? '<span class="text-rose-400 font-bold">ĐỎ MẠNH</span>' : 'TIN CAM'})`).join('<br>')
+      : '• Hiện chưa có tin tức mạnh sắp ra trong phiên này.';
+
     const lowerP = userPrompt.toLowerCase();
     let mode = 'Gold AI Market Mentor';
     let reply = '';
@@ -2949,63 +2984,63 @@ const server = http.createServer(async (req, res) => {
       reply = `
         <div class="space-y-2 text-xs text-slate-300 leading-relaxed">
           <p>Chào bạn! Mình là <strong>Gold AI Mentor 🌊</strong>.</p>
-          <p>Hôm nay bạn muốn xem bối cảnh giá Vàng ($${currentGoldPrice}), trao đổi kinh nghiệm trading hay có câu hỏi gì cần giải đáp không?</p>
+          <p>Giá Vàng XAU/USD trực tiếp hiện tại là <strong>$${currentGoldPrice}</strong> · Trạng thái EMA20/50: <strong>${stateDesc}</strong>.</p>
+          <p>Bạn muốn xem phân tích đa khung hay kiểm tra lịch tin tức kinh tế hôm nay?</p>
         </div>
       `;
     } else if (lowerP.includes('bán') || lowerP.includes('mua') || lowerP.includes('xu hướng') || lowerP.includes('chiến lược') || lowerP.includes('vào lệnh')) {
       mode = 'Market Analyst Mode';
       reply = `
         <div class="space-y-2 text-xs text-slate-300 leading-relaxed">
-          <p>Phân tích xu hướng & góc nhìn vào lệnh Vàng (XAU/USD $${currentGoldPrice}) realtime:</p>
-          <p>• <strong>Cấu trúc sóng M15</strong>: Giá đang duy trì cấu trúc tăng với dải nâng đỡ từ MA WAVE V8. Tuy nhiên, đà áp sát vùng kháng cự ngắn hạn cần nến xác nhận đứt điểm.</p>
-          <p>• <strong>Gợi ý hành động</strong>: Không nên mua đuổi khi nến đang mở rộng mạnh. Ưu tiên chờ giá test (Pullback) về vùng dải động EMA20 hoặc dải dưới MA WAVE để tối ưu điểm dừng lỗ (SL).</p>
-          <p>• <strong>Quy tắc vốn</strong>: Đặt Stop Loss cố định (3-5 giá) và kiểm soát rủi ro không quá 1-2% tài khoản cho mỗi vị thế.</p>
+          <p>Phân tích hệ thống <strong>EMA20 – EMA50</strong> Vàng (XAU/USD <strong>$${currentGoldPrice}</strong>):</p>
+          <p>• <strong>Trạng thái hiện tại</strong>: <strong>${stateDesc}</strong> | MTF: <strong>${mtfStr}</strong>.</p>
+          <p>• <strong>Chỉ số kỹ thuật M15</strong>: EMA20 = <strong>${ema20Str}</strong> | EMA50 = <strong>${ema50Str}</strong> | ATR(14) = <strong>${atrStr}</strong> | Hệ số D = <strong>${st ? st.dRatio : 'N/A'}</strong>.</p>
+          <p>• <strong>Kế hoạch hành động</strong>: ${st && st.shouldEmit ? `Ưu tiên <strong>${st.direction}</strong> (TP1: <strong>${structTp1}</strong>, SL cấu trúc: <strong>${structSl}</strong>).` : `Đứng ngoài quan sát (${st && st.blockReasons && st.blockReasons[0] ? st.blockReasons[0] : 'Chờ nến xác nhận tại EMA20/EMA50'}), tuyệt đối không đuổi giá khi dãn xa EMA.`}</p>
         </div>
       `;
     } else if (lowerP.includes('giá') || lowerP.includes('bao nhiêu')) {
       mode = 'Market Analyst Mode';
       reply = `
         <div class="space-y-2 text-xs text-slate-300 leading-relaxed">
-          <p>Giá Vàng (XAU/USD) hiển thị realtime hiện tại là <strong>$${currentGoldPrice} USD/ounce</strong>.</p>
-          <p>Biến động ngày: Cao nhất <strong>$${tvData.high || '4,378.50'}</strong> | Thấp nhất <strong>$${tvData.low || '4,342.10'}</strong>.</p>
+          <p>Giá Vàng (XAU/USD) realtime hiện tại là <strong>$${currentGoldPrice} USD/ounce</strong>.</p>
+          <p>Biến động ngày: Cao nhất <strong>$${tvData && tvData.high ? Number(tvData.high).toFixed(2) : currentGoldPrice}</strong> | Thấp nhất <strong>$${tvData && tvData.low ? Number(tvData.low).toFixed(2) : currentGoldPrice}</strong>.</p>
+          <p>Đường trung bình M15: EMA20 <strong>${ema20Str}</strong> · EMA50 <strong>${ema50Str}</strong>.</p>
         </div>
       `;
     } else if (lowerP.includes('tin') || lowerP.includes('cpi') || lowerP.includes('fed') || lowerP.includes('lãi suất') || lowerP.includes('nfp')) {
       mode = 'Macro Analyst Mode';
       reply = `
         <div class="space-y-2 text-xs text-slate-300 leading-relaxed">
-          <p>Thông tin tin tức kinh tế vĩ mô ảnh hưởng đến Vàng (XAU/USD $${currentGoldPrice}):</p>
-          <p>• Thị trường đang theo dõi sát diễn biến lạm phát (CPI) và định hướng lãi suất từ Fed. Dòng tiền an toàn đang nâng đỡ vùng giá Vàng.</p>
-          <p>• <strong>Lời khuyên khi đánh tin</strong>: Khoảng 15 phút trước và sau thời điểm ra tin mạnh, biến động nến cực kỳ giật và spread giãn rộng. Ưu tiên quản lý vị thế hoặc chờ tin ra rõ xu hướng mới tham gia.</p>
+          <p>Lịch tin tức kinh tế USD ảnh hưởng trực tiếp tới Vàng (XAU/USD <strong>$${currentGoldPrice}</strong>):</p>
+          <p>${newsSummaryHtml}</p>
+          <p>• <strong>Lưu ý quản trị rủi ro</strong>: Trước và sau tin 15 phút spread giãn mạnh; nên chờ nến M15 đóng ổn định trên/dưới EMA20 mới xác nhận hướng đi thật.</p>
         </div>
       `;
     } else if (lowerP.includes('quản lý vốn') || lowerP.includes('tâm lý') || lowerP.includes('gồng') || lowerP.includes('cháy') || lowerP.includes('sợ')) {
       mode = 'Psychology Mentor Mode';
       reply = `
         <div class="space-y-2 text-xs text-slate-300 leading-relaxed">
-          <p>Về Quản lý rủi ro & Tâm lý giao dịch trong thị trường Vàng:</p>
-          <p>1. <strong>Tâm lý sợ thua (Loss Aversion)</strong>: Nỗi sợ làm bạn do dự không thể bấm nút khi tín hiệu đã xuất hiện. Giải pháp là giảm rủi ro xuống mức nhỏ (1% tài khoản) để tâm lý hoàn toàn thoải mái.</p>
-          <p>2. <strong>Quy tắc tỷ lệ R:R</strong>: Luôn duy trì Risk/Reward tối thiểu 1:2. Kể cả tỷ lệ thắng chỉ là 40%, bạn vẫn sẽ có lợi nhuận dài hạn nhờ quản lý vốn chuẩn.</p>
+          <p>Về Quản lý rủi ro & Tâm lý giao dịch theo chuẩn <strong>EMA20 – EMA50</strong>:</p>
+          <p>1. <strong>Đặt SL theo cấu trúc</strong>: SL luôn đặt sau đáy HL (khi BUY) hoặc đỉnh LH (khi SELL) + đệm ATR (khoảng 7–13 giá với Vàng), không đặt SL sát ngay đường EMA20.</p>
+          <p>2. <strong>Kỷ luật</strong>: Chỉ vào lệnh khi điểm chất lượng đạt <strong>CONFIRMED (≥75/100)</strong> và không đu đỉnh/đáy.</p>
         </div>
       `;
     } else if (lowerP.includes('app') || lowerP.includes('tính năng') || lowerP.includes('hướng dẫn') || lowerP.includes('thông báo') || lowerP.includes('dùng')) {
       mode = 'Tech Advisor Mode';
       reply = `
         <div class="space-y-2 text-xs text-slate-300 leading-relaxed">
-          <p>Hướng dẫn sử dụng các tính năng nổi bật trên <strong>Gold Wave Terminal</strong>:</p>
-          <p>• <strong>📈 Biểu Đồ & Tín Hiệu MA WAVE V8</strong>: Theo dõi trực tiếp đường sóng giá và tín hiệu Mua/Bán tự động.</p>
-          <p>• <strong>🔔 Bật Thông Báo Nảy Màn Hình</strong>: Bấm vào nút **Chuông 🔔** ở góc trên để bật Push Notification cho cả Điện thoại & Máy tính.</p>
-          <p>• <strong>📰 Lịch Tin Tức Vĩ Mô</strong>: Cập nhật liên tục tin nóng tác động đến USD và Vàng.</p>
-          <p>• <strong>✦ Gold AI Chat</strong>: Trao đổi mở mọi thắc mắc trading và phân tích bối cảnh realtime cùng bạn!</p>
+          <p>Hướng dẫn sử dụng các tính năng trên <strong>Gold Wave Terminal</strong>:</p>
+          <p>• <strong>📈 Biểu Đồ & Bộ Lọc EMA20/50</strong>: Theo dõi trạng thái 5 pha (Uptrend / Downtrend / Pullback / Sideway / Chop) và điểm Setup 0-100 ngay trên thanh công cụ.</p>
+          <p>• <strong>🔔 Thông Báo 24/7</strong>: Tự động đẩy tín hiệu BUY/SELL, cập nhật tin tức kinh tế và phân tích giá chuẩn xác mỗi 20 phút.</p>
         </div>
       `;
     } else {
       mode = 'Gold AI Mentor Mode';
       reply = `
         <div class="space-y-2 text-xs text-slate-300 leading-relaxed">
-          <p>Cảm ơn chia sẻ của bạn! Mình hiểu góc nhìn của bạn. 🌊</p>
-          <p>Với bối cảnh thị trường Vàng (XAU/USD) realtime hiện tại ở mức <strong>$${currentGoldPrice} USD</strong>, các chỉ báo kỹ thuật đang duy trì đà tích nén xu hướng.</p>
-          <p>Bạn có muốn mình phân tích chi tiết thêm về khía cạnh kỹ thuật, bối cảnh tin tức hay tư vấn chiến lược cho câu hỏi này không?</p>
+          <p>XAU/USD trực tiếp hiện tại ở mức <strong>$${currentGoldPrice} USD</strong> (${stateDesc}).</p>
+          <p>Các ngưỡng kỹ thuật M15: EMA20 <strong>${ema20Str}</strong> | EMA50 <strong>${ema50Str}</strong> | MTF: <strong>${mtfStr}</strong>.</p>
+          <p>Bạn có muốn mình phân tích sâu hơn về điểm vào lệnh hay lịch tin tức hôm nay không?</p>
         </div>
       `;
     }
@@ -3086,10 +3121,11 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/signals/broadcast' && req.method === 'POST') {
     const body = await parseRequestBody(req);
-    const { type, pair, price, tp1, tp2, tp3, sl, id, asset, reason } = body;
+    const { type, pair, price, tp1, tp2, tp3, sl, id, asset, reason, isManualTest } = body;
     const isBuy = (type || 'BUY').toUpperCase() === 'BUY';
     const pairName = pair || 'XAU/USD';
-    const numPrice = Number(price || body.entryPrice || 4044.50);
+    const assetKey = (asset || (pairName.includes('BTC') ? 'btc' : (pairName.includes('XAG') ? 'xag' : 'xau'))).toLowerCase();
+    const numPrice = Number(price || body.entryPrice || (tvMarketPricesCache[assetKey.toUpperCase()] && tvMarketPricesCache[assetKey.toUpperCase()].price) || 3980.00);
 
     // Nếu lệnh này đã tồn tại trong signalsDB -> Bỏ qua, tránh tạo duplicate vô tận
     if (id && signalsDB.some(s => s && s.id === id)) {
@@ -3097,26 +3133,38 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ status: 'ALREADY_EXISTS', id }));
     }
 
-    // Cấp ID chuẩn duy nhất (Single Source of Truth) từ server
-    let assignedId = id;
-    const lastNum = (signalsDB && signalsDB.length > 0)
-      ? (parseInt(String(signalsDB[0].id).replace(/^V8-?/i, ''), 10) || 2083)
-      : 2083;
-    if (!assignedId) {
-      assignedId = `V8-${String(lastNum + 1).padStart(5, '0')}`;
+    // Bảo vệ Single Source of Truth: Chặn client gửi lệnh chồng chéo hoặc chưa qua Cooldown
+    if (!isManualTest) {
+      if (serverActiveTrades[assetKey]) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ status: 'SKIPPED_ACTIVE_TRADE', existingId: serverActiveTrades[assetKey].id }));
+      }
+      const cooldownMs = assetKey === 'btc' ? 60 * 60 * 1000 : 45 * 60 * 1000;
+      if (Date.now() - (lastSignalTimes[assetKey] || 0) < cooldownMs) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ status: 'SKIPPED_COOLDOWN' }));
+      }
     }
+
+    // Cấp ID chuẩn duy nhất từ server
+    let assignedId = (id && !/^V8-8{2,}/.test(String(id))) ? id : generateNextSignalId();
+    const defaultSlDist = assetKey === 'btc' ? 1400 : (assetKey === 'xag' ? 0.85 : 8.5);
+    const defaultTp1Dist = assetKey === 'btc' ? 1500 : (assetKey === 'xag' ? 1.00 : 10.0);
+    const defaultTp2Dist = assetKey === 'btc' ? 2800 : (assetKey === 'xag' ? 2.00 : 20.0);
+    const defaultTp3Dist = assetKey === 'btc' ? 4500 : (assetKey === 'xag' ? 3.20 : 35.0);
 
     const canonicalSignal = {
       ...body,
       id: assignedId,
+      asset: assetKey,
       pair: pairName,
       type: type || 'BUY',
       price: numPrice,
       entryPrice: numPrice,
-      sl: Number(sl || (isBuy ? numPrice - 5 : numPrice + 5)),
-      tp1: Number(tp1 || (isBuy ? numPrice + 10 : numPrice - 10)),
-      tp2: Number(tp2 || (isBuy ? numPrice + 20 : numPrice - 20)),
-      tp3: Number(tp3 || (isBuy ? numPrice + 30 : numPrice - 30)),
+      sl: Number(sl || (isBuy ? numPrice - defaultSlDist : numPrice + defaultSlDist)),
+      tp1: Number(tp1 || (isBuy ? numPrice + defaultTp1Dist : numPrice - defaultTp1Dist)),
+      tp2: Number(tp2 || (isBuy ? numPrice + defaultTp2Dist : numPrice - defaultTp2Dist)),
+      tp3: Number(tp3 || (isBuy ? numPrice + defaultTp3Dist : numPrice - defaultTp3Dist)),
       status: body.status || 'ĐANG CHẠY (Chờ TP1)',
       pnlPips: body.pnlPips || 0,
       pnlUsd: body.pnlUsd || 0
@@ -3133,7 +3181,6 @@ const server = http.createServer(async (req, res) => {
       saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
     }
 
-    const assetKey = (body.asset || (canonicalSignal.pair && canonicalSignal.pair.includes('BTC') ? 'btc' : (canonicalSignal.pair && canonicalSignal.pair.includes('XAG') ? 'xag' : 'xau'))).toLowerCase();
     serverActiveTrades[assetKey] = {
       id: assignedId,
       asset: assetKey,
@@ -3159,7 +3206,8 @@ const server = http.createServer(async (req, res) => {
     });
 
     const title = `🚨 TÍN HIỆU MA WAVE V8: ${isBuy ? 'BUY 📈' : 'SELL 📉'} ${pairName} @ $${numPrice.toFixed(2)}`;
-    const textBody = `📍 Điểm vào: $${numPrice.toFixed(2)}\n🎯 TP1 (+10 giá): $${Number(canonicalSignal.tp1).toFixed(2)}\n🎯 TP2 (+20 giá): $${Number(canonicalSignal.tp2).toFixed(2)}\n🎯 TP3 (+30 giá 🎯): $${Number(canonicalSignal.tp3).toFixed(2)}\n🛑 Cắt lỗ SL (-5 giá): $${Number(canonicalSignal.sl).toFixed(2)}`;
+    const slDistStr = Math.abs(numPrice - Number(canonicalSignal.sl)).toFixed(assetKey === 'btc' ? 0 : 2);
+    const textBody = `📍 Điểm vào: $${numPrice.toFixed(2)}\n🎯 TP1: $${Number(canonicalSignal.tp1).toFixed(2)} | TP2: $${Number(canonicalSignal.tp2).toFixed(2)}\n🎯 TP3: $${Number(canonicalSignal.tp3).toFixed(2)}\n🛑 SL cấu trúc (${slDistStr}): $${Number(canonicalSignal.sl).toFixed(2)}`;
 
     const notif = addNotification('SIGNAL', title, textBody, canonicalSignal);
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -3501,23 +3549,37 @@ const server = http.createServer(async (req, res) => {
 
 // 24/7 Server-Side News Notification Auto-Push Engine (Every 20 minutes)
 function startServerNewsPushEngine() {
-  const triggerNewsPush = () => {
+  const triggerNewsPush = async () => {
     try {
-      const now = new Date();
-      const upcoming = newsEventsDB.filter(ev => {
-        if (!ev.timestamp) return false;
-        const t = new Date(ev.timestamp).getTime();
-        return t > now.getTime();
+      if (!isTradingHoursActive()) return;
+      const nowMs = Date.now();
+      let upcoming = (Array.isArray(newsEventsDB) ? newsEventsDB : []).filter(ev => {
+        if (!ev || !ev.timestamp) return false;
+        return new Date(ev.timestamp).getTime() > nowMs;
       }).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+      if (upcoming.length === 0 && typeof refreshNewsData === 'function') {
+        await refreshNewsData().catch(() => null);
+        upcoming = (Array.isArray(newsEventsDB) ? newsEventsDB : []).filter(ev => {
+          if (!ev || !ev.timestamp) return false;
+          return new Date(ev.timestamp).getTime() > nowMs;
+        }).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      }
 
       if (upcoming.length > 0) {
         const top3 = upcoming.slice(0, 3);
-        const newsListText = top3.map(ev => `• ${ev.time}: ${ev.title} (${ev.impact === 'HIGH' ? '🔴 ĐỎ MẠNH' : '🟡 CAM'})`).join('\n');
+        const nextEv = top3[0];
+        const minsLeft = Math.max(1, Math.round((new Date(nextEv.timestamp).getTime() - nowMs) / 60000));
+        const timeHint = minsLeft >= 60 ? `${Math.floor(minsLeft / 60)}h${minsLeft % 60}p nữa` : `${minsLeft} phút nữa`;
+        const tvData = await fetchTradingViewGoldPrice().catch(() => null);
+        const goldLive = (tvData && tvData.price) ? Number(tvData.price).toFixed(2) : null;
+
+        const newsListText = top3.map(ev => `• ${ev.time}: ${ev.title_vn || ev.title} (${ev.impact === 'HIGH' ? '🔴 ĐỎ MẠNH' : '🟡 CAM'})`).join('\n');
         addNotification(
           'NEWS',
-          '📰 TIN TỨC KINH TẾ HÀNG NGÀY — GOLD WAVE',
-          `Cập nhật tự động các tin tức kinh tế quan trọng sắp công bố:\n${newsListText}\n\n💡 Chú ý biến động giá Vàng khi tin ra!`,
-          { topNews: top3 }
+          `📰 TIN TỨC KINH TẾ SẮP RA (${timeHint}) — GOLD WAVE`,
+          `Cập nhật lịch tin kinh tế quan trọng sắp công bố${goldLive ? ` (Giá XAU Live: $${goldLive})` : ''}:\n${newsListText}\n\n💡 Chú ý quản trị rủi ro & biến động nến quanh giờ ra tin!`,
+          { topNews: top3, goldPrice: goldLive }
         );
       }
     } catch(e) {
@@ -3525,68 +3587,76 @@ function startServerNewsPushEngine() {
     }
   };
 
-  setTimeout(triggerNewsPush, 10000);
+  setTimeout(triggerNewsPush, 12000);
   setInterval(triggerNewsPush, 20 * 60 * 1000);
 }
 
-// 24/7 Server-Side AI Trend Notification Auto-Push Engine (Every 30 minutes)
+// 24/7 Server-Side AI Trend Notification Auto-Push Engine (Every 20 minutes - Real EMA20/EMA50 & Multi-Asset)
 function startServerAITrendPushEngine() {
   const triggerTrendPush = async () => {
     try {
-      if (!isGoldMarketOpen()) return; // 🛑 Nghỉ cuối tuần: Không đẩy thông báo phân tích giả lập
+      if (!isTradingHoursActive()) return;
 
-      const tvData = await fetchTradingViewGoldPrice();
-      const price = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4044.50);
-      const atr = 3.50;
+      const [xauRes, btcRes, xagRes] = await Promise.all([
+        isGoldMarketOpen() ? evaluateAssetMarketState('xau').catch(() => null) : Promise.resolve(null),
+        evaluateAssetMarketState('btc').catch(() => null),
+        isGoldMarketOpen() ? evaluateAssetMarketState('xag').catch(() => null) : Promise.resolve(null)
+      ]);
 
-      const r1 = +(price + atr * 1.5).toFixed(2);
-      const r2 = +(price + atr * 3.2).toFixed(2);
-      const s1 = +(price - atr * 1.5).toFixed(2);
-      const s2 = +(price - atr * 3.2).toFixed(2);
+      const xau = xauRes && xauRes.analysis && xauRes.analysis.ready ? xauRes.analysis : null;
+      const btc = btcRes && btcRes.analysis && btcRes.analysis.ready ? btcRes.analysis : null;
+      const xag = xagRes && xagRes.analysis && xagRes.analysis.ready ? xagRes.analysis : null;
 
-      const isBull = price >= (tvData.open || price);
-      const trendState = isBull ? '📈 TĂNG MẠNH' : '📉 GIẢM CHỦ ĐẠO';
+      if (xau) {
+        const price = xau.livePrice;
+        const atr = xau.atr || 6.5;
+        const r1 = xau.lastSwingHigh ? Number(xau.lastSwingHigh).toFixed(2) : +(price + atr * 1.5).toFixed(2);
+        const s1 = xau.lastSwingLow ? Number(xau.lastSwingLow).toFixed(2) : +(price - atr * 1.5).toFixed(2);
+        const mtfTxt = xau.mtf ? xau.mtf.summary : 'N/A';
 
-      const title = `🤖 GOLD AI — PHÂN TÍCH XU HƯỚNG XAU/USD`;
-      const body = `〽 Xu hướng: ${trendState} (MTF Đồng thuận 100% 🟢)\n📍 Giá Live: $${price.toFixed(2)} (ATR: $${atr.toFixed(2)})\n🚧 Kháng cự chú ý: R1 $${r1.toFixed(2)} | R2 $${r2.toFixed(2)}\n🛡️ Hỗ trợ chú ý: S1 $${s1.toFixed(2)} | S2 $${s2.toFixed(2)}`;
+        const btcLine = btc ? `\n₿ BTC/USD: $${btc.livePrice.toLocaleString('en-US')} • ${btc.marketState} (${btc.score}/100)` : '';
+        const xagLine = xag ? `\n🥈 XAG/USD: $${xag.livePrice.toFixed(2)} • ${xag.marketState} (${xag.score}/100)` : '';
 
-      addNotification('TREND', title, body, { price, r1, r2, s1, s2, trendState });
+        const title = `🤖 PHÂN TÍCH GIÁ LIVE XAU $${price.toFixed(2)} — ${xau.marketState} (${xau.score}/100)`;
+        const body = `〽 Trạng thái M15: ${xau.marketStateLabel}\n🎯 Chất lượng: ${xau.signalQualityState} (${xau.score}/100) | D=${xau.dRatio} | MTF: ${mtfTxt}\n📍 Giá Live: $${price.toFixed(2)} | EMA20: $${xau.ema20.toFixed(2)} | EMA50: $${xau.ema50.toFixed(2)} | ATR: $${atr.toFixed(2)}\n🚧 Kháng cự cấu trúc: $${r1} | 🛡️ Hỗ trợ cấu trúc: $${s1}${btcLine}${xagLine}`;
+
+        addNotification('TREND', title, body, { price, ema20: xau.ema20, ema50: xau.ema50, atr, r1, s1, score: xau.score, marketState: xau.marketState });
+      } else if (btc) {
+        const title = `🤖 PHÂN TÍCH GIÁ LIVE BTC $${btc.livePrice.toLocaleString('en-US')} — ${btc.marketState} (${btc.score}/100)`;
+        const body = `〽 Thị trường Vàng đang nghỉ cuối tuần.\n₿ BTC/USD Live: $${btc.livePrice.toLocaleString('en-US')} | ${btc.marketStateLabel} (${btc.score}/100)\n📍 EMA20: $${btc.ema20} | EMA50: $${btc.ema50} | ATR: $${btc.atr}`;
+        addNotification('TREND', title, body, { btcPrice: btc.livePrice, score: btc.score });
+      }
     } catch(e) {
       console.warn('Server AI trend push engine error:', e);
     }
   };
 
-  setTimeout(triggerTrendPush, 15000);
-  setInterval(triggerTrendPush, 30 * 60 * 1000);
+  setTimeout(triggerTrendPush, 18000);
+  setInterval(triggerTrendPush, 20 * 60 * 1000);
 }
 
-// 24/7 Server-Side Bot Execution Engine (Chọn lọc cao, ít lệnh, bám sát sóng thật)
+// 24/7 Server-Side Bot Execution Engine (Tuân thủ 100% EMA20-EMA50 CONFIRMED >=75đ)
 function startServerBotExecutionEngine() {
   setInterval(async () => {
     try {
       if (!botConfigDB.enabled) return;
-      if (!isGoldMarketOpen()) return; // 🛑 Nghỉ cuối tuần: Không mở lệnh bot tự động
-      if (!isTradingHoursActive()) return; // 🛑 Nghỉ ngơi ban đêm (0h - 6h sáng): Tuyệt đối không mở lệnh bot
+      if (!isGoldMarketOpen()) return;
+      if (!isTradingHoursActive()) return;
 
-      const tvData = await fetchTradingViewGoldPrice();
-      const basePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4044.50);
-
-      // Số lệnh tối đa đồng thời (mặc định 1 lệnh, không nhồi lệnh dồn dập)
       const maxOrders = botConfigDB.maxConcurrentOrders !== undefined ? botConfigDB.maxConcurrentOrders : 1;
       const openPositions = botPositionsDB.filter(p => p && p.status && p.status.startsWith('OPEN'));
-      
       const now = Date.now();
       const cooldownMins = botConfigDB.minCooldownMinutes || (botConfigDB.entryFilterMode === 'sniper' ? 45 : (botConfigDB.entryFilterMode === 'balanced' ? 25 : 10));
       const cooldownMs = cooldownMins * 60 * 1000;
       const lastOrderTime = botConfigDB.lastBotOrderTime || 0;
 
-      // ĐIỀU KIỆN VÀO LỆNH BOT:
-      // 1. Số lệnh đang mở < maxOrders (mặc định 1 lệnh duy nhất)
-      // 2. Đã qua thời gian giãn cách Cooldown (mặc định 45 phút) để chỉ bắt những con sóng đẹp nhất
       if (openPositions.length < maxOrders && (now - lastOrderTime >= cooldownMs)) {
-        const isBuy = Math.random() > 0.48;
-        const type = isBuy ? 'BUY' : 'SELL';
-        const entry = +(basePrice + (Math.random() - 0.5) * 0.6).toFixed(2);
+        const xauRes = await evaluateAssetMarketState('xau').catch(() => null);
+        const analysis = xauRes && xauRes.analysis;
+        if (!analysis || !analysis.ready || !analysis.shouldEmit) return;
+
+        const type = analysis.direction;
+        const entry = +Number(analysis.livePrice).toFixed(2);
         const lots = botConfigDB.lotValue || 0.10;
         const newOrder = {
           ticket: `#${Math.floor(880000 + Math.random() * 10000)}`,
@@ -3594,11 +3664,11 @@ function startServerBotExecutionEngine() {
           type,
           lots,
           entry,
-          currentPrice: basePrice,
-          tp1: +(isBuy ? entry + 10.0 : entry - 10.0).toFixed(2),
-          tp2: +(isBuy ? entry + 20.0 : entry - 20.0).toFixed(2),
-          tp3: +(isBuy ? entry + 30.0 : entry - 30.0).toFixed(2),
-          sl:  +(isBuy ? entry - 5.0 : entry + 5.0).toFixed(2),
+          currentPrice: entry,
+          tp1: analysis.tp1,
+          tp2: analysis.tp2,
+          tp3: analysis.tp3,
+          sl:  analysis.sl,
           pnl: 0.00,
           status: 'OPEN',
           mode: botConfigDB.entryFilterMode || 'sniper',
@@ -4197,15 +4267,8 @@ function startServerSignalEngine() {
             const tp3 = analysis.tp3;
             const sl = analysis.sl;
 
-            // Tạo mã sóng tự tăng
-            let maxNum = 2120;
-            signalsDB.forEach(s => {
-              if (s && s.id) {
-                const n = parseInt(String(s.id).replace(/\D/g, ''), 10);
-                if (!isNaN(n) && n > maxNum) maxNum = n;
-              }
-            });
-            const newId = `V8-${String(maxNum + 1).padStart(5, '0')}`;
+            // Tạo mã sóng tự tăng chuẩn V8-xxxxx
+            const newId = generateNextSignalId();
 
             // Định dạng giờ Việt Nam (GMT+7)
             const vnDate = new Date(now + 7 * 3600 * 1000);

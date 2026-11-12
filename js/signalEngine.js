@@ -779,9 +779,10 @@ class SignalEngine {
       }
 
       // 2. HỆ THỐNG EMA20 - EMA50 TOÀN DIỆN (HYBRID SNIPER v9.2): Giãn cách 45 - 60 phút, chỉ vào khi CONFIRMED (>= 75đ)
+      const realCandlesReady = typeof window === 'undefined' || !window.marketDataStore || !window.marketDataStore.hasRealCandlesLoaded || window.marketDataStore.hasRealCandlesLoaded[(asset || 'xau').toUpperCase()];
       const cooldownMs = asset === 'btc' ? 60 * 60 * 1000 : 45 * 60 * 1000;
       const ema50State = snap.ema50State;
-      const canEmitFromEngine = ema50State && ema50State.ready ? ema50State.shouldEmit : (snap.buySignal || snap.sellSignal);
+      const canEmitFromEngine = realCandlesReady && (ema50State && ema50State.ready ? ema50State.shouldEmit : (snap.buySignal || snap.sellSignal));
 
       if (canEmitFromEngine && (nowMs - lastEmittedTime > cooldownMs)) {
         if (ema50State && ema50State.overextended) {
@@ -833,9 +834,17 @@ class SignalEngine {
       sl  = +(isBuy ? entryPrice - 8.5 : entryPrice + 8.5).toFixed(2);
     }
 
-    const currentCount = (this.signals && this.signals.length > 0) 
-      ? (parseInt(String(this.signals[0].id).replace(/^V8-?/i, ''), 10) || 2083) + 1 
-      : 2084;
+    let maxNum = 2120;
+    if (Array.isArray(this.signals)) {
+      this.signals.forEach(s => {
+        if (s && s.id) {
+          let n = parseInt(String(s.id).replace(/^V8-?/i, '').replace(/\D/g, ''), 10);
+          if (!isNaN(n) && n >= 100000) n = n % 100000;
+          if (!isNaN(n) && n > maxNum && n < 90000) maxNum = n;
+        }
+      });
+    }
+    const currentCount = maxNum + 1;
 
     const scoreBadge = ema50State && ema50State.ready ? `[${ema50State.signalQualityState} ${ema50State.score}/100]` : '(HYBRID SNIPER)';
     const newSignal = {

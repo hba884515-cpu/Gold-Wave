@@ -2787,18 +2787,20 @@ class GoldTradingApp {
     // Mốc Kháng cự & Hỗ trợ tính toán theo giá thực tế
     const levels = this.getCalculatedKeyLevels();
 
-    // Tính toán mốc TP1 (+10 giá), TP2 (+20 giá), TP3 (+30 giá) & SL (-5 giá) cho Kịch bản Mua/Bán
+    // Tính toán mốc TP1 (+10 giá), TP2 (+20 giá), TP3 (+35 giá) & SL Cấu Trúc An Toàn (theo ATR/8.5+ giá)
+    const e50St = snap.ema50State;
+    const dynSlDist = Math.min(14.0, Math.max(8.5, parseFloat(atrVal) * 1.35 || 8.5));
     const buyEntry = priceNum;
-    const buyTp1 = (buyEntry + 10.0).toFixed(2);
-    const buyTp2 = (buyEntry + 20.0).toFixed(2);
-    const buyTp3 = (buyEntry + 30.0).toFixed(2);
-    const buySl  = (buyEntry - 5.0).toFixed(2);
+    const buyTp1 = (buyEntry + Math.max(10.0, dynSlDist * 1.2)).toFixed(2);
+    const buyTp2 = (buyEntry + Math.max(20.0, dynSlDist * 2.2)).toFixed(2);
+    const buyTp3 = (buyEntry + Math.max(35.0, dynSlDist * 3.5)).toFixed(2);
+    const buySl  = (e50St && e50St.direction === 'BUY' && e50St.sl) ? Number(e50St.sl).toFixed(2) : (buyEntry - dynSlDist).toFixed(2);
 
     const sellEntry = priceNum;
-    const sellTp1 = (sellEntry - 10.0).toFixed(2);
-    const sellTp2 = (sellEntry - 20.0).toFixed(2);
-    const sellTp3 = (sellEntry - 30.0).toFixed(2);
-    const sellSl  = (sellEntry + 5.0).toFixed(2);
+    const sellTp1 = (sellEntry - Math.max(10.0, dynSlDist * 1.2)).toFixed(2);
+    const sellTp2 = (sellEntry - Math.max(20.0, dynSlDist * 2.2)).toFixed(2);
+    const sellTp3 = (sellEntry - Math.max(35.0, dynSlDist * 3.5)).toFixed(2);
+    const sellSl  = (e50St && e50St.direction === 'SELL' && e50St.sl) ? Number(e50St.sl).toFixed(2) : (sellEntry + dynSlDist).toFixed(2);
 
     // Tin tức kinh tế nếu có
     let newsContextText = '';
@@ -2902,20 +2904,20 @@ class GoldTradingApp {
                 <strong class="text-amber-300 font-bold">$${(buyEntry - 2.0).toFixed(2)} - $${buyEntry.toFixed(2)}</strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL (-5 giá):</span>
-                <strong class="text-rose-300 font-bold">$${buySl} <span class="text-[10px] text-rose-400/80 font-normal">(-50 pips)</span></strong>
+                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL Cấu Trúc:</span>
+                <strong class="text-rose-300 font-bold">$${buySl} <span class="text-[10px] text-rose-400/80 font-normal">(-${(buyEntry - parseFloat(buySl)).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1 (+10 giá):</span>
-                <strong class="text-emerald-300 font-bold">$${buyTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(+100 pips)</span></strong>
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1:</span>
+                <strong class="text-emerald-300 font-bold">$${buyTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(+${(parseFloat(buyTp1) - buyEntry).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2 (+20 giá):</span>
-                <strong class="text-emerald-300 font-bold">$${buyTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(+200 pips)</span></strong>
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2:</span>
+                <strong class="text-emerald-300 font-bold">$${buyTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(+${(parseFloat(buyTp2) - buyEntry).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1">
-                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3 (+30 giá):</span>
-                <strong class="text-yellow-300 font-black text-sm">$${buyTp3} <span class="text-[10px] text-yellow-400 font-normal">(+300 pips - Trọn Sóng)</span></strong>
+                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3:</span>
+                <strong class="text-yellow-300 font-black text-sm">$${buyTp3} <span class="text-[10px] text-yellow-400 font-normal">(+${(parseFloat(buyTp3) - buyEntry).toFixed(1)} giá - Trọn Sóng)</span></strong>
               </div>
             </div>
 
@@ -2931,7 +2933,7 @@ class GoldTradingApp {
               <span class="font-black text-rose-400 text-sm flex items-center gap-1.5">
                 <span>📉</span> VÙNG CANH SELL PHẢN ỨNG
               </span>
-              <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px] border border-rose-500/30">Mục Tiêu -30 Giá (🎯)</span>
+              <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px] border border-rose-500/30">Mục Tiêu Theo Cấu Trúc (🎯)</span>
             </div>
 
             <div class="space-y-2 text-slate-200">
@@ -2940,20 +2942,20 @@ class GoldTradingApp {
                 <strong class="text-amber-300 font-bold">$${sellEntry.toFixed(2)} - $${(sellEntry + 2.0).toFixed(2)}</strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL (+5 giá):</span>
-                <strong class="text-rose-300 font-bold">$${sellSl} <span class="text-[10px] text-rose-400/80 font-normal">(-50 pips)</span></strong>
+                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL Cấu Trúc:</span>
+                <strong class="text-rose-300 font-bold">$${sellSl} <span class="text-[10px] text-rose-400/80 font-normal">(+${(parseFloat(sellSl) - sellEntry).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1 (-10 giá):</span>
-                <strong class="text-emerald-300 font-bold">$${sellTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(+100 pips)</span></strong>
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1:</span>
+                <strong class="text-emerald-300 font-bold">$${sellTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(-${(sellEntry - parseFloat(sellTp1)).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2 (-20 giá):</span>
-                <strong class="text-emerald-300 font-bold">$${sellTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(+200 pips)</span></strong>
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2:</span>
+                <strong class="text-emerald-300 font-bold">$${sellTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(-${(sellEntry - parseFloat(sellTp2)).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1">
-                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3 (-30 giá):</span>
-                <strong class="text-yellow-300 font-black text-sm">$${sellTp3} <span class="text-[10px] text-yellow-400 font-normal">(+300 pips - Trọn Sóng)</span></strong>
+                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3:</span>
+                <strong class="text-yellow-300 font-black text-sm">$${sellTp3} <span class="text-[10px] text-yellow-400 font-normal">(-${(sellEntry - parseFloat(sellTp3)).toFixed(1)} giá - Trọn Sóng)</span></strong>
               </div>
             </div>
 
