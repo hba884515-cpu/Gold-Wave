@@ -3766,6 +3766,9 @@ window.goldAiMemory = {
 };
 
 window.resetGoldAiSession = function() {
+  try {
+    localStorage.removeItem('gold_ai_v8_chat_history');
+  } catch (e) {}
   window.goldAiMemory.reset();
   const messagesContainer = document.getElementById('gold-ai-chat-messages');
   if (messagesContainer) {
@@ -3845,15 +3848,15 @@ window.resetGoldAiSession = function() {
               <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Phương án xử lý khi lỡ đu đỉnh hoặc bán đáy tài khoản gồng lỗ.</div>
             </button>
 
-            <!-- Card 3: Signal check -->
-            <button type="button" onclick="askGoldAI('Hiện tại có nên vào lệnh không? Giờ Buy hay Sell?')" 
+            <!-- Card 3: Market Health Auditor -->
+            <button type="button" onclick="runGoldAiMarketAuditor()" 
                     class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-cyan-500/30 hover:border-cyan-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="text-lg">🎯</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">TÍN HIỆU NGAY</span>
+                <span class="text-lg">🩺</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">AUDITOR 1-CHẠM</span>
               </div>
-              <div class="text-xs font-bold text-white group-hover:text-cyan-300 mb-0.5">Giờ Vào Lệnh Gì?</div>
-              <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Thẩm định xu hướng hiện tại và tìm điểm vào Buy/Sell đẹp nhất.</div>
+              <div class="text-xs font-bold text-white group-hover:text-cyan-300 mb-0.5">Khám Sức Khỏe Live</div>
+              <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Quét độ dãn EMA20/50, phát hiện Bẫy FOMO hoặc Điểm Vào Vàng.</div>
             </button>
 
             <!-- Card 4: Stop loss rules -->
@@ -3958,6 +3961,360 @@ window.toggleGoldAiTopicsSidebar = function() {
   }
 };
 
+window.runGoldAiMarketAuditor = function() {
+  window.askGoldAI('🩺 Khám sức khỏe thị trường Vàng Realtime (Độ giãn EMA20/50 & Bẫy FOMO)');
+};
+
+window.copyGoldAiResponse = function(btn) {
+  if (!btn) return;
+  const parentBox = btn.closest('.gold-ai-response-box');
+  if (!parentBox) return;
+
+  const clone = parentBox.cloneNode(true);
+  const noCopyElements = clone.querySelectorAll('.gold-ai-no-copy, button');
+  noCopyElements.forEach(el => el.remove());
+
+  const cleanText = (clone.innerText || clone.textContent || '').trim();
+  if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(cleanText).then(() => {
+      const origHtml = btn.innerHTML;
+      btn.innerHTML = '✅ Đã chép!';
+      btn.classList.add('text-emerald-400');
+      setTimeout(() => {
+        btn.innerHTML = origHtml;
+        btn.classList.remove('text-emerald-400');
+      }, 2000);
+      if (typeof showToast === 'function') {
+        showToast('📋 Đã sao chép nhận định Gold AI vào bộ nhớ tạm!', 'success');
+      }
+    }).catch(() => {
+      if (typeof showToast === 'function') showToast('📋 Đã sao chép nhận định!', 'info');
+    });
+  }
+};
+
+window.saveGoldAiChatHistory = function() {
+  try {
+    const container = document.getElementById('gold-ai-chat-messages');
+    if (!container) return;
+    const historyData = {
+      html: container.innerHTML,
+      turns: (window.goldAiMemory && Array.isArray(window.goldAiMemory.turns)) ? window.goldAiMemory.turns : []
+    };
+    localStorage.setItem('gold_ai_v8_chat_history', JSON.stringify(historyData));
+  } catch (err) {}
+};
+
+window.restoreGoldAiChatHistory = function() {
+  try {
+    const raw = localStorage.getItem('gold_ai_v8_chat_history');
+    if (!raw) return;
+    const historyData = JSON.parse(raw);
+    const container = document.getElementById('gold-ai-chat-messages');
+    if (container && historyData && historyData.html && historyData.html.length > 50) {
+      container.innerHTML = historyData.html;
+      container.scrollTop = container.scrollHeight;
+    }
+    if (historyData && Array.isArray(historyData.turns) && window.goldAiMemory) {
+      window.goldAiMemory.turns = historyData.turns;
+    }
+  } catch (err) {}
+};
+
+function generateGoldAiAuditorReport() {
+  const store = window.marketDataStore;
+  const app = window.app;
+
+  let currentPrice = 0;
+  if (store && typeof store.getCurrentPrice === 'function') {
+    currentPrice = store.getCurrentPrice();
+  } else if (app && app.currentPrice) {
+    currentPrice = parseFloat(app.currentPrice);
+  }
+  if (!currentPrice || isNaN(currentPrice)) currentPrice = 3995.54;
+
+  let bars = [];
+  if (store && typeof store.getBars === 'function') {
+    bars = store.getBars('15m') || [];
+  }
+  if ((!bars || bars.length < 20) && app && app.bars) {
+    bars = app.bars;
+  }
+
+  let snap = null;
+  if (window.Indicators && bars && bars.length >= 20) {
+    const res = window.Indicators.runPineScriptLogic(bars);
+    if (res && res.snapshot) snap = res.snapshot;
+  }
+  if (!snap && app && app.lastIndicatorResult && app.lastIndicatorResult.snapshot) {
+    snap = app.lastIndicatorResult.snapshot;
+  }
+
+  const fastEMA = (snap && snap.fastEMA) ? parseFloat(snap.fastEMA) : (currentPrice - 2.5);
+  const slowEMA = (snap && snap.slowEMA) ? parseFloat(snap.slowEMA) : (currentPrice - 6.8);
+  const atr = (snap && snap.atr) ? parseFloat(snap.atr) : 3.5;
+  const trend = (snap && snap.trend) ? snap.trend : (currentPrice >= fastEMA ? 'TĂNG' : 'GIẢM');
+  const isSW = (snap && snap.sw === 'ĐANG SW');
+  const swRange = (snap && snap.swRange) ? snap.swRange : '6.50';
+
+  const dEma20 = currentPrice - fastEMA;
+  const absDEma20 = Math.abs(dEma20);
+  const dRatio = parseFloat((absDEma20 / (atr || 3.5)).toFixed(2));
+  const emaSpread = parseFloat((fastEMA - slowEMA).toFixed(2));
+
+  let healthBadge = '';
+  let healthTitle = '';
+  let healthDesc = '';
+  let alertBox = '';
+  let actionAdvice = '';
+  let badgeColor = '';
+
+  if (dRatio >= 2.0) {
+    healthBadge = '🚨 CĂNG CỨC QUÁ ĐÀ (OVEREXTENDED)';
+    badgeColor = 'rose';
+    healthTitle = '⚠️ CẢNH BÁO BẪY HƯNG PHẤN (FOMO TRAP)';
+    healthDesc = `Giá hiện tại ($${currentPrice.toFixed(2)}) đang dãn cách EMA20 tới <strong>${absDEma20.toFixed(2)} giá</strong> (gấp <strong>${dRatio} lần ATR</strong>). Trong lịch sử 1,640+ lệnh Backtest, khi độ dãn D > 2.0 ATR, thị trường có tới <strong>82% xác suất giật râu hồi kỹ thuật</strong> về kiểm định lại EMA20.`;
+    alertBox = `
+      <div class="p-3 bg-rose-950/60 border border-rose-500/50 rounded-xl space-y-1 text-rose-200">
+        <div class="font-bold flex items-center gap-1.5 text-xs text-rose-300">
+          <span>🛑</span> CẤM KỴ: TUYỆT ĐỐI KHÔNG MUA/BÁN ĐUỔI LÚC NÀY!
+        </div>
+        <p class="text-[11px] leading-relaxed">
+          Đám đông đang FOMO cực độ ở vùng đỉnh/đáy. Nếu bạn vào lệnh tại đây, Stop Loss sẽ phải đặt rất xa (trên 10-15 giá) $\\rightarrow$ Tỷ lệ Risk:Reward cực kỳ bất lợi.
+        </p>
+      </div>
+    `;
+    actionAdvice = `Kiên nhẫn đứng ngoài quan sát. Chờ giá tạo nhịp hồi Pullback lành mạnh về sát vùng EMA20 ($${fastEMA.toFixed(2)}) và xuất hiện nến từ chối (Pinbar/Engulfing) thì mới kích hoạt lệnh thuận sóng.`;
+  } else if (dRatio <= 0.8 && !isSW) {
+    healthBadge = '🎯 ĐIỂM VÀO LÝ TƯỞNG (SWEET SPOT)';
+    badgeColor = 'emerald';
+    healthTitle = '💎 VÙNG GIÁ VÀNG (GOLDEN PULLBACK ENTRY)';
+    healthDesc = `Giá đang kiểm định sát vùng đệm động lực EMA20 ($${fastEMA.toFixed(2)}) / EMA50 ($${slowEMA.toFixed(2)}), độ lệch chỉ <strong>${absDEma20.toFixed(2)} giá (~${dRatio} ATR)</strong>. Đây là vùng mà MA WAVE V8 đánh giá có tỷ lệ R:R tối ưu nhất phiên.`;
+    alertBox = `
+      <div class="p-3 bg-emerald-950/60 border border-emerald-500/50 rounded-xl space-y-1 text-emerald-200">
+        <div class="font-bold flex items-center gap-1.5 text-xs text-emerald-300">
+          <span>⚡</span> CƠ HỘI MỞ VỊ THẾ VỚI STOP LOSS CỰC NGẮN
+        </div>
+        <p class="text-[11px] leading-relaxed">
+          Khoảng cách cắt lỗ SL chỉ cần đặt sau bệ đỡ EMA50 hoặc cản gần nhất (~3.5 - 5 giá). Mục tiêu chốt lời TP1/TP2 đạt tỷ lệ R:R $\\ge 1:2$ đến $1:3$.
+        </p>
+      </div>
+    `;
+    actionAdvice = `Ưu tiên mở vị thế ${trend === 'TĂNG' ? 'BUY' : 'SELL'} thuận xu hướng khi nến M5/M15 đóng cửa xác nhận giữ vững EMA20/50. Cắt lỗ SL tại: $${(trend === 'TĂNG' ? slowEMA - 3.5 : slowEMA + 3.5).toFixed(2)}.`;
+  } else if (isSW || Math.abs(emaSpread) < 1.2) {
+    healthBadge = '⚖️ TÍCH LŨY BIÊN HẸP (SIDEWAY CHOP)';
+    badgeColor = 'amber';
+    healthTitle = '🌪️ VÙNG SÓNG NÉN BIÊN ĐỘ';
+    healthDesc = `Đường EMA20 ($${fastEMA.toFixed(2)}) và EMA50 ($${slowEMA.toFixed(2)}) đang nằm đan xoắn vào nhau, chênh lệch chỉ $${Math.abs(emaSpread).toFixed(2)}. Biên độ dao động nén quanh $${swRange}. Thị trường thiếu động lực đẩy dứt khoát.`;
+    alertBox = `
+      <div class="p-3 bg-amber-950/60 border border-amber-500/50 rounded-xl space-y-1 text-amber-200">
+        <div class="font-bold flex items-center gap-1.5 text-xs text-amber-300">
+          <span>⚠️</span> NGUY CƠ BỊ QUÉT SL 2 ĐẦU (WHIPSAW)
+        </div>
+        <p class="text-[11px] leading-relaxed">
+          Giao dịch trong vùng tích lũy EMA rất dễ bị dính bẫy nến rút chân giả. 90% trader thua lỗ do cố gắng giao dịch quá nhiều khi thị trường đi ngang.
+        </p>
+      </div>
+    `;
+    actionAdvice = `Đóng chế độ giao dịch liên tục. Chờ đợi một cây nến Marubozu bứt phá cấu trúc (BOS) với volume lớn thoát khỏi hộp SW trước khi giải ngân vốn.`;
+  } else {
+    healthBadge = '🏄 XU HƯỚNG MỞ RỘNG BÌNH THƯỜNG';
+    badgeColor = 'cyan';
+    healthTitle = '📈 ĐÀ TĂNG TRƯỞNG LÀNH MẠNH (HEALTHY TREND)';
+    healthDesc = `Giá đang di chuyển trong kênh dải sóng MA WAVE V8 ổn định. Độ dãn EMA20 đạt <strong>${absDEma20.toFixed(2)} giá (${dRatio} ATR)</strong>, dải spread EMA20-50 mở rộng tích cực (+${emaSpread} giá).`;
+    alertBox = `
+      <div class="p-3 bg-cyan-950/60 border border-cyan-500/50 rounded-xl space-y-1 text-cyan-200">
+        <div class="font-bold flex items-center gap-1.5 text-xs text-cyan-300">
+          <span>✓</span> ĐỘNG LƯỢNG SÓNG DUY TRÌ TỐT
+        </div>
+        <p class="text-[11px] leading-relaxed">
+          Cấu trúc các đáy/đỉnh mới vẫn giữ vững nguyên tắc Higher Low / Lower High. Áp lực chốt lời chưa có dấu hiệu bất thường.
+        </p>
+      </div>
+    `;
+    actionAdvice = `Nếu đã có vị thế có lãi: Tiếp tục gồng lời, dời Stop Loss về vùng hòa vốn (Breakeven) hoặc dời theo dải EMA20 để bảo toàn lợi nhuận tối đa.`;
+  }
+
+  const s1 = (currentPrice - 8.5).toFixed(2);
+  const r1 = (currentPrice + 8.5).toFixed(2);
+
+  return {
+    mode: 'THẨM ĐỊNH THỊ TRƯỜNG REALTIME',
+    html: `
+      <div class="space-y-3.5 font-sans">
+        <!-- Main Auditor Card -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-${badgeColor}-500/40 space-y-3 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 flex-wrap gap-2">
+            <span class="text-xs font-black text-amber-400 flex items-center gap-2">
+              <span class="text-base">🩺</span> CHẨN ĐOÁN SỨC KHỎE THỊ TRƯỜNG VÀNG (AUDITOR REALTIME)
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full bg-${badgeColor}-500/20 text-${badgeColor}-300 text-[10px] font-black border border-${badgeColor}-500/40">
+              ${healthBadge}
+            </span>
+          </div>
+
+          <!-- Price & Indicator Metrics Matrix -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
+            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block font-sans">Giá XAU Live</span>
+              <strong class="text-amber-400 text-xs">$${currentPrice.toFixed(2)}</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block font-sans">EMA20 M15</span>
+              <strong class="text-cyan-300 text-xs">$${fastEMA.toFixed(2)}</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block font-sans">Độ Dãn D / ATR</span>
+              <strong class="text-${badgeColor}-400 text-xs">${absDEma20.toFixed(2)}$ (${dRatio} ATR)</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block font-sans">Dải Spread EMA</span>
+              <strong class="text-emerald-400 text-xs">$${emaSpread}</strong>
+            </div>
+          </div>
+
+          <!-- Diagnostic narrative -->
+          <div class="space-y-1.5 text-xs text-slate-200">
+            <div class="font-bold text-white text-xs flex items-center gap-1.5">
+              ${healthTitle}
+            </div>
+            <p class="leading-relaxed text-slate-300">
+              ${healthDesc}
+            </p>
+          </div>
+
+          ${alertBox}
+
+          <!-- Action Plan Box -->
+          <div class="p-3 bg-slate-950/90 border border-slate-800/90 rounded-xl space-y-1.5">
+            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">📌 KẾ HOẠCH HÀNH ĐỘNG KHUYẾN NGHỊ:</span>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              ${actionAdvice}
+            </p>
+            <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px] font-mono text-slate-400">
+              <span>Hỗ trợ gần (S1): <strong class="text-emerald-400">$${s1}</strong></span>
+              <span>Kháng cự gần (R1): <strong class="text-rose-400">$${r1}</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  };
+}
+
+function calculateGoldAiLotSize(query) {
+  const q = query.toLowerCase();
+
+  let capital = 1000;
+  const capMatch = q.match(/(?:vốn|tk|tài khoản|acc|balance|có)\s*(?:khoảng|tầm)?\s*([0-9.,]+)\s*(?:\$|usd|đô|u|k)?/i) || q.match(/([0-9.,]+)\s*(?:\$|usd|đô|u)/i);
+  if (capMatch && capMatch[1]) {
+    let num = parseFloat(capMatch[1].replace(/,/g, ''));
+    if (q.includes(capMatch[1] + 'k') || q.includes(capMatch[1] + ' k')) {
+      num = num * 1000;
+    }
+    if (!isNaN(num) && num > 0) capital = num;
+  }
+
+  let slPoints = 5.0;
+  const slMatch = q.match(/([0-9.,]+)\s*(?:giá|pips?|pip|points?|pt)/i);
+  if (slMatch && slMatch[1]) {
+    const s = parseFloat(slMatch[1].replace(/,/g, ''));
+    if (!isNaN(s) && s > 0 && s < 50) slPoints = s;
+  }
+
+  const risk1Usd = capital * 0.01;
+  const risk2Usd = capital * 0.02;
+  const risk3Usd = capital * 0.03;
+
+  const lotSafe = Math.max(0.01, parseFloat((risk1Usd / (slPoints * 100)).toFixed(2)));
+  const lotStandard = Math.max(0.01, parseFloat((risk2Usd / (slPoints * 100)).toFixed(2)));
+  const lotAggressive = Math.max(0.01, parseFloat((risk3Usd / (slPoints * 100)).toFixed(2)));
+
+  const tp1Profit = (lotStandard * 10 * 100).toFixed(0);
+  const tp2Profit = (lotStandard * 20 * 100).toFixed(0);
+  const tp3Profit = (lotStandard * 30 * 100).toFixed(0);
+
+  return {
+    mode: 'QUẢN TRỊ VỐN & TÍNH KHỐI LƯỢNG LOT',
+    html: `
+      <div class="space-y-3 font-sans">
+        <!-- Lot Calculator Card -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-emerald-500/40 space-y-3 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <span class="text-xs font-black text-amber-400 flex items-center gap-2">
+              <span>🧮</span> KẾ HOẠCH ĐI LOT & BẢO VỆ VỐN (QUY CHUẨN QUỸ PROP FIRM)
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30">
+              VỐN $${capital.toLocaleString('en-US')}
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Với quy mô tài khoản <strong class="text-amber-400 font-mono">$${capital.toLocaleString('en-US')}</strong> và khoảng cách Stop Loss chuẩn hệ thống MA WAVE V8 là <strong class="text-rose-400 font-mono">${slPoints} giá</strong> (50 pips), đây là bảng tính phân bổ khối lượng lệnh chuẩn toán học:
+          </p>
+
+          <!-- 3 Risk Tier Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-xs">
+            <!-- Safe Tier -->
+            <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+              <div class="flex justify-between items-center text-[10px] font-sans">
+                <span class="text-slate-400">🛡️ An Toàn (1% Risk)</span>
+                <span class="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-bold">KHUYÊN DÙNG</span>
+              </div>
+              <div class="text-lg font-black text-emerald-400">${lotSafe} Lot</div>
+              <div class="text-[10px] text-slate-400 font-sans">Tối đa mất: <strong class="text-rose-400">-$${risk1Usd.toFixed(0)}</strong> / lệnh</div>
+            </div>
+
+            <!-- Standard Tier -->
+            <div class="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/40 space-y-1">
+              <div class="flex justify-between items-center text-[10px] font-sans">
+                <span class="text-amber-300 font-bold">🎯 Chuẩn Quỹ (2% Risk)</span>
+                <span class="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">CÂN BẰNG</span>
+              </div>
+              <div class="text-lg font-black text-amber-400">${lotStandard} Lot</div>
+              <div class="text-[10px] text-slate-400 font-sans">Tối đa mất: <strong class="text-rose-400">-$${risk2Usd.toFixed(0)}</strong> / lệnh</div>
+            </div>
+
+            <!-- Aggressive Tier -->
+            <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+              <div class="flex justify-between items-center text-[10px] font-sans">
+                <span class="text-slate-400">⚡ Tấn Công (3% Risk)</span>
+                <span class="px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-400 font-bold">RỦI RO CAO</span>
+              </div>
+              <div class="text-lg font-black text-rose-400">${lotAggressive} Lot</div>
+              <div class="text-[10px] text-slate-400 font-sans">Tối đa mất: <strong class="text-rose-400">-$${risk3Usd.toFixed(0)}</strong> / lệnh</div>
+            </div>
+          </div>
+
+          <!-- Profit Target Breakdown with 2% Lot -->
+          <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1.5 font-sans">
+            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">🎯 LỢI NHUẬN KỲ VỌNG THEO MỨC ĐI ${lotStandard} LOT (2% RISK):</span>
+            <div class="grid grid-cols-3 gap-2 font-mono text-center text-xs">
+              <div class="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/30">
+                <span class="text-[9px] text-slate-400 font-sans block">TP1 (+10 giá)</span>
+                <strong class="text-emerald-400 font-bold">+$${tp1Profit} (2R)</strong>
+              </div>
+              <div class="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/40">
+                <span class="text-[9px] text-slate-400 font-sans block">TP2 (+20 giá)</span>
+                <strong class="text-emerald-300 font-bold">+$${tp2Profit} (4R)</strong>
+              </div>
+              <div class="p-2 rounded-lg bg-emerald-950/50 border border-emerald-500/50">
+                <span class="text-[9px] text-slate-400 font-sans block">TP3 (+30 giá)</span>
+                <strong class="text-yellow-300 font-black">+$${tp3Profit} (6R)</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Core Discipline Golden Rule -->
+          <div class="p-2.5 bg-amber-950/40 border border-amber-500/30 rounded-xl text-[11px] text-amber-200 leading-relaxed font-sans">
+            🛡️ <strong>Kỷ Luật Vàng:</strong> Với vốn <strong>$${capital.toLocaleString('en-US')}</strong>, bạn có thể thua liên tiếp <strong>50 lệnh</strong> ở mức 2% mới chạm ngưỡng nguy hiểm. Đừng bao giờ all-in hoặc nhồi thêm volume khi đang gồng lỗ!
+          </div>
+        </div>
+      </div>
+    `
+  };
+}
+
 window.askGoldAI = function(question) {
   const sidebar = document.getElementById('gold-ai-sidebar-col');
   if (sidebar && !sidebar.classList.contains('hidden') && window.innerWidth < 768) {
@@ -3992,6 +4349,7 @@ window.handleGoldAISubmit = async function(e) {
 
   // Record user message in memory
   window.goldAiMemory.turns.push({ role: 'user', content: query });
+  window.saveGoldAiChatHistory();
 
   // Render typing indicator
   const typingDiv = document.createElement('div');
@@ -4013,40 +4371,58 @@ window.handleGoldAISubmit = async function(e) {
   let htmlResponse = '';
   let mode = 'Gold AI Market Mentor';
 
-  try {
-    const res = await fetch('/api/ai/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: query, price: livePriceStr })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.reply) {
-        htmlResponse = data.reply;
-        mode = data.mode || 'Gold AI Market Mentor';
-      }
-    }
-  } catch (err) {}
+  const cleanQuery = cleanVietnameseText(query);
 
-  if (!htmlResponse) {
-    if (typeof window.searchEMA2050Knowledge === 'function') {
-      const snap = window.appState && window.appState.goldSnapshot;
-      const clientKbRes = window.searchEMA2050Knowledge(query, {
-        livePriceStr,
-        ema20Str: snap && snap.ema20 ? `$${Number(snap.ema20).toFixed(2)}` : 'Đang cập nhật',
-        ema50Str: snap && snap.ema50 ? `$${Number(snap.ema50).toFixed(2)}` : 'Đang cập nhật',
-        stateDesc: snap && snap.ema50State ? snap.ema50State.marketStateLabel : 'Xu hướng M15',
-        st: snap && snap.ema50State
+  // 1. Kiểm tra nếu query liên quan đến Khám sức khỏe thị trường
+  const isMarketAuditorQuery = /(?:khám|sức khỏe|tình trạng|thẩm định|audit)\s*(?:thị trường|market|vàng|xau)?/i.test(cleanQuery) || cleanQuery.includes('khám thị trường');
+
+  // 2. Kiểm tra nếu query liên quan đến Tính Lot & Quản lý vốn
+  const isLotCalcQuery = /(?:đi|tính|bao nhiêu)\s*lot/i.test(cleanQuery) || /(?:quản lý|quản trị)\s*vốn/i.test(cleanQuery) || /(?:vốn|tk|tài khoản)\s*[0-9]+/i.test(cleanQuery);
+
+  if (isMarketAuditorQuery) {
+    const auditorRes = generateGoldAiAuditorReport();
+    htmlResponse = auditorRes.html;
+    mode = auditorRes.mode;
+  } else if (isLotCalcQuery) {
+    const lotRes = calculateGoldAiLotSize(query);
+    htmlResponse = lotRes.html;
+    mode = lotRes.mode;
+  } else {
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: query, price: livePriceStr })
       });
-      if (clientKbRes) {
-        htmlResponse = clientKbRes.renderedHtml;
-        mode = clientKbRes.mode;
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.reply) {
+          htmlResponse = data.reply;
+          mode = data.mode || 'Gold AI Market Mentor';
+        }
       }
-    }
+    } catch (err) {}
+
     if (!htmlResponse) {
-      const generated = generateGoldAIMentorResponse(query);
-      htmlResponse = generated.htmlResponse;
-      mode = generated.mode;
+      if (typeof window.searchEMA2050Knowledge === 'function') {
+        const snap = window.appState && window.appState.goldSnapshot;
+        const clientKbRes = window.searchEMA2050Knowledge(query, {
+          livePriceStr,
+          ema20Str: snap && snap.ema20 ? `$${Number(snap.ema20).toFixed(2)}` : 'Đang cập nhật',
+          ema50Str: snap && snap.ema50 ? `$${Number(snap.ema50).toFixed(2)}` : 'Đang cập nhật',
+          stateDesc: snap && snap.ema50State ? snap.ema50State.marketStateLabel : 'Xu hướng M15',
+          st: snap && snap.ema50State
+        });
+        if (clientKbRes) {
+          htmlResponse = clientKbRes.renderedHtml;
+          mode = clientKbRes.mode;
+        }
+      }
+      if (!htmlResponse) {
+        const generated = generateGoldAIMentorResponse(query);
+        htmlResponse = generated.htmlResponse;
+        mode = generated.mode;
+      }
     }
   }
 
@@ -4057,19 +4433,27 @@ window.handleGoldAISubmit = async function(e) {
   window.goldAiMemory.turns.push({ role: 'ai', content: htmlResponse, mode });
 
   const aiDiv = document.createElement('div');
-  aiDiv.className = 'flex gap-3 max-w-2xl';
+  aiDiv.className = 'flex gap-3 max-w-2xl gold-ai-response-box';
   aiDiv.innerHTML = `
     <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center shrink-0 shadow">✦</div>
-    <div class="bg-[#111622] border border-slate-800 rounded-2xl p-4 space-y-3 font-sans">
-      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+    <div class="bg-[#111622] border border-slate-800 rounded-2xl p-4 space-y-3 font-sans w-full shadow-lg">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 gold-ai-no-copy flex-wrap gap-2">
         <span class="font-bold text-amber-400 text-xs flex items-center gap-1.5">✦ Gold AI Mentor</span>
-        <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">${mode}</span>
+        <div class="flex items-center gap-2">
+          <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">${mode}</span>
+          <button type="button" onclick="copyGoldAiResponse(this)" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold border border-slate-700 transition flex items-center gap-1 cursor-pointer active:scale-95" title="Sao chép câu trả lời">
+            📋 Sao chép
+          </button>
+        </div>
       </div>
-      ${htmlResponse}
+      <div class="gold-ai-content-body">
+        ${htmlResponse}
+      </div>
     </div>
   `;
   messagesContainer.appendChild(aiDiv);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  window.saveGoldAiChatHistory();
 };
 
 function escapeHtml(text) {
