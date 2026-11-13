@@ -927,6 +927,31 @@ class SignalEngine {
     const effLow = (candleLow && candleLow > 0) ? Math.min(currentPrice, candleLow) : currentPrice;
 
     (this.signals || []).forEach(sig => {
+      // 🛡️ AUTO-HEALING & SỬA LỖI GIÁ: Nếu lệnh bị phán quyết nhầm SL khi giá live thực tế chưa hề chạm tới SL -> Khôi phục ngay về ĐANG CHẠY!
+      if (sig && (!sig.asset || sig.asset.toLowerCase() === a)) {
+        const isBuy = sig.type === 'BUY';
+        const entryP = sig.entryPrice || sig.price;
+        if (sig.status === 'CẮT LỖ AN TOÀN (SL)' || sig.status === 'CLOSED (SL HIT)') {
+          if (!isBuy && currentPrice < sig.sl) {
+            // Lệnh SELL: Giá thị trường hiện tại < SL (ví dụ $3,903.65 < $3,907.59) -> Chưa hề chạm SL!
+            sig.status = 'ĐANG CHẠY (Chờ TP1)';
+            delete sig.winType;
+            sig.pnlPips = Math.round((entryP - currentPrice) * 10);
+            sig.pnlUsd = Math.round((entryP - currentPrice) * 100);
+            sig.reason = `Khôi phục vị thế: Giá thị trường $${currentPrice.toFixed(2)} vẫn nằm an toàn dưới mốc SL $${sig.sl.toFixed(2)}, lệnh tiếp tục chạy!`;
+            hasChanges = true;
+          } else if (isBuy && currentPrice > sig.sl) {
+            // Lệnh BUY: Giá thị trường hiện tại > SL -> Chưa hề chạm SL!
+            sig.status = 'ĐANG CHẠY (Chờ TP1)';
+            delete sig.winType;
+            sig.pnlPips = Math.round((currentPrice - entryP) * 10);
+            sig.pnlUsd = Math.round((currentPrice - entryP) * 100);
+            sig.reason = `Khôi phục vị thế: Giá thị trường $${currentPrice.toFixed(2)} vẫn nằm an toàn trên mốc SL $${sig.sl.toFixed(2)}, lệnh tiếp tục chạy!`;
+            hasChanges = true;
+          }
+        }
+      }
+
       // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản
       if (sig && sig.status && sig.status.includes('ĐANG CHẠY') && (!sig.asset || sig.asset.toLowerCase() === a)) {
         // Bảo vệ an toàn: Loại trừ giá dị thường
@@ -992,14 +1017,14 @@ class SignalEngine {
               window.soundAlerts.playPingSound();
             }
             this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
-          } else if (currentPrice <= sig.sl) {
-            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT THEO GIÁ LIVE THẬT SỰ):
+          } else if (currentPrice <= sig.sl && currentPrice < entryPrice) {
+            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT KHI GIÁ THỰC SỰ <= SL VÀ < ENTRY):
             if (sig.hitTp1) {
               sig.winType = 'TP1';
               sig.status = 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️';
               sig.pnlPips = (a === 'btc') ? 50 : (a === 'xag' ? 40 : 50);
               sig.pnlUsd = (a === 'btc') ? 500 : (a === 'xag' ? 2000 : 500);
-              sig.reason = `Giá chạm mốc SL Dương tại $${currentPrice.toFixed(2)}, khóa chặt lợi nhuận TP1 an toàn (+${sig.pnlPips} pips)`;
+              sig.reason = `Giá quay đầu chạm mốc SL Dương tại $${currentPrice.toFixed(2)}, khóa chặt lợi nhuận TP1 an toàn (+${sig.pnlPips} pips)`;
               hasChanges = true;
               if (window.soundAlerts && typeof window.soundAlerts.playPingSound === 'function') {
                 window.soundAlerts.playPingSound();
@@ -1086,8 +1111,8 @@ class SignalEngine {
               window.soundAlerts.playPingSound();
             }
             this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
-          } else if (currentPrice >= sig.sl) {
-            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT THEO GIÁ LIVE THẬT SỰ):
+          } else if (currentPrice >= sig.sl && currentPrice > entryPrice) {
+            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT KHI GIÁ THỰC SỰ >= SL VÀ > ENTRY):
             if (sig.hitTp1) {
               sig.winType = 'TP1';
               sig.status = 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️';

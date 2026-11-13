@@ -1151,7 +1151,6 @@ class SignalEngine {
         }
       }
     });
-    });
 
     if (hasChanges) {
       this.saveHistory();
