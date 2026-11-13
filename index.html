@@ -3237,7 +3237,7 @@
           </div>
 
           <!-- Chat Input Bar -->
-          <div class="p-2.5 sm:p-3 border-t border-slate-800 bg-[#0d1117]">
+          <div class="p-2.5 sm:p-3 border-t border-slate-800 bg-[#0d1117] pb-24 md:pb-3">
             <form onsubmit="handleGoldAISubmit(event)" class="flex items-center gap-2">
               <input id="gold-ai-input" type="text" placeholder="Hỏi Gold AI (VD: Có nên mua đuổi lúc này không? Hoặc lỡ buy đỉnh xử lý sao?)..."
                      class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition font-sans">
@@ -5942,6 +5942,16 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
     } else if (targetView === 'account') {
       if (typeof updateUserUI === 'function') updateUserUI();
       if (typeof window.loadAccountAdminData === 'function') window.loadAccountAdminData();
+    } else if (targetView === 'gold-ai') {
+      setTimeout(() => {
+        const msgContainer = document.getElementById('gold-ai-chat-messages');
+        if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+        const goldAiPill = document.getElementById('gold-ai-pill-text');
+        if (goldAiPill && window.marketDataStore) {
+          const xau = window.marketDataStore.assetsData && window.marketDataStore.assetsData['XAU'];
+          if (xau && xau.price) goldAiPill.textContent = `XAU/USD: $${Number(xau.price).toFixed(2)} | 15M | MA WAVE V8 Active`;
+        }
+      }, 50);
     }
   }
 
@@ -6247,18 +6257,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 </script>
 
 <!-- External System JS Files -->
-<script src="./js/config.js?v=9.3.5"></script>
-<script src="./js/marketDataStore.js?v=9.3.5"></script>
-<script src="./js/v8Engine.js?v=9.3.5"></script>
-<script src="./js/eventEngine.js?v=9.3.5"></script>
-<script src="./js/soundAlert.js?v=9.3.5"></script>
-<script src="./js/ema50Engine.js?v=9.3.5"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.5"></script>
-<script src="./js/indicators.js?v=9.3.5"></script>
-<script src="./js/signalEngine.js?v=9.3.5"></script>
-<script src="./js/newsData.js?v=9.3.5"></script>
-<script src="./js/newsAdapter.js?v=9.3.5"></script>
-<script src="./js/app.js?v=9.3.5"></script>
+<script src="./js/config.js?v=9.3.6"></script>
+<script src="./js/marketDataStore.js?v=9.3.6"></script>
+<script src="./js/v8Engine.js?v=9.3.6"></script>
+<script src="./js/eventEngine.js?v=9.3.6"></script>
+<script src="./js/soundAlert.js?v=9.3.6"></script>
+<script src="./js/ema50Engine.js?v=9.3.6"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.6"></script>
+<script src="./js/indicators.js?v=9.3.6"></script>
+<script src="./js/signalEngine.js?v=9.3.6"></script>
+<script src="./js/newsData.js?v=9.3.6"></script>
+<script src="./js/newsAdapter.js?v=9.3.6"></script>
+<script src="./js/app.js?v=9.3.6"></script>
 
 
 
@@ -6280,6 +6290,10 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   <button id="mob-nav-history" onclick="switchView('history')" class="dock-item-btn" title="Lịch Sử Tín Hiệu (Vuốt xem chi tiết)">
     <span class="text-base">📜</span>
     <span>Lịch Sử</span>
+  </button>
+  <button id="mob-nav-gold-ai" onclick="switchView('gold-ai')" class="dock-item-btn text-amber-400 font-bold" title="Gold AI Market Mentor">
+    <span class="text-base">✦</span>
+    <span>Gold AI</span>
   </button>
   <button id="mob-nav-bot-trading" onclick="switchView('bot-trading')" class="dock-item-btn" title="Hệ Thống Bot MT5">
     <span class="text-base">🤖</span>
