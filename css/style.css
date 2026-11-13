@@ -389,5 +389,24 @@ button, a, input, select, textarea {
 .justify-between { justify-content: space-between; }
 .justify-center { justify-content: center; }
 
+/* ── View Trend Layout Guarantee (Fix mobile left clip/overlay) ── */
+#view-trend {
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
 
-
+#trend-content-xau,
+#trend-content-btc,
+#trend-content-xag {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+  z-index: 10 !important;
+}

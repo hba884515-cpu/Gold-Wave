@@ -7606,6 +7606,10 @@ window.switchTrendAsset = function(assetKey) {
       if (k === key) {
         pane.classList.remove('hidden');
         pane.style.display = 'block';
+        pane.style.width = '100%';
+        pane.style.maxWidth = '100%';
+        pane.style.overflowX = 'hidden';
+        pane.style.position = 'relative';
       } else {
         pane.classList.add('hidden');
         pane.style.display = 'none';

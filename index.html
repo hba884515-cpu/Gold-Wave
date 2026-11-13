@@ -31,7 +31,7 @@
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="./css/style.css?v=9.3.1">
+  <link rel="stylesheet" href="./css/style.css?v=9.3.8">
 
   <script>
     tailwind.config = {
@@ -137,6 +137,27 @@
       box-sizing: border-box !important;
     }
 
+    /* ── View Trend Layout Guarantee (Fix mobile left clip/overlay) ── */
+    #view-trend {
+      flex-direction: column !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      overflow-x: hidden !important;
+      box-sizing: border-box !important;
+      position: relative !important;
+      z-index: 10 !important;
+    }
+    #trend-content-xau,
+    #trend-content-btc,
+    #trend-content-xag {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+      position: relative !important;
+      z-index: 10 !important;
+    }
+
     /* ── Mobile Responsive Bottom Navigation Bar ── */
     #mobile-bottom-nav {
       display: none;
@@ -145,6 +166,11 @@
     @media (max-width: 768px) {
       #sidebar-left {
         display: none !important;
+        width: 0 !important;
+        max-width: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
       }
       #mobile-bottom-nav {
         display: flex !important;
@@ -3733,10 +3759,10 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!--  VIEW 4: 〽 PHÂN TÍCH XU HƯỚNG XAU/USD (MA WAVE V8 ENGINE) -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="view-trend" class="flex-1 flex flex-col min-h-0 overflow-hidden hidden bg-[#0a0d14]">
+    <div id="view-trend" class="flex-1 flex flex-col min-h-0 overflow-hidden hidden bg-[#0a0d14] w-full relative z-10" style="width: 100% !important; max-width: 100vw !important; overflow-x: hidden !important;">
 
       <!-- Header -->
-      <div class="px-3 sm:px-5 py-2.5 sm:py-3 border-b border-slate-800 bg-[#0d1117] flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
+      <div class="px-3 sm:px-5 py-2.5 sm:py-3 border-b border-slate-800 bg-[#0d1117] flex items-center justify-between flex-shrink-0 flex-wrap gap-2 w-full">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-gold-500 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-lg shadow-md shadow-amber-500/20 shrink-0">
             〽
@@ -3757,7 +3783,7 @@
       </div>
 
       <!-- Collapsible Trend Sub-Header (Live Price & Engine Info) -->
-      <div id="trend-header-body" class="px-3 sm:px-5 py-2 border-b border-slate-800/80 bg-[#0c1017] flex items-center justify-between flex-wrap gap-2 text-xs font-mono shrink-0 transition-all duration-300">
+      <div id="trend-header-body" class="px-3 sm:px-5 py-2 border-b border-slate-800/80 bg-[#0c1017] flex items-center justify-between flex-wrap gap-2 text-xs font-mono shrink-0 transition-all duration-300 w-full">
         <div class="flex items-center gap-2 flex-wrap">
           <div class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
             Giá Live: <strong id="trend-live-price" class="text-amber-400">$4,023.66</strong>
@@ -3772,7 +3798,7 @@
       </div>
 
       <!-- ASSET FILTER SELECTOR BAR (VÀNG • BITCOIN • BẠC) -->
-      <div class="px-5 py-3 border-b border-[#163629] bg-[#0b1a14] flex items-center justify-between flex-wrap gap-2 text-xs">
+      <div class="px-5 py-3 border-b border-[#163629] bg-[#0b1a14] flex items-center justify-between flex-wrap gap-2 text-xs w-full">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="text-slate-400 font-bold text-[11px] mr-1">CHỌN PHÂN TÍCH RIÊNG TỪNG MÃ:</span>
           <button id="btn-trend-filter-xau" onclick="switchTrendAsset('xau')" class="trend-asset-btn active flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/50 font-black text-xs transition cursor-pointer shadow-md">
@@ -3791,13 +3817,13 @@
       </div>
 
       <!-- Main Scroll View Area -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 sig-scroll font-sans">
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 sig-scroll font-sans w-full relative z-10" style="width: 100% !important; max-width: 100vw !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch;">
         
         <!-- PANE 1: VÀNG XAU/USD -->
-        <div id="trend-content-xau" class="space-y-5">
+        <div id="trend-content-xau" class="space-y-5 w-full relative z-10" style="width: 100% !important; max-width: 100% !important; overflow-x: hidden !important;">
 
           <!-- 0. THANH MINH BẠCH DỮ LIỆU & ĐẾM NGƯỢC NẾN REALTIME (DATA INTEGRITY BAR) -->
-          <div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#0d1624] via-slate-900 to-[#0d1624] border border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs font-mono shadow-lg">
+          <div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#0d1624] via-slate-900 to-[#0d1624] border border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs font-mono shadow-lg relative z-10 w-full overflow-hidden" style="width: 100% !important; box-sizing: border-box !important;">
             <div class="flex items-center gap-3 flex-wrap">
               <span class="flex items-center gap-1.5 text-emerald-400 font-bold">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -3813,7 +3839,7 @@
           </div>
 
           <!-- 0.1 HỘP TÓM TẮT NHANH CHO NGƯỜI MỚI (BEGINNER QUICK GUIDE - HIỂU TRONG 10 GIÂY) -->
-          <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-emerald-500/10 border border-amber-500/30 space-y-3 shadow-xl">
+          <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-emerald-500/10 border border-amber-500/30 space-y-3 shadow-xl relative z-10 w-full overflow-hidden" style="width: 100% !important; box-sizing: border-box !important;">
             <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-800 pb-2.5">
               <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center text-sm shadow">
@@ -4632,7 +4658,7 @@
         <!-- /PANE 1: VÀNG XAU/USD -->
 
         <!-- PANE 2: BITCOIN (BTC/USD) - BÀI PHÂN TÍCH CHUYÊN SÂU -->
-        <div id="trend-content-btc" class="space-y-5 hidden">
+        <div id="trend-content-btc" class="space-y-5 hidden w-full relative z-10" style="width: 100% !important; max-width: 100%; overflow-x: hidden !important;">
           <!-- Top Hero Card for BTC -->
           <div class="p-5 sm:p-6 rounded-3xl liquid-glass glass-btc flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden">
             <div class="space-y-2 flex-1">
@@ -4917,7 +4943,7 @@
         <!-- /PANE 2: BITCOIN (BTC/USD) -->
 
         <!-- PANE 3: BẠC THẾ GIỚI (XAG/USD) - BÀI PHÂN TÍCH CHUYÊN SÂU -->
-        <div id="trend-content-xag" class="space-y-5 hidden">
+        <div id="trend-content-xag" class="space-y-5 hidden w-full relative z-10" style="width: 100% !important; max-width: 100%; overflow-x: hidden !important;">
           <!-- Top Hero Card for Silver -->
           <div class="p-5 sm:p-6 rounded-3xl liquid-glass glass-silver flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden">
             <div class="space-y-2 flex-1">
@@ -5956,8 +5982,27 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
     const activeMobBtn = document.getElementById('mob-nav-' + targetView);
     if (activeMobBtn) activeMobBtn.classList.add('active');
 
+    // Reset and close all floating drawers, dropdowns, and overlays across views
+    const goldAiSidebar = document.getElementById('gold-ai-sidebar-col');
+    if (goldAiSidebar && (targetView !== 'gold-ai' || window.innerWidth <= 768)) {
+      goldAiSidebar.classList.add('hidden');
+      goldAiSidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'w-72', 'shadow-2xl', 'z-30');
+      if (window.innerWidth <= 768) goldAiSidebar.style.display = 'none';
+    }
+
+    const notifPanel = document.getElementById('notif-dropdown-panel');
+    if (notifPanel) notifPanel.classList.add('hidden');
+
+    const chartSymbolMenu = document.getElementById('chart-symbol-dropdown-menu');
+    if (chartSymbolMenu) chartSymbolMenu.classList.add('hidden');
+
     // On mobile devices, keep sidebar hidden by default when switching views
     if (window.innerWidth <= 768) {
+      const leftSidebar = document.getElementById('sidebar-left');
+      if (leftSidebar) {
+        leftSidebar.style.display = 'none';
+        leftSidebar.classList.add('hidden');
+      }
       const pref = localStorage.getItem('gi_panel_user_pref');
       if (pref !== 'show') {
         const rightSidebar = document.getElementById('sidebar-right');
@@ -6343,18 +6388,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 </script>
 
 <!-- External System JS Files -->
-<script src="./js/config.js?v=9.3.7"></script>
-<script src="./js/marketDataStore.js?v=9.3.7"></script>
-<script src="./js/v8Engine.js?v=9.3.7"></script>
-<script src="./js/eventEngine.js?v=9.3.7"></script>
-<script src="./js/soundAlert.js?v=9.3.7"></script>
-<script src="./js/ema50Engine.js?v=9.3.7"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.7"></script>
-<script src="./js/indicators.js?v=9.3.7"></script>
-<script src="./js/signalEngine.js?v=9.3.7"></script>
-<script src="./js/newsData.js?v=9.3.7"></script>
-<script src="./js/newsAdapter.js?v=9.3.7"></script>
-<script src="./js/app.js?v=9.3.7"></script>
+<script src="./js/config.js?v=9.3.8"></script>
+<script src="./js/marketDataStore.js?v=9.3.8"></script>
+<script src="./js/v8Engine.js?v=9.3.8"></script>
+<script src="./js/eventEngine.js?v=9.3.8"></script>
+<script src="./js/soundAlert.js?v=9.3.8"></script>
+<script src="./js/ema50Engine.js?v=9.3.8"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.8"></script>
+<script src="./js/indicators.js?v=9.3.8"></script>
+<script src="./js/signalEngine.js?v=9.3.8"></script>
+<script src="./js/newsData.js?v=9.3.8"></script>
+<script src="./js/newsAdapter.js?v=9.3.8"></script>
+<script src="./js/app.js?v=9.3.8"></script>
 
 
 
