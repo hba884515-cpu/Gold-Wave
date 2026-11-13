@@ -1590,6 +1590,13 @@ class GoldTradingApp {
           window.renderRadarSignalCards();
         }
       }
+
+      // Cập nhật Live Pill trong tab Gold AI
+      const goldAiPill = document.getElementById('gold-ai-pill-text');
+      if (goldAiPill && store && store.assetsData['XAU']) {
+        const p = store.assetsData['XAU'].price;
+        if (p) goldAiPill.textContent = `XAU/USD: $${Number(p).toFixed(2)} | 15M | MA WAVE V8 Active`;
+      }
     }
 
     // Cập nhật trạng thái thị trường trên thanh tiêu đề
@@ -3852,7 +3859,24 @@ function getGoldAiTerminalContext() {
   };
 }
 
+window.toggleGoldAiTopicsSidebar = function() {
+  const sidebar = document.getElementById('gold-ai-sidebar-col');
+  if (!sidebar) return;
+  if (sidebar.classList.contains('hidden')) {
+    sidebar.classList.remove('hidden');
+    sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'w-72', 'shadow-2xl', 'z-30');
+  } else {
+    sidebar.classList.add('hidden');
+    sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'w-72', 'shadow-2xl', 'z-30');
+  }
+};
+
 window.askGoldAI = function(question) {
+  const sidebar = document.getElementById('gold-ai-sidebar-col');
+  if (sidebar && !sidebar.classList.contains('hidden') && window.innerWidth < 768) {
+    sidebar.classList.add('hidden');
+    sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'w-72', 'shadow-2xl', 'z-30');
+  }
   const input = document.getElementById('gold-ai-input');
   if (input) input.value = question;
   window.handleGoldAISubmit(new Event('submit'));
