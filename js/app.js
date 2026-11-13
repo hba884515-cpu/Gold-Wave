@@ -3918,9 +3918,25 @@ window.handleGoldAISubmit = async function(e) {
   } catch (err) {}
 
   if (!htmlResponse) {
-    const generated = generateGoldAIMentorResponse(query);
-    htmlResponse = generated.htmlResponse;
-    mode = generated.mode;
+    if (typeof window.searchEMA2050Knowledge === 'function') {
+      const snap = window.appState && window.appState.goldSnapshot;
+      const clientKbRes = window.searchEMA2050Knowledge(query, {
+        livePriceStr,
+        ema20Str: snap && snap.ema20 ? `$${Number(snap.ema20).toFixed(2)}` : 'Đang cập nhật',
+        ema50Str: snap && snap.ema50 ? `$${Number(snap.ema50).toFixed(2)}` : 'Đang cập nhật',
+        stateDesc: snap && snap.ema50State ? snap.ema50State.marketStateLabel : 'Xu hướng M15',
+        st: snap && snap.ema50State
+      });
+      if (clientKbRes) {
+        htmlResponse = clientKbRes.renderedHtml;
+        mode = clientKbRes.mode;
+      }
+    }
+    if (!htmlResponse) {
+      const generated = generateGoldAIMentorResponse(query);
+      htmlResponse = generated.htmlResponse;
+      mode = generated.mode;
+    }
   }
 
   const typing = document.getElementById('gold-ai-typing-indicator');

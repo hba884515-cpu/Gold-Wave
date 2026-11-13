@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const EMA50Engine = require('./js/ema50Engine.js');
+const EMAKnowledgeBase = require('./js/emaKnowledgeBase.js');
 
 const PORT = process.env.PORT || 8080;
 
@@ -3029,7 +3030,21 @@ const server = http.createServer(async (req, res) => {
     let mode = 'Gold AI Market Mentor';
     let reply = '';
 
-    if (!userPrompt || lowerP === 'chào' || lowerP === 'hello' || lowerP === 'hi') {
+    // 1. Chắt lọc câu trả lời chuyên sâu từ Hệ Thống Giao Dịch EMA20 – EMA50 Toàn Diện (14 Chuyên Đề)
+    const emaKnowledgeResult = EMAKnowledgeBase.searchEMA2050Knowledge(userPrompt, {
+      livePriceStr: currentGoldPrice,
+      ema20Str,
+      ema50Str,
+      atrStr,
+      mtfStr,
+      stateDesc,
+      st
+    });
+
+    if (emaKnowledgeResult) {
+      mode = emaKnowledgeResult.mode;
+      reply = emaKnowledgeResult.renderedHtml;
+    } else if (!userPrompt || lowerP === 'chào' || lowerP === 'hello' || lowerP === 'hi') {
       mode = 'General Mentor Mode';
       reply = `
         <div class="space-y-2 text-xs text-slate-300 leading-relaxed">

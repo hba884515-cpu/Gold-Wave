@@ -3101,45 +3101,89 @@
       <!-- Main 2-Column Chat Layout -->
       <div class="flex-1 flex min-h-0 overflow-hidden">
         
-        <!-- Left Column: Topics & Quick Starter Pills (~260px) -->
-        <div class="w-64 border-r border-slate-800 bg-[#0d1117]/70 p-3.5 flex flex-col gap-4 overflow-y-auto flex-shrink-0">
+        <!-- Left Column: Topics & Quick Starter Pills (~270px) -->
+        <div class="w-64 sm:w-72 border-r border-slate-800 bg-[#0d1117]/80 p-3 flex flex-col gap-3.5 overflow-y-auto flex-shrink-0 sig-scroll">
           
+          <!-- Section 1: 14 Chuyên Đề Tri Thức EMA20 - EMA50 -->
           <div>
-            <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block mb-2">💡 GỢI Ý CÂU HỎI MẪU</span>
-            <div class="space-y-1.5 text-xs font-medium">
-              <button class="w-full text-left p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-amber-300 transition flex items-center gap-2 cursor-pointer" onclick="askGoldAI('Phân tích chart hiện tại')">
-                <span>📊</span> Phân tích chart hiện tại
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📘</span> SỔ TAY TRI THỨC EMA (14 CHỦ ĐỀ)
+              </span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">V8 PRO</span>
+            </div>
+            <p class="text-[10px] text-slate-400 mb-2 leading-tight">Bấm vào từng chuyên đề để AI chắt lọc phân tích chi tiết:</p>
+
+            <div class="space-y-1 text-xs font-medium">
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Bản chất và nhiệm vụ của EMA20 và EMA50 là gì?')">
+                <span class="flex items-center gap-1.5"><span>⚡</span> 1. Bản chất EMA20 - EMA50</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-amber-400">›</span>
               </button>
-              <button class="w-full text-left p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-amber-300 transition flex items-center gap-2 cursor-pointer" onclick="askGoldAI('Tại sao thị trường đang đi ngang?')">
-                <span>🔄</span> Thị trường đang đi ngang?
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Xác định 5 trạng thái thị trường theo EMA như thế nào?')">
+                <span class="flex items-center gap-1.5"><span>🧭</span> 2. 5 Trạng thái thị trường</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-amber-400">›</span>
               </button>
-              <button class="w-full text-left p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-amber-300 transition flex items-center gap-2 cursor-pointer" onclick="askGoldAI('Giải thích MA WAVE V8')">
-                <span>🌊</span> Giải thích MA WAVE V8
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Chiến lược giao dịch BUY thuận xu hướng tăng chuẩn xác?')">
+                <span class="flex items-center gap-1.5"><span class="text-emerald-400">🟢</span> 3. Chiến lược BUY chuẩn</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-emerald-400">›</span>
               </button>
-              <button class="w-full text-left p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-amber-300 transition flex items-center gap-2 cursor-pointer" onclick="askGoldAI('Giải thích EMA20/50')">
-                <span>📈</span> Giải thích EMA20/50
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Chiến lược giao dịch SELL thuận xu hướng giảm chuẩn xác?')">
+                <span class="flex items-center gap-1.5"><span class="text-rose-400">🔴</span> 4. Chiến lược SELL chuẩn</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-rose-400">›</span>
               </button>
-              <button class="w-full text-left p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-amber-300 transition flex items-center gap-2 cursor-pointer" onclick="askGoldAI('Phân tích tin tức mới nhất')">
-                <span>📰</span> Phân tích tin tức mới nhất
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Cách đánh khi giá hồi sâu về EMA50 (3 trường hợp A, B, C)?')">
+                <span class="flex items-center gap-1.5"><span>🎯</span> 5. Hồi sâu về EMA50</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-cyan-400">›</span>
               </button>
-              <button class="w-full text-left p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-amber-300 transition flex items-center gap-2 cursor-pointer" onclick="askGoldAI('Giải thích tâm lý giao dịch')">
-                <span>🧠</span> Giải thích tâm lý giao dịch
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Cách giao dịch khi thị trường Sideway đi ngang?')">
+                <span class="flex items-center gap-1.5"><span>📦</span> 6. Giao dịch vùng Sideway</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-amber-400">›</span>
               </button>
-              <button class="w-full text-left p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-amber-300 transition flex items-center gap-2 cursor-pointer" onclick="askGoldAI('ATR dùng để làm gì?')">
-                <span>🛡</span> ATR dùng để làm gì?
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-orange-500/50 text-slate-300 hover:text-orange-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Cách nhận biết thị trường Nhiễu (Chop) và Bộ lọc khoảng cách D = |EMA20-EMA50|/ATR?')">
+                <span class="flex items-center gap-1.5"><span>🌪️</span> 7. Lọc nhiễu Chop & Hệ số D</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-orange-400">›</span>
+              </button>
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Sự thật về giao cắt EMA20 và EMA50: Có nên mua bán ngay khi vừa cắt không?')">
+                <span class="flex items-center gap-1.5"><span>✂️</span> 8. Giao cắt EMA20/EMA50</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-amber-400">›</span>
+              </button>
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Công thức chấm 100 điểm chất lượng tín hiệu (Confirmed, Setup, Watch)?')">
+                <span class="flex items-center gap-1.5"><span>💯</span> 9. Thang 100 điểm tín hiệu</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-amber-400">›</span>
+              </button>
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-purple-500/50 text-slate-300 hover:text-purple-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Nguyên tắc phối hợp đa khung thời gian H1, M30, M15, M5 như thế nào?')">
+                <span class="flex items-center gap-1.5"><span>📊</span> 10. Phối hợp Đa khung (MTF)</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-purple-400">›</span>
+              </button>
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Quản lý rủi ro, cách đặt SL theo cấu trúc và bộ lọc chống đu đỉnh/đáy ATR?')">
+                <span class="flex items-center gap-1.5"><span>🛡️</span> 11. Quản lý rủi ro & SL/TP</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-emerald-400">›</span>
+              </button>
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('4 Dấu hiệu nhận biết xu hướng suy yếu và đảo chiều sớm là gì?')">
+                <span class="flex items-center gap-1.5"><span>⚠️</span> 12. Dấu hiệu suy yếu / Đảo chiều</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-amber-400">›</span>
+              </button>
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-sky-500/50 text-slate-300 hover:text-sky-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('Thống kê kiểm định Backtest thực tế hơn 1640 lệnh trên máy chủ?')">
+                <span class="flex items-center gap-1.5"><span>📈</span> 13. Kiểm định Backtest thực tế</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-sky-400">›</span>
+              </button>
+              <button class="w-full text-left p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 transition flex items-center justify-between group cursor-pointer" onclick="askGoldAI('8 Lỗi kinh điển cần tuyệt đối tránh khi sử dụng MA?')">
+                <span class="flex items-center gap-1.5"><span>❌</span> 14. 8 Lỗi kinh điển cần tránh</span>
+                <span class="text-[10px] text-slate-500 group-hover:text-rose-400">›</span>
               </button>
             </div>
           </div>
 
           <div class="w-full h-px bg-slate-800"></div>
 
+          <!-- Section 2: Quick FAQ Chips -->
           <div>
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">QUICK TOPICS</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">HỎI NHANH THỰC CHIẾN</span>
             <div class="flex flex-wrap gap-1.5">
-              <button class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition cursor-pointer" onclick="askGoldAI('Sao hôm nay vàng đi khó chịu vậy?')">Vàng khó chịu 😅</button>
-              <button class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition cursor-pointer" onclick="askGoldAI('Mình đang bị tâm lý khi giao dịch')">Tâm lý giao dịch 🧠</button>
-              <button class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition cursor-pointer" onclick="askGoldAI('EMA20 cắt xuống là chắc chắn giảm đúng không?')">EMA20 cắt EMA50?</button>
-              <button class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition cursor-pointer" onclick="askGoldAI('RSI là gì?')">RSI là gì?</button>
+              <button class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition cursor-pointer" onclick="askGoldAI('EMA20 cắt xuống là chắc chắn giảm đúng không?')">Cắt nhau có vào lệnh? ✂️</button>
+              <button class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition cursor-pointer" onclick="askGoldAI('Tại sao giá cách xa EMA20 thì không được vào lệnh?')">Chống đu đỉnh/đáy 🚫</button>
+              <button class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition cursor-pointer" onclick="askGoldAI('Hồi sâu về EMA50 thì khi nào mua được?')">Hồi sâu EMA50 🎯</button>
+              <button class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition cursor-pointer" onclick="askGoldAI('Đặt Stop Loss ở đâu an toàn theo cấu trúc?')">Đặt SL cấu trúc 🛡️</button>
             </div>
           </div>
 
@@ -3156,14 +3200,14 @@
               <div class="bg-[#111622] border border-slate-800 rounded-2xl p-4 space-y-2.5">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-amber-400 text-sm">Chào bạn! Mình là Gold AI Market Mentor 🌊</span>
-                  <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">Market Mentor</span>
+                  <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">EMA20-50 Specialist</span>
                 </div>
                 <p class="text-slate-300">
-                  Mình ở đây để cùng bạn quan sát, trao đổi và phân tích chuyên sâu về thị trường Vàng (XAU/USD). Bạn có thể hỏi mình về nến realtime, xu hướng, thuật toán MA WAVE V8, tác động tin tức vĩ mô hoặc tâm lý giao dịch.
+                  Mình đã được tích hợp toàn diện <strong>Hệ Thống Giao Dịch EMA20 – EMA50 Toàn Diện (14 Chuyên Đề Cốt Lõi)</strong>! Bạn có thể đặt bất kỳ câu hỏi nào về bản chất EMA, điểm vào BUY/SELL chuẩn, cách xử lý Sideway, thị trường Chop, nhịp hồi sâu EMA50 hay cách đặt SL theo cấu trúc.
                 </p>
                 <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-300/90 space-y-1">
-                  <div>💡 <strong>Cách trao đổi hiệu quả:</strong></div>
-                  <p>Hỏi mình tự nhiên như đang nói chuyện với một mentor. Mình sẽ cùng bạn phân tích, phản biện cấu trúc giá và đặt câu hỏi ngược lại để hai bên cùng đào sâu vấn đề!</p>
+                  <div>💡 <strong>Chắt lọc câu trả lời thông minh:</strong></div>
+                  <p>Khi bạn hỏi về bất kỳ khía cạnh nào của MA, mình sẽ chắt lọc chính xác quy tắc chuẩn từ sổ tay 14 chuyên đề kết hợp với dữ liệu nến realtime của Vàng/BTC để phân tích cho bạn!</p>
                 </div>
               </div>
             </div>
@@ -6180,17 +6224,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 </script>
 
 <!-- External System JS Files -->
-<script src="./js/config.js?v=9.3.2"></script>
-<script src="./js/marketDataStore.js?v=9.3.2"></script>
-<script src="./js/v8Engine.js?v=9.3.2"></script>
-<script src="./js/eventEngine.js?v=9.3.2"></script>
-<script src="./js/soundAlert.js?v=9.3.2"></script>
-<script src="./js/ema50Engine.js?v=9.3.2"></script>
-<script src="./js/indicators.js?v=9.3.2"></script>
-<script src="./js/signalEngine.js?v=9.3.2"></script>
-<script src="./js/newsData.js?v=9.3.2"></script>
-<script src="./js/newsAdapter.js?v=9.3.2"></script>
-<script src="./js/app.js?v=9.3.2"></script>
+<script src="./js/config.js?v=9.3.3"></script>
+<script src="./js/marketDataStore.js?v=9.3.3"></script>
+<script src="./js/v8Engine.js?v=9.3.3"></script>
+<script src="./js/eventEngine.js?v=9.3.3"></script>
+<script src="./js/soundAlert.js?v=9.3.3"></script>
+<script src="./js/ema50Engine.js?v=9.3.3"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.3"></script>
+<script src="./js/indicators.js?v=9.3.3"></script>
+<script src="./js/signalEngine.js?v=9.3.3"></script>
+<script src="./js/newsData.js?v=9.3.3"></script>
+<script src="./js/newsAdapter.js?v=9.3.3"></script>
+<script src="./js/app.js?v=9.3.3"></script>
 
 
 
