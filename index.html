@@ -3067,37 +3067,37 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!--  VIEW 5: GOLD AI — MARKET MENTOR CHAT TERMINAL              -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="view-gold-ai" class="flex-1 flex flex-col min-h-0 overflow-hidden hidden bg-[#081410]">
+    <div id="view-gold-ai" class="flex-1 flex flex-col min-h-0 overflow-hidden hidden bg-[#06090e]">
       
-      <!-- Gold AI Header Bar -->
-      <div class="px-5 py-3 border-b border-slate-800 bg-[#0d1117] flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
+      <!-- Gold AI Header Bar (Liquid Dark Glass Aesthetic) -->
+      <div class="px-3.5 py-2.5 sm:px-5 sm:py-3 border-b border-amber-500/20 bg-slate-950/80 backdrop-blur-xl flex items-center justify-between flex-shrink-0 flex-wrap gap-2 shadow-lg z-10">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-lg shadow-md shadow-amber-500/20">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/30 border border-yellow-200/50">
             ✦
           </div>
           <div>
-            <h2 class="text-sm font-black text-white flex items-center gap-2">
-              GOLD AI – MARKET MENTOR
-              <span id="gold-ai-persona-badge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">Market Mentor Mode</span>
+            <h2 class="text-xs sm:text-sm font-black text-white flex items-center gap-2">
+              GOLD AI · MARKET MENTOR
+              <span id="gold-ai-persona-badge" class="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold uppercase tracking-wider">V8 PRO MENTOR</span>
             </h2>
-            <p class="text-xs text-slate-400">Trợ lý hội thoại, trao đổi & phản biện chuyên sâu về thị trường Vàng realtime</p>
+            <p class="text-[11px] text-slate-400">Cố vấn chiến lược EMA20-50 & Phân tích thị trường Vàng Realtime</p>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Mobile Toggle Sổ Tay EMA 14 Chuyên Đề -->
-          <button id="btn-toggle-gold-ai-sidebar" onclick="toggleGoldAiTopicsSidebar()" class="md:hidden px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+          <!-- Mobile Toggle Sổ Tay EMA 14 Chuyên Đề (Capsule Pill) -->
+          <button id="btn-toggle-gold-ai-sidebar" onclick="toggleGoldAiTopicsSidebar()" class="md:hidden px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 to-yellow-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer">
             <span>📘</span> Sổ Tay EMA
           </button>
 
           <!-- Live Terminal Context Badge Pill -->
-          <div id="gold-ai-live-context-pill" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-xs text-emerald-400 font-bold">
+          <div id="gold-ai-live-context-pill" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-xs text-emerald-400 font-bold">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span id="gold-ai-pill-text">XAU/USD Live Context · MA WAVE V8 Mentor Active</span>
           </div>
 
-          <!-- Reset Session Button -->
-          <button onclick="resetGoldAiSession()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+          <!-- Reset Session Button (Pill) -->
+          <button onclick="resetGoldAiSession()" class="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer">
             <span>🔄</span> Làm mới
           </button>
         </div>
@@ -3107,7 +3107,7 @@
       <div class="flex-1 flex min-h-0 overflow-hidden relative">
         
         <!-- Left Column: Topics & Quick Starter Pills (~270px) -->
-        <div id="gold-ai-sidebar-col" class="w-64 sm:w-72 border-r border-slate-800 bg-[#0d1117]/95 p-3 flex-col gap-3.5 overflow-y-auto flex-shrink-0 sig-scroll hidden md:flex transition-all duration-200 z-20">
+        <div id="gold-ai-sidebar-col" class="w-72 sm:w-80 border-r border-amber-500/20 bg-[#0b101b]/98 backdrop-blur-2xl p-3 flex-col gap-3.5 overflow-y-auto flex-shrink-0 sig-scroll hidden md:flex transition-all duration-200 z-30">
           
           <!-- Section 1: 14 Chuyên Đề Tri Thức EMA20 - EMA50 -->
           <div>
@@ -3115,7 +3115,10 @@
               <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                 <span>📘</span> SỔ TAY TRI THỨC EMA (14 CHỦ ĐỀ)
               </span>
-              <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">V8 PRO</span>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">V8 PRO</span>
+                <button type="button" onclick="toggleGoldAiTopicsSidebar()" class="md:hidden w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer" title="Đóng">✕</button>
+              </div>
             </div>
             <p class="text-[10px] text-slate-400 mb-2 leading-tight">Bấm vào từng chuyên đề để AI chắt lọc phân tích chi tiết:</p>
 
@@ -3202,47 +3205,125 @@
         <div class="flex-1 flex flex-col min-w-0 bg-[#0a0d14]">
           
           <!-- Message history stream -->
-          <div id="gold-ai-chat-messages" class="flex-1 p-3 sm:p-4 overflow-y-auto sig-scroll space-y-4 font-sans text-xs leading-relaxed">
-            <!-- Initial Mentor Greeting -->
-            <div class="flex gap-3 max-w-2xl">
-              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center shrink-0 shadow">✦</div>
-              <div class="bg-[#111622] border border-slate-800 rounded-2xl p-4 space-y-2.5">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-amber-400 text-sm">Chào bạn! Mình là Gold AI Market Mentor 🌊</span>
-                  <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">EMA20-50 Specialist</span>
+          <div id="gold-ai-chat-messages" class="flex-1 p-3 sm:p-5 overflow-y-auto sig-scroll space-y-4 font-sans text-xs leading-relaxed">
+            <!-- Initial Mentor Greeting & Interactive Starter Dashboard -->
+            <div class="space-y-4 max-w-2xl mx-auto animate-fade-in">
+              <!-- Hero Mentor Box -->
+              <div class="rounded-3xl bg-gradient-to-br from-slate-900/90 via-[#0d1424]/95 to-slate-950/90 border border-amber-500/30 p-4 sm:p-5 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+                <div class="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="flex items-start gap-3.5 relative z-10">
+                  <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 text-slate-950 font-black text-xl flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30 border border-yellow-200/50">
+                    ✦
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between flex-wrap gap-1.5 mb-1">
+                      <h3 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                        Gold AI Market Mentor
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 font-bold border border-amber-500/40 uppercase tracking-wide">EMA20-50 PRO</span>
+                      </h3>
+                      <span class="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/25">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Sẵn Sàng
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                      Trợ lý cố vấn & phản biện giao dịch Vàng thực chiến. Huấn luyện theo <strong>14 Chuyên Đề EMA Cốt Lõi</strong>, chắt lọc câu trả lời theo <strong>Công thức 3 Bước Trader</strong>: Kết luận trực diện ➔ Điều kiện kỹ thuật & SL ➔ Kịch bản hành động.
+                    </p>
+                  </div>
                 </div>
-                <p class="text-slate-300">
-                  Mình là Trợ lý Cố vấn & Phản biện thị trường thực chiến được huấn luyện theo <strong>Hệ Thống EMA20 – EMA50 Toàn Diện (14 Chuyên Đề Chuẩn Trader)</strong>!
-                </p>
-                <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-300/90 space-y-1">
-                  <div>💡 <strong>Quy trình phản hồi 3 Bước Chuẩn Trader:</strong></div>
-                  <p>1. <strong>Kết luận ngay</strong>: Đưa ra đáp án trực diện (Mua, Bán, hay Đứng ngoài).</p>
-                  <p>2. <strong>Điều kiện & Cắt lỗ</strong>: Chỉ rõ vị trí Stop Loss cấu trúc và các bẫy quét râu.</p>
-                  <p>3. <strong>Kịch bản hành động</strong>: Hướng dẫn bước xử lý tiếp theo kèm gợi ý 1 chạm.</p>
+              </div>
+
+              <!-- Realtime Market Pulse Quick Bar -->
+              <div class="rounded-2xl bg-slate-900/80 border border-slate-800/80 p-3 flex items-center justify-between flex-wrap gap-2 text-xs backdrop-blur-md">
+                <div class="flex items-center gap-2">
+                  <span class="text-base">🪙</span>
+                  <span class="text-slate-400 font-medium">Bối cảnh Vàng:</span>
+                  <span id="gold-ai-welcome-price" class="text-amber-400 font-mono font-bold">XAU/USD Realtime</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+                  <span class="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700/80 text-slate-300 font-mono">Khung M15</span>
+                  <span class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">MA WAVE V8</span>
+                </div>
+              </div>
+
+              <!-- 4 Interactive Quick-Action Cards (Grid 2x2) -->
+              <div>
+                <div class="flex items-center justify-between mb-2 px-1">
+                  <span class="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>⚡</span> TÌNH HUỐNG THỰC CHIẾN NÓNG (1-CHẠM):
+                  </span>
+                  <span class="text-[10px] text-slate-500">Chạm để hỏi ngay</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  <!-- Card 1: Fomo check -->
+                  <button type="button" onclick="askGoldAI('Có nên mua đuổi khi giá bay mạnh không?')" 
+                          class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-rose-500/30 hover:border-rose-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-lg">🛑</span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">FOMO CHECK</span>
+                    </div>
+                    <div class="text-xs font-bold text-white group-hover:text-rose-300 mb-0.5">Có Nên Mua Đuổi?</div>
+                    <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Khi nến xanh bay dốc đứng, có nên vào Buy ngay hay chờ hồi?</div>
+                  </button>
+
+                  <!-- Card 2: Rescue position -->
+                  <button type="button" onclick="askGoldAI('Mình lỡ buy đỉnh giờ âm nặng quá cứu tài khoản với')" 
+                          class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-amber-500/30 hover:border-amber-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-lg">🚑</span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">CỨU TÀI KHOẢN</span>
+                    </div>
+                    <div class="text-xs font-bold text-white group-hover:text-amber-300 mb-0.5">Kẹt Lệnh Âm Nặng</div>
+                    <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Phương án xử lý khi lỡ đu đỉnh hoặc bán đáy tài khoản gồng lỗ.</div>
+                  </button>
+
+                  <!-- Card 3: Signal check -->
+                  <button type="button" onclick="askGoldAI('Hiện tại có nên vào lệnh không? Giờ Buy hay Sell?')" 
+                          class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-cyan-500/30 hover:border-cyan-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-lg">🎯</span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">TÍN HIỆU NGAY</span>
+                    </div>
+                    <div class="text-xs font-bold text-white group-hover:text-cyan-300 mb-0.5">Giờ Vào Lệnh Gì?</div>
+                    <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Thẩm định xu hướng hiện tại và tìm điểm vào Buy/Sell đẹp nhất.</div>
+                  </button>
+
+                  <!-- Card 4: Stop loss rules -->
+                  <button type="button" onclick="askGoldAI('Đặt Stop Loss ở đâu an toàn theo cấu trúc và tránh quét râu?')" 
+                          class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-emerald-500/30 hover:border-emerald-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-lg">🛡️</span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">QUẢN TRỊ VỐN</span>
+                    </div>
+                    <div class="text-xs font-bold text-white group-hover:text-emerald-300 mb-0.5">Đặt SL Cấu Trúc</div>
+                    <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Cách đặt cắt lỗ an toàn sau cản và tính số lot đi lệnh chuẩn.</div>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Quick Horizontal One-Touch Bar for Mobile & Desktop -->
-          <div class="px-3 py-1.5 border-t border-slate-800/80 bg-[#0a0e16] flex items-center gap-1.5 overflow-x-auto no-scrollbar touch-pan-x">
+          <!-- Quick Horizontal One-Touch Bar (Apple Glass Aesthetic) -->
+          <div class="px-3.5 py-2 border-t border-slate-800/80 bg-slate-950/90 backdrop-blur-md flex items-center gap-2 overflow-x-auto no-scrollbar touch-pan-x">
             <span class="text-[10px] text-amber-400 font-bold uppercase shrink-0 flex items-center gap-1">⚡ Hỏi Nhanh:</span>
-            <button type="button" class="px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-[11px] font-medium whitespace-nowrap transition cursor-pointer shrink-0" onclick="askGoldAI('Có nên mua đuổi khi giá bay mạnh không?')">🛑 Mua đuổi khi bay?</button>
-            <button type="button" class="px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-amber-500/30 text-amber-300 hover:text-amber-200 text-[11px] font-medium whitespace-nowrap transition cursor-pointer shrink-0" onclick="askGoldAI('Mình lỡ buy đỉnh giờ âm nặng quá cứu tài khoản với')">🚑 Kẹt lệnh âm nặng</button>
-            <button type="button" class="px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-cyan-500/30 text-cyan-300 hover:text-cyan-200 text-[11px] font-medium whitespace-nowrap transition cursor-pointer shrink-0" onclick="askGoldAI('Hiện tại có nên vào lệnh không? Giờ Buy hay Sell?')">🎯 Giờ vào lệnh gì?</button>
-            <button type="button" class="px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-orange-500/30 text-orange-300 hover:text-orange-200 text-[11px] font-medium whitespace-nowrap transition cursor-pointer shrink-0" onclick="askGoldAI('Sao hôm nay vàng đi khó chịu thế bot bị quét sl liên tục')">🌪️ Quét SL liên tục?</button>
-            <button type="button" class="px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-emerald-500/30 text-emerald-300 hover:text-emerald-200 text-[11px] font-medium whitespace-nowrap transition cursor-pointer shrink-0" onclick="askGoldAI('Tài khoản 1000$ thì đi bao nhiêu lot và quản lý vốn ra sao?')">💰 Đi bao nhiêu lot?</button>
-            <button type="button" class="px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-amber-300 text-[11px] font-medium whitespace-nowrap transition cursor-pointer shrink-0" onclick="askGoldAI('EMA20 cắt xuống là chắc chắn giảm đúng không?')">✂️ Cắt nhau có vào?</button>
-            <button type="button" class="px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-amber-300 text-[11px] font-medium whitespace-nowrap transition cursor-pointer shrink-0" onclick="askGoldAI('Đặt Stop Loss ở đâu an toàn theo cấu trúc?')">🛡️ Đặt SL cấu trúc</button>
+            <button type="button" class="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 active:scale-95 shadow-sm" onclick="askGoldAI('Có nên mua đuổi khi giá bay mạnh không?')">🛑 Mua đuổi khi bay?</button>
+            <button type="button" class="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:text-amber-200 text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 active:scale-95 shadow-sm" onclick="askGoldAI('Mình lỡ buy đỉnh giờ âm nặng quá cứu tài khoản với')">🚑 Kẹt lệnh âm nặng</button>
+            <button type="button" class="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:text-cyan-200 text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 active:scale-95 shadow-sm" onclick="askGoldAI('Hiện tại có nên vào lệnh không? Giờ Buy hay Sell?')">🎯 Giờ vào lệnh gì?</button>
+            <button type="button" class="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-orange-500/10 border border-orange-500/30 text-orange-300 hover:text-orange-200 text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 active:scale-95 shadow-sm" onclick="askGoldAI('Sao hôm nay vàng đi khó chịu thế bot bị quét sl liên tục')">🌪️ Quét SL liên tục?</button>
+            <button type="button" class="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:text-emerald-200 text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 active:scale-95 shadow-sm" onclick="askGoldAI('Tài khoản 1000$ thì đi bao nhiêu lot và quản lý vốn ra sao?')">💰 Đi bao nhiêu lot?</button>
+            <button type="button" class="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-400 text-slate-300 hover:text-amber-300 text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 active:scale-95 shadow-sm" onclick="askGoldAI('EMA20 cắt xuống là chắc chắn giảm đúng không?')">✂️ Cắt nhau có vào?</button>
+            <button type="button" class="px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-400 text-slate-300 hover:text-amber-300 text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 active:scale-95 shadow-sm" onclick="askGoldAI('Đặt Stop Loss ở đâu an toàn theo cấu trúc?')">🛡️ Đặt SL cấu trúc</button>
           </div>
 
-          <!-- Chat Input Bar -->
-          <div class="p-2.5 sm:p-3 border-t border-slate-800 bg-[#0d1117] pb-24 md:pb-3">
-            <form onsubmit="handleGoldAISubmit(event)" class="flex items-center gap-2">
-              <input id="gold-ai-input" type="text" placeholder="Hỏi Gold AI (VD: Có nên mua đuổi lúc này không? Hoặc lỡ buy đỉnh xử lý sao?)..."
-                     class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition font-sans">
-              <button type="submit" id="gold-ai-send-btn" class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow cursor-pointer shrink-0">
-                <span>➤</span> Gửi
+          <!-- Chat Input Bar (Liquid Dark Glass Capsule) -->
+          <div class="p-3 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent pb-24 md:pb-4 border-t border-slate-800/40 relative z-10">
+            <form onsubmit="handleGoldAISubmit(event)" class="max-w-2xl mx-auto relative flex items-center bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-500/25 rounded-full p-1.5 pl-4 shadow-xl transition-all">
+              <input id="gold-ai-input" type="text" placeholder="Hỏi Gold AI (VD: Có nên mua đuổi lúc này? Hoặc lỡ buy đỉnh xử lý sao?)..."
+                     class="flex-1 bg-transparent border-0 text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none pr-2 font-sans">
+              <button type="submit" id="gold-ai-send-btn" 
+                      class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-slate-950 font-black flex items-center justify-center shadow-lg shadow-amber-500/40 active:scale-90 transition-all cursor-pointer shrink-0" 
+                      title="Gửi câu hỏi">
+                <span class="text-sm leading-none ml-0.5">➤</span>
               </button>
             </form>
           </div>
@@ -5947,9 +6028,14 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
         const msgContainer = document.getElementById('gold-ai-chat-messages');
         if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
         const goldAiPill = document.getElementById('gold-ai-pill-text');
-        if (goldAiPill && window.marketDataStore) {
+        const welcomePrice = document.getElementById('gold-ai-welcome-price');
+        if (window.marketDataStore) {
           const xau = window.marketDataStore.assetsData && window.marketDataStore.assetsData['XAU'];
-          if (xau && xau.price) goldAiPill.textContent = `XAU/USD: $${Number(xau.price).toFixed(2)} | 15M | MA WAVE V8 Active`;
+          if (xau && xau.price) {
+            const formatted = `XAU/USD: $${Number(xau.price).toFixed(2)}`;
+            if (goldAiPill) goldAiPill.textContent = `${formatted} | 15M | MA WAVE V8 Active`;
+            if (welcomePrice) welcomePrice.textContent = formatted;
+          }
         }
       }, 50);
     }
@@ -6257,18 +6343,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 </script>
 
 <!-- External System JS Files -->
-<script src="./js/config.js?v=9.3.6"></script>
-<script src="./js/marketDataStore.js?v=9.3.6"></script>
-<script src="./js/v8Engine.js?v=9.3.6"></script>
-<script src="./js/eventEngine.js?v=9.3.6"></script>
-<script src="./js/soundAlert.js?v=9.3.6"></script>
-<script src="./js/ema50Engine.js?v=9.3.6"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.6"></script>
-<script src="./js/indicators.js?v=9.3.6"></script>
-<script src="./js/signalEngine.js?v=9.3.6"></script>
-<script src="./js/newsData.js?v=9.3.6"></script>
-<script src="./js/newsAdapter.js?v=9.3.6"></script>
-<script src="./js/app.js?v=9.3.6"></script>
+<script src="./js/config.js?v=9.3.7"></script>
+<script src="./js/marketDataStore.js?v=9.3.7"></script>
+<script src="./js/v8Engine.js?v=9.3.7"></script>
+<script src="./js/eventEngine.js?v=9.3.7"></script>
+<script src="./js/soundAlert.js?v=9.3.7"></script>
+<script src="./js/ema50Engine.js?v=9.3.7"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.7"></script>
+<script src="./js/indicators.js?v=9.3.7"></script>
+<script src="./js/signalEngine.js?v=9.3.7"></script>
+<script src="./js/newsData.js?v=9.3.7"></script>
+<script src="./js/newsAdapter.js?v=9.3.7"></script>
+<script src="./js/app.js?v=9.3.7"></script>
 
 
 
