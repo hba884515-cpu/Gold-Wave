@@ -3577,9 +3577,10 @@ const server = http.createServer(async (req, res) => {
     // Siêu tốc: Phục vụ từ RAM cache nếu đã nạp
     if (global._staticMemCache && global._staticMemCache.has(filePath)) {
       const cached = global._staticMemCache.get(filePath);
+      const isHtml = path.extname(filePath).toLowerCase() === '.html';
       res.writeHead(200, {
         'Content-Type': cached.contentType,
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': isHtml ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300',
         'Content-Length': cached.buffer.length
       });
       return res.end(cached.buffer);
@@ -3592,15 +3593,16 @@ const server = http.createServer(async (req, res) => {
       }
       const ext = path.extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+      const isHtml = ext === '.html';
 
       if (!global._staticMemCache) global._staticMemCache = new Map();
-      if (data.length < 5 * 1024 * 1024) {
+      if (!isHtml && data.length < 5 * 1024 * 1024) {
         global._staticMemCache.set(filePath, { contentType, buffer: data });
       }
 
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': isHtml ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300',
         'Content-Length': data.length
       });
       res.end(data);

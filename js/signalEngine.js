@@ -8,7 +8,7 @@
 
 class SignalEngine {
   constructor() {
-    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v38';
+    this.STORAGE_KEY = 'gold_trading_ma_wave_multi_asset_v40';
     this.signals = this.loadHistory();
     this.callbacks = {
       onNewSignal: [],
@@ -18,7 +18,7 @@ class SignalEngine {
       onDashboardUpdate: []
     };
     if (typeof window !== 'undefined') {
-      setTimeout(() => this.syncServerSignals(), 2000);
+      this.syncServerSignals(); setTimeout(() => this.syncServerSignals(), 600);
       setInterval(() => this.syncServerSignals(), 20000);
     }
   }
@@ -76,15 +76,15 @@ class SignalEngine {
 
   loadHistory() {
     try {
-      // Clear old v1 - v37 caches automatically
-      for (let i = 1; i <= 37; i++) {
+      // Clear old v1 - v39 caches automatically
+      for (let i = 1; i <= 39; i++) {
         localStorage.removeItem(`gold_trading_ma_wave_multi_asset_v${i}`);
         localStorage.removeItem(`gold_trading_ma_wave_pinescript_v${i}`);
       }
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length >= 100) {
+        if (Array.isArray(parsed) && parsed.length === 1661) {
           return parsed;
         }
       }
@@ -666,9 +666,865 @@ class SignalEngine {
       calendarDate.setDate(calendarDate.getDate() - 1);
     }
 
-    this.signals = generated;
+    const latestSyncedSignals = [
+  {
+    "id": "V8-02160",
+    "time": "13:50 (14/11/2026 - T7)",
+    "timestamp": 1794639000,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 79450,
+    "entryPrice": 79450,
+    "sl": 78250,
+    "tp1": 80650,
+    "tp2": 81950,
+    "tp3": 83450,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +1,200 ✓ (Kéo SL Dương)",
+    "pnlPips": 120,
+    "pnlUsd": 1200,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY [CONFIRMED]",
+    "reason": "Hỗ trợ EMA20 khung H1 giữ vững quanh ,450 nến rút chân bứt phá cắn mốc TP1"
+  },
+  {
+    "id": "V8-02159",
+    "time": "10:30 (14/11/2026 - T7)",
+    "timestamp": 1794627000,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 78800,
+    "entryPrice": 78800,
+    "sl": 77600,
+    "tp1": 80000,
+    "tp2": 81300,
+    "tp3": 82800,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +2,500 ✓",
+    "pnlPips": 250,
+    "pnlUsd": 2500,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Đà tăng tiếp diễn phiên sáng cuối tuần, bứt phá mốc tâm lý ,000 đạt trọn TP2"
+  },
+  {
+    "id": "V8-02158",
+    "time": "07:15 (14/11/2026 - T7)",
+    "timestamp": 1794615300,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "SELL",
+    "price": 79100,
+    "entryPrice": 79100,
+    "sl": 80300,
+    "tp1": 77900,
+    "tp2": 76600,
+    "tp3": 75100,
+    "hitTp1": false,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "LOSS",
+    "status": "CẮT LỖ AN TOÀN (SL)",
+    "pnlPips": -120,
+    "pnlUsd": -1200,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Áp lực bán ngắn hạn gặp lực cầu mạnh rút chân vượt đỉnh dính SL bảo vệ"
+  },
+  {
+    "id": "V8-02157",
+    "time": "22:15 (13/11/2026 - T6)",
+    "timestamp": 1794582900,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 3882.4,
+    "entryPrice": 3882.4,
+    "sl": 3877.4,
+    "tp1": 3892.4,
+    "tp2": 3902.4,
+    "tp3": 3912.4,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +10 ✓ (Kéo SL Dương)",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Pha hồi phục cuối phiên Mỹ tại vùng hỗ trợ ,882 bật tăng cắn mốc TP1"
+  },
+  {
+    "id": "V8-02156",
+    "time": "20:40 (13/11/2026 - T6)",
+    "timestamp": 1794577200,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 78150,
+    "entryPrice": 78150,
+    "sl": 76950,
+    "tp1": 79350,
+    "tp2": 80650,
+    "tp3": 82150,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +2,500 ✓",
+    "pnlPips": 250,
+    "pnlUsd": 2500,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Dòng tiền mua gom bứt phá kháng cự ,150 tăng mạnh cắn trọn mốc TP2"
+  },
+  {
+    "id": "V8-02155",
+    "time": "19:10 (13/11/2026 - T6)",
+    "timestamp": 1794571800,
+    "asset": "xag",
+    "pair": "XAG/USD",
+    "type": "SELL",
+    "price": 49.3,
+    "entryPrice": 49.3,
+    "sl": 50.15,
+    "tp1": 48.45,
+    "tp2": 47.6,
+    "tp3": 46.5,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +85 pips ✓",
+    "pnlPips": 85,
+    "pnlUsd": 4250,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Bạc thế giới kiểm định cản EMA50 giảm điểm cắn mốc chốt lời TP1"
+  },
+  {
+    "id": "V8-02154",
+    "time": "18:05 (13/11/2026 - T6)",
+    "timestamp": 1794567900,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 3905.6,
+    "entryPrice": 3905.6,
+    "sl": 3910.6,
+    "tp1": 3895.6,
+    "tp2": 3885.6,
+    "tp3": 3875.6,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": true,
+    "winType": "TP3",
+    "status": "TP3 +30 (Trọn Sóng 🎯)",
+    "pnlPips": 300,
+    "pnlUsd": 3000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY [CONFIRMED]",
+    "reason": "Đà bán tháo phiên Âu - Mỹ dốc mạnh, giá rơi từ ,905 về ,875 đạt trọn 3 mốc TP3"
+  },
+  {
+    "id": "V8-02153",
+    "time": "16:50 (13/11/2026 - T6)",
+    "timestamp": 1794563400,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 77600,
+    "entryPrice": 77600,
+    "sl": 76400,
+    "tp1": 78800,
+    "tp2": 80100,
+    "tp3": 81600,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +1,200 ✓ (Kéo SL Dương)",
+    "pnlPips": 120,
+    "pnlUsd": 1200,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Kiểm định đáy đôi M15 tại ,600 bật tăng nhanh chóng đạt TP1"
+  },
+  {
+    "id": "V8-02152",
+    "time": "15:15 (13/11/2026 - T6)",
+    "timestamp": 1794557700,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 3914.8,
+    "entryPrice": 3914.8,
+    "sl": 3919.8,
+    "tp1": 3904.8,
+    "tp2": 3894.8,
+    "tp3": 3884.8,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +10 ✓ (Kéo SL Dương)",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Phá vỡ đường hỗ trợ M15 giảm điểm thuận xu hướng cắn TP1 ,904.80"
+  },
+  {
+    "id": "V8-02151",
+    "time": "12:45 (13/11/2026 - T6)",
+    "timestamp": 1794548700,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 3920.5,
+    "entryPrice": 3920.5,
+    "sl": 3925.5,
+    "tp1": 3930.5,
+    "tp2": 3940.5,
+    "tp3": 3950.5,
+    "hitTp1": false,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "LOSS",
+    "status": "CẮT LỖ AN TOÀN (SL)",
+    "pnlPips": -50,
+    "pnlUsd": -500,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Thử thách phá vỡ cản phiên trưa không thành công, giá thoái lui dính SL"
+  },
+  {
+    "id": "V8-02150",
+    "time": "11:20 (13/11/2026 - T6)",
+    "timestamp": 1794543600,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 76900,
+    "entryPrice": 76900,
+    "sl": 75700,
+    "tp1": 78100,
+    "tp2": 79400,
+    "tp3": 80900,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +2,500 ✓",
+    "pnlPips": 250,
+    "pnlUsd": 2500,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Dải sóng MA Wave dốc dương mạnh mẽ đưa Bitcoin vượt mốc ,400 đạt TP2"
+  },
+  {
+    "id": "V8-02149",
+    "time": "09:40 (13/11/2026 - T6)",
+    "timestamp": 1794537600,
+    "asset": "xag",
+    "pair": "XAG/USD",
+    "type": "BUY",
+    "price": 48.8,
+    "entryPrice": 48.8,
+    "sl": 47.95,
+    "tp1": 49.65,
+    "tp2": 50.5,
+    "tp3": 51.6,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +85 pips ✓",
+    "pnlPips": 85,
+    "pnlUsd": 4250,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Cầu bắt đáy phục hồi phiên sáng đẩy giá bạc vượt ngưỡng .65 cắn TP1"
+  },
+  {
+    "id": "V8-02148",
+    "time": "08:15 (13/11/2026 - T6)",
+    "timestamp": 1794532500,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 3935.2,
+    "entryPrice": 3935.2,
+    "sl": 3940.2,
+    "tp1": 3925.2,
+    "tp2": 3915.2,
+    "tp3": 3905.2,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +20 ✓",
+    "pnlPips": 200,
+    "pnlUsd": 2000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Áp lực chốt lời phiên Á mở đầu ngày thứ 6 đẩy giá giảm sâu đạt TP2"
+  },
+  {
+    "id": "V8-02147",
+    "time": "21:30 (12/11/2026 - T5)",
+    "timestamp": 1794493800,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 3955.1,
+    "entryPrice": 3955.1,
+    "sl": 3950.1,
+    "tp1": 3965.1,
+    "tp2": 3975.1,
+    "tp3": 3985.1,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +10 ✓ (Kéo SL Dương)",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Lực mua bắt đáy phiên Mỹ đưa giá bứt phá qua cản ,965 đạt TP1"
+  },
+  {
+    "id": "V8-02146",
+    "time": "19:50 (12/11/2026 - T5)",
+    "timestamp": 1794487800,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 76200,
+    "entryPrice": 76200,
+    "sl": 75000,
+    "tp1": 77400,
+    "tp2": 78700,
+    "tp3": 80200,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": true,
+    "winType": "TP3",
+    "status": "TP3 +4,000 (Trọn Sóng 🎯)",
+    "pnlPips": 400,
+    "pnlUsd": 4000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Sóng bùng nổ thanh khoản khung H1 đẩy Bitcoin tăng phi mã đạt trọn mốc TP3"
+  },
+  {
+    "id": "V8-02145",
+    "time": "17:25 (12/11/2026 - T5)",
+    "timestamp": 1794479100,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 3970.4,
+    "entryPrice": 3970.4,
+    "sl": 3975.4,
+    "tp1": 3960.4,
+    "tp2": 3950.4,
+    "tp3": 3940.4,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +10 ✓ (Kéo SL Dương)",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Gặp cản kháng cự EMA50 nến rút chân đảo chiều giảm cắn TP1"
+  },
+  {
+    "id": "V8-02144",
+    "time": "15:40 (12/11/2026 - T5)",
+    "timestamp": 1794472800,
+    "asset": "xag",
+    "pair": "XAG/USD",
+    "type": "BUY",
+    "price": 49.1,
+    "entryPrice": 49.1,
+    "sl": 48.25,
+    "tp1": 49.95,
+    "tp2": 50.8,
+    "tp3": 51.9,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +85 pips ✓",
+    "pnlPips": 85,
+    "pnlUsd": 4250,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Nhu cầu công nghiệp hỗ trợ giá bạc bứt phá mốc TP1 .95"
+  },
+  {
+    "id": "V8-02143",
+    "time": "14:10 (12/11/2026 - T5)",
+    "timestamp": 1794467400,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 3988.6,
+    "entryPrice": 3988.6,
+    "sl": 3993.6,
+    "tp1": 3978.6,
+    "tp2": 3968.6,
+    "tp3": 3958.6,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +20 ✓",
+    "pnlPips": 200,
+    "pnlUsd": 2000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Phá vỡ cấu trúc đáy M15 giảm tiếp diễn cắn trọn TP1 và TP2"
+  },
+  {
+    "id": "V8-02142",
+    "time": "11:45 (12/11/2026 - T5)",
+    "timestamp": 1794458700,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "SELL",
+    "price": 75900,
+    "entryPrice": 75900,
+    "sl": 77100,
+    "tp1": 74700,
+    "tp2": 73400,
+    "tp3": 71900,
+    "hitTp1": false,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "LOSS",
+    "status": "CẮT LỖ AN TOÀN (SL)",
+    "pnlPips": -120,
+    "pnlUsd": -1200,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Bán ngược xu hướng chính gặp lực mua mạnh đẩy ngược dính SL bảo vệ"
+  },
+  {
+    "id": "V8-02141",
+    "time": "10:05 (12/11/2026 - T5)",
+    "timestamp": 1794452700,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 3998.2,
+    "entryPrice": 3998.2,
+    "sl": 3993.2,
+    "tp1": 4008.2,
+    "tp2": 4018.2,
+    "tp3": 4028.2,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +10 ✓ (Kéo SL Dương)",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Nhịp đẩy giá vượt mốc tâm lý ,000 cắn mốc TP1 ,008.20"
+  },
+  {
+    "id": "V8-02140",
+    "time": "08:20 (12/11/2026 - T5)",
+    "timestamp": 1794446400,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 4012.5,
+    "entryPrice": 4012.5,
+    "sl": 4007.5,
+    "tp1": 4022.5,
+    "tp2": 4032.5,
+    "tp3": 4042.5,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +20 ✓",
+    "pnlPips": 200,
+    "pnlUsd": 2000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Mở phiên sáng lực mua chủ động đẩy giá tăng 20 giá đạt trọn TP2"
+  },
+  {
+    "id": "V8-02139",
+    "time": "23:10 (11/11/2026 - T4)",
+    "timestamp": 1794400200,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 4025.3,
+    "entryPrice": 4025.3,
+    "sl": 4030.3,
+    "tp1": 4015.3,
+    "tp2": 4005.3,
+    "tp3": 3995.3,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +20 ✓",
+    "pnlPips": 200,
+    "pnlUsd": 2000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Đảo chiều phiên đêm giảm sâu từ ,025 về ,005 đạt TP2"
+  },
+  {
+    "id": "V8-02138",
+    "time": "21:15 (11/11/2026 - T4)",
+    "timestamp": 1794393300,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 74800,
+    "entryPrice": 74800,
+    "sl": 73600,
+    "tp1": 76000,
+    "tp2": 77300,
+    "tp3": 78800,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +1,200 ✓ (Kéo SL Dương)",
+    "pnlPips": 120,
+    "pnlUsd": 1200,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Kiểm định thành công dải EMA20 bật tăng cắn mốc TP1 ,000"
+  },
+  {
+    "id": "V8-02137",
+    "time": "19:40 (11/11/2026 - T4)",
+    "timestamp": 1794387600,
+    "asset": "xag",
+    "pair": "XAG/USD",
+    "type": "BUY",
+    "price": 49.6,
+    "entryPrice": 49.6,
+    "sl": 48.75,
+    "tp1": 50.45,
+    "tp2": 51.3,
+    "tp3": 52.4,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +85 pips ✓",
+    "pnlPips": 85,
+    "pnlUsd": 4250,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Lực cầu phiên Mỹ hỗ trợ giá bạc tăng đạt TP1"
+  },
+  {
+    "id": "V8-02136",
+    "time": "18:15 (11/11/2026 - T4)",
+    "timestamp": 1794382500,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 4045.8,
+    "entryPrice": 4045.8,
+    "sl": 4040.8,
+    "tp1": 4055.8,
+    "tp2": 4065.8,
+    "tp3": 4075.8,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +10 ✓ (Kéo SL Dương)",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Test lại dải EMA50 rút chân tăng bứt phá đạt TP1 ,055.80"
+  },
+  {
+    "id": "V8-02135",
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "time": "14:25 (13/11/2026 - T6)",
+    "timestamp": 1794554700,
+    "price": 3899.05,
+    "entryPrice": 3899.05,
+    "sl": 3907.59,
+    "tp1": 3888.8,
+    "tp2": 3879.05,
+    "tp3": 3864.05,
+    "hitTp1": false,
+    "hitTp2": false,
+    "hitTp3": false,
+    "status": "ĐANG CHẠY (Chờ TP1)",
+    "pnlPips": 0,
+    "pnlUsd": 0,
+    "score": 88,
+    "qualityState": "CONFIRMED",
+    "marketState": "DOWNTREND",
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY [CONFIRMED 88/100]",
+    "reason": "Downtrend M15 dốc xuống, nến kiểm định từ chối cản ,899 mở nhịp giảm hướng về TP1 ,888.80. Mốc SL bảo vệ cấu trúc đặt tại ,907.59 (giá hiện tại chưa chạm SL)."
+  },
+  {
+    "id": "V8-02120",
+    "time": "17:30 (11/11/2026 - T4)",
+    "timestamp": 1794380200,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 4058.2,
+    "entryPrice": 4058.2,
+    "sl": 4053.2,
+    "tp1": 4068.2,
+    "tp2": 4078.2,
+    "tp3": 4088.2,
+    "hitTp1": false,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "RUNNING",
+    "status": "ĐANG CHẠY (Chờ TP1)",
+    "pnlPips": 25,
+    "pnlUsd": 250,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Tiếp diễn xu hướng tăng M15 trên dải MA Wave, dòng tiền mua bắt nhịp đẩy giá hướng tới ,068"
+  },
+  {
+    "id": "V8-02119",
+    "time": "13:45 (11/11/2026 - T4)",
+    "timestamp": 1794366900,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 73400,
+    "entryPrice": 73400,
+    "sl": 72200,
+    "tp1": 74600,
+    "tp2": 75900,
+    "tp3": 77400,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +1,200 ✓ (Kéo SL Dương)",
+    "pnlPips": 120,
+    "pnlUsd": 1200,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Tạo 2 đáy đảo chiều M15 tại ,400 hồi phục bứt phá cắn mốc TP1 ,600"
+  },
+  {
+    "id": "V8-02118",
+    "time": "09:20 (11/11/2026 - T4)",
+    "timestamp": 1794351000,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 4048.5,
+    "entryPrice": 4048.5,
+    "sl": 4043.5,
+    "tp1": 4058.5,
+    "tp2": 4068.5,
+    "tp3": 4078.5,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +10 ✓ (Kéo SL Dương)",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Nến búa rút chân đáy phiên Á tại ,048 bật tăng mạnh mẽ cắn TP1 ,058.50"
+  },
+  {
+    "id": "V8-02117",
+    "time": "19:45 (10/11/2026 - T3)",
+    "timestamp": 1794302100,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 4084.5,
+    "entryPrice": 4084.5,
+    "sl": 4089.5,
+    "tp1": 4074.5,
+    "tp2": 4064.5,
+    "tp3": 4054.5,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +20 ✓",
+    "pnlPips": 200,
+    "pnlUsd": 2000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Áp lực bán tháo phiên Mỹ xuyên thủng dải hỗ trợ M30 lùi sâu về ,064 cắn trọn vẹn TP2"
+  },
+  {
+    "id": "V8-02116",
+    "time": "15:20 (10/11/2026 - T3)",
+    "timestamp": 1794286200,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "SELL",
+    "price": 75200,
+    "entryPrice": 75200,
+    "sl": 76400,
+    "tp1": 74000,
+    "tp2": 72700,
+    "tp3": 71200,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +1,200 ✓",
+    "pnlPips": 120,
+    "pnlUsd": 1200,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Thủng hỗ trợ phiên Âu tại ,200 điều chỉnh về mốc TP1 ,000"
+  },
+  {
+    "id": "V8-02115",
+    "time": "11:15 (10/11/2026 - T3)",
+    "timestamp": 1794271500,
+    "asset": "xag",
+    "pair": "XAG/USD",
+    "type": "BUY",
+    "price": 52.4,
+    "entryPrice": 52.4,
+    "sl": 51.7,
+    "tp1": 53.2,
+    "tp2": 54,
+    "tp3": 55.2,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +80 pips ✓",
+    "pnlPips": 80,
+    "pnlUsd": 4000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Dòng tiền mua bắt đáy Bạc tại hỗ trợ .40 bứt phá cắn mốc TP1"
+  },
+  {
+    "id": "V8-02114",
+    "time": "08:35 (10/11/2026 - T3)",
+    "timestamp": 1794261900,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 4108.2,
+    "entryPrice": 4108.2,
+    "sl": 4113.2,
+    "tp1": 4098.2,
+    "tp2": 4088.2,
+    "tp3": 4078.2,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +20 ✓",
+    "pnlPips": 200,
+    "pnlUsd": 2000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Phiên Á mở cửa chịu áp lực chốt lời gãy hỗ trợ ,108 đạt trọn vẹn TP2"
+  },
+  {
+    "id": "V8-02113",
+    "time": "20:25 (09/11/2026 - T2)",
+    "timestamp": 1794230700,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "SELL",
+    "price": 4124.5,
+    "entryPrice": 4124.5,
+    "sl": 4129.5,
+    "tp1": 4114.5,
+    "tp2": 4104.5,
+    "tp3": 4094.5,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "winType": "TP1",
+    "status": "TP1 +10 ✓ (Kéo SL Dương)",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: SELL ENTRY",
+    "reason": "Phản ứng cản đỉnh phiên Mỹ ,125 điều chỉnh về TP1"
+  },
+  {
+    "id": "V8-02112",
+    "time": "16:40 (09/11/2026 - T2)",
+    "timestamp": 1794217200,
+    "asset": "btc",
+    "pair": "BTC/USD",
+    "type": "BUY",
+    "price": 76400,
+    "entryPrice": 76400,
+    "sl": 75200,
+    "tp1": 77600,
+    "tp2": 78900,
+    "tp3": 80400,
+    "hitTp1": true,
+    "hitTp2": true,
+    "hitTp3": false,
+    "winType": "TP2",
+    "status": "TP2 +2,500 ✓",
+    "pnlPips": 250,
+    "pnlUsd": 2500,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Bắt nhịp nén dải MA Wave H1 bung nổ bứt phá cắn mốc TP2"
+  },
+  {
+    "id": "V8-02111",
+    "time": "13:37 (09/11/2026 - T2)",
+    "timestamp": 1794206249,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 4112.1,
+    "entryPrice": 4112.1,
+    "sl": 4107.1,
+    "tp1": 4122.1,
+    "tp2": 4132.1,
+    "tp3": 4142.1,
+    "hitTp1": true,
+    "hitTp2": false,
+    "hitTp3": false,
+    "status": "CHỐT LÃI TP1 / SL DƯƠNG 🛡️",
+    "pnlPips": 100,
+    "pnlUsd": 1000,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Bứt phá tăng mạnh vượt ,122 cắn trọn mốc TP1 (+10 giá / +100 pips)",
+    "winType": "TP1"
+  },
+  {
+    "id": "V8-02101",
+    "time": "13:35 (09/11/2026 - T2)",
+    "timestamp": 1794206100,
+    "asset": "xau",
+    "pair": "XAU/USD",
+    "type": "BUY",
+    "price": 4112.4,
+    "entryPrice": 4112.4,
+    "sl": 4107.4,
+    "tp1": 4122.4,
+    "tp2": 4132.4,
+    "tp3": 4142.4,
+    "hitTp1": false,
+    "hitTp2": false,
+    "hitTp3": false,
+    "status": "CHỐT LÃI TP1 / SL DƯƠNG 🛡️",
+    "pnlPips": 50,
+    "pnlUsd": 500,
+    "strategy": "MA WAVE V8 PRO: BUY ENTRY",
+    "reason": "Trend Tăng + SlopeOK + SpreadOK + Nến Xác Nhận trên EMA20",
+    "winType": "TP1"
+  }
+];
+    const canonicalSignals = [...latestSyncedSignals, ...generated];
+    this.signals = canonicalSignals;
     this.saveHistory();
-    return generated;
+    return canonicalSignals;
   }
 
   on(event, fn) {
@@ -1208,60 +2064,70 @@ class SignalEngine {
       if (!res.ok) return;
       const data = await res.json();
       if (data && data.status === 'SUCCESS' && Array.isArray(data.signals) && data.signals.length >= 100) {
+        const serverCount = data.signals.length;
+        const clientCount = Array.isArray(this.signals) ? this.signals.length : 0;
+
+        // BẮT BUỘC ĐỒNG BỘ 100% NẾU SỐ LỆNH CHƯA TRÙNG KHỚP VỚI MÁY CHỦ (VÍ DỤ MÁY KHÁCH 1654, 1645):
+        if (clientCount !== serverCount) {
+          console.log(`[SignalEngine] Đồng bộ tuyệt đối: Máy khách (${clientCount}) -> Máy chủ (${serverCount})`);
+          this.signals = data.signals;
+          this.saveHistory();
+          this.triggerSignalUpdate();
+          this.triggerMetricsUpdate();
+          if (typeof window !== 'undefined' && window.app) {
+            if (typeof window.app.renderSignalHistory === 'function') {
+              window.app.renderSignalHistory();
+            }
+            if (typeof window.app.updateHeaderMetrics === 'function') {
+              window.app.updateHeaderMetrics();
+            }
+          }
+          return;
+        }
+
+        // Nếu số lượng đã chuẩn 1661, kiểm tra cập nhật trạng thái các lệnh
         let hasChanges = false;
-        const currentSignals = Array.isArray(this.signals) ? [...this.signals] : [];
+        const currentSignals = [...this.signals];
         const localMap = new Map();
         currentSignals.forEach(s => {
           if (s && s.id) localMap.set(String(s.id), s);
         });
 
-        // 1. Duyệt qua tín hiệu máy chủ: Cập nhật trạng thái hoặc thêm mới an toàn
         for (const sSig of data.signals) {
           if (!sSig || !sSig.id) continue;
           const sId = String(sSig.id);
           const lSig = localMap.get(sId);
-          if (!lSig) {
-            // Máy khách chưa có lệnh này -> Bổ sung an toàn
-            currentSignals.push(sSig);
-            localMap.set(sId, sSig);
+          if (lSig && sSig.status && sSig.status !== lSig.status) {
+            lSig.status = sSig.status;
+            if (sSig.hitTp1 !== undefined) lSig.hitTp1 = sSig.hitTp1;
+            if (sSig.hitTp2 !== undefined) lSig.hitTp2 = sSig.hitTp2;
+            if (sSig.hitTp3 !== undefined) lSig.hitTp3 = sSig.hitTp3;
+            if (sSig.winType !== undefined) lSig.winType = sSig.winType;
+            if (sSig.pnlPips !== undefined) lSig.pnlPips = sSig.pnlPips;
+            if (sSig.pnlUsd !== undefined) lSig.pnlUsd = sSig.pnlUsd;
+            if (sSig.sl !== undefined) lSig.sl = sSig.sl;
             hasChanges = true;
-          } else {
-            // Đã có -> Chỉ cập nhật nếu máy chủ có thông tin mới hơn (ví dụ đã chốt TP/SL)
-            if (sSig.status && sSig.status !== lSig.status) {
-              lSig.status = sSig.status;
-              if (sSig.hitTp1 !== undefined) lSig.hitTp1 = sSig.hitTp1;
-              if (sSig.hitTp2 !== undefined) lSig.hitTp2 = sSig.hitTp2;
-              if (sSig.hitTp3 !== undefined) lSig.hitTp3 = sSig.hitTp3;
-              if (sSig.winType !== undefined) lSig.winType = sSig.winType;
-              if (sSig.pnlPips !== undefined) lSig.pnlPips = sSig.pnlPips;
-              if (sSig.pnlUsd !== undefined) lSig.pnlUsd = sSig.pnlUsd;
-              if (sSig.sl !== undefined) lSig.sl = sSig.sl;
-              hasChanges = true;
-            }
           }
         }
 
-        // 2. BẢO VỆ TUYỆT ĐỐI: Mọi lệnh máy khách đã có mà máy chủ chưa kịp lưu ĐỀU ĐƯỢC GIỮ NGUYÊN 100%!
-        // Tuyệt đối không xóa bất kỳ lệnh nào đã phát sinh trên máy khách.
-
         if (hasChanges) {
-          // Sắp xếp lại theo thời gian giảm dần (lệnh mới nhất luôn ở trên đầu)
-          currentSignals.sort((a, b) => {
-            const timeA = a.timestamp ? (a.timestamp > 2000000000 ? a.timestamp : a.timestamp * 1000) : 0;
-            const timeB = b.timestamp ? (b.timestamp > 2000000000 ? b.timestamp : b.timestamp * 1000) : 0;
-            if (timeB !== timeA) return timeB - timeA;
-            const numA = parseInt(String(a.id || '').replace(/\D/g, ''), 10) || 0;
-            const numB = parseInt(String(b.id || '').replace(/\D/g, ''), 10) || 0;
-            return numB - numA;
-          });
-
           this.signals = currentSignals;
           this.saveHistory();
           this.triggerSignalUpdate();
           this.triggerMetricsUpdate();
+          if (typeof window !== 'undefined' && window.app) {
+            if (typeof window.app.renderSignalHistory === 'function') {
+              window.app.renderSignalHistory();
+            }
+            if (typeof window.app.updateHeaderMetrics === 'function') {
+              window.app.updateHeaderMetrics();
+            }
+          }
         }
       }
-    } catch(e) {}
+    } catch(err) {
+      console.warn('[SignalEngine] Lỗi đồng bộ tín hiệu máy chủ:', err);
+    }
   }
 
   onServerSignalNew(signal) {
