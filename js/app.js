@@ -3993,6 +3993,294 @@ window.copyGoldAiResponse = function(btn) {
   }
 };
 
+window.speakGoldAiResponse = function(btn) {
+  if (!btn) return;
+  if (!('speechSynthesis' in window)) {
+    if (typeof showToast === 'function') {
+      showToast('Trình duyệt của bạn chưa hỗ trợ đọc giọng nói tự động.', 'info');
+    }
+    return;
+  }
+
+  // Nếu đang nói với nút này -> Dừng lại
+  if (window._goldAiActiveSpeakBtn === btn) {
+    window.speechSynthesis.cancel();
+    resetSpeakBtn(btn);
+    window._goldAiActiveSpeakBtn = null;
+    return;
+  }
+
+  // Nếu một nút khác đang nói -> Dừng nút đó lại
+  if (window._goldAiActiveSpeakBtn) {
+    window.speechSynthesis.cancel();
+    resetSpeakBtn(window._goldAiActiveSpeakBtn);
+    window._goldAiActiveSpeakBtn = null;
+  }
+
+  const parentBox = btn.closest('.gold-ai-response-box');
+  if (!parentBox) return;
+
+  const clone = parentBox.cloneNode(true);
+  const noCopyElements = clone.querySelectorAll('.gold-ai-no-copy, button');
+  noCopyElements.forEach(el => el.remove());
+
+  let rawText = (clone.innerText || clone.textContent || '').trim();
+  // Làm sạch các ký tự đặc biệt, emoji để giọng đọc tròn vành rõ chữ
+  rawText = rawText
+    .replace(/[✦★✓✔🎯🛡️🩺🧮🚨⏳📋💧📝🚫🪙⚡]/g, '')
+    .replace(/[-─=]{2,}/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!rawText) return;
+
+  try {
+    const utterance = new SpeechSynthesisUtterance(rawText);
+    utterance.lang = 'vi-VN';
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const viVoice = voices.find(v => v.lang && (v.lang === 'vi-VN' || v.lang.toLowerCase().includes('vi')));
+    if (viVoice) utterance.voice = viVoice;
+
+    btn.innerHTML = '<span class="text-amber-400 animate-pulse">⏹️</span> <span class="text-amber-300 font-bold">Dừng đọc</span>';
+    btn.classList.add('border-amber-400/80', 'bg-amber-500/15');
+    window._goldAiActiveSpeakBtn = btn;
+
+    utterance.onend = function() {
+      resetSpeakBtn(btn);
+      window._goldAiActiveSpeakBtn = null;
+    };
+
+    utterance.onerror = function() {
+      resetSpeakBtn(btn);
+      window._goldAiActiveSpeakBtn = null;
+    };
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+
+    const resumeTimer = setInterval(() => {
+      if (!window._goldAiActiveSpeakBtn) {
+        clearInterval(resumeTimer);
+        return;
+      }
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    }, 5000);
+
+  } catch (err) {
+    console.error('Lỗi đọc giọng nói:', err);
+    resetSpeakBtn(btn);
+    window._goldAiActiveSpeakBtn = null;
+  }
+
+  function resetSpeakBtn(button) {
+    if (!button) return;
+    button.innerHTML = '<span>🔊</span> <span>Nghe đọc</span>';
+    button.classList.remove('border-amber-400/80', 'bg-amber-500/15');
+  }
+};
+
+window.toggleGoldAiVoiceInput = function() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = document.getElementById('gold-ai-mic-btn');
+  const micIcon = document.getElementById('gold-ai-mic-icon');
+  const input = document.getElementById('gold-ai-input');
+
+  if (!SpeechRecognition) {
+    if (typeof showToast === 'function') {
+      showToast('Trình duyệt chưa hỗ trợ ghi âm trực tiếp. Bạn dùng Chrome, Safari hoặc Edge nhé!', 'info');
+    }
+    return;
+  }
+
+  if (window._goldAiSpeechRecognizer) {
+    try { window._goldAiSpeechRecognizer.stop(); } catch(e) {}
+    cleanup();
+    return;
+  }
+
+  try {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'vi-VN';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    window._goldAiSpeechRecognizer = recognition;
+
+    if (micBtn) {
+      micBtn.className = 'w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-500 text-white flex items-center justify-center mr-1 transition-all cursor-pointer shrink-0 active:scale-90 border border-rose-400 animate-pulse shadow-lg shadow-rose-500/50';
+    }
+    if (micIcon) micIcon.textContent = '🔴';
+    if (input) {
+      input.placeholder = '🎙️ Đang lắng nghe giọng nói... Hãy đặt câu hỏi!';
+    }
+    if (typeof showToast === 'function') {
+      showToast('🎙️ Đang nghe giọng nói tiếng Việt... Hãy nói câu hỏi!', 'info');
+    }
+
+    let finalTranscript = '';
+
+    recognition.onresult = function(event) {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      if (input) {
+        input.value = (finalTranscript || interim).trim();
+      }
+    };
+
+    recognition.onerror = function(event) {
+      console.warn('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed') {
+        if (typeof showToast === 'function') {
+          showToast('Vui lòng cấp quyền Micro trong trình duyệt để sử dụng giọng nói!', 'warning');
+        }
+      }
+      cleanup();
+    };
+
+    recognition.onend = function() {
+      cleanup();
+      if (input && input.value.trim().length > 2) {
+        window.handleGoldAISubmit(new Event('submit'));
+      }
+    };
+
+    function cleanup() {
+      window._goldAiSpeechRecognizer = null;
+      if (micBtn) {
+        micBtn.className = 'w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-amber-400 flex items-center justify-center mr-1 transition-all cursor-pointer shrink-0 active:scale-90 border border-slate-700/70';
+      }
+      if (micIcon) micIcon.textContent = '🎙️';
+      if (input && input.placeholder.includes('Đang lắng nghe')) {
+        input.placeholder = 'Hỏi Gold AI (hoặc bấm Micro nói)...';
+      }
+    }
+
+    recognition.start();
+  } catch (err) {
+    console.error('Lỗi nhận diện giọng nói:', err);
+    if (typeof showToast === 'function') {
+      showToast('Không thể kích hoạt Micro. Vui lòng thử lại.', 'warning');
+    }
+  }
+};
+
+function generateGoldAiPsychologicalDefense(query) {
+  const timerId = 'cooldown-timer-' + Date.now();
+  
+  setTimeout(() => {
+    let timeLeft = 30 * 60;
+    const interval = setInterval(() => {
+      const el = document.getElementById(timerId);
+      if (!el) {
+        clearInterval(interval);
+        return;
+      }
+      timeLeft--;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        el.innerHTML = '✅ ĐÃ HẠ NHIỆT XONG (30 PHÚT) - TÂM LÝ ĐÃ SẴN SÀNG';
+        el.className = 'text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/40 px-3 py-1.5 rounded-xl';
+        return;
+      }
+      const m = Math.floor(timeLeft / 60);
+      const s = timeLeft % 60;
+      el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }, 1000);
+  }, 150);
+
+  return {
+    mode: '🛡️ KHIÊN BẢO VỆ TÂM LÝ',
+    html: `
+      <div class="space-y-4 font-sans text-xs">
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-rose-950/80 via-slate-900/90 to-amber-950/80 border-2 border-rose-500/60 shadow-2xl relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-rose-500/20 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="flex items-start gap-3 relative z-10">
+            <span class="text-3xl animate-bounce">🚨</span>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-black text-white uppercase tracking-wider">LỆNH DỪNG KHẨN CẤP: BUÔNG CHUỘT NGAY!</span>
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-rose-500/30 text-rose-300 font-bold border border-rose-500/50 uppercase">CHẾ ĐỘ COOL-DOWN 30 PHÚT</span>
+              </div>
+              <p class="text-xs text-rose-200/90 leading-relaxed font-medium">
+                Dừng lại ngay! Mình biết bạn đang vô cùng căng thẳng, bực tức hoặc hoảng loạn muốn gỡ ngay lúc này. Nhưng <strong>99% trader cháy sạch tài khoản</strong> là do bấm lệnh bừa bãi trong vòng 30 phút sau khi vừa thua lỗ (Hội chứng Revenge Trading - Giao dịch trả thù).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-950/90 border border-amber-500/40 flex items-center justify-between flex-wrap gap-3 shadow-lg">
+          <div class="space-y-0.5">
+            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block flex items-center gap-1.5">
+              <span>⏳</span> ĐỒNG HỒ ĐẾM NGƯỢC HẠ NHIỆT TÂM LÝ:
+            </span>
+            <span class="text-xs text-slate-300">Tuyệt đối không vào bất kỳ lệnh mới nào trước khi đồng hồ về 0.</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div id="${timerId}" class="text-2xl font-black font-mono text-amber-400 bg-amber-500/10 border border-amber-500/40 px-4 py-1.5 rounded-2xl shadow-inner tracking-widest animate-pulse">
+              30:00
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2.5">
+          <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">📋 4 BƯỚC KHÔI PHỤC KỶ LUẬT THỰC CHIẾN CỦA TRADER BẢN LĨNH:</span>
+          
+          <div class="space-y-2 text-xs text-slate-300">
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5">
+              <span class="text-base shrink-0">💧</span>
+              <div>
+                <strong class="text-white block">1. Rời khỏi màn hình và uống 1 cốc nước ấm</strong>
+                <span class="text-slate-400 text-[11px]">Đứng dậy đi lại, hít thở sâu 10 nhịp để hạ nồng độ Adrenaline trong máu xuống.</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5">
+              <span class="text-base shrink-0">📝</span>
+              <div>
+                <strong class="text-white block">2. Chấp nhận khoản lỗ là chi phí kinh doanh (Cost of Business)</strong>
+                <span class="text-slate-400 text-[11px]">Không có nhà vô địch nào không từng cắt lỗ. Khoản tiền đã mất là học phí, không thể đòi lại bằng sự cay cú.</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5">
+              <span class="text-base shrink-0">🚫</span>
+              <div>
+                <strong class="text-white block">3. Tuyệt đối không nạp thêm tiền để "gỡ ngay"</strong>
+                <span class="text-slate-400 text-[11px]">Nạp tiền khi đang hoảng loạn chỉ khiến bạn mất tiếp. Hãy giữ chặt vốn còn lại.</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5">
+              <span class="text-base shrink-0">🎯</span>
+              <div>
+                <strong class="text-white block">4. Chỉ quay lại khi bình tâm & Đi đúng 1% Risk</strong>
+                <span class="text-slate-400 text-[11px]">Đợi tín hiệu MA Wave V8 PRO chuẩn xác. Đặt sẵn SL 50 pips, không nhồi lệnh, không dời SL âm.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center text-[11px] text-amber-200 leading-relaxed font-sans">
+          🛡️ <em>"Thị trường Vàng đã tồn tại hơn 3,000 năm và ngày mai nó vẫn ở đó. Cơ hội không bao giờ hết — chỉ có người cháy hết vốn là phải rời cuộc chơi!"</em>
+        </div>
+      </div>
+    `
+  };
+}
+
+
 window.saveGoldAiChatHistory = function() {
   try {
     const container = document.getElementById('gold-ai-chat-messages');
@@ -4373,13 +4661,24 @@ window.handleGoldAISubmit = async function(e) {
 
   const cleanQuery = cleanVietnameseText(query);
 
+  // 0. Kiểm tra nếu query liên quan đến Trấn An & Khóa Tâm Lý (Cool-down Mode 30 Phút)
+  const isPsychologicalQuery = /(?:cháy|chay)\s*(?:tk|tài khoản|acc|sạch|hết)?/i.test(cleanQuery) ||
+    /(?:gỡ|go)\s*(?:lệnh|lenh|tiền|gấp|lại)/i.test(cleanQuery) ||
+    /(?:all\s*in|all-in|tất tay|tat tay|nhồi lệnh|nhoi lenh|chết em|cứu em)/i.test(cleanQuery) ||
+    /(?:áp lực|hoảng loạn|stress|sợ quá|run quá|mất kiểm soát|cay cú)/i.test(cleanQuery) ||
+    cleanQuery.includes('hạ nhiệt') || cleanQuery.includes('cool down') || cleanQuery.includes('trấn an');
+
   // 1. Kiểm tra nếu query liên quan đến Khám sức khỏe thị trường
   const isMarketAuditorQuery = /(?:khám|sức khỏe|tình trạng|thẩm định|audit)\s*(?:thị trường|market|vàng|xau)?/i.test(cleanQuery) || cleanQuery.includes('khám thị trường');
 
   // 2. Kiểm tra nếu query liên quan đến Tính Lot & Quản lý vốn
   const isLotCalcQuery = /(?:đi|tính|bao nhiêu)\s*lot/i.test(cleanQuery) || /(?:quản lý|quản trị)\s*vốn/i.test(cleanQuery) || /(?:vốn|tk|tài khoản)\s*[0-9]+/i.test(cleanQuery);
 
-  if (isMarketAuditorQuery) {
+  if (isPsychologicalQuery) {
+    const psychRes = generateGoldAiPsychologicalDefense(query);
+    htmlResponse = psychRes.html;
+    mode = psychRes.mode;
+  } else if (isMarketAuditorQuery) {
     const auditorRes = generateGoldAiAuditorReport();
     htmlResponse = auditorRes.html;
     mode = auditorRes.mode;
@@ -4441,6 +4740,9 @@ window.handleGoldAISubmit = async function(e) {
         <span class="font-bold text-amber-400 text-xs flex items-center gap-1.5">✦ Gold AI Mentor</span>
         <div class="flex items-center gap-2">
           <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">${mode}</span>
+          <button type="button" onclick="speakGoldAiResponse(this)" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold border border-slate-700 transition flex items-center gap-1 cursor-pointer active:scale-95" title="Đọc nhận định bằng giọng nói">
+            <span>🔊</span> <span>Nghe đọc</span>
+          </button>
           <button type="button" onclick="copyGoldAiResponse(this)" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold border border-slate-700 transition flex items-center gap-1 cursor-pointer active:scale-95" title="Sao chép câu trả lời">
             📋 Sao chép
           </button>
