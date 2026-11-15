@@ -3783,8 +3783,9 @@ window.resetGoldAiSession = function() {
         <div class="rounded-3xl bg-gradient-to-br from-slate-900/90 via-[#0d1424]/95 to-slate-950/90 border border-amber-500/30 p-4 sm:p-5 shadow-2xl relative overflow-hidden backdrop-blur-xl">
           <div class="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
           <div class="flex items-start gap-3.5 relative z-10">
-            <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 text-slate-950 font-black text-xl flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30 border border-yellow-200/50">
-              ✦
+            <div class="relative w-12 h-12 rounded-2xl overflow-hidden shadow-xl shadow-amber-500/30 border-2 border-amber-400/80 shrink-0 bg-slate-900">
+              <img src="./assets/gold-ai-avatar.jpg" alt="Gold AI Mentor" class="w-full h-full object-cover">
+              <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse"></span>
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between flex-wrap gap-1.5 mb-1">
@@ -3995,6 +3996,151 @@ window.copyGoldAiResponse = function(btn) {
 
 window._goldAiAudioPlayer = null;
 window._goldAiActiveSpeakBtn = null;
+window._goldAiAudioChunks = [];
+window._goldAiChunkIndex = 0;
+
+// Chuẩn hóa phát âm từ ngữ Trading cho giọng đọc tiếng Việt mượt mà, chuẩn ngữ âm
+window.normalizeTradingTextForSpeech = function(text) {
+  if (!text) return '';
+  let s = text;
+
+  // Xóa các ký tự biểu tượng, gạch ngang trang trí
+  s = s.replace(/[✦★✓✔🎯🛡️🩺🧮🚨⏳📋💧📝🚫🪙⚡›]/g, ' ');
+  s = s.replace(/[-─=]{2,}/g, ' ');
+
+  const replacements = [
+    // Xu hướng
+    [/\buptrend\b/gi, 'áp-tren'],
+    [/\bup-trend\b/gi, 'áp-tren'],
+    [/\bdowntrend\b/gi, 'đao-tren'],
+    [/\bdown-trend\b/gi, 'đao-tren'],
+    [/\bpullback\b/gi, 'pun-bách'],
+    [/\bpull-back\b/gi, 'pun-bách'],
+    [/\bfullback\b/gi, 'pun-bách'],
+    [/\bsideway\b/gi, 'sai-guây'],
+    [/\bsideways\b/gi, 'sai-guây'],
+    [/\bchoppy\b/gi, 'chóp-py'],
+    [/\bchop\b/gi, 'chóp hỗn loạn'],
+    [/\bbreakout\b/gi, 'bờ-rếch-ao'],
+    [/\bbreak-out\b/gi, 'bờ-rếch-ao'],
+    [/\bretest\b/gi, 'ri-tét'],
+    [/\bre-test\b/gi, 'ri-tét'],
+
+    // Quản trị lệnh & vị thế
+    [/\bstop\s*loss\b/gi, 'cắt lỗ xtóp-lót'],
+    [/\btake\s*profit\b/gi, 'chốt lời tê-pê'],
+    [/\bTP1\b/g, 'tê-pê 1'],
+    [/\bTP2\b/g, 'tê-pê 2'],
+    [/\bTP3\b/g, 'tê-pê 3'],
+    [/\bTP\b/g, 'tê-pê'],
+    [/\bSL\b/g, 'ét-lờ'],
+    [/\bEntry\b/gi, 'điểm vào lệnh en-tri'],
+    [/\bBUY\b/g, 'Mua'],
+    [/\bBuy\b/g, 'Mua'],
+    [/\bSELL\b/g, 'Bán'],
+    [/\bSell\b/g, 'Bán'],
+    [/\bpips\b/gi, 'bíp'],
+    [/\bpip\b/gi, 'bíp'],
+    [/\bpoints\b/gi, 'điểm'],
+    [/\bpoint\b/gi, 'điểm'],
+    [/\bVolume\b/gi, 'khối lượng vô-lum'],
+    [/\bMargin\b/gi, 'ký quỹ mác-gin'],
+    [/\bAll-in\b/gi, 'o-in tất tay'],
+    [/\ball in\b/gi, 'o-in tất tay'],
+    [/\bScalping\b/gi, 'lướt sóng scáp-ping'],
+    [/\bSwing\b/gi, 'su-inh'],
+    [/\bFOMO\b/gi, 'phô-mô'],
+    [/\bR:R\b/gi, 'tỷ lệ rờ rờ'],
+
+    // Chỉ báo & công cụ
+    [/\bEMA20\b/gi, 'E-M-A hai mươi'],
+    [/\bEMA50\b/gi, 'E-M-A năm mươi'],
+    [/\bEMA200\b/gi, 'E-M-A hai trăm'],
+    [/\bEMA\b/g, 'E-M-A'],
+    [/\bSMA\b/g, 'S-M-A'],
+    [/\bRSI\b/g, 'R-S-I'],
+    [/\bATR\b/g, 'A-T-R'],
+    [/\bMTF\b/g, 'M-T-F đa khung'],
+
+    // Khung thời gian & cặp tiền
+    [/\bH1\b/g, 'khung H 1'],
+    [/\bH4\b/g, 'khung H 4'],
+    [/\bM15\b/g, 'khung M 15'],
+    [/\bM30\b/g, 'khung M 30'],
+    [/\bM5\b/g, 'khung M 5'],
+    [/\bXAU\/USD\b/gi, 'Vàng X-A-U'],
+    [/\bBTC\/USD\b/gi, 'Bít-coi'],
+    [/\bXAG\/USD\b/gi, 'Bạc X-A-G']
+  ];
+
+  for (const [regex, rep] of replacements) {
+    s = s.replace(regex, rep);
+  }
+
+  return s.replace(/\s+/g, ' ').trim();
+};
+
+// Tách toàn bộ văn bản thành danh sách chunks ~140-160 ký tự không ngắt từ
+window.splitTextIntoAudioChunks = function(text, maxLen = 160) {
+  if (!text) return [];
+  const rawSentences = text.split(/(?<=[.?!;:\n])\s+/);
+  const chunks = [];
+  let currentChunk = '';
+
+  for (let s of rawSentences) {
+    s = s.trim();
+    if (!s) continue;
+
+    if ((currentChunk + ' ' + s).trim().length <= maxLen) {
+      currentChunk = (currentChunk + ' ' + s).trim();
+    } else {
+      if (currentChunk) chunks.push(currentChunk);
+      if (s.length > maxLen) {
+        const subParts = s.split(/(?<=[,])\s+/);
+        let subChunk = '';
+        for (let sub of subParts) {
+          if ((subChunk + ' ' + sub).trim().length <= maxLen) {
+            subChunk = (subChunk + ' ' + sub).trim();
+          } else {
+            if (subChunk) chunks.push(subChunk);
+            subChunk = sub.trim();
+          }
+        }
+        if (subChunk) currentChunk = subChunk;
+        else currentChunk = '';
+      } else {
+        currentChunk = s;
+      }
+    }
+  }
+  if (currentChunk) chunks.push(currentChunk);
+  return chunks;
+};
+
+// Trích xuất toàn bộ 100% nội dung (bảng, danh sách, tiêu đề, đoạn văn)
+window.extractFullSpeechText = function(container) {
+  if (!container) return '';
+  const clone = container.cloneNode(true);
+  clone.querySelectorAll('.gold-ai-no-copy, button, script, style').forEach(el => el.remove());
+
+  // Định dạng lại các hàng của bảng (Table Rows) thành câu văn hoàn chỉnh
+  clone.querySelectorAll('tr').forEach(tr => {
+    const cells = Array.from(tr.querySelectorAll('th, td')).map(td => td.innerText.trim()).filter(Boolean);
+    if (cells.length > 0) {
+      const rowDiv = document.createElement('div');
+      rowDiv.innerText = cells.join(' — ') + '. ';
+      tr.parentNode.replaceChild(rowDiv, tr);
+    }
+  });
+
+  // Đảm bảo các mục danh sách có dấu chấm kết câu
+  clone.querySelectorAll('li').forEach(li => {
+    li.innerText = li.innerText.trim() + '. ';
+  });
+
+  const rawText = (clone.innerText || clone.textContent || '').trim();
+  return window.normalizeTradingTextForSpeech(rawText);
+};
 
 window.speakGoldAiResponse = function(btn) {
   if (!btn) return;
@@ -4010,6 +4156,8 @@ window.speakGoldAiResponse = function(btn) {
     if ('speechSynthesis' in window) {
       try { window.speechSynthesis.cancel(); } catch(e) {}
     }
+    window._goldAiAudioChunks = [];
+    window._goldAiChunkIndex = 0;
     if (window._goldAiActiveSpeakBtn) {
       window._goldAiActiveSpeakBtn.innerHTML = '<span>🔊</span> <span>Nghe đọc</span>';
       window._goldAiActiveSpeakBtn.classList.remove('border-amber-400/80', 'bg-amber-500/20');
@@ -4017,98 +4165,86 @@ window.speakGoldAiResponse = function(btn) {
     }
   }
 
-  // 1. Nếu đang phát âm thanh ở nút này -> Dừng lại
+  // Nếu đang đọc nút này -> Dừng lại
   if (window._goldAiActiveSpeakBtn === btn) {
     stopCurrentAudio();
     return;
   }
 
-  // 2. Dừng bất kỳ âm thanh nào đang phát trước đó
+  // Dừng bài đang đọc trước đó
   stopCurrentAudio();
 
   const parentBox = btn.closest('.gold-ai-response-box');
   if (!parentBox) return;
 
-  // 3. Trích xuất nội dung cốt lõi súc tích để đọc
-  const clone = parentBox.cloneNode(true);
-  const noCopyElements = clone.querySelectorAll('.gold-ai-no-copy, button');
-  noCopyElements.forEach(el => el.remove());
+  const contentBody = parentBox.querySelector('.gold-ai-content-body') || parentBox;
+  const fullText = window.extractFullSpeechText(contentBody);
 
-  let spokenText = '';
-  const innerHtml = clone.innerHTML || '';
-  const textContent = clone.innerText || clone.textContent || '';
-
-  if (textContent.includes('LỆNH DỪNG KHẨN CẤP') || textContent.includes('COOL-DOWN')) {
-    spokenText = 'Lệnh dừng khẩn cấp! Bạn hãy buông chuột ngay và uống một cốc nước ấm. 99% trader cháy tài khoản là do giao dịch trả thù sau khi thua lỗ. Hãy bình tâm lại 30 phút!';
-  } else if (textContent.includes('KHÁM SỨC KHỎE') || textContent.includes('ĐỘ GIÃN EMA')) {
-    spokenText = 'Khám sức khỏe thị trường: Giá Vàng đang kiểm định dải EMA. Xu hướng cần theo dõi thận trọng, tuyệt đối không nên mua đuổi nến xanh.';
-  } else if (textContent.includes('QUẢN TRỊ VỐN') || textContent.includes('TÍNH KHỐI LƯỢNG LOT')) {
-    spokenText = 'Tư vấn quản trị vốn: Hãy tuân thủ mức rủi ro tối đa từ 1 đến 2% tài khoản cho mỗi lệnh. Đặt Stop Loss cố định và tuyệt đối không all in.';
-  } else {
-    // Trích xuất các câu mở đầu hoặc kết luận
-    const pElements = clone.querySelectorAll('p, li');
-    const validSentences = [];
-    pElements.forEach(p => {
-      const t = (p.innerText || '').trim();
-      if (t.length > 15 && !t.includes('───') && !t.includes('100 điểm') && !t.includes('http')) {
-        validSentences.push(t);
-      }
-    });
-    if (validSentences.length > 0) {
-      spokenText = validSentences.slice(0, 3).join('. ');
-    } else {
-      spokenText = textContent;
-    }
+  if (!fullText || fullText.length < 5) {
+    if (typeof showToast === 'function') showToast('Không tìm thấy nội dung văn bản để đọc.', 'info');
+    return;
   }
 
-  // Làm sạch các ký hiệu, biểu tượng để giọng nói tự nhiên
-  spokenText = spokenText
-    .replace(/[✦★✓✔🎯🛡️🩺🧮🚨⏳📋💧📝🚫🪙⚡]/g, '')
-    .replace(/[-─=]{2,}/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // Tách thành playlist các câu hoàn chỉnh
+  const chunks = window.splitTextIntoAudioChunks(fullText, 160);
+  if (!chunks || chunks.length === 0) return;
 
-  if (spokenText.length > 190) {
-    const cutPos = spokenText.lastIndexOf('.', 185);
-    spokenText = cutPos > 60 ? spokenText.substring(0, cutPos + 1) : spokenText.substring(0, 185) + '...';
-  }
-
-  if (!spokenText) {
-    spokenText = 'Gold AI Market Mentor sẵn sàng phân tích và đồng hành chiến lược giao dịch cùng bạn.';
-  }
-
-  // Cập nhật giao diện nút
-  btn.innerHTML = '<span class="text-amber-400 animate-pulse">⏹️</span> <span class="text-amber-300 font-bold">Dừng đọc</span>';
-  btn.classList.add('border-amber-400/80', 'bg-amber-500/20');
+  window._goldAiAudioChunks = chunks;
+  window._goldAiChunkIndex = 0;
   window._goldAiActiveSpeakBtn = btn;
 
-  // PHƯƠNG ÁN 1: Phát qua Audio MP3 Server Proxy (Google Assistant tiếng Việt cực chuẩn)
-  try {
-    const audioUrl = '/api/tts?text=' + encodeURIComponent(spokenText);
-    const audio = new Audio(audioUrl);
-    window._goldAiAudioPlayer = audio;
+  btn.classList.add('border-amber-400/80', 'bg-amber-500/20');
 
-    audio.onended = function() {
-      stopCurrentAudio();
-    };
-
-    audio.onerror = function() {
-      fallbackWebSpeech(spokenText, btn);
-    };
-
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        fallbackWebSpeech(spokenText, btn);
-      });
+  // Hàm phát tuần tự từng chunk bằng Audio MP3 Server (Giọng nữ Miền Bắc Google chuẩn)
+  function playChunkAt(index) {
+    if (!window._goldAiActiveSpeakBtn || window._goldAiActiveSpeakBtn !== btn) {
+      return; // Đã bị dừng
     }
-  } catch (e) {
-    fallbackWebSpeech(spokenText, btn);
+
+    if (index >= chunks.length) {
+      stopCurrentAudio();
+      if (typeof showToast === 'function') {
+        showToast('✅ Đã đọc xong trọn vẹn toàn bộ nội dung phân tích!', 'success');
+      }
+      return;
+    }
+
+    window._goldAiChunkIndex = index;
+    const chunkText = chunks[index];
+
+    // Cập nhật trạng thái nút và tiến trình đọc
+    btn.innerHTML = '<span class="text-amber-400 animate-pulse">⏹️</span> <span class="text-amber-300 font-bold">Dừng đọc (' + (index + 1) + '/' + chunks.length + ')</span>';
+
+    try {
+      const audioUrl = '/api/tts?text=' + encodeURIComponent(chunkText);
+      const audio = new Audio(audioUrl);
+      // Tốc độ 1.15x: Đọc nhanh hơn, lưu loát, dứt khoát, thanh thoát dịu dàng
+      audio.playbackRate = 1.15;
+      window._goldAiAudioPlayer = audio;
+
+      audio.onended = function() {
+        playChunkAt(index + 1);
+      };
+
+      audio.onerror = function() {
+        // Fallback Web Speech nếu mạng gián đoạn
+        fallbackWebSpeechChunk(chunkText, () => playChunkAt(index + 1));
+      };
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          fallbackWebSpeechChunk(chunkText, () => playChunkAt(index + 1));
+        });
+      }
+    } catch (e) {
+      fallbackWebSpeechChunk(chunkText, () => playChunkAt(index + 1));
+    }
   }
 
-  function fallbackWebSpeech(text, button) {
+  function fallbackWebSpeechChunk(text, onDone) {
     if (!('speechSynthesis' in window)) {
-      stopCurrentAudio();
+      if (onDone) onDone();
       return;
     }
     try {
@@ -4116,21 +4252,25 @@ window.speakGoldAiResponse = function(btn) {
       setTimeout(() => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'vi-VN';
-        utterance.rate = 1.0;
+        utterance.rate = 1.15;
 
         const voices = window.speechSynthesis.getVoices();
-        const viVoice = voices.find(v => v.lang && (v.lang === 'vi-VN' || v.lang.toLowerCase().includes('vi')));
+        // Ưu tiên giọng nữ miền Bắc thanh thoát
+        const viVoice = voices.find(v => v.lang && (v.lang === 'vi-VN' || v.lang.toLowerCase().includes('vi')) && (v.name.includes('HoaiMy') || v.name.includes('Linh') || v.name.includes('Female') || v.name.includes('Google')));
         if (viVoice) utterance.voice = viVoice;
 
-        utterance.onend = () => stopCurrentAudio();
-        utterance.onerror = () => stopCurrentAudio();
+        utterance.onend = () => { if (onDone) onDone(); };
+        utterance.onerror = () => { if (onDone) onDone(); };
 
         window.speechSynthesis.speak(utterance);
       }, 50);
     } catch(err) {
-      stopCurrentAudio();
+      if (onDone) onDone();
     }
   }
+
+  // Khởi động phát chunk đầu tiên
+  playChunkAt(0);
 };
 
 window.toggleGoldAiVoiceInput = function() {
@@ -4693,7 +4833,7 @@ window.handleGoldAISubmit = async function(e) {
   typingDiv.id = 'gold-ai-typing-indicator';
   typingDiv.className = 'flex gap-3 max-w-2xl animate-pulse';
   typingDiv.innerHTML = `
-    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center shrink-0 shadow">✦</div>
+    <div class="relative w-8 h-8 rounded-xl overflow-hidden border border-amber-400/80 shrink-0 shadow bg-slate-900"><img src="./assets/gold-ai-avatar.jpg" alt="Gold AI Mentor" class="w-full h-full object-cover"></div>
     <div class="bg-[#111622] border border-slate-800 rounded-2xl px-4 py-3 text-slate-400 text-xs italic">
       Gold AI Mentor đang quan sát bối cảnh & suy luận...
     </div>
@@ -4783,7 +4923,7 @@ window.handleGoldAISubmit = async function(e) {
   const aiDiv = document.createElement('div');
   aiDiv.className = 'flex gap-3 max-w-2xl gold-ai-response-box';
   aiDiv.innerHTML = `
-    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center shrink-0 shadow">✦</div>
+    <div class="relative w-8 h-8 rounded-xl overflow-hidden border border-amber-400/80 shrink-0 shadow bg-slate-900"><img src="./assets/gold-ai-avatar.jpg" alt="Gold AI Mentor" class="w-full h-full object-cover"></div>
     <div class="bg-[#111622] border border-slate-800 rounded-2xl p-4 space-y-3 font-sans w-full shadow-lg">
       <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 gold-ai-no-copy flex-wrap gap-2">
         <span class="font-bold text-amber-400 text-xs flex items-center gap-1.5">✦ Gold AI Mentor</span>
