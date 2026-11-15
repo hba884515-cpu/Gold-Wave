@@ -3168,6 +3168,41 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ status: 'SUCCESS', count: pushSubscriptionsDB.length }));
   }
+  else if (urlPath === '/api/tts' && req.method === 'GET') {
+    const rawText = queryParams.text || '';
+    if (!rawText || !rawText.trim()) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ error: 'Text parameter is required' }));
+    }
+    const cleanText = rawText.trim().slice(0, 200);
+    const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText)}&tl=vi&client=tw-ob`;
+
+    const proxyReq = https.get(googleTtsUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://translate.google.com/'
+      },
+      timeout: 10000
+    }, proxyRes => {
+      if (proxyRes.statusCode >= 200 && proxyRes.statusCode < 300) {
+        res.writeHead(200, {
+          'Content-Type': 'audio/mpeg',
+          'Cache-Control': 'public, max-age=86400',
+          'Access-Control-Allow-Origin': '*'
+        });
+        proxyRes.pipe(res);
+      } else {
+        res.writeHead(proxyRes.statusCode || 500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: 'TTS upstream error' }));
+      }
+    });
+
+    proxyReq.on('error', err => {
+      console.warn('[TTS Proxy] Error:', err.message);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: err.message }));
+    });
+  }
   else if (urlPath === '/api/signals' && req.method === 'GET') {
     res.writeHead(200, {
       'Content-Type': 'application/json; charset=utf-8',

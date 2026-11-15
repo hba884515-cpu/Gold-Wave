@@ -3993,94 +3993,143 @@ window.copyGoldAiResponse = function(btn) {
   }
 };
 
+window._goldAiAudioPlayer = null;
+window._goldAiActiveSpeakBtn = null;
+
 window.speakGoldAiResponse = function(btn) {
   if (!btn) return;
-  if (!('speechSynthesis' in window)) {
-    if (typeof showToast === 'function') {
-      showToast('Trình duyệt của bạn chưa hỗ trợ đọc giọng nói tự động.', 'info');
+
+  function stopCurrentAudio() {
+    if (window._goldAiAudioPlayer) {
+      try {
+        window._goldAiAudioPlayer.pause();
+        window._goldAiAudioPlayer.currentTime = 0;
+      } catch(e) {}
+      window._goldAiAudioPlayer = null;
     }
-    return;
+    if ('speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
+    if (window._goldAiActiveSpeakBtn) {
+      window._goldAiActiveSpeakBtn.innerHTML = '<span>🔊</span> <span>Nghe đọc</span>';
+      window._goldAiActiveSpeakBtn.classList.remove('border-amber-400/80', 'bg-amber-500/20');
+      window._goldAiActiveSpeakBtn = null;
+    }
   }
 
-  // Nếu đang nói với nút này -> Dừng lại
+  // 1. Nếu đang phát âm thanh ở nút này -> Dừng lại
   if (window._goldAiActiveSpeakBtn === btn) {
-    window.speechSynthesis.cancel();
-    resetSpeakBtn(btn);
-    window._goldAiActiveSpeakBtn = null;
+    stopCurrentAudio();
     return;
   }
 
-  // Nếu một nút khác đang nói -> Dừng nút đó lại
-  if (window._goldAiActiveSpeakBtn) {
-    window.speechSynthesis.cancel();
-    resetSpeakBtn(window._goldAiActiveSpeakBtn);
-    window._goldAiActiveSpeakBtn = null;
-  }
+  // 2. Dừng bất kỳ âm thanh nào đang phát trước đó
+  stopCurrentAudio();
 
   const parentBox = btn.closest('.gold-ai-response-box');
   if (!parentBox) return;
 
+  // 3. Trích xuất nội dung cốt lõi súc tích để đọc
   const clone = parentBox.cloneNode(true);
   const noCopyElements = clone.querySelectorAll('.gold-ai-no-copy, button');
   noCopyElements.forEach(el => el.remove());
 
-  let rawText = (clone.innerText || clone.textContent || '').trim();
-  // Làm sạch các ký tự đặc biệt, emoji để giọng đọc tròn vành rõ chữ
-  rawText = rawText
+  let spokenText = '';
+  const innerHtml = clone.innerHTML || '';
+  const textContent = clone.innerText || clone.textContent || '';
+
+  if (textContent.includes('LỆNH DỪNG KHẨN CẤP') || textContent.includes('COOL-DOWN')) {
+    spokenText = 'Lệnh dừng khẩn cấp! Bạn hãy buông chuột ngay và uống một cốc nước ấm. 99% trader cháy tài khoản là do giao dịch trả thù sau khi thua lỗ. Hãy bình tâm lại 30 phút!';
+  } else if (textContent.includes('KHÁM SỨC KHỎE') || textContent.includes('ĐỘ GIÃN EMA')) {
+    spokenText = 'Khám sức khỏe thị trường: Giá Vàng đang kiểm định dải EMA. Xu hướng cần theo dõi thận trọng, tuyệt đối không nên mua đuổi nến xanh.';
+  } else if (textContent.includes('QUẢN TRỊ VỐN') || textContent.includes('TÍNH KHỐI LƯỢNG LOT')) {
+    spokenText = 'Tư vấn quản trị vốn: Hãy tuân thủ mức rủi ro tối đa từ 1 đến 2% tài khoản cho mỗi lệnh. Đặt Stop Loss cố định và tuyệt đối không all in.';
+  } else {
+    // Trích xuất các câu mở đầu hoặc kết luận
+    const pElements = clone.querySelectorAll('p, li');
+    const validSentences = [];
+    pElements.forEach(p => {
+      const t = (p.innerText || '').trim();
+      if (t.length > 15 && !t.includes('───') && !t.includes('100 điểm') && !t.includes('http')) {
+        validSentences.push(t);
+      }
+    });
+    if (validSentences.length > 0) {
+      spokenText = validSentences.slice(0, 3).join('. ');
+    } else {
+      spokenText = textContent;
+    }
+  }
+
+  // Làm sạch các ký hiệu, biểu tượng để giọng nói tự nhiên
+  spokenText = spokenText
     .replace(/[✦★✓✔🎯🛡️🩺🧮🚨⏳📋💧📝🚫🪙⚡]/g, '')
     .replace(/[-─=]{2,}/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
-  if (!rawText) return;
-
-  try {
-    const utterance = new SpeechSynthesisUtterance(rawText);
-    utterance.lang = 'vi-VN';
-    utterance.rate = 1.05;
-    utterance.pitch = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    const viVoice = voices.find(v => v.lang && (v.lang === 'vi-VN' || v.lang.toLowerCase().includes('vi')));
-    if (viVoice) utterance.voice = viVoice;
-
-    btn.innerHTML = '<span class="text-amber-400 animate-pulse">⏹️</span> <span class="text-amber-300 font-bold">Dừng đọc</span>';
-    btn.classList.add('border-amber-400/80', 'bg-amber-500/15');
-    window._goldAiActiveSpeakBtn = btn;
-
-    utterance.onend = function() {
-      resetSpeakBtn(btn);
-      window._goldAiActiveSpeakBtn = null;
-    };
-
-    utterance.onerror = function() {
-      resetSpeakBtn(btn);
-      window._goldAiActiveSpeakBtn = null;
-    };
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-
-    const resumeTimer = setInterval(() => {
-      if (!window._goldAiActiveSpeakBtn) {
-        clearInterval(resumeTimer);
-        return;
-      }
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-    }, 5000);
-
-  } catch (err) {
-    console.error('Lỗi đọc giọng nói:', err);
-    resetSpeakBtn(btn);
-    window._goldAiActiveSpeakBtn = null;
+  if (spokenText.length > 190) {
+    const cutPos = spokenText.lastIndexOf('.', 185);
+    spokenText = cutPos > 60 ? spokenText.substring(0, cutPos + 1) : spokenText.substring(0, 185) + '...';
   }
 
-  function resetSpeakBtn(button) {
-    if (!button) return;
-    button.innerHTML = '<span>🔊</span> <span>Nghe đọc</span>';
-    button.classList.remove('border-amber-400/80', 'bg-amber-500/15');
+  if (!spokenText) {
+    spokenText = 'Gold AI Market Mentor sẵn sàng phân tích và đồng hành chiến lược giao dịch cùng bạn.';
+  }
+
+  // Cập nhật giao diện nút
+  btn.innerHTML = '<span class="text-amber-400 animate-pulse">⏹️</span> <span class="text-amber-300 font-bold">Dừng đọc</span>';
+  btn.classList.add('border-amber-400/80', 'bg-amber-500/20');
+  window._goldAiActiveSpeakBtn = btn;
+
+  // PHƯƠNG ÁN 1: Phát qua Audio MP3 Server Proxy (Google Assistant tiếng Việt cực chuẩn)
+  try {
+    const audioUrl = '/api/tts?text=' + encodeURIComponent(spokenText);
+    const audio = new Audio(audioUrl);
+    window._goldAiAudioPlayer = audio;
+
+    audio.onended = function() {
+      stopCurrentAudio();
+    };
+
+    audio.onerror = function() {
+      fallbackWebSpeech(spokenText, btn);
+    };
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        fallbackWebSpeech(spokenText, btn);
+      });
+    }
+  } catch (e) {
+    fallbackWebSpeech(spokenText, btn);
+  }
+
+  function fallbackWebSpeech(text, button) {
+    if (!('speechSynthesis' in window)) {
+      stopCurrentAudio();
+      return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'vi-VN';
+        utterance.rate = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const viVoice = voices.find(v => v.lang && (v.lang === 'vi-VN' || v.lang.toLowerCase().includes('vi')));
+        if (viVoice) utterance.voice = viVoice;
+
+        utterance.onend = () => stopCurrentAudio();
+        utterance.onerror = () => stopCurrentAudio();
+
+        window.speechSynthesis.speak(utterance);
+      }, 50);
+    } catch(err) {
+      stopCurrentAudio();
+    }
   }
 };
 
@@ -4117,7 +4166,7 @@ window.toggleGoldAiVoiceInput = function() {
     }
     if (micIcon) micIcon.textContent = '🔴';
     if (input) {
-      input.placeholder = '🎙️ Đang lắng nghe giọng nói... Hãy đặt câu hỏi!';
+      input.placeholder = '🎙️ Đang lắng nghe giọng nói... Hãy nói câu hỏi!';
     }
     if (typeof showToast === 'function') {
       showToast('🎙️ Đang nghe giọng nói tiếng Việt... Hãy nói câu hỏi!', 'info');
@@ -4171,7 +4220,7 @@ window.toggleGoldAiVoiceInput = function() {
   } catch (err) {
     console.error('Lỗi nhận diện giọng nói:', err);
     if (typeof showToast === 'function') {
-      showToast('Không thể kích hoạt Micro. Vui lòng thử lại.', 'warning');
+      showToast('Không thể kích hoạt Micro. Vui lòng kiểm tra quyền thiết bị.', 'warning');
     }
   }
 };
