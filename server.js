@@ -3030,7 +3030,7 @@ const server = http.createServer(async (req, res) => {
     let mode = 'Gold AI Market Mentor';
     let reply = '';
 
-    // 1. Chắt lọc câu trả lời chuyên sâu từ Hệ Thống Giao Dịch EMA20 – EMA50 Toàn Diện (14 Chuyên Đề)
+    // 1. Chắt lọc câu trả lời chuyên sâu từ Hệ Thống Giao Dịch EMA20 – EMA50 Toàn Diện (26 Chuyên Đề & Tình Huống)
     const emaKnowledgeResult = EMAKnowledgeBase.searchEMA2050Knowledge(userPrompt, {
       livePriceStr: currentGoldPrice,
       ema20Str,
@@ -3038,7 +3038,8 @@ const server = http.createServer(async (req, res) => {
       atrStr,
       mtfStr,
       stateDesc,
-      st
+      st,
+      latestSignal: body.latestSignal || (botPositionsDB && botPositionsDB[0]) || (Array.isArray(notificationsDB) && notificationsDB.find(n => n && (n.type === 'SIGNAL' || (n.title && n.title.includes('TÍN HIỆU'))))) || null
     });
 
     if (emaKnowledgeResult) {

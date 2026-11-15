@@ -10,23 +10,92 @@ function renderStructuredResponse({
   verdictText,
   verdictType = 'WARN', // 'SUCCESS', 'DANGER', 'WARN', 'INFO'
   badgeTitle = 'KẾT LUẬN TỪ GOLD AI MENTOR',
+  emotionNote, // Lời chia sẻ mang cung bậc cảm xúc, đồng cảm của chuyên gia
+  emotionTone = 'EMPATHY', // 'EMPATHY', 'CONFIDENT', 'ALERT', 'WELCOME'
+  // BẢNG ĐỐI CHIẾU WIN-WIN VS RỦI RO
+  winWinTitle = 'YẾU TỐ WIN-WIN (LỢI THẾ CHIẾN LƯỢC)',
+  winWinHtml,
   coreConditionTitle = '1. ĐIỀU KIỆN CHUẨN XÁC & BẢN CHẤT CỐT LÕI',
   coreConditionHtml,
-  riskTitle = '2. ĐIỂM CẮT LỖ (SL) & BẪY RỦI RO CẦN TRÁNH',
+  riskTitle = 'YẾU TỐ RỦI RO & BẪY CẦN PHÒNG VỆ',
   riskHtml,
-  actionTitle = '3. LỜI KHUYÊN HÀNH ĐỘNG THỰC CHIẾN (KỊCH BẢN)',
+  // HÀNH ĐỘNG CỤ THỂ
+  actionTitle = 'HÀNH ĐỘNG BẢN THÂN CẦN LÀM NGAY LÚC NÀY',
   actionHtml,
   followUpQuestions = [],
   marketContext
 }) {
   const verdictStyles = {
-    SUCCESS: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300',
-    DANGER: 'bg-rose-500/15 border-rose-500/30 text-rose-300',
-    WARN: 'bg-amber-500/15 border-amber-500/30 text-amber-300',
-    INFO: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
+    SUCCESS: 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300',
+    DANGER: 'bg-rose-500/15 border-rose-500/35 text-rose-300',
+    WARN: 'bg-amber-500/15 border-amber-500/35 text-amber-300',
+    INFO: 'bg-cyan-500/15 border-cyan-500/35 text-cyan-300'
   };
   const vStyle = verdictStyles[verdictType] || verdictStyles.WARN;
 
+  const winWinContent = winWinHtml || coreConditionHtml || '';
+  const riskContent = riskHtml || '';
+
+  // Khối Emotion Note (Cung bậc cảm xúc & Đồng cảm)
+  const emotionHtml = emotionNote ? `
+    <div class="p-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-transparent border border-amber-500/35 flex items-start gap-2.5 shadow-sm">
+      <div class="w-8 h-8 rounded-xl overflow-hidden border border-amber-400/80 shrink-0 shadow bg-slate-900 mt-0.5">
+        <img src="./assets/gold-ai-avatar.jpg" alt="Gold AI Mentor" class="w-full h-full object-cover">
+      </div>
+      <div class="flex-1 space-y-1 font-sans">
+        <div class="text-[10px] text-amber-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+          <span>🌸</span> <span>LỜI CHIA SẺ &amp; ĐỒNG CẢM TỪ NỮ CỐ VẤN:</span>
+        </div>
+        <p class="text-xs text-amber-100/95 leading-relaxed italic font-medium">"${emotionNote}"</p>
+      </div>
+    </div>
+  ` : '';
+
+  // Bảng đối chiếu Win-Win vs Rủi ro chuẩn 2 cột
+  const matrixTableHtml = (winWinContent || riskContent) ? `
+    <div class="rounded-xl border border-slate-800/90 overflow-hidden bg-slate-950/80 shadow-md">
+      <div class="px-3 py-2 bg-gradient-to-r from-slate-900 to-slate-950 border-b border-slate-800 text-[11px] font-bold text-slate-300 flex items-center justify-between">
+        <span class="flex items-center gap-1.5 font-mono uppercase tracking-wider text-amber-400">
+          <span>⚖️</span> BẢNG ĐỐI CHIẾU: YẾU TỐ WIN-WIN VS YẾU TỐ RỦI RO
+        </span>
+        <span class="text-[10px] text-slate-400 font-sans">Hệ Thống EMA20/50</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-800/90">
+        <!-- Cột Win-Win -->
+        <div class="p-3 bg-emerald-950/20 space-y-2">
+          <div class="text-emerald-400 font-bold text-xs flex items-center gap-1.5 border-b border-emerald-500/20 pb-1.5">
+            <span>🟢</span> <span>${winWinTitle}</span>
+          </div>
+          <div class="text-slate-300 text-xs space-y-1.5 leading-relaxed">
+            ${winWinContent}
+          </div>
+        </div>
+        <!-- Cột Rủi Ro -->
+        <div class="p-3 bg-rose-950/20 space-y-2">
+          <div class="text-rose-400 font-bold text-xs flex items-center gap-1.5 border-b border-rose-500/20 pb-1.5">
+            <span>🔴</span> <span>${riskTitle}</span>
+          </div>
+          <div class="text-slate-300 text-xs space-y-1.5 leading-relaxed">
+            ${riskContent}
+          </div>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
+  // Khối hành động bản thân cần làm
+  const actionPlanHtml = actionHtml ? `
+    <div class="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 space-y-1.5">
+      <div class="text-amber-300 font-bold flex items-center gap-1.5 text-xs">
+        <span>⚡</span> <span>${actionTitle}</span>
+      </div>
+      <div class="text-slate-300 text-xs space-y-1 leading-relaxed pl-1">
+        ${actionHtml}
+      </div>
+    </div>
+  ` : '';
+
+  // Gợi ý câu hỏi tiếp theo
   const followUpHtml = (followUpQuestions && followUpQuestions.length > 0)
     ? `
       <div class="pt-2.5 mt-2.5 border-t border-slate-800/80">
@@ -45,6 +114,7 @@ function renderStructuredResponse({
     `
     : '';
 
+  // Footer realtime context
   const liveContextHtml = marketContext
     ? `
       <div class="text-[10px] text-slate-400 pt-2 border-t border-slate-800/60 flex items-center justify-between flex-wrap gap-1">
@@ -55,46 +125,26 @@ function renderStructuredResponse({
     : '';
 
   return `
-    <div class="space-y-2.5 text-xs text-slate-300 leading-relaxed font-sans">
-      <!-- BƯỚC 1: KẾT LUẬN / ĐÁNH GIÁ TRỰC DIỆN -->
+    <div class="space-y-3 text-xs text-slate-300 leading-relaxed font-sans">
+      <!-- CUNG BẬC CẢM XÚC & LỜI CHIA SẺ THẤU HIỂU -->
+      ${emotionHtml}
+
+      <!-- KẾT LUẬN TRỰC DIỆN -->
       <div class="p-3 rounded-xl border ${vStyle} shadow-sm">
         <div class="text-[10px] font-mono uppercase font-bold tracking-wider opacity-80 mb-0.5">${badgeTitle}</div>
         <div class="font-bold text-sm leading-snug">${verdictText}</div>
       </div>
 
-      <!-- BƯỚC 2: CÁC KHUNG PHÂN TÍCH CHUẨN XÁC & CẮT LỖ -->
-      <div class="p-3 rounded-xl bg-slate-900/90 border border-emerald-500/25 space-y-1.5">
-        <div class="text-emerald-400 font-bold flex items-center gap-1.5 text-xs">
-          <span>🟢</span> ${coreConditionTitle}
-        </div>
-        <div class="text-slate-300 text-xs pl-4 space-y-1">
-          ${coreConditionHtml}
-        </div>
-      </div>
+      <!-- BẢNG ĐỐI CHIẾU WIN-WIN VS RỦI RO -->
+      ${matrixTableHtml}
 
-      <div class="p-3 rounded-xl bg-slate-900/90 border border-rose-500/25 space-y-1.5">
-        <div class="text-rose-400 font-bold flex items-center gap-1.5 text-xs">
-          <span>🔴</span> ${riskTitle}
-        </div>
-        <div class="text-slate-300 text-xs pl-4 space-y-1">
-          ${riskHtml}
-        </div>
-      </div>
+      <!-- HÀNH ĐỘNG BẢN THÂN CẦN LÀM NGAY LÚC NÀY -->
+      ${actionPlanHtml}
 
-      <!-- BƯỚC 3: LỜI KHUYÊN HÀNH ĐỘNG CỤ THỂ -->
-      <div class="p-3 rounded-xl bg-slate-900/90 border border-amber-500/25 space-y-1.5">
-        <div class="text-amber-300 font-bold flex items-center gap-1.5 text-xs">
-          <span>⚡</span> ${actionTitle}
-        </div>
-        <div class="text-slate-300 text-xs pl-4 space-y-1">
-          ${actionHtml}
-        </div>
-      </div>
-
-      <!-- Follow-up One-Touch Questions -->
+      <!-- GỢI Ý THẮC MẮC TIẾP THEO -->
       ${followUpHtml}
 
-      <!-- Realtime Context Footer -->
+      <!-- FOOTER REALTIME CONTEXT -->
       ${liveContextHtml}
     </div>
   `;
@@ -790,6 +840,289 @@ const EMA2050_TOPICS = {
       marketContext: ctx
     })
   }
+,
+
+  // 20. ĐÀM THOẠI MỞ & LẮNG NGHE THẮC MẮC TRADER
+  OPEN_GREETING_DIALOGUE: {
+    id: 'open_greeting_dialogue',
+    title: 'Đàm thoại mở & Lắng nghe thắc mắc trader',
+    shortTitle: 'Đàm thoại & Lắng nghe mở',
+    icon: '🌸',
+    keywords: ['xin chào', 'chào bạn', 'chào em', 'hello', 'hi', 'alo', 'có ai không', 'test bot', 'mình đang cần', 'xin chào tất cả các bạn', 'bắt đầu trò chuyện', 'chào tất cả các bạn'],
+    render: (ctx) => renderStructuredResponse({
+      badgeTitle: 'ĐÀM THOẠI MỞ & HỖ TRỢ TRỰC TIẾP',
+      emotionNote: 'Chào bạn! Mình là nữ cố vấn chiến lược MA Wave V8 PRO. Rất vui được gặp bạn! Mình luôn ở đây 24/7 để đồng hành, lắng nghe và chia sẻ mọi góc nhìn thực chiến cùng bạn. Bạn đang quan tâm hay thắc mắc điều gì nhất lúc này, có thể giải thích hoặc chia sẻ chi tiết cho mình nhé?',
+      verdictText: '🌸 SẴN SÀNG GIẢI MÃ MỌI VẤN ĐỀ VỀ VÀNG (XAU/USD), TÍN HIỆU BOT & HỆ THỐNG EMA20/50 CHO BẠN!',
+      verdictType: 'INFO',
+      winWinTitle: 'LỢI THẾ KHI ĐỒNG HÀNH CÙNG GOLD AI MENTOR',
+      winWinHtml: `
+        <p>• <strong>Bám sát nhịp nến M15</strong>: Phân tích khách quan độ dốc và khoảng cách EMA20/50 theo thời gian thực.</p>
+        <p>• <strong>Bảo vệ kỷ luật bản thân</strong>: Kiểm soát tâm lý FOMO, chống đu đỉnh/bán đáy, tính toán lot chuẩn 1-2% rủi ro.</p>
+        <p>• <strong>Tỷ lệ R:R tối ưu</strong>: Luôn tìm kiếm các điểm vào lệnh có tiềm năng lợi nhuận tối thiểu 1:1.5 đến 1:3.</p>
+      `,
+      riskTitle: 'NHỮNG RỦI RO LỚN NHẤT CẦN LOẠI BỎ',
+      riskHtml: `
+        <p>• <strong>Giao dịch theo cảm tính</strong>: Đánh theo linh cảm hoặc thấy nến xanh đỏ giật mạnh là nhảy vào bấm lệnh.</p>
+        <p>• <strong>Gồng lỗ & Nhồi lệnh ngược xu hướng</strong>: Khiến tài khoản bốc hơi nhanh chóng khi thị trường vào sóng mạnh.</p>
+        <p>• <strong>Chưa hiểu bản chất tín hiệu</strong>: Vào lệnh mà không biết tại sao bot Buy/Sell, dẫn đến hoang mang khi giá rung lắc.</p>
+      `,
+      actionTitle: 'HÀNH ĐỘNG BẢN THÂN CẦN LÀM NGAY BÂY GIỜ',
+      actionHtml: `
+        <p>1. <strong>Nếu bạn thắc mắc về tín hiệu bot vừa ra</strong>: Hãy hỏi ngay <em>"Tại sao tín hiệu bot vừa vào lại như này?"</em> để mình giải mã chi tiết các yếu tố kỹ thuật.</p>
+        <p>2. <strong>Nếu bạn đang có lệnh kẹt</strong>: Cứ nhắn rõ giá vào lệnh và hướng Buy/Sell, mình sẽ đưa ra phương án xử lý giảm thiểu thiệt hại.</p>
+        <p>3. <strong>Hoặc bấm nhanh các gợi ý 1-chạm bên dưới</strong> để khám phá ngay tình trạng thị trường lúc này nhé!</p>
+      `,
+      followUpQuestions: [
+        { icon: '🔍', text: 'Tại sao tín hiệu bot vừa vào lại Buy/Sell ở giá này?', label: 'Giải mã tín hiệu mới nhất' },
+        { icon: '🩺', text: 'Khám sức khỏe thị trường Vàng Realtime (Độ giãn EMA20/50 & Bẫy FOMO)?', label: 'Khám sức khỏe thị trường' },
+        { icon: '📈', text: 'Khung M15 đang thuận hay nghịch H1?', label: 'M15 thuận hay nghịch H1?' },
+        { icon: '💰', text: 'Tài khoản 1000$ thì đi bao nhiêu lot và quản lý vốn ra sao?', label: 'Tính Lot chuẩn vốn 1000$' }
+      ],
+      marketContext: ctx
+    })
+  },
+
+  // 21. GIẢI MÃ TÍN HIỆU BOT MỚI NHẤT
+  EXPLAIN_LATEST_SIGNAL: {
+    id: 'explain_latest_signal',
+    title: 'Giải mã chi tiết lý do và cấu trúc tín hiệu bot vừa phát',
+    shortTitle: 'Giải mã tín hiệu bot mới nhất',
+    icon: '🔍',
+    keywords: ['tại sao tín hiệu', 'tại sao bot lại vào', 'sao bot lại ra tín hiệu', 'lý do vào lệnh', 'tại sao lại buy ở đây', 'tại sao lại sell ở đây', 'giải thích tín hiệu', 'tại sao tín hiệu này lại như này', 'sao lại có lệnh', 'tại sao lệnh dính sl', 'tại sao lại báo buy', 'tại sao lại báo sell', 'giải mã tín hiệu'],
+    render: (ctx) => {
+      const sig = (ctx && ctx.latestSignal) || (typeof window !== 'undefined' && window.signalEngine && Array.isArray(window.signalEngine.signals) && window.signalEngine.signals[0]) || null;
+      const isBuy = sig ? (sig.type === 'BUY' || (sig.signal && String(sig.signal).includes('BUY'))) : (ctx && ctx.st && ctx.st.direction === 'BUY');
+      const dir = isBuy ? 'BUY (MUA)' : 'SELL (BÁN)';
+      const entryPrice = sig ? (sig.entryPrice || sig.price || 'vùng giá hồi') : (ctx ? ctx.livePriceStr : 'Giá realtime');
+      const slVal = sig ? (sig.slPrice || sig.sl || 'Dưới đáy/đỉnh cấu trúc') : (ctx && ctx.st && ctx.st.sl ? `$${ctx.st.sl.toFixed(2)}` : 'Dưới đáy/đỉnh cấu trúc');
+      const tp1Val = sig ? (sig.tp1Price || sig.tp1 || '+10 giá') : '+10 giá';
+      const scoreVal = sig ? (sig.score || '85') : (ctx && ctx.st ? ctx.st.score : '80');
+
+      return renderStructuredResponse({
+        badgeTitle: 'GIẢI MÃ TÍN HIỆU THỰC CHIẾN TỪ HỆ THỐNG',
+        emotionNote: 'Mình rất hoan nghênh câu hỏi này của bạn! Một trader bản lĩnh luôn muốn hiểu thấu đáo bản chất đằng sau mỗi tín hiệu: vì sao vào lệnh, cơ sở kỹ thuật là gì, và xác suất an toàn ra sao. Hãy cùng mình mổ xẻ 4 tiêu chí cốt lõi tạo nên tín hiệu này nhé!',
+        verdictText: `🎯 TÍN HIỆU ${dir} TẠI $${entryPrice}: ĐẠT CHUẨN ĐỒNG PHA EMA20/50 VỚI ĐIỂM CHẤT LƯỢNG ${scoreVal}/100!`,
+        verdictType: isBuy ? 'SUCCESS' : 'DANGER',
+        winWinTitle: '4 YẾU TỐ WIN-WIN (LỢI THẾ XÁC SUẤT CAO)',
+        winWinHtml: `
+          <p>1. <strong>Xu hướng & Độ dốc EMA</strong>: EMA20 ${isBuy ? 'nằm trên và dốc lên song song với' : 'nằm dưới và chúc dốc cùng'} EMA50, xác nhận dòng tiền lớn đang kiểm soát thị trường M15.</p>
+          <p>2. <strong>Hành động giá Pullback</strong>: Giá không bị đuổi mua/bán mù quáng mà đã hoàn thành nhịp hồi lành mạnh (Pullback) kiểm định trực tiếp vùng hỗ trợ/kháng cự EMA20.</p>
+          <p>3. <strong>Nến xác nhận phản ứng</strong>: Xuất hiện nến ${isBuy ? 'rút chân tăng (Pinbar/Hammer)' : 'bắn sao từ chối giá (Shooting Star)'} đóng cửa xác nhận phe ${isBuy ? 'Mua' : 'Bán'} bảo vệ phòng tuyến thành công.</p>
+          <p>4. <strong>Hệ số giãn cách D tối ưu</strong>: Biên độ giãn cách giữa EMA20 và EMA50 đạt ngưỡng an toàn (từ 1.2 đến 3.5 giá), loại bỏ hoàn toàn bẫy Sideway nén chặt.</p>
+        `,
+        riskTitle: 'YẾU TỐ RỦI RO & BẪY CẦN PHÒNG VỆ NGAY',
+        riskHtml: `
+          <p>• <strong>Bẫy quét thanh khoản (Liquidity Sweep)</strong>: Cá mập có thể giật một cây râu nến quét qua đáy/đỉnh gần nhất trước khi giá bung sóng thật.</p>
+          <p>• <strong>Ngưỡng Stop Loss bắt buộc</strong>: Tuyệt đối phải neo SL tại <strong>${slVal}</strong> (cách khoảng 5-7 giá). Không dời xa SL, không gồng lỗ!</p>
+          <p>• <strong>Rủi ro tin tức bất ngờ</strong>: Nếu có tin tức đỏ USD sắp công bố, giá có thể đảo chiều giật 2 đầu bất chấp chỉ báo kỹ thuật.</p>
+        `,
+        actionTitle: 'HÀNH ĐỘNG BẢN THÂN CẦN LÀM VỚI LỆNH NÀY',
+        actionHtml: `
+          <p>• <strong>Bước 1 - Quản lý vốn</strong>: Đi khối lượng đúng 1% - 2% tài khoản (ví dụ vốn $1.000 đi 0.02 - 0.04 lot), không nhồi thêm lệnh.</p>
+          <p>• <strong>Bước 2 - Khóa lợi nhuận</strong>: Khi giá đạt TP1 (<strong>${tp1Val}</strong>, tương đương +10 giá / 100 pips), lập tức chốt 50% khối lượng và kéo Stop Loss về điểm vào lệnh (Breakeven).</p>
+          <p>• <strong>Bước 3 - Gồng sóng lớn</strong>: 50% khối lượng còn lại thả trôi theo đường EMA20 để săn TP2 và TP3 mà không còn chút rủi ro nào cho tài khoản!</p>
+        `,
+        followUpQuestions: [
+          { icon: '🛡️', text: 'Khi nào được phép dời SL về hòa vốn (Breakeven) an toàn?', label: 'Khi nào dời SL hòa vốn?' },
+          { icon: '🏆', text: 'Bí quyết gồng lãi đến TP2, TP3 mà không bị chốt non?', label: 'Bí quyết gồng lãi TP2/TP3' },
+          { icon: '⚡', text: 'Ứng phó bão tin CPI / NFP ra sao khi đánh theo EMA?', label: 'Ứng phó bão tin CPI/NFP' },
+          { icon: '📈', text: 'Khung M15 đang thuận hay nghịch H1?', label: 'M15 thuận hay nghịch H1?' }
+        ],
+        marketContext: ctx
+      });
+    }
+  },
+
+  // 22. PHÂN TÍCH ĐA KHUNG: M15 THUẬN HAY NGHỊCH H1
+  MTF_H1_M15: {
+    id: 'mtf_h1_m15',
+    title: 'Phân tích đa khung: M15 đang thuận hay nghịch H1?',
+    shortTitle: 'M15 thuận hay nghịch H1',
+    icon: '📈',
+    keywords: ['m15 thuận hay nghịch h1', 'm15 và h1', 'thuận hay nghịch', 'đa khung h1', 'phối hợp m15 h1'],
+    render: (ctx) => renderStructuredResponse({
+      badgeTitle: 'PHÂN TÍCH ĐỒNG PHA ĐA KHUNG THỜI GIAN',
+      emotionNote: 'Giao dịch theo xu hướng lớn của H1 và bấm cò trên M15 là bí quyết của những trader có tỷ lệ thắng bền vững nhất. Hãy luôn nhớ: đi ngược H1 giống như bơi ngược dòng thác!',
+      verdictText: '👉 NGUYÊN TẮC BẤT DI BẤT DỊCH: CHỈ ĐƯỢC PHÉP VÀO LỆNH M15 KHI ĐỒNG PHA VỚI XU HƯỚNG EMA CỦA H1!',
+      verdictType: 'INFO',
+      winWinTitle: 'LỢI THẾ CỦA GIAO DỊCH ĐỒNG PHA (MTF ALIGNED)',
+      winWinHtml: `
+        <p>• <strong>H1 chỉ đường</strong>: Nếu H1 EMA20 > EMA50 (Tăng), ta chỉ tìm setup BUY trên M15; tuyệt đối bỏ qua mọi lệnh SELL M15.</p>
+        <p>• <strong>Biên độ sóng lớn</strong>: Lệnh đồng pha H1 có xác suất chạm TP2, TP3 cao gấp 3 lần so với lệnh đánh ngược pha.</p>
+        <p>• <strong>Ít bị quét SL</strong>: Lực đỡ từ khung H1 sẽ bảo vệ vị thế của bạn trước các nhịp rung giật nhỏ của M15.</p>
+      `,
+      riskTitle: 'RỦI RO KHI M15 ĐÁNH NGHỊCH H1',
+      riskHtml: `
+        <p>• <strong>Bẫy sóng hồi giả</strong>: M15 xuất hiện tín hiệu Sell nhưng H1 đang Uptrend mạnh ➔ Lệnh Sell rất dễ bị cá mập nuốt chửng ngay khi chạm EMA20 H1.</p>
+        <p>• <strong>Tỷ lệ R:R kém</strong>: Đánh ngược xu hướng H1 chỉ ăn được 20-30 pips nhưng đối mặt rủi ro dính SL 50-70 pips.</p>
+      `,
+      actionTitle: 'QUY TRÌNH HÀNH ĐỘNG BẢN THÂN CẦN LÀM',
+      actionHtml: `
+        <p>1. <strong>Bước 1</strong>: Mở biểu đồ H1, kiểm tra vị trí giá so với EMA20 và EMA50 H1. Nếu H1 Tăng ➔ Đóng khung chỉ tìm lệnh BUY.</p>
+        <p>2. <strong>Bước 2</strong>: Chờ M15 tạo nhịp Pullback hồi về kiểm định EMA20/50 M15.</p>
+        <p>3. <strong>Bước 3</strong>: Bấm cò khi M15 xuất hiện nến xác nhận cùng hướng với H1.</p>
+      `,
+      followUpQuestions: [
+        { icon: '🔍', text: 'Tại sao tín hiệu bot vừa vào lại Buy/Sell ở giá này?', label: 'Giải mã tín hiệu mới nhất' },
+        { icon: '🏆', text: 'Bí quyết gồng lãi đến TP2, TP3 mà không bị chốt non?', label: 'Cách gồng lãi TP2/TP3' },
+        { icon: '🛡️', text: 'Khi nào được phép dời SL về hòa vốn (Breakeven) an toàn?', label: 'Khi nào dời SL hòa vốn?' }
+      ],
+      marketContext: ctx
+    })
+  },
+
+  // 23. KHI NÀO DỜI SL VỀ HÒA VỐN (BREAKEVEN)
+  BREAKEVEN_MOVE: {
+    id: 'breakeven_move',
+    title: 'Khi nào được phép dời SL về hòa vốn (Breakeven)?',
+    shortTitle: 'Khi nào dời SL về hòa vốn',
+    icon: '🛡️',
+    keywords: ['khi nào dời sl', 'dời sl hòa vốn', 'kéo sl dương', 'dời sl về entry', 'breakeven', 'bảo vệ vốn'],
+    render: (ctx) => renderStructuredResponse({
+      badgeTitle: 'CHIẾN LƯỢC QUẢN TRỊ LỆNH & DỜI SL HÒA VỐN',
+      emotionNote: 'Bảo vệ tiền gốc luôn là ưu tiên số 1 của trader chuyên nghiệp. Tuy nhiên, dời SL hòa vốn quá sớm sẽ bị thị trường quét râu rồi mới bay đúng hướng; dời quá trễ thì lệnh đang thắng biến thành lệnh thua!',
+      verdictText: '👉 ĐIỀU KIỆN CHUẨN: CHỈ DỜI SL VỀ ENTRY KHI GIÁ CHẠM TP1 (+10 GIÁ) HOẶC ĐÃ TẠO MỘT ĐÁY/ĐỈNH MỚI TRÊN M15!',
+      verdictType: 'SUCCESS',
+      winWinTitle: 'YẾU TỐ WIN-WIN (TÂM LÝ BẤT BẠI)',
+      winWinHtml: `
+        <p>• <strong>Giải tỏa áp lực tâm lý</strong>: Khi SL đã ở mức hòa vốn hoặc có lãi nhỏ (SL Dương +1 giá), lệnh giao dịch trở thành FREE TRADE — rủi ro tài khoản về 0!</p>
+        <p>• <strong>Bảo toàn vốn tuyệt đối</strong>: Nếu thị trường bất ngờ đảo chiều vì tin tức, bạn hoàn toàn không bị mất một xu nào.</p>
+        <p>• <strong>Cơ hội ăn sóng lớn</strong>: Bạn thảnh thơi gồng lãi phần khối lượng còn lại tới TP2 (+20 giá) và TP3 (+30 giá).</p>
+      `,
+      riskTitle: 'SAI LẦM TAI HẠI KHI DỜI SL QUÁ VỘI VÀNG',
+      riskHtml: `
+        <p>• <strong>Bẫy quét râu Re-test</strong>: Vừa thấy lãi 2-3 giá đã vội kéo SL về Entry. Thị trường giật nhẹ một nhịp re-test đường EMA20 quét lệnh của bạn ra ngoài, sau đó mới phi thẳng tới TP3!</p>
+        <p>• <strong>Tài khoản dậm chân tại chỗ</strong>: Lệnh nào cũng bị cắn hòa vốn, vừa tốn phí spread/swap vừa bỏ lỡ con sóng tăng đẹp.</p>
+      `,
+      actionTitle: 'QUY TẮC 3 BƯỚC THỰC CHIẾN CỦA MA WAVE V8',
+      actionHtml: `
+        <p>1. <strong>Giá chạy +5 giá</strong>: GIỮ NGUYÊN SL BAN ĐẦU, không manh động.</p>
+        <p>2. <strong>Giá chạm TP1 (+10 giá)</strong>: CHỐT NGAY 50% KHỐI LƯỢNG. Đồng thời kéo SL về Entry (hoặc Entry + 1 giá đệm phí).</p>
+        <p>3. <strong>Giá bứt phá tạo đỉnh/đáy M15 tiếp theo</strong>: Nâng dần SL theo các đáy HL mới (Trailing Stop) bám theo đường EMA20.</p>
+      `,
+      followUpQuestions: [
+        { icon: '🏆', text: 'Bí quyết gồng lãi đến TP2, TP3 mà không bị chốt non?', label: 'Bí quyết gồng lãi TP2/TP3' },
+        { icon: '🛡️', text: 'Đặt Stop Loss ở đâu an toàn theo cấu trúc?', label: 'Cách đặt SL an toàn' },
+        { icon: '💰', text: 'Cách tính lot và quản lý vốn an toàn cho tài khoản?', label: 'Quản lý vốn & Đi lot' }
+      ],
+      marketContext: ctx
+    })
+  },
+
+  // 24. PHÂN BIỆT SIDEWAY TÍCH LŨY VÀ PHÂN PHỐI
+  SIDEWAY_VS_DISTRIBUTION: {
+    id: 'sideway_vs_distribution',
+    title: 'Phân biệt Sideway tích lũy và Phân phối đỉnh/đáy',
+    shortTitle: 'Phân biệt Sideway & Phân phối',
+    icon: '📦',
+    keywords: ['phân biệt sideway', 'tích lũy hay phân phối', 'sideway và phân phối', 'tích lũy và phân phối', 'gom hàng hay xả hàng', 'phân phối đỉnh'],
+    render: (ctx) => renderStructuredResponse({
+      badgeTitle: 'BÍ QUYẾT PHÂN BIỆT PHA VẬN ĐỘNG CỦA CÁ MẬP',
+      emotionNote: 'Rất nhiều trader mất tiền vì nhầm lẫn giữa một nhịp tích lũy gom hàng để tăng tiếp với một nhịp phân phối xả hàng của nhà cái. Hãy cùng mình đọc vị các dấu hiệu qua hành động giá và dải EMA nhé!',
+      verdictText: '👉 ĐẶC ĐIỂM CỐT LÕI: TÍCH LŨY THƯỜNG CÓ VOLUME GIẢM DẦN & ĐÁY NÂNG CAO; PHÂN PHỐI THƯỜNG XUẤT HIỆN RÂU NẾN DÀI Ở ĐỈNH VỚI VOLUME ĐỘT BIẾN!',
+      verdictType: 'WARN',
+      winWinTitle: 'ĐẶC ĐIỂM NHẬN BIẾT TÍCH LŨY (ACCUMULATION)',
+      winWinHtml: `
+        <p>• <strong>Biên độ nén hẹp dần</strong>: Các cây nến M15 nhỏ dần, dao động ép chặt quanh dải EMA20-50.</p>
+        <p>• <strong>Đáy nâng dần (Higher Lows)</strong>: Phe mua liên tục đỡ giá ở các mốc cao hơn, không cho giá thủng EMA50.</p>
+        <p>• <strong>Volume thu hẹp</strong>: Lực bán cạn kiệt, chờ đợi một cây nến Breakout mạnh mẽ bứt phá khỏi biên trên của hộp.</p>
+      `,
+      riskTitle: 'DẤU HIỆU CỦA PHA PHÂN PHỐI (DISTRIBUTION)',
+      riskHtml: `
+        <p>• <strong>Râu trên giật liên tục (Upthrust)</strong>: Giá cố gắng vượt đỉnh nhưng bị đạp mạnh xuống ngay trong phiên M15.</p>
+        <p>• <strong>EMA20 gãy cụp xuống dưới EMA50</strong>: Động lượng ngắn hạn bị bẻ gãy hoàn toàn.</p>
+        <p>• <strong>Thanh khoản tăng vọt tại vùng đỉnh</strong>: Nhà cái đang sang tay lượng lớn lệnh cho đám đông FOMO.</p>
+      `,
+      actionTitle: 'HÀNH ĐỘNG AN TOÀN BẢN THÂN CẦN LÀM',
+      actionHtml: `
+        <p>• <strong>Khi chưa rõ ràng</strong>: ĐỨNG NGOÀI TUYỆT ĐỐI. Kẻ thông minh là người kiên nhẫn đứng xem cá mập đánh nhau.</p>
+        <p>• <strong>Đánh tích lũy</strong>: Chờ nến Breakout đóng cửa vượt biên trên + retest EMA20 thành công mới vào BUY.</p>
+        <p>• <strong>Đánh phân phối</strong>: Chờ cấu trúc CHoCH đâm thủng đáy gần nhất + nến retest thất bại tại EMA50 mới vào SELL.</p>
+      `,
+      followUpQuestions: [
+        { icon: '🧭', text: 'Xác định 5 trạng thái thị trường theo EMA như thế nào?', label: '5 Trạng thái thị trường' },
+        { icon: '⚠️', text: '4 Dấu hiệu nhận biết xu hướng suy yếu và đảo chiều sớm là gì?', label: 'Dấu hiệu đảo chiều sớm' },
+        { icon: '📦', text: 'Cách giao dịch khi thị trường Sideway đi ngang?', label: 'Cách đánh Sideway' }
+      ],
+      marketContext: ctx
+    })
+  },
+
+  // 25. ỨNG PHÓ BÃO TIN KINH TẾ MẠNH (CPI, NFP, FED)
+  NEWS_CPI_NFP: {
+    id: 'news_cpi_nfp',
+    title: 'Ứng phó bão tin kinh tế mạnh (CPI, NFP, Fed Lãi suất)',
+    shortTitle: 'Ứng phó bão tin CPI / NFP',
+    icon: '⚡',
+    keywords: ['ứng phó bão tin', 'đánh tin cpi', 'tin nfp', 'tin tức mạnh', 'đánh tin thế nào', 'tránh bão tin', 'fomc', 'lãi suất fed'],
+    render: (ctx) => renderStructuredResponse({
+      badgeTitle: 'CHIẾN LƯỢC QUẢN TRỊ RỦI RO KHI CÓ TIN ĐỎ USD',
+      emotionNote: 'Vàng là kim loại phản ứng nhạy cảm nhất thế giới trước số liệu lạm phát CPI và bảng lương NFP. Trước bão tin, lòng tham muốn ăn nhanh x2 tài khoản chính là cái bẫy chết người nhất!',
+      verdictText: '👉 NGUYÊN TẮC THÉP: KHÔNG ĐOÁN HƯỚNG TIN TỨC — ĐỨNG NGOÀI 15 PHÚT TRƯỚC VÀ SAU TIN, CHỈ VÀO LỆNH THEO NẾN XÁC NHẬN M15!',
+      verdictType: 'DANGER',
+      winWinTitle: 'LỢI THẾ CỦA VIỆC ĐỢI TIN RA XONG MỚI GIAO DỊCH',
+      winWinHtml: `
+        <p>• <strong>Không bị trượt giá (Slippage)</strong>: Lúc tin ra, spread có thể giãn từ 2 pips lên 20-50 pips; đợi tin xong spread trở về bình thường.</p>
+        <p>• <strong>Bắt trọn con sóng thực sự</strong>: 1-2 cây nến đầu tiên thường là quét râu 2 đầu của nhà cái; cây nến M15 thứ 2 trở đi mới là hướng đi thực của dòng tiền lớn.</p>
+        <p>• <strong>Tín hiệu EMA trở lại chuẩn xác</strong>: Sau khi cơn sốc tin đi qua, dải EMA20 và EMA50 sẽ dẫn dắt xu hướng cực kỳ mượt mà.</p>
+      `,
+      riskTitle: 'RỦI RO KHI ĐÁNH TRƯỚC VÀ ĐOÁN TIN',
+      riskHtml: `
+        <p>• <strong>Quét sạch cả 2 đầu SL</strong>: Giá giật lên 15 giá rồi giật xuống 20 giá chỉ trong 30 giây, quét bay cả lệnh Buy lẫn Sell.</p>
+        <p>• <strong>Treo sàn / Mất kết nối</strong>: Lệnh Stop Loss có thể bị khớp trượt hàng chục giá dẫn đến cháy tài khoản ngoài ý muốn.</p>
+      `,
+      actionTitle: 'KẾ HOẠCH HÀNH ĐỘNG CỦA CHUYÊN GIA',
+      actionHtml: `
+        <p>1. <strong>Trước giờ tin 15 phút</strong>: Đóng các lệnh lướt ngắn hạn, hoặc kéo SL về hòa vốn cho các lệnh đang gồng lãi xa.</p>
+        <p>2. <strong>Khi tin công bố</strong>: Khoanh tay quan sát, không bấm lệnh theo cảm xúc.</p>
+        <p>3. <strong>Sau tin 15 - 30 phút</strong>: Quan sát cây nến M15 đóng cửa. Nếu nến đóng vững chắc trên EMA20/50 ➔ Tìm cơ hội BUY khi giá pullback; ngược lại nếu thủng mạnh ➔ Canh SELL.</p>
+      `,
+      followUpQuestions: [
+        { icon: '🔍', text: 'Tại sao tín hiệu bot vừa vào lại Buy/Sell ở giá này?', label: 'Giải mã tín hiệu mới nhất' },
+        { icon: '🛡️', text: 'Đặt Stop Loss ở đâu an toàn theo cấu trúc?', label: 'Cách đặt SL an toàn' },
+        { icon: '💰', text: 'Cách tính lot và quản lý vốn an toàn cho tài khoản?', label: 'Quản lý vốn & Đi lot' }
+      ],
+      marketContext: ctx
+    })
+  },
+
+  // 26. BÍ QUYẾT GỒNG LÃI ĐẾN TP2, TP3
+  TRAILING_PROFIT: {
+    id: 'trailing_profit',
+    title: 'Bí quyết gồng lãi đến TP2, TP3 mà không bị chốt non',
+    shortTitle: 'Bí quyết gồng lãi TP2, TP3',
+    icon: '🏆',
+    keywords: ['gồng lời tp2 tp3', 'cách gồng lãi', 'không bị chốt non', 'gồng lời thế nào', 'làm sao gồng lãi', 'trailing stop'],
+    render: (ctx) => renderStructuredResponse({
+      badgeTitle: 'NGHỆ THUẬT GỒNG LÃI THEO ĐƯỜNG EMA20',
+      emotionNote: 'Gồng lỗ thì ai cũng giỏi, nhưng gồng lãi mới là thử thách tâm lý lớn nhất của trader! Nỗi sợ mất số tiền đang có thường khiến bạn chốt non ăn 1-2 giá, rồi tiếc nuối nhìn thị trường bay 20-30 giá. Hãy để quy tắc kỹ thuật thay thế cảm xúc của bạn!',
+      verdictText: '👉 BÍ QUYẾT: CHỐT 50% TẠI TP1 ĐỂ BẢO VỆ TÂM LÝ, 50% CÒN LẠI DÙNG ĐƯỜNG EMA20 M15 LÀM ĐƯỜNG TRAILING STOP ĐỂ ĂN TRỌN SÓNG!',
+      verdictType: 'SUCCESS',
+      winWinTitle: 'TẠI SAO PHƯƠNG PHÁP NÀY ĐEM LẠI LỢI NHUẬN KHỦNG?',
+      winWinHtml: `
+        <p>• <strong>Bắt trọn cả con sóng lớn</strong>: Trong một xu hướng mạnh (Uptrend/Downtrend), giá có thể bám dọc theo đường EMA20 chạy 20-50 giá mà không hề chạm vào EMA50.</p>
+        <p>• <strong>Tâm lý hoàn toàn thoải mái</strong>: Do 50% khối lượng đã chốt lời đút túi tại TP1 và SL đã được dời về Entry, phần còn lại bạn chỉ việc ngồi xem lợi nhuận phình to!</p>
+        <p>• <strong>Tỷ lệ R:R bứt phá</strong>: Các lệnh ăn trọn sóng TP3 (+30 giá) sẽ bù đắp và kéo tài khoản tăng trưởng theo cấp số nhân.</p>
+      `,
+      riskTitle: 'BẪY TÂM LÝ CẦN VƯỢT QUA',
+      riskHtml: `
+        <p>• <strong>Sợ mất lãi khi giá hồi</strong>: Thị trường đi lên theo hình bậc thang zíc zắc. Thấy giá hồi 2-3 giá là hoảng sợ bấm đóng lệnh bằng tay ➔ Mất con sóng lớn phía sau.</p>
+        <p>• <strong>Quá tham không chịu chốt 1 phần</strong>: Giữ nguyên 100% vol không chốt TP1, đến khi giá quay đầu dính hòa vốn thì tiếc nuối và cay cú.</p>
+      `,
+      actionTitle: 'HÀNH ĐỘNG BẢN THÂN CẦN LÀM THEO TỪNG BƯỚC',
+      actionHtml: `
+        <p>1. <strong>Đạt TP1 (+10 giá / 100 pips)</strong>: Chốt đúng 50% khối lượng, dời SL về mức hòa vốn.</p>
+        <p>2. <strong>Khi giá tiếp tục chạy</strong>: Quan sát đường EMA20 trên khung M15. Chừng nào nến M15 chưa đóng cửa thủng qua đường EMA20 thì VẪN TIẾP TỤC GỒNG.</p>
+        <p>3. <strong>Điểm thoát lệnh toàn bộ</strong>: Chỉ đóng nốt 50% còn lại khi giá chạm mốc TP3 (+30 giá) hoặc khi xuất hiện cây nến M15 đóng cửa vi phạm hoàn toàn qua đường EMA20.</p>
+      `,
+      followUpQuestions: [
+        { icon: '🛡️', text: 'Khi nào được phép dời SL về hòa vốn (Breakeven) an toàn?', label: 'Khi nào dời SL hòa vốn?' },
+        { icon: '🔍', text: 'Tại sao tín hiệu bot vừa vào lại Buy/Sell ở giá này?', label: 'Giải mã tín hiệu mới nhất' },
+        { icon: '💰', text: 'Cách tính lot và quản lý vốn an toàn cho tài khoản?', label: 'Quản lý vốn & Đi lot' }
+      ],
+      marketContext: ctx
+    })
+  }
 };
 
 /**
@@ -799,7 +1132,30 @@ function searchEMA2050Knowledge(query, marketContext) {
   if (!query) return null;
   const qLower = query.toLowerCase().trim();
 
-  // Chấm điểm độ khớp cho từng chủ đề trong bộ tri thức
+  // 1. Nhận diện Thắc mắc tín hiệu chuyên sâu từ trader (Ưu tiên số 1)
+  if (/(?:tại sao|vì sao|sao|lý do|giải thích|thắc mắc).*(?:tín hiệu|lệnh|vào lệnh|buy|sell|mới nhất|vừa vào|ở giá này|như này)/i.test(qLower) ||
+      /(?:tín hiệu này|lệnh này).*(?:như thế nào|tại sao|sao lại|vì sao|nó như)/i.test(qLower) ||
+      qLower.includes('tại sao tín hiệu') || qLower.includes('giải mã tín hiệu') ||
+      /(?:tại sao|vì sao|sao).*(?:vào buy|vào sell|buy ở|sell ở|khớp lệnh)/i.test(qLower)) {
+    return {
+      topic: EMA2050_TOPICS.EXPLAIN_LATEST_SIGNAL,
+      renderedHtml: EMA2050_TOPICS.EXPLAIN_LATEST_SIGNAL.render(marketContext),
+      mode: 'Gold AI Mentor: Giải Mã Tín Hiệu Chuyên Sâu'
+    };
+  }
+
+  // 2. Nhận diện Đàm thoại mở & Chào hỏi tự do của người dùng
+  if (/(?:xin\s*chào|chào\s*(?:bạn|em|mọi người|tất cả|cả nhà)|\bhello\b|\bhi\b|\balo\b|có ai không|test bot|mình đang cần|bắt đầu trò chuyện)/i.test(qLower) || 
+      qLower.startsWith('chào') || qLower.startsWith('hello') || qLower.startsWith('ok xin chào') || qLower.includes('xin chào tất cả các bạn') ||
+      qLower === 'chào' || qLower === 'hi' || qLower === 'hello') {
+    return {
+      topic: EMA2050_TOPICS.OPEN_GREETING_DIALOGUE,
+      renderedHtml: EMA2050_TOPICS.OPEN_GREETING_DIALOGUE.render(marketContext),
+      mode: 'Gold AI Mentor: Đàm Thoại Mở & Lắng Nghe'
+    };
+  }
+
+  // 3. So khớp các chủ đề khác trong bộ tri thức
   let bestTopic = null;
   let maxScore = 0;
 
@@ -814,7 +1170,13 @@ function searchEMA2050Knowledge(query, marketContext) {
       }
     }
 
-    // So khớp cụm từ tình huống cụ thể (Priority Boosting)
+    // Priority Boosting cho các tình huống thực chiến & chủ đề mới
+    if (topic.id === 'mtf_h1_m15' && (/m15.*h1|thuận hay nghịch|đa khung h1/i.test(qLower))) score += 18;
+    if (topic.id === 'breakeven_move' && (/dời sl|hòa vốn|kéo sl dương|breakeven/i.test(qLower))) score += 18;
+    if (topic.id === 'sideway_vs_distribution' && (/tích lũy|phân phối|gom hàng|xả hàng/i.test(qLower))) score += 18;
+    if (topic.id === 'news_cpi_nfp' && (/bão tin|đánh tin|cpi|nfp|lãi suất fed|fomc/i.test(qLower))) score += 18;
+    if (topic.id === 'trailing_profit' && (/gồng lãi|gồng lời|chốt non|tp2|tp3/i.test(qLower))) score += 18;
+
     if (topic.id === 'trader_fomo' && (/mua đuổi|bán đuổi|đuổi giá|bay mạnh quá|tăng mạnh quá|sợ lỡ sóng|lỡ tàu|sợ mất cơ hội|fomo|đu đỉnh|đu đáy|có nên nhảy vào/i.test(qLower))) score += 15;
     if (topic.id === 'trader_trapped' && (/kẹt lệnh|lỡ buy đỉnh|lỡ sell đáy|bị âm|gồng lỗ|cứu tài khoản|sắp cháy|xử lý lệnh lỗ|âm nặng/i.test(qLower))) score += 15;
     if (topic.id === 'trader_chop_annoying' && (/khó chịu|thị trường bẩn|quét sl|bị cắn sl|giật 2 đầu|đi ngang khó chịu|đánh khó quá|sao hôm nay vàng đi khó/i.test(qLower))) score += 15;

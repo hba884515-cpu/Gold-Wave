@@ -4875,12 +4875,13 @@ window.handleGoldAISubmit = async function(e) {
     const lotRes = calculateGoldAiLotSize(query);
     htmlResponse = lotRes.html;
     mode = lotRes.mode;
-  } else {
+    const latestClientSignal = (window.signalEngine && Array.isArray(window.signalEngine.signals) && window.signalEngine.signals.length > 0) ? window.signalEngine.signals[0] : null;
+
     try {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: query, price: livePriceStr })
+        body: JSON.stringify({ prompt: query, price: livePriceStr, latestSignal: latestClientSignal })
       });
       if (res.ok) {
         const data = await res.json();
@@ -4899,7 +4900,8 @@ window.handleGoldAISubmit = async function(e) {
           ema20Str: snap && snap.ema20 ? `$${Number(snap.ema20).toFixed(2)}` : 'Đang cập nhật',
           ema50Str: snap && snap.ema50 ? `$${Number(snap.ema50).toFixed(2)}` : 'Đang cập nhật',
           stateDesc: snap && snap.ema50State ? snap.ema50State.marketStateLabel : 'Xu hướng M15',
-          st: snap && snap.ema50State
+          st: snap && snap.ema50State,
+          latestSignal: latestClientSignal
         });
         if (clientKbRes) {
           htmlResponse = clientKbRes.renderedHtml;
