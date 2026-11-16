@@ -1545,12 +1545,12 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 4044.50,
-    change: -3.50,
-    changePercent: -0.09,
-    high: 4050.00,
-    low: 4038.00,
-    open: 4048.00,
+    price: 3840.00,
+    change: -43.89,
+    changePercent: -1.13,
+    high: 3901.23,
+    low: 3835.81,
+    open: 3883.89,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
@@ -1728,17 +1728,21 @@ async function fetchTradingViewAllPrices() {
 
     // Parse CFD (Gold & Silver)
     if (cfdData && cfdData.data && Array.isArray(cfdData.data)) {
-      cfdData.data.forEach(item => {
-        if (!item || !item.s || !item.d || item.d.length < 6) return;
-        const close = parseFloat(item.d[0]);
-        const chgPct = parseFloat(item.d[1]);
-        const chgAbs = parseFloat(item.d[2]);
-        const high = parseFloat(item.d[3]);
-        const low = parseFloat(item.d[4]);
-        const open = parseFloat(item.d[5]);
-        if (isNaN(close) || close <= 0) return;
+      // Ưu tiên chuẩn xác TVC:GOLD và TVC:SILVER
+      const goldItems = cfdData.data.filter(i => i && i.s && (i.s.includes('GOLD') || i.s.includes('XAUUSD')));
+      const silverItems = cfdData.data.filter(i => i && i.s && (i.s.includes('SILVER') || i.s.includes('XAGUSD')));
 
-        if (item.s.includes('GOLD') || item.s.includes('XAUUSD')) {
+      const bestGold = goldItems.find(i => i.s === 'TVC:GOLD') || goldItems[0];
+      const bestSilver = silverItems.find(i => i.s === 'TVC:SILVER') || silverItems[0];
+
+      if (bestGold && bestGold.d && bestGold.d.length >= 6) {
+        const close = parseFloat(bestGold.d[0]);
+        const chgPct = parseFloat(bestGold.d[1]);
+        const chgAbs = parseFloat(bestGold.d[2]);
+        const high = parseFloat(bestGold.d[3]);
+        const low = parseFloat(bestGold.d[4]);
+        const open = parseFloat(bestGold.d[5]);
+        if (!isNaN(close) && close > 0) {
           tvMarketPricesCache.XAU = {
             price: +close.toFixed(2),
             change: +chgAbs.toFixed(2),
@@ -1746,12 +1750,22 @@ async function fetchTradingViewAllPrices() {
             high: +high.toFixed(2),
             low: +low.toFixed(2),
             open: +open.toFixed(2),
-            symbol: item.s,
+            symbol: bestGold.s,
             lastUpdated: now
           };
           tvGoldDataCache = tvMarketPricesCache.XAU;
           goldUpdated = true;
-        } else if (item.s.includes('SILVER') || item.s.includes('XAGUSD')) {
+        }
+      }
+
+      if (bestSilver && bestSilver.d && bestSilver.d.length >= 6) {
+        const close = parseFloat(bestSilver.d[0]);
+        const chgPct = parseFloat(bestSilver.d[1]);
+        const chgAbs = parseFloat(bestSilver.d[2]);
+        const high = parseFloat(bestSilver.d[3]);
+        const low = parseFloat(bestSilver.d[4]);
+        const open = parseFloat(bestSilver.d[5]);
+        if (!isNaN(close) && close > 0) {
           tvMarketPricesCache.XAG = {
             price: +close.toFixed(2),
             change: +chgAbs.toFixed(2),
@@ -1759,12 +1773,12 @@ async function fetchTradingViewAllPrices() {
             high: +high.toFixed(2),
             low: +low.toFixed(2),
             open: +open.toFixed(2),
-            symbol: item.s,
+            symbol: bestSilver.s,
             lastUpdated: now
           };
           silverUpdated = true;
         }
-      });
+      }
     }
 
     // Parse Crypto (BTC)
@@ -1811,15 +1825,15 @@ async function fetchTradingViewAllPrices() {
     const [liveGold, liveSilver, liveBtc] = await Promise.all(fallbackTasks);
 
     if (liveGold && liveGold > 0) {
-      const openPrice = tvMarketPricesCache.XAU.open || 4048.00;
+      const openPrice = tvMarketPricesCache.XAU.open || 3883.89;
       const chgAbs = +(liveGold - openPrice).toFixed(2);
       const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
       tvMarketPricesCache.XAU = {
         price: +liveGold.toFixed(2),
         change: chgAbs,
         changePercent: chgPct,
-        high: +Math.max(tvMarketPricesCache.XAU.high || 4050.00, liveGold).toFixed(2),
-        low: +Math.min(tvMarketPricesCache.XAU.low || 4038.00, liveGold).toFixed(2),
+        high: +Math.max(tvMarketPricesCache.XAU.high || 3901.23, liveGold).toFixed(2),
+        low: +Math.min(tvMarketPricesCache.XAU.low || 3835.81, liveGold).toFixed(2),
         open: openPrice,
         symbol: 'TVC:GOLD',
         lastUpdated: now
@@ -3478,28 +3492,29 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/notifications/trigger-all') {
     const tvData = await fetchTradingViewGoldPrice();
-    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 4044.50);
+    const livePrice = (tvData && tvData.price) ? tvData.price : (tvMarketPricesCache?.XAU?.price || 3840.00);
     const buyEntry = livePrice;
     const tp1 = +(buyEntry + 10.0).toFixed(2);
     const tp2 = +(buyEntry + 20.0).toFixed(2);
     const sl  = +(buyEntry - 5.0).toFixed(2);
     const s1  = +(livePrice - 10.0).toFixed(2);
     const r1  = +(livePrice + 10.0).toFixed(2);
+    const vnTime = new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
 
     const newsItem = addNotification(
       'NEWS',
-      '📰 TIN TỨC KINH TẾ HÀNG NGÀY — GOLD WAVE',
+      `[${vnTime}] 📰 TIN TỨC KINH TẾ HÀNG NGÀY — GOLD WAVE`,
       '🔴 Báo cáo CPI & lạm phát Mỹ công bố hôm nay! Tác động cực mạnh đến USD & biến động giá Vàng XAU/USD.'
     );
     const trendItem = addNotification(
       'TREND',
-      '📈 GOLD AI — PHÂN TÍCH XU HƯỚNG XAU/USD',
-      `〽 Xu hướng: TĂNG MẠNH 🟢 (MTF Đồng thuận 100%)\n📍 Giá Live: $${livePrice.toFixed(2)}\n🛡️ Hỗ trợ chú ý S1: $${s1.toFixed(2)} | 🚧 Kháng cự R1: $${r1.toFixed(2)}`
+      `[${vnTime}] 📈 GOLD AI — XU HƯỚNG XAU/USD: $${livePrice.toFixed(2)}`,
+      `⏰ Cập nhật lúc: ${vnTime} (GMT+7)\n📍 Giá ghi nhận: $${livePrice.toFixed(2)} | MTF Đồng thuận 🟢\n🚧 Mốc cản Kháng cự: R1 $${r1.toFixed(2)} | 🛡️ Mốc cản Hỗ trợ: S1 $${s1.toFixed(2)}\n💡 Giá Vàng biến động liên tục, mở App để theo dõi nến Realtime!`
     );
     const signalItem = addNotification(
       'SIGNAL',
-      '🚨 TÍN HIỆU MA WAVE V8 REALTIME: MUA (BUY) 📈',
-      `📍 Entry: $${buyEntry.toFixed(2)}\n🎯 TP1 (+10 giá): $${tp1.toFixed(2)}\n🎯 TP2 (+20 giá): $${tp2.toFixed(2)}\n🛑 SL (-5 giá): $${sl.toFixed(2)}`
+      `[${vnTime}] 🚨 TÍN HIỆU MA WAVE V8: MUA (BUY) 📈`,
+      `📍 Điểm vào lệnh: $${buyEntry.toFixed(2)}\n🎯 TP1 (+10 giá): $${tp1.toFixed(2)} | TP2 (+20 giá): $${tp2.toFixed(2)}\n🛑 Cắt lỗ SL (-5 giá): $${sl.toFixed(2)}`
     );
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ status: 'SUCCESS', items: [newsItem, trendItem, signalItem] }));
@@ -3717,11 +3732,13 @@ function startServerAITrendPushEngine() {
         const s1 = xau.lastSwingLow ? Number(xau.lastSwingLow).toFixed(2) : +(price - atr * 1.5).toFixed(2);
         const mtfTxt = xau.mtf ? xau.mtf.summary : 'N/A';
 
+        const vnTime = new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+
         const btcLine = btc ? `\n₿ BTC/USD: $${btc.livePrice.toLocaleString('en-US')} • ${btc.marketState} (${btc.score}/100)` : '';
         const xagLine = xag ? `\n🥈 XAG/USD: $${xag.livePrice.toFixed(2)} • ${xag.marketState} (${xag.score}/100)` : '';
 
-        const title = `🤖 PHÂN TÍCH GIÁ LIVE XAU $${price.toFixed(2)} — ${xau.marketState} (${xau.score}/100)`;
-        const body = `〽 Trạng thái M15: ${xau.marketStateLabel}\n🎯 Chất lượng: ${xau.signalQualityState} (${xau.score}/100) | D=${xau.dRatio} | MTF: ${mtfTxt}\n📍 Giá Live: $${price.toFixed(2)} | EMA20: $${xau.ema20.toFixed(2)} | EMA50: $${xau.ema50.toFixed(2)} | ATR: $${atr.toFixed(2)}\n🚧 Kháng cự cấu trúc: $${r1} | 🛡️ Hỗ trợ cấu trúc: $${s1}${btcLine}${xagLine}`;
+        const title = `[${vnTime}] 🤖 XU HƯỚNG XAU/USD: $${price.toFixed(2)} — ${xau.marketState}`;
+        const body = `⏰ Cập nhật lúc: ${vnTime} (GMT+7)\n📍 Giá ghi nhận: $${price.toFixed(2)} | Trạng thái: ${xau.marketStateLabel}\n🚧 Mốc cản Kháng cự: R1 $${r1} | 🛡️ Mốc cản Hỗ trợ: S1 $${s1}\n🎯 Điểm chất lượng: ${xau.score}/100 | MTF: ${mtfTxt}${btcLine}${xagLine}\n💡 Giá Vàng biến động liên tục, mở App để theo dõi nến Realtime!`;
 
         addNotification('TREND', title, body, { price, ema20: xau.ema20, ema50: xau.ema50, atr, r1, s1, score: xau.score, marketState: xau.marketState });
       } else if (btc) {

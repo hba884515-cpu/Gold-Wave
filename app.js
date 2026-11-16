@@ -2608,7 +2608,10 @@ class GoldTradingApp {
   }
 
   getCalculatedKeyLevels() {
-    const price = this.currentPrice || (window.marketDataStore ? window.marketDataStore.getCurrentPrice() : 3995.54);
+    const liveStorePrice = (window.marketDataStore && typeof window.marketDataStore.getCurrentPrice === 'function')
+      ? window.marketDataStore.getCurrentPrice()
+      : null;
+    const price = (liveStorePrice && liveStorePrice > 0) ? liveStorePrice : (this.currentPrice || 3840.00);
 
     const r3 = +(price + 30.0).toFixed(2);
     const r2 = +(price + 20.0).toFixed(2);
@@ -2636,7 +2639,13 @@ class GoldTradingApp {
       return;
     }
 
-    const price = this.currentPrice ? `$${this.currentPrice.toFixed(2)}` : '$4,361.78';
+    const liveStorePrice = (window.marketDataStore && typeof window.marketDataStore.getCurrentPrice === 'function')
+      ? window.marketDataStore.getCurrentPrice()
+      : null;
+    const priceNum = (liveStorePrice && liveStorePrice > 0) ? liveStorePrice : (this.currentPrice || 3840.00);
+    this.currentPrice = priceNum;
+    const priceStr = `$${priceNum.toFixed(2)}`;
+
     const snap = this.lastIndicatorResult ? this.lastIndicatorResult.snapshot : null;
     const isBull = snap ? snap.trend === 'TĂNG' : true;
     const isBear = snap ? snap.trend === 'GIẢM' : false;
@@ -2644,10 +2653,12 @@ class GoldTradingApp {
     const alignText = isBull ? 'MTF Đồng thuận 100% 🟢' : 'MTF Giằng co Phân kỳ ⚠️';
     
     const levels = this.getCalculatedKeyLevels();
+    const now = new Date();
+    const vnTimeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-    const prefix = sessionLabel ? `${sessionLabel}: ` : '🤖 GOLD AI — ';
-    const title = `${prefix}PHÂN TÍCH XU HƯỚNG XAU/USD`;
-    const body = `〽 Xu hướng: ${trendState} (${alignText})\n📍 Giá Live: ${price} (ATR: $${levels.atr.toFixed(2)})\n🚧 Kháng cự chú ý: R1 $${levels.r1.toFixed(2)} | R2 $${levels.r2.toFixed(2)}\n🛡️ Hỗ trợ chú ý: S1 $${levels.s1.toFixed(2)} | S2 $${levels.s2.toFixed(2)}`;
+    const prefix = sessionLabel ? `${sessionLabel} ` : '';
+    const title = `[${vnTimeStr}] ${prefix}🤖 XU HƯỚNG XAU/USD: ${priceStr}`;
+    const body = `⏰ Cập nhật lúc: ${vnTimeStr} (GMT+7)\n📍 Giá ghi nhận: ${priceStr} (${trendState})\n🚧 Mốc cản Kháng cự: R1 $${levels.r1.toFixed(2)} | R2 $${levels.r2.toFixed(2)}\n🛡️ Mốc cản Hỗ trợ: S1 $${levels.s1.toFixed(2)} | S2 $${levels.s2.toFixed(2)}\n💡 Giá Vàng biến động liên tục, mở App để theo dõi nến Realtime!`;
 
     window.sendNativePushNotification(title, {
       body: body,
