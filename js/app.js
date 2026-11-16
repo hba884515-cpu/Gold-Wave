@@ -7289,19 +7289,35 @@ window.filterAdminUsers = function(type) {
   window.adminUserFilter = type;
   window.adminUserPage = 1;
   const btnAll = document.getElementById('acc-filter-user-all');
+  const btnReal = document.getElementById('acc-filter-user-real');
+  const btnVirtual = document.getElementById('acc-filter-user-virtual');
   const btnVip = document.getElementById('acc-filter-user-vip');
   const btnTrial = document.getElementById('acc-filter-user-trial');
   const btnExp = document.getElementById('acc-filter-user-expired');
 
-  [btnAll, btnVip, btnTrial, btnExp].forEach(b => {
+  [btnAll, btnReal, btnVirtual, btnVip, btnTrial, btnExp].forEach(b => {
     if (b) {
       b.className = 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer';
     }
   });
 
-  const activeBtn = type === 'ALL' ? btnAll : (type === 'VIP' ? btnVip : (type === 'TRIAL' ? btnTrial : btnExp));
+  const btnMap = {
+    'ALL': btnAll,
+    'REAL': btnReal,
+    'VIRTUAL': btnVirtual,
+    'VIP': btnVip,
+    'TRIAL': btnTrial,
+    'EXPIRED': btnExp
+  };
+  const activeBtn = btnMap[type];
   if (activeBtn) {
-    activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs transition cursor-pointer';
+    if (type === 'REAL') {
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs transition cursor-pointer';
+    } else if (type === 'VIRTUAL') {
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs transition cursor-pointer';
+    } else {
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs transition cursor-pointer';
+    }
   }
 
   window.renderAdminUsersTable();
@@ -7324,6 +7340,8 @@ window.renderAdminUsersTable = function() {
 
   const users = window.adminUsersList || [];
   
+  let countReal = 0;
+  let countVirtual = 0;
   let countVip = 0;
   let countTrial = 0;
   let countExpired = 0;
@@ -7331,6 +7349,13 @@ window.renderAdminUsersTable = function() {
   users.forEach(u => {
     const emailLower = (u.email || '').toLowerCase();
     const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const isReal = u.accountType === 'T' || u.isReal === true || isUAdmin;
+    if (isReal) {
+      countReal++;
+    } else {
+      countVirtual++;
+    }
+
     const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false };
     if (isUAdmin || sub.status === 'LIFETIME' || sub.status === 'ACTIVE') {
       countVip++;
@@ -7342,10 +7367,14 @@ window.renderAdminUsersTable = function() {
   });
 
   const elCntAll = document.getElementById('acc-cnt-all');
+  const elCntReal = document.getElementById('acc-cnt-real');
+  const elCntVirtual = document.getElementById('acc-cnt-virtual');
   const elCntVip = document.getElementById('acc-cnt-vip');
   const elCntTrial = document.getElementById('acc-cnt-trial');
   const elCntExp = document.getElementById('acc-cnt-expired');
   if (elCntAll) elCntAll.textContent = users.length.toLocaleString('vi-VN');
+  if (elCntReal) elCntReal.textContent = countReal.toLocaleString('vi-VN');
+  if (elCntVirtual) elCntVirtual.textContent = countVirtual.toLocaleString('vi-VN');
   if (elCntVip) elCntVip.textContent = countVip.toLocaleString('vi-VN');
   if (elCntTrial) elCntTrial.textContent = countTrial.toLocaleString('vi-VN');
   if (elCntExp) elCntExp.textContent = countExpired.toLocaleString('vi-VN');
@@ -7353,9 +7382,12 @@ window.renderAdminUsersTable = function() {
   let filtered = users.filter(u => {
     const emailLower = (u.email || '').toLowerCase();
     const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const isReal = u.accountType === 'T' || u.isReal === true || isUAdmin;
     const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false };
     const isVip = isUAdmin || sub.status === 'LIFETIME' || sub.status === 'ACTIVE';
 
+    if (window.adminUserFilter === 'REAL' && !isReal) return false;
+    if (window.adminUserFilter === 'VIRTUAL' && isReal) return false;
     if (window.adminUserFilter === 'VIP' && !isVip) return false;
     if (window.adminUserFilter === 'TRIAL' && (isVip || sub.isExpired)) return false;
     if (window.adminUserFilter === 'EXPIRED' && !sub.isExpired) return false;
@@ -7395,7 +7427,7 @@ window.renderAdminUsersTable = function() {
   if (nextBtn) nextBtn.disabled = window.adminUserPage >= totalPages;
 
   if (pageUsers.length === 0) {
-    usersTbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-500 font-sans">Không tìm thấy người dùng phù hợp với bộ lọc.</td></tr>';
+    usersTbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-500 font-sans">Không tìm thấy người dùng phù hợp với bộ lọc.</td></tr>';
     return;
   }
 
@@ -7403,7 +7435,13 @@ window.renderAdminUsersTable = function() {
     const globalIndex = startIndex + idx + 1;
     const emailLower = (u.email || '').toLowerCase();
     const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const isReal = u.accountType === 'T' || u.isReal === true || isUAdmin;
     const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false, badgeText: 'DÙNG THỬ 14 NGÀY' };
+
+    // Phân loại: T = Thật, Y = Ảo
+    const typeBadge = isReal
+      ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-black text-[11px] inline-flex items-center gap-1 shadow-sm shadow-emerald-500/10" title="Tài khoản Thật"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>[T] THẬT</span>`
+      : `<span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300/90 border border-amber-500/30 font-bold text-[11px] inline-flex items-center gap-1" title="Tài khoản Ảo"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>[Y] ẢO</span>`;
 
     const roleBadge = isUAdmin
       ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 ADMIN</span>'
@@ -7432,14 +7470,21 @@ window.renderAdminUsersTable = function() {
     return `
       <tr class="hover:bg-slate-900/60 transition">
         <td class="py-2.5 px-3 text-slate-500">${globalIndex}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${typeBadge}</td>
         <td class="py-2.5 px-3">
-          <div class="font-bold text-white text-xs">${u.name || 'Trader'}</div>
+          <div class="font-bold text-white text-xs flex items-center gap-1.5">
+            ${u.name || 'Trader'}
+            <span class="px-1.5 py-0.2 rounded font-black text-[9px] ${isReal ? 'bg-emerald-500 text-slate-950' : 'bg-amber-500/30 text-amber-300 border border-amber-500/40'}">${isReal ? 'T' : 'Y'}</span>
+          </div>
           <div class="text-amber-300/90 text-[11px] font-mono">${u.email}</div>
         </td>
         <td class="py-2.5 px-3">${roleBadge}</td>
         <td class="py-2.5 px-3">${subBadge}</td>
         <td class="py-2.5 px-3">${remainStr}</td>
         <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+          <button onclick="accountAdminToggleAccountType('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer" title="Đổi trạng thái Thật [T] / Ảo [Y]">
+            ${isReal ? '🔁 Sang [Y]' : '🔁 Sang [T]'}
+          </button>
           <button onclick="accountAdminExtendUser('${u.email}', 30)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 30 ngày (1 tháng)">
             +30 Ngày
           </button>
@@ -7534,6 +7579,28 @@ window.accountAdminToggleRole = async function(email) {
       if (typeof loadAdminDashboardData === 'function') loadAdminDashboardData();
     } else {
       alert('Lỗi cập nhật vai trò: ' + (data.error || 'Vui lòng thử lại'));
+    }
+  } catch (e) {
+    alert('Lỗi kết nối máy chủ.');
+  }
+};
+
+window.accountAdminToggleAccountType = async function(email) {
+  try {
+    const res = await fetch('/api/admin/toggle-account-type', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'SUCCESS') {
+      if (typeof showToast === 'function') {
+        const isT = data.accountType === 'T';
+        showToast(isT ? `🟢 Đã đánh dấu ${email} là TÀI KHOẢN THẬT [T]!` : `🟡 Đã đánh dấu ${email} là TÀI KHOẢN ẢO [Y]!`, 'success');
+      }
+      await window.loadAccountAdminData();
+    } else {
+      alert('Lỗi chuyển đổi loại tài khoản: ' + (data.error || 'Vui lòng thử lại'));
     }
   } catch (e) {
     alert('Lỗi kết nối máy chủ.');

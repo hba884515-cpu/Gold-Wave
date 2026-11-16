@@ -2356,6 +2356,8 @@ const server = http.createServer(async (req, res) => {
       authProvider: 'email',
       emailVerified: true,
       role: userRole,
+      accountType: 'T',
+      isReal: true,
       trialDays: trialDays,
       trialExpiresAt: userRole === 'ADMIN' ? null : trialExpiresIso,
       subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : (isDeviceLocked ? 'EXPIRED' : 'TRIAL'),
@@ -2535,6 +2537,8 @@ const server = http.createServer(async (req, res) => {
         authProvider: 'google',
         emailVerified: true,
         role: userRole,
+        accountType: 'T',
+        isReal: true,
         trialDays: trialDays,
         trialExpiresAt: isAdminAccount ? null : trialExpiresIso,
         subscriptionStatus: isAdminAccount ? 'LIFETIME' : (isDeviceLocked ? 'EXPIRED' : 'TRIAL'),
@@ -2782,17 +2786,26 @@ const server = http.createServer(async (req, res) => {
   }
   else if (urlPath === '/api/admin/users') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    const cleanUsers = usersDB.map(u => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      deviceId: u.deviceId || '',
-      isDeviceLocked: !!u.isDeviceLocked,
-      role: u.role || 'USER',
-      emailVerified: u.emailVerified || false,
-      subscription: getUserSubscriptionInfo(u),
-      createdAt: u.createdAt || new Date().toISOString()
-    }));
+    const cleanUsers = usersDB.map(u => {
+      const emailLower = (u.email || '').toLowerCase();
+      const isKnownReal = emailLower.includes('hba4515') || emailLower.includes('hba884515') || emailLower.includes('hoangba220904') || emailLower.includes('duloxo99') || emailLower.includes('thuynguyen0389');
+      const isReal = (u.accountType === 'T' || u.isReal === true || u.role === 'ADMIN' || isKnownReal);
+      const accType = isReal ? 'T' : 'Y';
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone || '',
+        deviceId: u.deviceId || '',
+        isDeviceLocked: !!u.isDeviceLocked,
+        role: u.role || 'USER',
+        accountType: accType, // 'T' = Thật, 'Y' = Ảo
+        isReal: isReal,
+        emailVerified: u.emailVerified || false,
+        subscription: getUserSubscriptionInfo(u),
+        createdAt: u.createdAt || new Date().toISOString()
+      };
+    });
     res.end(JSON.stringify({ status: 'SUCCESS', users: cleanUsers, payment: paymentConfig, deviceTrials: deviceTrialsDB }));
   }
   else if (urlPath === '/api/admin/payment-requests') {
@@ -2885,6 +2898,25 @@ const server = http.createServer(async (req, res) => {
       saveJSON(USERS_FILE, usersDB);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'SUCCESS', message: `Đã thay đổi quyền hạn của ${target.email} thành ${target.role}` }));
+    } else {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ERROR', error: 'Không tìm thấy người dùng' }));
+    }
+  }
+  else if (urlPath === '/api/admin/toggle-account-type' && req.method === 'POST') {
+    const body = await parseRequestBody(req);
+    const target = usersDB.find(u => u.email.toLowerCase() === (body.email || '').toLowerCase() || u.id === body.userId);
+    if (target) {
+      target.accountType = target.accountType === 'T' ? 'Y' : 'T';
+      target.isReal = target.accountType === 'T';
+      saveJSON(USERS_FILE, usersDB);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        status: 'SUCCESS', 
+        accountType: target.accountType, 
+        isReal: target.isReal, 
+        message: `Đã đổi tài khoản ${target.email} sang: ${target.accountType === 'T' ? 'THẬT [T]' : 'ẢO [Y]'}` 
+      }));
     } else {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'ERROR', error: 'Không tìm thấy người dùng' }));

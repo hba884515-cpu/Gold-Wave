@@ -2050,7 +2050,9 @@
           <!-- Quick Search & Filter Controls -->
           <div class="flex items-center justify-between gap-3 flex-wrap bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
             <div class="flex items-center gap-1.5 flex-wrap">
-              <button onclick="filterAdminUsers('ALL')" id="acc-filter-user-all" class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs transition cursor-pointer">Tất Cả (<span id="acc-cnt-all">1.728</span>)</button>
+              <button onclick="filterAdminUsers('ALL')" id="acc-filter-user-all" class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs transition cursor-pointer">Tất Cả (<span id="acc-cnt-all">3.100</span>)</button>
+              <button onclick="filterAdminUsers('REAL')" id="acc-filter-user-real" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 font-bold text-xs transition cursor-pointer">🟢 [T] THẬT (<span id="acc-cnt-real">13</span>)</button>
+              <button onclick="filterAdminUsers('VIRTUAL')" id="acc-filter-user-virtual" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 font-bold text-xs transition cursor-pointer">🟡 [Y] ẢO (<span id="acc-cnt-virtual">3.087</span>)</button>
               <button onclick="filterAdminUsers('VIP')" id="acc-filter-user-vip" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer">👑 VIP (<span id="acc-cnt-vip">520</span>)</button>
               <button onclick="filterAdminUsers('TRIAL')" id="acc-filter-user-trial" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer">⏱️ Dùng Thử (<span id="acc-cnt-trial">1.060</span>)</button>
               <button onclick="filterAdminUsers('EXPIRED')" id="acc-filter-user-expired" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer">🔒 Hết Hạn (<span id="acc-cnt-expired">148</span>)</button>
@@ -2065,6 +2067,7 @@
               <thead>
                 <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
                   <th class="py-2.5 px-3">STT</th>
+                  <th class="py-2.5 px-3">Phân Loại</th>
                   <th class="py-2.5 px-3">Tên & Email</th>
                   <th class="py-2.5 px-3">Quyền Hạn</th>
                   <th class="py-2.5 px-3">Gói & Trạng Thái</th>
@@ -6422,18 +6425,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   });
 </script>
 
-<script src="./js/config.js?v=9.3.17"></script>
-<script src="./js/marketDataStore.js?v=9.3.17"></script>
-<script src="./js/v8Engine.js?v=9.3.17"></script>
-<script src="./js/eventEngine.js?v=9.3.17"></script>
-<script src="./js/soundAlert.js?v=9.3.17"></script>
-<script src="./js/ema50Engine.js?v=9.3.17"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.17"></script>
-<script src="./js/indicators.js?v=9.3.17"></script>
-<script src="./js/signalEngine.js?v=9.3.17"></script>
-<script src="./js/newsData.js?v=9.3.17"></script>
-<script src="./js/newsAdapter.js?v=9.3.17"></script>
-<script src="./js/app.js?v=9.3.17"></script>
+<script src="./js/config.js?v=9.3.18"></script>
+<script src="./js/marketDataStore.js?v=9.3.18"></script>
+<script src="./js/v8Engine.js?v=9.3.18"></script>
+<script src="./js/eventEngine.js?v=9.3.18"></script>
+<script src="./js/soundAlert.js?v=9.3.18"></script>
+<script src="./js/ema50Engine.js?v=9.3.18"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.18"></script>
+<script src="./js/indicators.js?v=9.3.18"></script>
+<script src="./js/signalEngine.js?v=9.3.18"></script>
+<script src="./js/newsData.js?v=9.3.18"></script>
+<script src="./js/newsAdapter.js?v=9.3.18"></script>
+<script src="./js/app.js?v=9.3.18"></script>
 
 
 
