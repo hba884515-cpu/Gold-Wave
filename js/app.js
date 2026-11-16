@@ -7288,6 +7288,14 @@ window.adminUserPageSize = 50;
 window.filterAdminUsers = function(type) {
   window.adminUserFilter = type;
   window.adminUserPage = 1;
+
+  // Tự động xóa ô tìm kiếm khi chuyển bộ lọc để hiển thị toàn bộ danh sách thành viên của tab đó (ví dụ: hiển thị đủ 13 tài khoản thật)
+  window.adminUserSearch = '';
+  const searchInput = document.getElementById('acc-user-search-input');
+  if (searchInput) searchInput.value = '';
+  const clearBtn = document.getElementById('acc-user-search-clear');
+  if (clearBtn) clearBtn.classList.add('hidden');
+
   const btnAll = document.getElementById('acc-filter-user-all');
   const btnMonthly = document.getElementById('acc-filter-user-monthly');
   const btnReal = document.getElementById('acc-filter-user-real');
@@ -7312,7 +7320,7 @@ window.filterAdminUsers = function(type) {
   const activeBtn = btnMap[type];
   if (activeBtn) {
     if (type === 'REAL') {
-      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs transition cursor-pointer';
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs transition cursor-pointer shadow-md shadow-emerald-500/20';
     } else if (type === 'MONTHLY') {
       activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs transition cursor-pointer shadow-md shadow-amber-500/20';
     } else if (type === 'VIRTUAL') {
@@ -7334,6 +7342,26 @@ window.changeAdminUsersPageSize = function(size) {
 window.handleAdminUserSearch = function(query) {
   window.adminUserSearch = (query || '').toLowerCase().trim();
   window.adminUserPage = 1;
+  const clearBtn = document.getElementById('acc-user-search-clear');
+  if (clearBtn) {
+    if (window.adminUserSearch) {
+      clearBtn.classList.remove('hidden');
+    } else {
+      clearBtn.classList.add('hidden');
+    }
+  }
+  window.renderAdminUsersTable();
+};
+
+window.clearAdminUserSearch = function() {
+  window.adminUserSearch = '';
+  const searchInput = document.getElementById('acc-user-search-input');
+  if (searchInput) {
+    searchInput.value = '';
+    searchInput.focus();
+  }
+  const clearBtn = document.getElementById('acc-user-search-clear');
+  if (clearBtn) clearBtn.classList.add('hidden');
   window.renderAdminUsersTable();
 };
 
