@@ -84,7 +84,7 @@ class SignalEngine {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length === 1661) {
+        if (Array.isArray(parsed) && parsed.length >= 1661) {
           return parsed;
         }
       }
