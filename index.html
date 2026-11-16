@@ -419,6 +419,9 @@
       <!-- Subtle top champagne gold highlight line -->
       <div class="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-[#f4c95d] to-transparent"></div>
 
+      <!-- Nút Đóng Quay Lại Ứng Dụng (Dành cho tài khoản đang mở màn hình gia hạn) -->
+      <button type="button" id="paywall-close-x-btn" onclick="closePaywallScreen()" class="hidden absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer border border-slate-700 transition z-20" title="Đóng & Quay lại ứng dụng">✕</button>
+
         <!-- Header / Logo Inside Card -->
         <div class="text-center space-y-1">
           <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-950/90 border border-amber-500/40 shadow-xl shadow-amber-500/30 mb-1 p-0.5">
@@ -651,14 +654,14 @@
           </form>
         </div>
 
-        <!-- ── FORM 6: SUBSCRIPTION PAYWALL (HẾT HẠN DÙNG THỬ 14 NGÀY) ── -->
+        <!-- ── FORM 6: SUBSCRIPTION PAYWALL (HẾT HẠN DÙNG THỬ 14 NGÀY & GIA HẠN GÓI) ── -->
         <div id="auth-form-paywall" class="space-y-4 hidden">
           <div class="text-center space-y-1">
-            <div class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 font-black text-[10px] uppercase tracking-wider mb-1">
+            <div id="paywall-badge-status" class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 font-black text-[10px] uppercase tracking-wider mb-1">
               🔒 HẾT HẠN DÙNG THỬ 14 NGÀY
             </div>
-            <h2 class="text-xl font-black text-white">Thanh Toán Phí Duy Trì</h2>
-            <p class="text-xs text-slate-300">
+            <h2 id="paywall-title-text" class="text-xl font-black text-white">Thanh Toán Phí Duy Trì</h2>
+            <p id="paywall-desc-text" class="text-xs text-slate-300">
               Tài khoản <span id="paywall-user-email" class="text-amber-400 font-semibold font-mono">user@gmail.com</span> đã hoàn thành 2 tuần trải nghiệm miễn phí. Vui lòng thanh toán gói 1 tháng để tiếp tục sử dụng.
             </p>
           </div>
@@ -745,12 +748,15 @@
           </div>
 
           <!-- LIÊN HỆ TRỰC TIẾP ADMIN ĐỂ KÍCH HOẠT NHANH -->
-          <div class="flex items-center justify-between text-xs pt-1 px-1">
+          <div class="flex items-center justify-between text-xs pt-1 px-1 flex-wrap gap-2">
             <a id="paywall-support-zalo" href="https://zalo.me" target="_blank" rel="noopener" class="text-amber-400 hover:underline font-bold flex items-center gap-1">
               <span>💬</span> Chat Zalo Kích Hoạt Nhanh
             </a>
-            <button type="button" onclick="showAuthView('login')" class="text-slate-400 hover:text-white transition cursor-pointer">
-              ← Đăng nhập tài khoản khác
+            <button type="button" id="paywall-back-btn" onclick="closePaywallScreen()" class="text-amber-300 hover:underline font-bold transition cursor-pointer flex items-center gap-1">
+              ← Quay lại ứng dụng
+            </button>
+            <button type="button" id="paywall-switch-user-btn" onclick="showAuthView('login')" class="text-slate-400 hover:text-white transition cursor-pointer">
+              Đổi tài khoản
             </button>
           </div>
         </div>
@@ -1903,9 +1909,14 @@
             <span class="text-[10px] text-slate-500 font-sans block mb-1">EMAIL ĐĂNG KÝ</span>
             <strong id="user-display-email" class="text-sm text-amber-300">user@goldwave.com</strong>
           </div>
-          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
-            <span class="text-[10px] text-slate-500 font-sans block mb-1">GÓI & THỜI HẠN DÙNG THỬ</span>
-            <strong id="user-display-sub-status" class="text-sm text-amber-300 flex items-center gap-1.5 font-sans">⏱️ Dùng thử: Còn 14 ngày</strong>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] text-slate-500 font-sans block mb-1">GÓI & THỜI HẠN SỬ DỤNG</span>
+              <strong id="user-display-sub-status" class="text-sm text-amber-300 flex items-center gap-1.5 font-sans">⏱️ Dùng thử: Còn 14 ngày</strong>
+            </div>
+            <button type="button" onclick="handleSubBadgeClick()" class="mt-1.5 text-[10px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer">
+              <span>⚡ Gia hạn / Nâng cấp ngay →</span>
+            </button>
           </div>
           <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
             <span class="text-[10px] text-slate-500 font-sans block mb-1">NGÀY THAM GIA</span>
@@ -6468,18 +6479,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   });
 </script>
 
-<script src="./js/config.js?v=9.3.20"></script>
-<script src="./js/marketDataStore.js?v=9.3.20"></script>
-<script src="./js/v8Engine.js?v=9.3.20"></script>
-<script src="./js/eventEngine.js?v=9.3.20"></script>
-<script src="./js/soundAlert.js?v=9.3.20"></script>
-<script src="./js/ema50Engine.js?v=9.3.20"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.20"></script>
-<script src="./js/indicators.js?v=9.3.20"></script>
-<script src="./js/signalEngine.js?v=9.3.20"></script>
-<script src="./js/newsData.js?v=9.3.20"></script>
-<script src="./js/newsAdapter.js?v=9.3.20"></script>
-<script src="./js/app.js?v=9.3.20"></script>
+<script src="./js/config.js?v=9.3.21"></script>
+<script src="./js/marketDataStore.js?v=9.3.21"></script>
+<script src="./js/v8Engine.js?v=9.3.21"></script>
+<script src="./js/eventEngine.js?v=9.3.21"></script>
+<script src="./js/soundAlert.js?v=9.3.21"></script>
+<script src="./js/ema50Engine.js?v=9.3.21"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.21"></script>
+<script src="./js/indicators.js?v=9.3.21"></script>
+<script src="./js/signalEngine.js?v=9.3.21"></script>
+<script src="./js/newsData.js?v=9.3.21"></script>
+<script src="./js/newsAdapter.js?v=9.3.21"></script>
+<script src="./js/app.js?v=9.3.21"></script>
 
 
 

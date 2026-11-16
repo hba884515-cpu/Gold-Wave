@@ -5829,7 +5829,19 @@ window.showAuthView = function(viewName) {
 // ── Paywall & Subscription Manager ──
 window.cachedPaymentConfig = null;
 
-window.openPaywallScreen = function(user, sub, payment) {
+window.openPaywallScreen = async function(user, sub, payment) {
+  // Tự động tải thông tin tài khoản ngân hàng & QR code nếu chưa có
+  if (!payment && (!window.cachedPaymentConfig || !window.cachedPaymentConfig.bankName)) {
+    try {
+      const res = await fetch('/api/subscription/config');
+      const data = await res.json();
+      if (data && data.payment) {
+        window.cachedPaymentConfig = data.payment;
+        payment = data.payment;
+      }
+    } catch(e) {}
+  }
+
   const authPage = document.getElementById('auth-fullscreen-page');
   const appShell = document.getElementById('app-shell');
   if (appShell) {
@@ -5880,6 +5892,54 @@ window.openPaywallScreen = function(user, sub, payment) {
         this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
       }
     };
+  }
+
+  // Cập nhật trạng thái hiển thị tiêu đề & nút đóng quay lại app
+  const userObj = user || window.currentUser;
+  const subObj = sub || (userObj ? userObj.subscription : null);
+  const isExp = subObj ? !!subObj.isExpired : false;
+  const daysLeft = subObj && subObj.daysRemaining != null ? subObj.daysRemaining : 14;
+
+  const badgeEl = document.getElementById('paywall-badge-status');
+  const titleEl = document.getElementById('paywall-title-text');
+  const descEl = document.getElementById('paywall-desc-text');
+  const backBtn = document.getElementById('paywall-back-btn');
+  const closeXBtn = document.getElementById('paywall-close-x-btn');
+
+  if (isExp) {
+    if (badgeEl) {
+      badgeEl.className = 'inline-flex items-center justify-center px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 font-black text-[10px] uppercase tracking-wider mb-1';
+      badgeEl.textContent = '🔒 HẾT HẠN DÙNG THỬ 14 NGÀY';
+    }
+    if (titleEl) titleEl.textContent = 'Thanh Toán Phí Duy Trì';
+    if (descEl) descEl.innerHTML = `Tài khoản <span id="paywall-user-email" class="text-amber-400 font-semibold font-mono">${uEmail}</span> đã hoàn thành thời gian dùng thử. Vui lòng thanh toán gói 1 tháng để tiếp tục sử dụng.`;
+    if (backBtn) backBtn.classList.add('hidden');
+    if (closeXBtn) closeXBtn.classList.add('hidden');
+  } else {
+    if (badgeEl) {
+      badgeEl.className = 'inline-flex items-center justify-center px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-[10px] uppercase tracking-wider mb-1';
+      badgeEl.textContent = '⚡ GIA HẠN / NÂNG CẤP GÓI THÁNG';
+    }
+    if (titleEl) titleEl.textContent = 'Đăng Ký Gia Hạn Gói 1 Tháng';
+    if (descEl) descEl.innerHTML = `Tài khoản <span id="paywall-user-email" class="text-amber-400 font-semibold font-mono">${uEmail}</span> (Còn <strong>${daysLeft} ngày</strong>). Bạn có thể thanh toán gia hạn trước +30 ngày bất kỳ lúc nào để nhận tín hiệu không gián đoạn.`;
+    if (backBtn) backBtn.classList.remove('hidden');
+    if (closeXBtn) closeXBtn.classList.remove('hidden');
+  }
+};
+
+window.closePaywallScreen = function() {
+  const authPage = document.getElementById('auth-fullscreen-page');
+  const appShell = document.getElementById('app-shell');
+  if (authPage) {
+    authPage.classList.add('hidden');
+    authPage.style.display = 'none';
+  }
+  if (appShell) {
+    appShell.classList.remove('hidden');
+    appShell.style.display = 'flex';
+  }
+  if (typeof window.switchView === 'function') {
+    window.switchView('account');
   }
 };
 
@@ -6007,23 +6067,14 @@ window.updateSubscriptionBadgeUI = function() {
   }
 };
 
-window.handleSubBadgeClick = function() {
+window.handleSubBadgeClick = async function() {
   if (!window.currentUser) {
     openAuthModal();
     return;
   }
   const user = window.currentUser;
-  const emailLower = (user && user.email ? user.email : '').toLowerCase().trim();
-  const isAdmin = user && (user.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin'));
-  if (isAdmin) {
-    if (typeof window.switchView === 'function') window.switchView('account');
-  } else {
-    if (user.subscription && user.subscription.isExpired) {
-      openPaywallScreen(user, user.subscription, window.cachedPaymentConfig);
-    } else {
-      if (typeof window.switchView === 'function') window.switchView('account');
-    }
-  }
+  // Luôn mở trực tiếp màn hình đăng ký gia hạn & trả phí (Mã QR, thông tin ngân hàng & form gửi xác nhận)
+  await window.openPaywallScreen(user, user.subscription, window.cachedPaymentConfig);
 };
 
 window.togglePasswordVisibility = function(inputId, eyeBtnId) {
