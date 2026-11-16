@@ -7289,13 +7289,13 @@ window.filterAdminUsers = function(type) {
   window.adminUserFilter = type;
   window.adminUserPage = 1;
   const btnAll = document.getElementById('acc-filter-user-all');
+  const btnMonthly = document.getElementById('acc-filter-user-monthly');
   const btnReal = document.getElementById('acc-filter-user-real');
   const btnVirtual = document.getElementById('acc-filter-user-virtual');
-  const btnVip = document.getElementById('acc-filter-user-vip');
   const btnTrial = document.getElementById('acc-filter-user-trial');
   const btnExp = document.getElementById('acc-filter-user-expired');
 
-  [btnAll, btnReal, btnVirtual, btnVip, btnTrial, btnExp].forEach(b => {
+  [btnAll, btnMonthly, btnReal, btnVirtual, btnTrial, btnExp].forEach(b => {
     if (b) {
       b.className = 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer';
     }
@@ -7303,9 +7303,9 @@ window.filterAdminUsers = function(type) {
 
   const btnMap = {
     'ALL': btnAll,
+    'MONTHLY': btnMonthly,
     'REAL': btnReal,
     'VIRTUAL': btnVirtual,
-    'VIP': btnVip,
     'TRIAL': btnTrial,
     'EXPIRED': btnExp
   };
@@ -7313,6 +7313,8 @@ window.filterAdminUsers = function(type) {
   if (activeBtn) {
     if (type === 'REAL') {
       activeBtn.className = 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs transition cursor-pointer';
+    } else if (type === 'MONTHLY') {
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs transition cursor-pointer shadow-md shadow-amber-500/20';
     } else if (type === 'VIRTUAL') {
       activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs transition cursor-pointer';
     } else {
@@ -7320,6 +7322,12 @@ window.filterAdminUsers = function(type) {
     }
   }
 
+  window.renderAdminUsersTable();
+};
+
+window.changeAdminUsersPageSize = function(size) {
+  window.adminUserPageSize = parseInt(size, 10) || 50;
+  window.adminUserPage = 1;
   window.renderAdminUsersTable();
 };
 
@@ -7342,7 +7350,7 @@ window.renderAdminUsersTable = function() {
   
   let countReal = 0;
   let countVirtual = 0;
-  let countVip = 0;
+  let countMonthly = 0;
   let countTrial = 0;
   let countExpired = 0;
 
@@ -7357,25 +7365,26 @@ window.renderAdminUsersTable = function() {
     }
 
     const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false };
-    if (isUAdmin || sub.status === 'LIFETIME' || sub.status === 'ACTIVE') {
-      countVip++;
-    } else if (sub.isExpired) {
+    if (sub.status === 'ACTIVE') {
+      countMonthly++;
+    }
+    if (sub.isExpired) {
       countExpired++;
-    } else {
+    } else if (sub.status !== 'ACTIVE' && sub.status !== 'LIFETIME' && !isUAdmin) {
       countTrial++;
     }
   });
 
   const elCntAll = document.getElementById('acc-cnt-all');
+  const elCntMonthly = document.getElementById('acc-cnt-monthly');
   const elCntReal = document.getElementById('acc-cnt-real');
   const elCntVirtual = document.getElementById('acc-cnt-virtual');
-  const elCntVip = document.getElementById('acc-cnt-vip');
   const elCntTrial = document.getElementById('acc-cnt-trial');
   const elCntExp = document.getElementById('acc-cnt-expired');
   if (elCntAll) elCntAll.textContent = users.length.toLocaleString('vi-VN');
+  if (elCntMonthly) elCntMonthly.textContent = countMonthly.toLocaleString('vi-VN');
   if (elCntReal) elCntReal.textContent = countReal.toLocaleString('vi-VN');
   if (elCntVirtual) elCntVirtual.textContent = countVirtual.toLocaleString('vi-VN');
-  if (elCntVip) elCntVip.textContent = countVip.toLocaleString('vi-VN');
   if (elCntTrial) elCntTrial.textContent = countTrial.toLocaleString('vi-VN');
   if (elCntExp) elCntExp.textContent = countExpired.toLocaleString('vi-VN');
 
@@ -7384,12 +7393,11 @@ window.renderAdminUsersTable = function() {
     const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
     const isReal = u.accountType === 'T' || u.isReal === true || isUAdmin;
     const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false };
-    const isVip = isUAdmin || sub.status === 'LIFETIME' || sub.status === 'ACTIVE';
 
+    if (window.adminUserFilter === 'MONTHLY' && sub.status !== 'ACTIVE') return false;
     if (window.adminUserFilter === 'REAL' && !isReal) return false;
     if (window.adminUserFilter === 'VIRTUAL' && isReal) return false;
-    if (window.adminUserFilter === 'VIP' && !isVip) return false;
-    if (window.adminUserFilter === 'TRIAL' && (isVip || sub.isExpired)) return false;
+    if (window.adminUserFilter === 'TRIAL' && (sub.status === 'ACTIVE' || sub.status === 'LIFETIME' || isUAdmin || sub.isExpired)) return false;
     if (window.adminUserFilter === 'EXPIRED' && !sub.isExpired) return false;
 
     if (window.adminUserSearch) {
@@ -7427,7 +7435,7 @@ window.renderAdminUsersTable = function() {
   if (nextBtn) nextBtn.disabled = window.adminUserPage >= totalPages;
 
   if (pageUsers.length === 0) {
-    usersTbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-500 font-sans">Không tìm thấy người dùng phù hợp với bộ lọc.</td></tr>';
+    usersTbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-slate-500 font-sans">Không tìm thấy người dùng phù hợp với bộ lọc.</td></tr>';
     return;
   }
 
@@ -7447,29 +7455,49 @@ window.renderAdminUsersTable = function() {
       ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 ADMIN</span>'
       : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]">👤 USER</span>';
 
-    let subBadge = '';
+    // 1. Ngày Đăng Ký
+    const regDate = u.createdAt ? new Date(u.createdAt) : null;
+    const regTimeStr = regDate ? regDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--';
+    const regDateStr = regDate ? regDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+    const regDisplay = regDate
+      ? `<div><span class="text-white font-mono font-medium">${regTimeStr}</span></div><div class="text-[10px] text-slate-400 font-mono">${regDateStr}</div>`
+      : '<span class="text-slate-500">N/A</span>';
+
+    // 2. Hạn Dùng & Ngày Hết Hạn
+    const expDate = (sub && sub.expiresAt) ? new Date(sub.expiresAt) : (u.subscriptionExpiresAt ? new Date(u.subscriptionExpiresAt) : null);
+    let expDisplay = '';
     if (sub.status === 'LIFETIME' || isUAdmin) {
-      subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 VIP VĨNH VIỄN</span>';
+      expDisplay = `<div><span class="text-emerald-400 font-bold">VĨNH VIỄN</span></div><div class="text-[10px] text-emerald-400/70 font-mono">Không giới hạn</div>`;
     } else if (sub.isExpired) {
-      subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px]">🔒 HẾT HẠN</span>';
-    } else if (sub.status === 'ACTIVE') {
-      subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px]">✨ GÓI VIP 30N</span>';
+      const expDateStr = expDate ? `${expDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} • ${expDate.toLocaleDateString('vi-VN')}` : 'Đã qua';
+      expDisplay = `<div><span class="text-rose-400 font-bold">ĐÃ HẾT HẠN</span></div><div class="text-[10px] text-rose-300 font-mono">${expDateStr}</div>`;
     } else {
-      subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px]">⏱️ DÙNG THỬ 14N</span>';
+      const expTimeStr = expDate ? expDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--';
+      const expDateStr = expDate ? expDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+      const daysLeft = sub.daysRemaining != null ? sub.daysRemaining : 0;
+      const isMonthlyVip = sub.status === 'ACTIVE';
+      expDisplay = `
+        <div><span class="text-amber-300 font-mono font-semibold">${expTimeStr}</span></div>
+        <div class="text-[10px] text-slate-300 font-mono">${expDateStr}</div>
+        <div class="text-[10px] ${isMonthlyVip ? 'text-amber-400 font-bold' : 'text-sky-400'}">⏱️ Còn ${daysLeft} ngày</div>
+      `;
     }
 
-    let remainStr = '';
+    // 3. Gói Cước Dịch Vụ
+    let subBadge = '';
     if (sub.status === 'LIFETIME' || isUAdmin) {
-      remainStr = '<span class="text-emerald-400 font-bold">Không giới hạn</span>';
+      subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] whitespace-nowrap">👑 VIP VĨNH VIỄN</span>';
     } else if (sub.isExpired) {
-      remainStr = '<span class="text-rose-400 font-bold">Đã hết hạn!</span>';
+      subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px] whitespace-nowrap">🔒 HẾT HẠN</span>';
+    } else if (sub.status === 'ACTIVE') {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px] whitespace-nowrap shadow-sm shadow-amber-500/10">📅 GÓI THÁNG</span>';
     } else {
-      remainStr = `<span class="text-amber-300 font-bold">Còn ${sub.daysRemaining != null ? sub.daysRemaining : 14} ngày</span>`;
+      subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px] whitespace-nowrap">⏱️ DÙNG THỬ 14N</span>';
     }
 
     return `
       <tr class="hover:bg-slate-900/60 transition">
-        <td class="py-2.5 px-3 text-slate-500">${globalIndex}</td>
+        <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">${globalIndex}</td>
         <td class="py-2.5 px-3 whitespace-nowrap">${typeBadge}</td>
         <td class="py-2.5 px-3">
           <div class="font-bold text-white text-xs flex items-center gap-1.5">
@@ -7478,9 +7506,10 @@ window.renderAdminUsersTable = function() {
           </div>
           <div class="text-amber-300/90 text-[11px] font-mono">${u.email}</div>
         </td>
-        <td class="py-2.5 px-3">${roleBadge}</td>
-        <td class="py-2.5 px-3">${subBadge}</td>
-        <td class="py-2.5 px-3">${remainStr}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${regDisplay}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${expDisplay}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${subBadge}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${roleBadge}</td>
         <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
           <button onclick="accountAdminToggleAccountType('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer" title="Đổi trạng thái Thật [T] / Ảo [Y]">
             ${isReal ? '🔁 Sang [Y]' : '🔁 Sang [T]'}

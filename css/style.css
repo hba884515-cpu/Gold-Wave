@@ -56,6 +56,27 @@ button, a, input, select, textarea {
   background: #275644;
 }
 
+/* Custom Admin Table Scrollbar */
+.custom-admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.45) rgba(15, 23, 42, 0.7);
+}
+.custom-admin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-admin-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 4px;
+}
+.custom-admin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.45);
+  border-radius: 4px;
+}
+.custom-admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.85);
+}
+
 /* Glowing text and borders */
 .glow-gold {
   box-shadow: 0 0 15px var(--gold-glow);

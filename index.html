@@ -31,7 +31,7 @@
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="./css/style.css?v=9.3.8">
+  <link rel="stylesheet" href="./css/style.css?v=9.3.19">
 
   <script>
     tailwind.config = {
@@ -2051,33 +2051,35 @@
           <div class="flex items-center justify-between gap-3 flex-wrap bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
             <div class="flex items-center gap-1.5 flex-wrap">
               <button onclick="filterAdminUsers('ALL')" id="acc-filter-user-all" class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs transition cursor-pointer">Tất Cả (<span id="acc-cnt-all">3.100</span>)</button>
+              <button onclick="filterAdminUsers('MONTHLY')" id="acc-filter-user-monthly" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 font-black text-xs transition cursor-pointer shadow-sm shadow-amber-500/10">📅 Gói Tháng (<span id="acc-cnt-monthly">1.300</span>)</button>
               <button onclick="filterAdminUsers('REAL')" id="acc-filter-user-real" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 font-bold text-xs transition cursor-pointer">🟢 [T] THẬT (<span id="acc-cnt-real">13</span>)</button>
-              <button onclick="filterAdminUsers('VIRTUAL')" id="acc-filter-user-virtual" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 font-bold text-xs transition cursor-pointer">🟡 [Y] ẢO (<span id="acc-cnt-virtual">3.087</span>)</button>
-              <button onclick="filterAdminUsers('VIP')" id="acc-filter-user-vip" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer">👑 VIP (<span id="acc-cnt-vip">520</span>)</button>
-              <button onclick="filterAdminUsers('TRIAL')" id="acc-filter-user-trial" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer">⏱️ Dùng Thử (<span id="acc-cnt-trial">1.060</span>)</button>
-              <button onclick="filterAdminUsers('EXPIRED')" id="acc-filter-user-expired" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer">🔒 Hết Hạn (<span id="acc-cnt-expired">148</span>)</button>
+              <button onclick="filterAdminUsers('VIRTUAL')" id="acc-filter-user-virtual" class="px-2.5 py-1 rounded-lg bg-slate-800 text-amber-300 border border-amber-500/20 hover:bg-slate-700 font-bold text-xs transition cursor-pointer">🟡 [Y] ẢO (<span id="acc-cnt-virtual">3.087</span>)</button>
+              <button onclick="filterAdminUsers('TRIAL')" id="acc-filter-user-trial" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer">⏱️ Dùng Thử (<span id="acc-cnt-trial">1.758</span>)</button>
+              <button onclick="filterAdminUsers('EXPIRED')" id="acc-filter-user-expired" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer">🔒 Hết Hạn (<span id="acc-cnt-expired">40</span>)</button>
             </div>
             <div class="relative flex-1 min-w-[200px] max-w-xs">
               <input type="text" id="acc-user-search-input" oninput="handleAdminUserSearch(this.value)" placeholder="🔍 Tìm kiếm theo tên hoặc email..." class="w-full px-3 py-1.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-sans">
             </div>
           </div>
 
-          <div class="overflow-x-auto sig-scroll">
-            <table class="w-full text-left text-xs font-mono border-collapse">
-              <thead>
-                <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
-                  <th class="py-2.5 px-3">STT</th>
-                  <th class="py-2.5 px-3">Phân Loại</th>
-                  <th class="py-2.5 px-3">Tên & Email</th>
-                  <th class="py-2.5 px-3">Quyền Hạn</th>
-                  <th class="py-2.5 px-3">Gói & Trạng Thái</th>
-                  <th class="py-2.5 px-3">Hạn Sử Dụng</th>
-                  <th class="py-2.5 px-3 text-right">Kích Hoạt Nhanh</th>
+          <!-- Bảng Thành Viên Cố Định Chiều Cao Với Thanh Trượt Cuộn Mượt Mà Không Phóng To -->
+          <div class="relative max-h-[520px] overflow-y-auto overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/80 custom-admin-scrollbar sig-scroll shadow-inner">
+            <table class="w-full text-left text-xs font-mono border-collapse min-w-[1040px]">
+              <thead class="sticky top-0 bg-slate-900/95 backdrop-blur z-10 border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px] shadow-sm">
+                <tr>
+                  <th class="py-2.5 px-3 whitespace-nowrap">STT</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Phân Loại</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Tên & Email</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Ngày Đăng Ký</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Hạn Dùng & Hết Hạn</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Gói Dịch Vụ</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Quyền Hạn</th>
+                  <th class="py-2.5 px-3 text-right whitespace-nowrap">Kích Hoạt Nhanh</th>
                 </tr>
               </thead>
               <tbody id="acc-admin-users-tbody" class="divide-y divide-slate-800/60">
                 <tr>
-                  <td colspan="6" class="py-6 text-center text-slate-500">
+                  <td colspan="8" class="py-8 text-center text-slate-500">
                     Đang tải danh sách tài khoản thành viên...
                   </td>
                 </tr>
@@ -2085,12 +2087,24 @@
             </table>
           </div>
 
-          <!-- Pagination Bar -->
+          <!-- Pagination & Page Size Control -->
           <div id="acc-users-pagination" class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs font-mono text-slate-400 flex-wrap gap-2">
-            <span id="acc-users-page-info">Hiển thị 1 - 50 / 1.728 thành viên</span>
+            <div class="flex items-center gap-3">
+              <span id="acc-users-page-info">Hiển thị 1 - 50 / 3.100 thành viên</span>
+              <div class="flex items-center gap-1.5 text-[11px] text-slate-500">
+                <span>Số dòng:</span>
+                <select id="acc-user-pagesize-select" onchange="changeAdminUsersPageSize(this.value)" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 text-xs focus:outline-none">
+                  <option value="50" selected>50 / trang</option>
+                  <option value="100">100 / trang</option>
+                  <option value="200">200 / trang</option>
+                  <option value="500">500 / trang</option>
+                  <option value="3100">Tất cả (Cuộn trượt)</option>
+                </select>
+              </div>
+            </div>
             <div class="flex items-center gap-2">
               <button onclick="changeAdminUsersPage(-1)" id="acc-user-prev-btn" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition disabled:opacity-40 cursor-pointer">◀ Trước</button>
-              <span id="acc-user-current-page" class="font-bold text-amber-400">Trang 1 / 35</span>
+              <span id="acc-user-current-page" class="font-bold text-amber-400">Trang 1 / 62</span>
               <button onclick="changeAdminUsersPage(1)" id="acc-user-next-btn" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition disabled:opacity-40 cursor-pointer">Sau ▶</button>
             </div>
           </div>
@@ -2564,22 +2578,23 @@
           <span class="text-xs text-slate-400">Kiểm tra thời hạn dùng thử 14 ngày & gia hạn gói 1 tháng (+30 ngày) cho từng người dùng</span>
         </div>
 
-        <div class="overflow-x-auto sig-scroll">
-          <table class="w-full text-left text-xs font-mono border-collapse">
-            <thead>
-              <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
-                <th class="py-2.5 px-3">STT</th>
-                <th class="py-2.5 px-3">Tên Người Dùng</th>
-                <th class="py-2.5 px-3">Email</th>
-                <th class="py-2.5 px-3">Quyền Hạn</th>
-                <th class="py-2.5 px-3">Gói Cước & Trạng Thái</th>
-                <th class="py-2.5 px-3">Hạn Sử Dụng</th>
-                <th class="py-2.5 px-3 text-right">Gia Hạn & Thao Tác</th>
+        <div class="relative max-h-[520px] overflow-y-auto overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/80 custom-admin-scrollbar sig-scroll shadow-inner">
+          <table class="w-full text-left text-xs font-mono border-collapse min-w-[1040px]">
+            <thead class="sticky top-0 bg-slate-900/95 backdrop-blur z-10 border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px] shadow-sm">
+              <tr>
+                <th class="py-2.5 px-3 whitespace-nowrap">STT</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Loại</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Tên & Email</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Ngày Đăng Ký</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Hạn Dùng & Hết Hạn</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Gói Dịch Vụ</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Quyền Hạn</th>
+                <th class="py-2.5 px-3 text-right whitespace-nowrap">Gia Hạn & Thao Tác</th>
               </tr>
             </thead>
             <tbody id="admin-users-table-body" class="divide-y divide-slate-800/60">
               <tr>
-                <td colspan="7" class="py-4 text-center text-slate-500">Đang tải danh sách người dùng...</td>
+                <td colspan="8" class="py-6 text-center text-slate-500">Đang tải danh sách người dùng...</td>
               </tr>
             </tbody>
           </table>
@@ -6214,43 +6229,70 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       // Populate Upgraded Users Table
       if (tbody) {
         if (users.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-slate-500">Chưa có người dùng nào đăng ký.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-slate-500">Chưa có người dùng nào đăng ký.</td></tr>';
         } else {
           tbody.innerHTML = users.map((u, i) => {
-            const isAdmin = u.role === 'ADMIN';
+            const emailLower = (u.email || '').toLowerCase();
+            const isAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com';
+            const isReal = u.accountType === 'T' || u.isReal === true || isAdmin;
             const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false, badgeText: 'DÙNG THỬ 14 NGÀY' };
+
+            const typeBadge = isReal
+              ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-black text-[10px] inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>[T] THẬT</span>`
+              : `<span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold text-[10px] inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>[Y] ẢO</span>`;
+
             const roleBadge = isAdmin 
-              ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">👑 ADMIN</span>' 
-              : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">USER</span>';
+              ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 ADMIN</span>' 
+              : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]">USER</span>';
+
+            const regDate = u.createdAt ? new Date(u.createdAt) : null;
+            const regTimeStr = regDate ? regDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+            const regDateStr = regDate ? regDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+            const regDisplay = regDate 
+              ? `<div><span class="text-white font-mono font-medium">${regTimeStr}</span></div><div class="text-[10px] text-slate-400 font-mono">${regDateStr}</div>` 
+              : '<span class="text-slate-500">N/A</span>';
+
+            const expDate = (sub && sub.expiresAt) ? new Date(sub.expiresAt) : null;
+            let expDisplay = '';
+            if (sub.status === 'LIFETIME' || isAdmin) {
+              expDisplay = `<div><span class="text-emerald-400 font-bold text-xs">VĨNH VIỄN</span></div><div class="text-[10px] text-emerald-400/70 font-mono">Không giới hạn</div>`;
+            } else if (sub.isExpired) {
+              const expDateStr = expDate ? `${expDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} • ${expDate.toLocaleDateString('vi-VN')}` : 'Đã qua';
+              expDisplay = `<div><span class="text-rose-400 font-bold text-xs">HẾT HẠN</span></div><div class="text-[10px] text-rose-300 font-mono">${expDateStr}</div>`;
+            } else {
+              const expTimeStr = expDate ? expDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+              const expDateStr = expDate ? expDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+              const isMonthlyVip = sub.status === 'ACTIVE';
+              expDisplay = `
+                <div><span class="text-amber-300 font-mono font-semibold">${expTimeStr}</span></div>
+                <div class="text-[10px] text-slate-300 font-mono">${expDateStr}</div>
+                <div class="text-[10px] ${isMonthlyVip ? 'text-amber-400 font-bold' : 'text-sky-400'}">Còn ${sub.daysRemaining != null ? sub.daysRemaining : 14} ngày</div>
+              `;
+            }
 
             let subBadge = '';
             if (sub.status === 'LIFETIME' || isAdmin) {
-              subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 VĨNH VIỄN</span>';
+              subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] whitespace-nowrap">👑 VĨNH VIỄN</span>';
             } else if (sub.isExpired) {
-              subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px]">🔒 HẾT HẠN</span>';
+              subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px] whitespace-nowrap">🔒 HẾT HẠN</span>';
             } else if (sub.status === 'ACTIVE') {
-              subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px]">✨ GÓI VIP</span>';
+              subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px] whitespace-nowrap shadow-sm shadow-amber-500/10">📅 GÓI THÁNG</span>';
             } else {
-              subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px]">⏱️ DÙNG THỬ 14N</span>';
-            }
-
-            let remainStr = '';
-            if (sub.status === 'LIFETIME' || isAdmin) {
-              remainStr = '<span class="text-emerald-400 font-bold">Không giới hạn</span>';
-            } else if (sub.isExpired) {
-              remainStr = '<span class="text-rose-400 font-bold">Đã hết hạn!</span>';
-            } else {
-              remainStr = `<span class="text-amber-300 font-bold">Còn ${sub.daysRemaining} ngày</span>`;
+              subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px] whitespace-nowrap">⏱️ DÙNG THỬ 14N</span>';
             }
 
             return `
               <tr class="hover:bg-slate-900/50 transition">
                 <td class="py-2.5 px-3 text-slate-500">${i + 1}</td>
-                <td class="py-2.5 px-3 font-bold text-white">${u.name || 'Trader'}</td>
-                <td class="py-2.5 px-3 text-amber-300">${u.email}</td>
-                <td class="py-2.5 px-3">${roleBadge}</td>
-                <td class="py-2.5 px-3">${subBadge}</td>
-                <td class="py-2.5 px-3">${remainStr}</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">${typeBadge}</td>
+                <td class="py-2.5 px-3">
+                  <div class="font-bold text-white text-xs">${u.name || 'Trader'}</div>
+                  <div class="text-amber-300 text-[11px] font-mono">${u.email}</div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">${regDisplay}</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">${expDisplay}</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">${subBadge}</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">${roleBadge}</td>
                 <td class="py-2.5 px-3 text-right space-x-1.5 whitespace-nowrap">
                   <button onclick="adminExtendUser('${u.email}', 30)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 30 ngày (1 tháng)">
                     +30 Ngày
@@ -6425,18 +6467,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   });
 </script>
 
-<script src="./js/config.js?v=9.3.18"></script>
-<script src="./js/marketDataStore.js?v=9.3.18"></script>
-<script src="./js/v8Engine.js?v=9.3.18"></script>
-<script src="./js/eventEngine.js?v=9.3.18"></script>
-<script src="./js/soundAlert.js?v=9.3.18"></script>
-<script src="./js/ema50Engine.js?v=9.3.18"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.18"></script>
-<script src="./js/indicators.js?v=9.3.18"></script>
-<script src="./js/signalEngine.js?v=9.3.18"></script>
-<script src="./js/newsData.js?v=9.3.18"></script>
-<script src="./js/newsAdapter.js?v=9.3.18"></script>
-<script src="./js/app.js?v=9.3.18"></script>
+<script src="./js/config.js?v=9.3.19"></script>
+<script src="./js/marketDataStore.js?v=9.3.19"></script>
+<script src="./js/v8Engine.js?v=9.3.19"></script>
+<script src="./js/eventEngine.js?v=9.3.19"></script>
+<script src="./js/soundAlert.js?v=9.3.19"></script>
+<script src="./js/ema50Engine.js?v=9.3.19"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.19"></script>
+<script src="./js/indicators.js?v=9.3.19"></script>
+<script src="./js/signalEngine.js?v=9.3.19"></script>
+<script src="./js/newsData.js?v=9.3.19"></script>
+<script src="./js/newsAdapter.js?v=9.3.19"></script>
+<script src="./js/app.js?v=9.3.19"></script>
 
 
 
