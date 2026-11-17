@@ -1580,32 +1580,32 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 3875.70,
-    change: -12.50,
-    changePercent: -0.32,
-    high: 3901.20,
-    low: 3865.00,
-    open: 3888.20,
+    price: 3873.50,
+    change: 17.90,
+    changePercent: 0.46,
+    high: 3887.35,
+    low: 3843.70,
+    open: 3855.60,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
   BTC: {
-    price: 65015.00,
-    change: 255.00,
-    changePercent: 0.39,
-    high: 65626.00,
-    low: 63833.00,
-    open: 64760.00,
+    price: 64615.00,
+    change: -36.00,
+    changePercent: -0.06,
+    high: 65626.98,
+    low: 63833.47,
+    open: 64651.16,
     symbol: 'COINBASE:BTCUSD',
     lastUpdated: Date.now()
   },
   XAG: {
-    price: 47.42,
-    change: 0.42,
-    changePercent: 0.89,
-    high: 48.50,
-    low: 46.80,
-    open: 47.00,
+    price: 47.49,
+    change: 0.51,
+    changePercent: 1.09,
+    high: 48.01,
+    low: 46.84,
+    open: 47.01,
     symbol: 'TVC:SILVER',
     lastUpdated: Date.now()
   },
@@ -1755,7 +1755,7 @@ function queryTvScanner(path, tickers) {
         'Origin': 'https://www.tradingview.com',
         'Referer': 'https://www.tradingview.com/'
       },
-      timeout: 2500
+      timeout: 5000
     }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
@@ -1889,15 +1889,15 @@ async function fetchTradingViewAllPrices() {
     const [liveGold, liveSilver, liveBtc] = await Promise.all(fallbackTasks);
 
     if (liveGold && liveGold > 0) {
-      const openPrice = tvMarketPricesCache.XAU.open || 3883.89;
+      const openPrice = tvMarketPricesCache.XAU.open || 3855.60;
       const chgAbs = +(liveGold - openPrice).toFixed(2);
       const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
       tvMarketPricesCache.XAU = {
         price: +liveGold.toFixed(2),
         change: chgAbs,
         changePercent: chgPct,
-        high: +Math.max(tvMarketPricesCache.XAU.high || 3901.23, liveGold).toFixed(2),
-        low: +Math.min(tvMarketPricesCache.XAU.low || 3835.81, liveGold).toFixed(2),
+        high: +Math.max(tvMarketPricesCache.XAU.high || 3887.35, liveGold).toFixed(2),
+        low: +Math.min(tvMarketPricesCache.XAU.low || 3843.70, liveGold).toFixed(2),
         open: openPrice,
         symbol: 'TVC:GOLD',
         lastUpdated: now
@@ -1906,15 +1906,15 @@ async function fetchTradingViewAllPrices() {
     }
 
     if (liveSilver && liveSilver > 0) {
-      const openPrice = tvMarketPricesCache.XAG.open || 52.14;
+      const openPrice = tvMarketPricesCache.XAG.open || 47.01;
       const chgAbs = +(liveSilver - openPrice).toFixed(2);
       const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
       tvMarketPricesCache.XAG = {
         price: +liveSilver.toFixed(2),
         change: chgAbs,
         changePercent: chgPct,
-        high: +Math.max(tvMarketPricesCache.XAG.high || 51.27, liveSilver).toFixed(2),
-        low: +Math.min(tvMarketPricesCache.XAG.low || 48.95, liveSilver).toFixed(2),
+        high: +Math.max(tvMarketPricesCache.XAG.high || 48.01, liveSilver).toFixed(2),
+        low: +Math.min(tvMarketPricesCache.XAG.low || 46.84, liveSilver).toFixed(2),
         open: openPrice,
         symbol: 'TVC:SILVER',
         lastUpdated: now
@@ -4479,8 +4479,13 @@ function startServerSignalEngine() {
               saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
             }
             serverActiveTrades[cfg.key] = null;
-          }
         } else {
+          // BẢO VỆ TUYỆT ĐỐI 100%: Mỗi mã chỉ có DUY NHẤT 1 lệnh đang hoạt động, TUYỆT ĐỐI KHÔNG BAO GIỜ PHÁT LỆNH ĐÈ HOẶC VỪA BUY VỪA SELL!
+          const isAnyTradeRunning = signalsDB.some(s => s && s.asset === cfg.key && s.status && s.status.includes('ĐANG CHẠY'));
+          if (isAnyTradeRunning || serverActiveTrades[cfg.key]) {
+            continue; // Đang có lệnh chạy trên tài sản này trong DB, tuyệt đối KHÔNG ĐƯỢC PHÁT THÊM LỆNH!
+          }
+
           // 2. HỆ THỐNG GIAO DỊCH EMA20 – EMA50 TOÀN DIỆN (HYBRID SNIPER v9.2)
           // Luôn cập nhật nến OHLC thực tế mỗi chu kỳ 30s
           await getServerOHLCBars(cfg.key, price);

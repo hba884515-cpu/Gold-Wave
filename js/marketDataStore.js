@@ -27,12 +27,12 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 3875.70,
-        prevPrice: 3880.00,
-        change: -12.50,
-        changePercent: -0.32,
-        high: 3901.20,
-        low: 3865.00,
+        price: 3873.50,
+        prevPrice: 3875.00,
+        change: 17.90,
+        changePercent: 0.46,
+        high: 3887.35,
+        low: 3843.70,
         icon: '🪙',
         tag: 'GOLD'
       },
@@ -40,12 +40,12 @@ class MarketDataStore {
         symbol: 'BTC/USD',
         name: 'Bitcoin (Crypto)',
         source: 'COINBASE:BTCUSD',
-        price: 65015.00,
-        prevPrice: 64950.00,
-        change: 255.00,
-        changePercent: 0.39,
-        high: 65626.00,
-        low: 63833.00,
+        price: 64615.00,
+        prevPrice: 64650.00,
+        change: -36.00,
+        changePercent: -0.06,
+        high: 65626.98,
+        low: 63833.47,
         icon: '₿',
         tag: 'CRYPTO'
       },
@@ -53,12 +53,12 @@ class MarketDataStore {
         symbol: 'XAG/USD',
         name: 'Bạc Thế Giới',
         source: 'TVC:SILVER',
-        price: 47.42,
+        price: 47.49,
         prevPrice: 47.20,
-        change: 0.42,
-        changePercent: 0.89,
-        high: 48.50,
-        low: 46.80,
+        change: 0.51,
+        changePercent: 1.09,
+        high: 48.01,
+        low: 46.84,
         icon: '🥈',
         tag: 'SILVER'
       }
@@ -498,7 +498,7 @@ class MarketDataStore {
       // 1. Backend proxy endpoint for all market assets (Gold, BTC, Silver)
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2200);
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         const res = await fetch('/api/market-prices', { signal: controller.signal });
         clearTimeout(timeoutId);
         if (res.ok) {
@@ -559,7 +559,7 @@ class MarketDataStore {
             if (data2 && data2.price && !isNaN(data2.price) && data2.price > 0) {
               const liveGold = parseFloat(data2.price);
               const curXau = this.assetsData['XAU'];
-              const openP = (curXau && curXau.change != null) ? (liveGold - curXau.change) : 3883.89;
+              const openP = (curXau && curXau.change != null && curXau.change !== 0) ? (liveGold - curXau.change) : 3855.60;
               const chg = +(liveGold - openP).toFixed(2);
               const chgPct = +((chg / openP) * 100).toFixed(2);
               this.assetsData['XAU'].price = liveGold;

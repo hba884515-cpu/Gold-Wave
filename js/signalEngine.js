@@ -19,7 +19,7 @@ class SignalEngine {
     };
     if (typeof window !== 'undefined') {
       this.syncServerSignals(); setTimeout(() => this.syncServerSignals(), 600);
-      setInterval(() => this.syncServerSignals(), 20000);
+      setInterval(() => this.syncServerSignals(), 4000);
     }
   }
 

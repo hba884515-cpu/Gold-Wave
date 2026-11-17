@@ -168,6 +168,9 @@ class GoldTradingApp {
     if (this.bars && this.bars.length > 0) {
       this.renderIndicators();
     }
+    if (window.signalEngine && typeof window.signalEngine.syncServerSignals === 'function') {
+      window.signalEngine.syncServerSignals();
+    }
     this.renderSignalHistory();
   }
 
