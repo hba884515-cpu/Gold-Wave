@@ -5928,6 +5928,12 @@ window.openPaywallScreen = async function(user, sub, payment) {
 };
 
 window.closePaywallScreen = function() {
+  if (!window.currentUser || (window.currentUser.subscription && window.currentUser.subscription.isExpired) || window.currentUser.subscriptionStatus === 'EXPIRED') {
+    if (typeof showToast === 'function') {
+      showToast('🔒 Tài khoản đã hết hạn trải nghiệm. Vui lòng chuyển khoản thanh toán gói tháng để được kích hoạt sử dụng!', 'warning');
+    }
+    return;
+  }
   const authPage = document.getElementById('auth-fullscreen-page');
   const appShell = document.getElementById('app-shell');
   if (authPage) {
@@ -6265,9 +6271,10 @@ window.checkAuthOnLoad = async function() {
     }
   } catch (e) {
     // Client-side fallback check
-    if (userObj.role !== 'ADMIN' && userObj.trialExpiresAt) {
-      if (new Date(userObj.trialExpiresAt).getTime() <= Date.now()) {
-        openPaywallScreen(userObj, { isExpired: true }, null);
+    if (userObj.role !== 'ADMIN') {
+      const isReal = userObj.accountType === 'T' || userObj.isReal === true;
+      if (userObj.subscriptionStatus === 'EXPIRED' || (isReal && userObj.subscriptionStatus !== 'ACTIVE' && userObj.subscriptionStatus !== 'LIFETIME') || (userObj.trialExpiresAt && new Date(userObj.trialExpiresAt).getTime() <= Date.now())) {
+        openPaywallScreen(userObj, { isExpired: true, status: 'EXPIRED' }, null);
         return;
       }
     }

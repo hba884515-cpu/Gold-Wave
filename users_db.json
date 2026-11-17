@@ -11,7 +11,8 @@
     "createdAt": "2026-09-25T11:52:00.000Z",
     "accountType": "T",
     "isReal": true,
-    "subscriptionExpiresAt": null
+    "subscriptionExpiresAt": null,
+    "trialExpiresAt": null
   },
   {
     "id": "USR-1355",
@@ -25,7 +26,8 @@
     "createdAt": "2026-09-25T06:13:11.356Z",
     "accountType": "T",
     "isReal": true,
-    "subscriptionExpiresAt": null
+    "subscriptionExpiresAt": null,
+    "trialExpiresAt": null
   },
   {
     "id": "USR-2209",
@@ -36,13 +38,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-15T17:53:03.067Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "createdAt": "2026-11-15T17:53:03.067Z",
     "accountType": "T",
     "isReal": true,
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-29T17:53:03.067Z"
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z"
   },
   {
     "id": "USR-6745",
@@ -54,9 +56,9 @@
     "role": "USER",
     "createdAt": "2026-11-14T23:42:11.195Z",
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-28T23:42:11.195Z",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-14T23:42:11.195Z",
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "accountType": "T",
     "isReal": true
   },
@@ -70,9 +72,9 @@
     "role": "USER",
     "createdAt": "2026-11-14T09:24:45.741Z",
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-28T09:24:45.741Z",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-14T09:24:45.741Z",
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "accountType": "T",
     "isReal": true
   },
@@ -85,13 +87,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-12T15:40:49.416Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "createdAt": "2026-11-12T15:40:49.416Z",
     "accountType": "T",
     "isReal": true,
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-26T15:40:49.416Z"
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z"
   },
   {
     "id": "USR-8002",
@@ -103,9 +105,9 @@
     "role": "USER",
     "createdAt": "2026-11-12T12:08:04.612Z",
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-26T12:08:04.612Z",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-12T12:08:04.612Z",
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "accountType": "T",
     "isReal": true
   },
@@ -118,13 +120,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-10T17:05:16.929Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "createdAt": "2026-11-10T17:05:16.929Z",
     "accountType": "T",
     "isReal": true,
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-24T17:05:16.929Z"
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z"
   },
   {
     "id": "USR-8004",
@@ -136,9 +138,9 @@
     "role": "USER",
     "createdAt": "2026-11-10T06:51:36.989Z",
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-24T06:51:36.989Z",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-10T06:51:36.989Z",
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "accountType": "T",
     "isReal": true
   },
@@ -151,13 +153,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-08T15:09:56.717Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "createdAt": "2026-11-08T15:09:56.717Z",
     "accountType": "T",
     "isReal": true,
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-22T15:09:56.717Z"
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z"
   },
   {
     "id": "USR-8006",
@@ -200,13 +202,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-06T02:13:01.267Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "createdAt": "2026-11-06T02:13:01.267Z",
     "accountType": "T",
     "isReal": true,
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-20T02:13:01.267Z"
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z"
   },
   {
     "id": "USR-8009",
@@ -219,9 +221,9 @@
     "role": "USER",
     "createdAt": "2026-11-04T19:28:30.741Z",
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-18T19:28:30.741Z",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-04T19:28:30.741Z",
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "accountType": "T",
     "isReal": true
   },
@@ -266,13 +268,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "ACTIVE",
-    "subscriptionExpiresAt": "2026-12-02T05:38:14.281Z",
+    "subscriptionStatus": "EXPIRED",
+    "subscriptionExpiresAt": "2026-11-16T00:00:00.000Z",
     "createdAt": "2026-11-02T05:38:14.281Z",
     "accountType": "T",
     "isReal": true,
     "trialDays": 14,
-    "trialExpiresAt": "2026-11-16T05:38:14.281Z"
+    "trialExpiresAt": "2026-11-16T00:00:00.000Z"
   },
   {
     "id": "USR-8013",
@@ -20842,12 +20844,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "EXPIRED",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-10-31T04:30:00.000Z",
-    "createdAt": "2026-11-06T04:30:00.000Z",
+    "createdAt": "2026-11-05T08:00:00.000Z",
     "accountType": "Y",
-    "isReal": false
+    "isReal": false,
+    "subscriptionExpiresAt": "2026-12-05T08:00:00.000Z"
   },
   {
     "id": "USR-11286",
@@ -20857,13 +20860,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-26T17:43:38.432Z",
-    "createdAt": "2026-11-12T17:43:38.432Z",
+    "createdAt": "2026-11-06T09:07:13.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-26T17:43:38.432Z"
+    "subscriptionExpiresAt": "2026-12-06T09:07:13.000Z"
   },
   {
     "id": "USR-11287",
@@ -20873,12 +20876,13 @@
     "authProvider": "google",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "EXPIRED",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-10-31T10:30:00.000Z",
-    "createdAt": "2026-11-08T10:30:00.000Z",
+    "createdAt": "2026-11-07T10:14:26.000Z",
     "accountType": "Y",
-    "isReal": false
+    "isReal": false,
+    "subscriptionExpiresAt": "2026-12-07T10:14:26.000Z"
   },
   {
     "id": "USR-11288",
@@ -20888,13 +20892,13 @@
     "authProvider": "google",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-25T10:30:06.938Z",
-    "createdAt": "2026-11-11T10:30:06.938Z",
+    "createdAt": "2026-11-08T11:21:39.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-25T10:30:06.938Z"
+    "subscriptionExpiresAt": "2026-12-08T11:21:39.000Z"
   },
   {
     "id": "USR-11289",
@@ -20904,13 +20908,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-23T21:20:37.483Z",
-    "createdAt": "2026-11-09T21:20:37.483Z",
+    "createdAt": "2026-11-09T12:28:52.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-23T21:20:37.483Z"
+    "subscriptionExpiresAt": "2026-12-09T12:28:52.000Z"
   },
   {
     "id": "USR-11290",
@@ -20920,13 +20924,13 @@
     "authProvider": "google",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-23T12:51:01.152Z",
-    "createdAt": "2026-11-09T12:51:01.152Z",
+    "createdAt": "2026-11-10T13:35:05.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-23T12:51:01.152Z"
+    "subscriptionExpiresAt": "2026-12-10T13:35:05.000Z"
   },
   {
     "id": "USR-11291",
@@ -20936,13 +20940,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-21T15:42:25.707Z",
-    "createdAt": "2026-11-07T15:42:25.707Z",
+    "createdAt": "2026-11-11T14:42:18.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-21T15:42:25.707Z"
+    "subscriptionExpiresAt": "2026-12-11T14:42:18.000Z"
   },
   {
     "id": "USR-11292",
@@ -20952,13 +20956,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-21T03:49:45.748Z",
-    "createdAt": "2026-11-07T03:49:45.748Z",
+    "createdAt": "2026-11-12T15:49:31.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-21T03:49:45.748Z"
+    "subscriptionExpiresAt": "2026-12-12T15:49:31.000Z"
   },
   {
     "id": "USR-11293",
@@ -20968,13 +20972,13 @@
     "authProvider": "google",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-20T10:43:40.866Z",
-    "createdAt": "2026-11-06T10:43:40.866Z",
+    "createdAt": "2026-11-13T16:56:44.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-20T10:43:40.866Z"
+    "subscriptionExpiresAt": "2026-12-13T16:56:44.000Z"
   },
   {
     "id": "USR-11294",
@@ -20984,13 +20988,13 @@
     "authProvider": "email",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-19T07:23:03.738Z",
-    "createdAt": "2026-11-05T07:23:03.738Z",
+    "createdAt": "2026-11-14T17:03:57.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-19T07:23:03.738Z"
+    "subscriptionExpiresAt": "2026-12-14T17:03:57.000Z"
   },
   {
     "id": "USR-11295",
@@ -21000,13 +21004,13 @@
     "authProvider": "google",
     "emailVerified": true,
     "role": "USER",
-    "subscriptionStatus": "TRIAL",
+    "subscriptionStatus": "ACTIVE",
     "trialDays": 14,
     "trialExpiresAt": "2026-11-18T02:58:25.767Z",
-    "createdAt": "2026-11-04T02:58:25.767Z",
+    "createdAt": "2026-11-15T18:10:10.000Z",
     "accountType": "Y",
     "isReal": false,
-    "subscriptionExpiresAt": "2026-11-18T02:58:25.767Z"
+    "subscriptionExpiresAt": "2026-12-15T18:10:10.000Z"
   },
   {
     "id": "USR-11296",

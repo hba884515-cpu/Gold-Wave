@@ -143,7 +143,7 @@ function loadJSON(filePath, defaultData) {
 
 function saveJSON(filePath, data) {
   try {
-    fs.writeFile(filePath, JSON.stringify(data), 'utf8', () => {});
+    fs.writeFileSync(filePath, JSON.stringify(data), 'utf8');
   } catch (e) {}
 }
 
@@ -253,6 +253,20 @@ function getUserSubscriptionInfo(user) {
   const now = Date.now();
   const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
+  // 0. Nếu tài khoản đã hết hạn / bị khóa trải nghiệm (EXPIRED)
+  if (user.subscriptionStatus === 'EXPIRED') {
+    return {
+      status: 'EXPIRED',
+      isAdmin: false,
+      isExpired: true,
+      badgeText: 'HẾT HẠN TRẢI NGHIỆM 🔒',
+      badgeColor: 'rose',
+      daysRemaining: 0,
+      expiresAt: user.subscriptionExpiresAt || user.trialExpiresAt || new Date(now - ONE_DAY_MS).toISOString(),
+      message: 'Thời gian trải nghiệm đã kết thúc. Vui lòng thanh toán phí duy trì gói tháng (390.000 VNĐ) để được kích hoạt tiếp tục sử dụng.'
+    };
+  }
+
   // 1. Nếu tài khoản đã thanh toán gói (ACTIVE)
   if (user.subscriptionStatus === 'ACTIVE' && user.subscriptionExpiresAt) {
     const expiresAtMs = new Date(user.subscriptionExpiresAt).getTime();
@@ -284,7 +298,22 @@ function getUserSubscriptionInfo(user) {
     }
   }
 
-  // 2. Tài khoản dùng thử 14 ngày (TRIAL)
+  // 2. Toàn bộ tài khoản thật [T] không được dùng trải nghiệm miễn phí nữa (Chỉ mở khi nạp gói tháng)
+  const isReal = user.accountType === 'T' || user.isReal === true;
+  if (isReal) {
+    return {
+      status: 'EXPIRED',
+      isAdmin: false,
+      isExpired: true,
+      badgeText: 'HẾT HẠN TRẢI NGHIỆM 🔒',
+      badgeColor: 'rose',
+      daysRemaining: 0,
+      expiresAt: user.subscriptionExpiresAt || user.trialExpiresAt || new Date(now - ONE_DAY_MS).toISOString(),
+      message: 'Chương trình trải nghiệm miễn phí đã kết thúc. Vui lòng thanh toán gói tháng (390.000 VNĐ) để được kích hoạt tiếp tục sử dụng.'
+    };
+  }
+
+  // 3. Tài khoản ảo dùng thử 14 ngày (TRIAL cho tài khoản [Y])
   const createdMs = user.createdAt ? new Date(user.createdAt).getTime() : now;
   const trialDays = user.trialDays || paymentConfig.trialDays || 14;
   const trialExpiresAtMs = user.trialExpiresAt ? new Date(user.trialExpiresAt).getTime() : (createdMs + trialDays * ONE_DAY_MS);
@@ -324,10 +353,16 @@ usersDB = usersDB.map(u => {
     u.role = 'ADMIN';
     u.subscriptionStatus = 'LIFETIME';
   } else if (!u.subscriptionStatus) {
-    u.trialDays = u.trialDays || 14;
-    const createdMs = u.createdAt ? new Date(u.createdAt).getTime() : Date.now();
-    u.trialExpiresAt = u.trialExpiresAt || new Date(createdMs + 14 * 24 * 60 * 60 * 1000).toISOString();
-    u.subscriptionStatus = 'TRIAL';
+    const isReal = u.isReal || u.accountType === 'T';
+    if (isReal) {
+      u.subscriptionStatus = 'EXPIRED';
+      u.subscriptionExpiresAt = '2026-11-16T00:00:00.000Z';
+    } else {
+      u.trialDays = u.trialDays || 14;
+      const createdMs = u.createdAt ? new Date(u.createdAt).getTime() : Date.now();
+      u.trialExpiresAt = u.trialExpiresAt || new Date(createdMs + 14 * 24 * 60 * 60 * 1000).toISOString();
+      u.subscriptionStatus = 'TRIAL';
+    }
   }
   return u;
 });
@@ -2358,10 +2393,10 @@ const server = http.createServer(async (req, res) => {
       role: userRole,
       accountType: 'T',
       isReal: true,
-      trialDays: trialDays,
-      trialExpiresAt: userRole === 'ADMIN' ? null : trialExpiresIso,
-      subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : (isDeviceLocked ? 'EXPIRED' : 'TRIAL'),
-      subscriptionExpiresAt: userRole === 'ADMIN' ? null : trialExpiresIso,
+      trialDays: 0,
+      trialExpiresAt: userRole === 'ADMIN' ? null : nowIso,
+      subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : 'EXPIRED',
+      subscriptionExpiresAt: userRole === 'ADMIN' ? null : nowIso,
       isDeviceLocked: isDeviceLocked,
       createdAt: nowIso
     };
@@ -2371,15 +2406,12 @@ const server = http.createServer(async (req, res) => {
 
     const subInfo = getUserSubscriptionInfo(newUser);
 
-    if (isDeviceLocked) {
-      subInfo.isExpired = true;
-      subInfo.status = 'EXPIRED';
-      subInfo.message = 'Thiết bị này đã từng sử dụng hết 14 ngày dùng thử miễn phí. Mỗi thiết bị chỉ được nhận 1 lượt trải nghiệm. Vui lòng thanh toán gói cước 390.000đ/tháng để tiếp tục sử dụng.';
+    if (subInfo.isExpired) {
       res.writeHead(200);
       return res.end(JSON.stringify({
         status: 'EXPIRED',
         isExpired: true,
-        deviceLocked: true,
+        deviceLocked: isDeviceLocked,
         message: subInfo.message,
         user: { 
           id: newUser.id, 
@@ -2396,7 +2428,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200);
     res.end(JSON.stringify({
       status: 'SUCCESS',
-      message: 'Đăng ký tài khoản thành công! Bạn nhận được 14 ngày dùng thử miễn phí.',
+      message: 'Đăng ký tài khoản thành công!',
       user: { 
         id: newUser.id, 
         name: newUser.name, 
@@ -2539,10 +2571,10 @@ const server = http.createServer(async (req, res) => {
         role: userRole,
         accountType: 'T',
         isReal: true,
-        trialDays: trialDays,
-        trialExpiresAt: isAdminAccount ? null : trialExpiresIso,
-        subscriptionStatus: isAdminAccount ? 'LIFETIME' : (isDeviceLocked ? 'EXPIRED' : 'TRIAL'),
-        subscriptionExpiresAt: isAdminAccount ? null : trialExpiresIso,
+        trialDays: 0,
+        trialExpiresAt: isAdminAccount ? null : nowIso,
+        subscriptionStatus: isAdminAccount ? 'LIFETIME' : 'EXPIRED',
+        subscriptionExpiresAt: isAdminAccount ? null : nowIso,
         isDeviceLocked: isDeviceLocked,
         createdAt: nowIso
       };
