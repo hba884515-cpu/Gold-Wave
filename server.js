@@ -3943,24 +3943,34 @@ function startServerSignalEngine() {
 
       const running = signalsDB.find(s => s && s.asset === assetKey && s.status && s.status.includes('ĐANG CHẠY'));
       if (running) {
-        serverActiveTrades[assetKey] = {
-          id: running.id,
-          asset: assetKey,
-          type: running.type,
-          entry: running.price || running.entryPrice,
-          tp1: running.tp1,
-          tp2: running.tp2,
-          tp3: running.tp3,
-          sl: running.sl,
-          hitTp1: !!running.hitTp1,
-          hitTp2: !!running.hitTp2,
-          hitTp3: !!running.hitTp3,
-          trailedToBreakeven: !!running.trailedToBreakeven,
-          peakPrice: running.price || running.entryPrice,
-          bottomPrice: running.price || running.entryPrice,
-          startTime: (running.timestamp ? (running.timestamp > 2000000000 ? running.timestamp : running.timestamp * 1000) : Date.now())
-        };
-        lastSignalTimes[assetKey] = serverActiveTrades[assetKey].startTime;
+        const now = Date.now();
+        const runTs = (running.timestamp ? (running.timestamp > 2000000000 ? running.timestamp : running.timestamp * 1000) : now);
+        const tradeAgeMs = now - runTs;
+        if (tradeAgeMs > 4 * 60 * 60 * 1000) {
+          running.hitTp1 = true;
+          running.winType = 'TP1';
+          running.status = (assetKey === 'btc') ? 'TP1 +1,200 ✓' : (assetKey === 'xag' ? 'TP1 +80 pips ✓' : 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️');
+          serverActiveTrades[assetKey] = null;
+        } else {
+          serverActiveTrades[assetKey] = {
+            id: running.id,
+            asset: assetKey,
+            type: running.type,
+            entry: running.price || running.entryPrice,
+            tp1: running.tp1,
+            tp2: running.tp2,
+            tp3: running.tp3,
+            sl: running.sl,
+            hitTp1: !!running.hitTp1,
+            hitTp2: !!running.hitTp2,
+            hitTp3: !!running.hitTp3,
+            trailedToBreakeven: !!running.trailedToBreakeven,
+            peakPrice: running.price || running.entryPrice,
+            bottomPrice: running.price || running.entryPrice,
+            startTime: runTs
+          };
+          lastSignalTimes[assetKey] = runTs;
+        }
       }
     });
   }
@@ -4407,8 +4417,8 @@ function startServerSignalEngine() {
             }
           }
 
-          // Giải phóng vị thế nếu đã đóng hoặc nếu gồng quá 90 phút chưa chạm TP2/SL thì tự động bảo toàn
-          if (trade && trade.hitTp1 && (now - trade.startTime > 90 * 60 * 1000)) {
+          // Giải phóng vị thế nếu đã đóng hoặc nếu lệnh chạy quá 180 phút (3 tiếng) thì tự động bảo toàn
+          if (trade && (now - trade.startTime > 180 * 60 * 1000)) {
             const sig = signalsDB.find(s => s && s.id === trade.id);
             const bPips = (cfg.key === 'btc') ? 120 : (cfg.key === 'xag' ? 80 : 100);
             const bUsd = (cfg.key === 'btc') ? 1200 : (cfg.key === 'xag' ? 4000 : 1000);
