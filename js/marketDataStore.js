@@ -27,25 +27,25 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 3868.50,
-        prevPrice: 3870.00,
-        change: -15.39,
-        changePercent: -0.40,
+        price: 3875.70,
+        prevPrice: 3880.00,
+        change: -12.50,
+        changePercent: -0.32,
         high: 3901.20,
-        low: 3835.80,
+        low: 3865.00,
         icon: '🪙',
         tag: 'GOLD'
       },
       'BTC': {
         symbol: 'BTC/USD',
         name: 'Bitcoin (Crypto)',
-        source: 'BINANCE:BTCUSDT',
-        price: 80415.00,
-        prevPrice: 79850.00,
-        change: 565.00,
-        changePercent: 0.71,
-        high: 81200.00,
-        low: 79150.00,
+        source: 'COINBASE:BTCUSD',
+        price: 65015.00,
+        prevPrice: 64950.00,
+        change: 255.00,
+        changePercent: 0.39,
+        high: 65626.00,
+        low: 63833.00,
         icon: '₿',
         tag: 'CRYPTO'
       },
@@ -53,10 +53,10 @@ class MarketDataStore {
         symbol: 'XAG/USD',
         name: 'Bạc Thế Giới',
         source: 'TVC:SILVER',
-        price: 47.25,
-        prevPrice: 48.10,
-        change: -0.85,
-        changePercent: -1.77,
+        price: 47.42,
+        prevPrice: 47.20,
+        change: 0.42,
+        changePercent: 0.89,
         high: 48.50,
         low: 46.80,
         icon: '🥈',
@@ -106,8 +106,8 @@ class MarketDataStore {
     this.assetCandles['XAU'] = JSON.parse(JSON.stringify(this.candles));
 
     this.hasRealCandlesLoaded = { XAU: false, BTC: false, XAG: false };
-    this.initAssetCandles('BTC', 80642.33, 79200.00, 81900.00, 150.0);
-    this.initAssetCandles('XAG', 53.76, 52.80, 54.80, 0.25);
+    this.initAssetCandles('BTC', 65015.00, 63800.00, 65650.00, 120.0);
+    this.initAssetCandles('XAG', 47.42, 46.80, 48.50, 0.15);
 
     this.hydrateRealCandlesFromServer();
     setInterval(() => this.hydrateRealCandlesFromServer(), 180000);

@@ -1580,32 +1580,32 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 3840.00,
-    change: -43.89,
-    changePercent: -1.13,
-    high: 3901.23,
-    low: 3835.81,
-    open: 3883.89,
+    price: 3875.70,
+    change: -12.50,
+    changePercent: -0.32,
+    high: 3901.20,
+    low: 3865.00,
+    open: 3888.20,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
   BTC: {
-    price: 80414.96,
-    change: 564.96,
-    changePercent: 0.71,
-    high: 81200.00,
-    low: 79150.00,
-    open: 79850.00,
-    symbol: 'BINANCE:BTCUSDT',
+    price: 65015.00,
+    change: 255.00,
+    changePercent: 0.39,
+    high: 65626.00,
+    low: 63833.00,
+    open: 64760.00,
+    symbol: 'COINBASE:BTCUSD',
     lastUpdated: Date.now()
   },
   XAG: {
-    price: 52.67,
-    change: 0.57,
-    changePercent: 1.09,
-    high: 53.40,
-    low: 51.80,
-    open: 52.10,
+    price: 47.42,
+    change: 0.42,
+    changePercent: 0.89,
+    high: 48.50,
+    low: 46.80,
+    open: 47.00,
     symbol: 'TVC:SILVER',
     lastUpdated: Date.now()
   },
@@ -1683,24 +1683,53 @@ function fetchSilverApiPriceDirect() {
 
 function fetchBtcPriceDirect() {
   return new Promise((resolve) => {
-    const req = https.get('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
+    // 1. Primary: Coinbase Exchange Stats (Hoạt động 100% trên Render/Datacenter IP, không bị 451)
+    const req = https.get('https://api.exchange.coinbase.com/products/BTC-USD/stats', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
         try {
           const j = JSON.parse(body);
-          if (j && j.lastPrice) {
+          if (j && j.last && !isNaN(j.last)) {
+            const last = parseFloat(j.last);
+            const open = parseFloat(j.open || last);
+            const high = parseFloat(j.high || last);
+            const low = parseFloat(j.low || last);
+            const chg = +(last - open).toFixed(2);
+            const chgPct = +((chg / open) * 100).toFixed(2);
             return resolve({
-              price: parseFloat(j.lastPrice),
-              change: parseFloat(j.priceChange),
-              changePercent: parseFloat(j.priceChangePercent),
-              high: parseFloat(j.highPrice),
-              low: parseFloat(j.lowPrice),
-              open: parseFloat(j.prevClosePrice)
+              price: last,
+              change: chg,
+              changePercent: chgPct,
+              high: high,
+              low: low,
+              open: open
             });
           }
         } catch (e) {}
-        resolve(null);
+
+        // 2. Fallback: Coinbase Spot API
+        https.get('https://api.coinbase.com/v2/prices/BTC-USD/spot', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 3000 }, (sRes) => {
+          let sBody = '';
+          sRes.on('data', c => sBody += c);
+          sRes.on('end', () => {
+            try {
+              const sj = JSON.parse(sBody);
+              if (sj && sj.data && sj.data.amount) {
+                const p = parseFloat(sj.data.amount);
+                return resolve({
+                  price: p,
+                  change: 0,
+                  changePercent: 0,
+                  high: p,
+                  low: p,
+                  open: p
+                });
+              }
+            } catch (e2) {}
+            resolve(null);
+          });
+        }).on('error', () => resolve(null));
       });
     });
     req.on('timeout', () => { req.destroy(); resolve(null); });
@@ -2059,15 +2088,27 @@ async function getServerOHLCBars(assetKey, liveSpotPrice) {
   if (cache.bars5m.length < 100 || now - cache.lastFetch > 180000) {
     let fetched = [];
     if (key === 'btc') {
-      const klines = await fetchJsonHttps('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=400');
-      if (Array.isArray(klines) && klines.length > 50) {
-        fetched = klines.map(k => ({
-          time: Math.floor(Number(k[0]) / 1000),
-          open: +Number(k[1]).toFixed(2),
-          high: +Number(k[2]).toFixed(2),
-          low: +Number(k[3]).toFixed(2),
-          close: +Number(k[4]).toFixed(2)
-        }));
+      const cbCandles = await fetchJsonHttps('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=300');
+      if (Array.isArray(cbCandles) && cbCandles.length > 50) {
+        fetched = cbCandles.map(c => ({
+          time: Number(c[0]),
+          open: +Number(c[3]).toFixed(2),
+          high: +Number(c[2]).toFixed(2),
+          low: +Number(c[1]).toFixed(2),
+          close: +Number(c[4]).toFixed(2)
+        })).sort((a, b) => a.time - b.time);
+      }
+      if (fetched.length < 50) {
+        const klines = await fetchJsonHttps('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=400');
+        if (Array.isArray(klines) && klines.length > 50) {
+          fetched = klines.map(k => ({
+            time: Math.floor(Number(k[0]) / 1000),
+            open: +Number(k[1]).toFixed(2),
+            high: +Number(k[2]).toFixed(2),
+            low: +Number(k[3]).toFixed(2),
+            close: +Number(k[4]).toFixed(2)
+          }));
+        }
       }
     }
     if (fetched.length < 60) {
@@ -3985,7 +4026,7 @@ function startServerSignalEngine() {
 
       const assetConfigs = [
         { key: 'xau', symKey: 'XAU', pair: 'XAU/USD', minMove: 1.5, tp1Pips: 100, tp1Usd: 1000, tp2Pips: 200, tp2Usd: 2000, tp3Pips: 350, tp3Usd: 3500, slPips: -85, slUsd: -850, tp1Val: 10.0, tp2Val: 20.0, tp3Val: 35.0, slVal: 8.5, isMarketOpen: isGoldMarketOpen() },
-        { key: 'btc', symKey: 'BTC', pair: 'BTC/USD', minMove: 120.0, tp1Pips: 150, tp1Usd: 1500, tp2Pips: 280, tp2Usd: 2800, tp3Pips: 450, tp3Usd: 4500, slPips: -140, slUsd: -1400, tp1Val: 1500.0, tp2Val: 2800.0, tp3Val: 4500.0, slVal: 1400.0, isMarketOpen: true },
+        { key: 'btc', symKey: 'BTC', pair: 'BTC/USD', minMove: 60.0, tp1Pips: 80, tp1Usd: 800, tp2Pips: 160, tp2Usd: 1600, tp3Pips: 250, tp3Usd: 2500, slPips: -80, slUsd: -800, tp1Val: 800.0, tp2Val: 1600.0, tp3Val: 2500.0, slVal: 800.0, isMarketOpen: true },
         { key: 'xag', symKey: 'XAG', pair: 'XAG/USD', minMove: 0.15, tp1Pips: 100, tp1Usd: 5000, tp2Pips: 200, tp2Usd: 10000, tp3Pips: 320, tp3Usd: 16000, slPips: -85, slUsd: -4250, tp1Val: 1.00, tp2Val: 2.00, tp3Val: 3.20, slVal: 0.85, isMarketOpen: isGoldMarketOpen() }
       ];
 
@@ -3999,9 +4040,9 @@ function startServerSignalEngine() {
         const low = Number(pObj.low || price);
 
         // Bảo vệ an toàn: Kiểm tra giá hợp lý, loại bỏ hoàn toàn giá bất thường hoặc cache cũ
-        if (cfg.key === 'xau' && (price < 3800 || price > 4300)) continue;
-        if (cfg.key === 'btc' && (price < 50000 || price > 150000)) continue;
-        if (cfg.key === 'xag' && (price < 30 || price > 80)) continue;
+        if (cfg.key === 'xau' && (price < 3500 || price > 4500)) continue;
+        if (cfg.key === 'btc' && (price < 40000 || price > 120000)) continue;
+        if (cfg.key === 'xag' && (price < 25 || price > 80)) continue;
 
         if (!serverPriceHistory[cfg.key]) serverPriceHistory[cfg.key] = [];
         serverPriceHistory[cfg.key].push({ price, high, low, time: now });
