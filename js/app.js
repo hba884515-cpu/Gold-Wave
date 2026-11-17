@@ -4498,7 +4498,25 @@ window.saveGoldAiChatHistory = function() {
   } catch (err) {}
 };
 
+window.initGoldAiEvents = function() {
+  const inputEl = document.getElementById('gold-ai-input');
+  if (inputEl && !inputEl._enterBound) {
+    inputEl._enterBound = true;
+    inputEl.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (typeof window.handleGoldAISubmit === 'function') {
+          window.handleGoldAISubmit(e);
+        }
+      }
+    });
+  }
+};
+
 window.restoreGoldAiChatHistory = function() {
+  if (typeof window.initGoldAiEvents === 'function') {
+    window.initGoldAiEvents();
+  }
   try {
     const raw = localStorage.getItem('gold_ai_v8_chat_history');
     if (!raw) return;
@@ -4891,14 +4909,20 @@ window.handleGoldAISubmit = async function(e) {
     const lotRes = calculateGoldAiLotSize(query);
     htmlResponse = lotRes.html;
     mode = lotRes.mode;
+  } else {
+    // 3. Toàn bộ các câu hỏi giao dịch, thị trường, kỹ thuật, bối cảnh, chào hỏi...
     const latestClientSignal = (window.signalEngine && Array.isArray(window.signalEngine.signals) && window.signalEngine.signals.length > 0) ? window.signalEngine.signals[0] : null;
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: query, price: livePriceStr, latestSignal: latestClientSignal })
+        body: JSON.stringify({ prompt: query, price: livePriceStr, latestSignal: latestClientSignal }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
         if (data && data.reply) {
@@ -4906,8 +4930,11 @@ window.handleGoldAISubmit = async function(e) {
           mode = data.mode || 'Gold AI Market Mentor';
         }
       }
-    } catch (err) {}
+    } catch (err) {
+      console.warn('Backend /api/ai/chat fetch error or timeout:', err);
+    }
 
+    // Fallback thông minh 100% nếu Backend chậm hoặc offline:
     if (!htmlResponse) {
       if (typeof window.searchEMA2050Knowledge === 'function') {
         const snap = window.appState && window.appState.goldSnapshot;
@@ -4924,12 +4951,24 @@ window.handleGoldAISubmit = async function(e) {
           mode = clientKbRes.mode;
         }
       }
-      if (!htmlResponse) {
+      if (!htmlResponse && typeof generateGoldAIMentorResponse === 'function') {
         const generated = generateGoldAIMentorResponse(query);
         htmlResponse = generated.htmlResponse;
         mode = generated.mode;
       }
     }
+  }
+
+  // Đảm bảo TUYỆT ĐỐI không bao giờ bị rỗng nội dung trả lời
+  if (!htmlResponse || !htmlResponse.trim()) {
+    htmlResponse = `
+      <div class="space-y-2 text-xs text-slate-300 leading-relaxed font-sans">
+        <p>✦ <strong>Gold AI Mentor đã nhận câu hỏi của bạn:</strong> <em>"${escapeHtml(query)}"</em></p>
+        <p>• <strong>Bối cảnh thị trường hiện tại</strong>: Giá Vàng XAU/USD trực tiếp đang ở mốc <strong>$${livePriceStr}</strong>.</p>
+        <p>• <strong>Gợi ý hành động</strong>: Hệ thống MA WAVE V8 khuyến nghị theo dõi cấu trúc nến đóng khung M15 tại dải EMA20/EMA50 để đón điểm vào lệnh có R:R tốt nhất. Bạn có thể chọn các câu hỏi nhanh phía trên hoặc hỏi cụ thể về điểm vào, cắt lỗ hay tính lot nhé!</p>
+      </div>
+    `;
+    mode = 'Gold AI Market Mentor';
   }
 
   const typing = document.getElementById('gold-ai-typing-indicator');

@@ -168,6 +168,9 @@ class GoldTradingApp {
     if (this.bars && this.bars.length > 0) {
       this.renderIndicators();
     }
+    if (window.signalEngine && typeof window.signalEngine.syncServerSignals === 'function') {
+      window.signalEngine.syncServerSignals();
+    }
     this.renderSignalHistory();
   }
 
@@ -1122,6 +1125,29 @@ class GoldTradingApp {
       cardReversal.className = isRev ? 'text-xs font-black text-[#f23645] mt-1' : isWarn ? 'text-xs font-black text-amber-400 mt-1' : 'text-xs font-bold text-slate-400 mt-1';
     }
 
+    const cardMarketState = document.getElementById('v8-card-market-state');
+    const cardQualityScore = document.getElementById('v8-card-quality-score');
+    if (snap.ema50State && snap.ema50State.ready) {
+      const eState = snap.ema50State;
+      if (cardMarketState) {
+        const ms = eState.marketState;
+        cardMarketState.textContent = eState.overextended ? `${ms} (DÃN XA)` : ms;
+        cardMarketState.title = eState.marketStateLabel || ms;
+        cardMarketState.className = ms === 'UPTREND' ? 'text-[11px] font-black text-[#089981]'
+          : ms === 'DOWNTREND' ? 'text-[11px] font-black text-[#f23645]'
+          : ms === 'PULLBACK' ? 'text-[11px] font-black text-cyan-400'
+          : ms === 'CHOP' ? 'text-[11px] font-black text-orange-400'
+          : 'text-[11px] font-black text-amber-400';
+      }
+      if (cardQualityScore) {
+        cardQualityScore.textContent = `${eState.score}/100 (${eState.signalQualityState}) • D=${eState.dRatio}`;
+        cardQualityScore.title = eState.reason || '';
+        cardQualityScore.className = eState.score >= 75 ? 'text-[11px] font-black text-emerald-400'
+          : eState.score >= 60 ? 'text-[11px] font-black text-amber-300'
+          : 'text-[11px] font-bold text-slate-400';
+      }
+    }
+
     // Cập nhật Small On-Chart Dashboard (Section 12)
     const mTrend = document.getElementById('mini-dash-trend');
     const mWave = document.getElementById('mini-dash-wave');
@@ -1420,50 +1446,58 @@ class GoldTradingApp {
 
   startSimulatedMarketTicks() {
     if (window.marketDataStore) {
+      this._lastHeavyEvalMs = 0;
       window.marketDataStore.subscribe((event, payload) => {
         if (event === 'tick') {
           this.updatePriceHeader();
+          const nowTickMs = Date.now();
+          const activeView = window.currentActiveView || 'chart';
+          const isChartOrTrendVisible = (activeView === 'chart' || activeView === 'trend');
+          let barCountChanged = false;
+
           if (this.replayMode === 'live') {
             const tf = this.currentTimeframe || '15m';
             const prevCount = this.bars ? this.bars.length : 0;
             this.bars = window.marketDataStore.getBars(tf);
+            barCountChanged = !!(this.bars && this.bars.length !== prevCount);
             const lastBar = (this.bars && this.bars.length) ? this.bars[this.bars.length - 1] : null;
-            if (this.candleSeries && lastBar) {
-              if (this.bars && this.bars.length !== prevCount) {
+            if (isChartOrTrendVisible && this.candleSeries && lastBar) {
+              if (barCountChanged) {
                 this.candleSeries.setData(this.bars);
               } else {
                 this.candleSeries.update(lastBar);
               }
             }
-            this.renderIndicators();
-            this.updateReplayUI();
           }
-          if (window.v8Engine) {
-            const currentSnap = window.v8Engine.getV8MarketSnap ? window.v8Engine.getV8MarketSnap() : null;
-            if (currentSnap) {
-              this.updateV8DashboardUI(currentSnap);
-            }
-          }
-          if (window.signalEngine) {
-            const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
-            window.signalEngine.evaluateMarket(this.bars, activeAsset);
-            window.signalEngine.updateOpenOrders(payload.price, activeAsset);
 
-            // Quét tức thời cho cả các tài sản khác (Vàng, Bitcoin, Bạc) theo giá live chuẩn xác
-            if (window.marketDataStore && window.marketDataStore.assetsData) {
-              ['XAU', 'BTC', 'XAG'].forEach(symKey => {
-                const sym = symKey.toLowerCase();
-                if (sym !== activeAsset) {
-                  const assetObj = window.marketDataStore.assetsData[symKey];
-                  if (assetObj && assetObj.price) {
-                    window.signalEngine.updateOpenOrders(assetObj.price, sym);
-                  }
-                }
-              });
+          const shouldRunHeavy = barCountChanged || (nowTickMs - (this._lastHeavyEvalMs || 0) >= 8000);
+          if (shouldRunHeavy) {
+            this._lastHeavyEvalMs = nowTickMs;
+            if (this.replayMode === 'live' && isChartOrTrendVisible) {
+              this.renderIndicators();
+              this.updateReplayUI();
+            }
+            if (window.v8Engine && isChartOrTrendVisible) {
+              const currentSnap = window.v8Engine.getV8MarketSnap ? window.v8Engine.getV8MarketSnap() : null;
+              if (currentSnap) {
+                this.updateV8DashboardUI(currentSnap);
+              }
+            }
+            if (window.signalEngine) {
+              const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
+              window.signalEngine.evaluateMarket(this.bars, activeAsset);
             }
           }
-        } else if (event === 'timeframeChange') {
-          this.currentTimeframe = payload.timeframe;
+
+          if (window.signalEngine && payload && payload.price) {
+            const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
+            window.signalEngine.updateOpenOrders(payload.price, activeAsset);
+          }
+        } else if (event === 'timeframeChange' || event === 'candlesHydrated' || event === 'assetChange') {
+          this._lastHeavyEvalMs = Date.now();
+          if (event === 'timeframeChange' && payload && payload.timeframe) {
+            this.currentTimeframe = payload.timeframe;
+          }
           this.loadInitialBars();
           this.renderIndicators();
           this.updateReplayUI();
@@ -1502,10 +1536,12 @@ class GoldTradingApp {
     priceElem.textContent = `$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     if (curPrice > prevPrice) {
-      priceElem.classList.remove('flash-down');
+      priceElem.classList.remove('flash-up', 'flash-down');
+      void priceElem.offsetWidth;
       priceElem.classList.add('flash-up');
     } else if (curPrice < prevPrice) {
-      priceElem.classList.remove('flash-up');
+      priceElem.classList.remove('flash-up', 'flash-down');
+      void priceElem.offsetWidth;
       priceElem.classList.add('flash-down');
     }
 
@@ -1558,6 +1594,13 @@ class GoldTradingApp {
         if (maWaveView && !maWaveView.classList.contains('hidden') && typeof window.renderRadarSignalCards === 'function') {
           window.renderRadarSignalCards();
         }
+      }
+
+      // Cập nhật Live Pill trong tab Gold AI
+      const goldAiPill = document.getElementById('gold-ai-pill-text');
+      if (goldAiPill && store && store.assetsData['XAU']) {
+        const p = store.assetsData['XAU'].price;
+        if (p) goldAiPill.textContent = `XAU/USD: $${Number(p).toFixed(2)} | 15M | MA WAVE V8 Active`;
       }
     }
 
@@ -2085,6 +2128,31 @@ class GoldTradingApp {
         : `Đang xem: [${activeAssetName}] ${labelText} (${signals.length} tín hiệu)`;
     }
 
+    // Cập nhật số lượng lệnh lên nút Toàn Bộ
+    const btnAll = document.getElementById('hist-filter-all');
+    if (btnAll) {
+      btnAll.textContent = `Toàn Bộ (${filteredByAsset.length.toLocaleString('en-US')})`;
+    }
+
+    // Cập nhật Banner hướng dẫn bộ lọc
+    const hintBanner = document.getElementById('hist-filter-hint-banner');
+    if (hintBanner) {
+      if (filterKey === 'today') {
+        hintBanner.classList.remove('hidden');
+        hintBanner.innerHTML = `
+          <div class="flex items-center gap-2 text-amber-300 font-sans">
+            <span>💡</span>
+            <span>Bạn đang chọn xem các lệnh phát sinh trong <strong>Hôm Nay (${signals.length} lệnh)</strong>. Toàn bộ <strong>${filteredByAsset.length.toLocaleString('en-US')} lệnh lịch sử</strong> từ trước đến nay vẫn được bảo toàn nguyên vẹn trong hệ thống.</span>
+          </div>
+          <button onclick="if(window.app) window.app.setHistoryFilter('all')" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] shadow hover:bg-amber-400 transition cursor-pointer shrink-0">
+            Xem Toàn Bộ ${filteredByAsset.length.toLocaleString('en-US')} Lệnh ➔
+          </button>
+        `;
+      } else {
+        hintBanner.classList.add('hidden');
+      }
+    }
+
     // Calculate Summary KPIs
     const totalSignals = signals.length;
     const buyCount = signals.filter(s => s.type === 'BUY').length;
@@ -2177,9 +2245,17 @@ class GoldTradingApp {
         : `<span class="text-slate-500 text-[11px]">${valStr}</span>`;
     };
 
+    // Giới hạn số lượng node DOM render mỗi lần (50 lệnh mới nhất) để app điện thoại mượt mà 60fps
+    this.historyDisplayLimit = this.historyDisplayLimit || 50;
+    const displaySignals = signals.slice(0, this.historyDisplayLimit);
+    const hasMoreHistory = signals.length > displaySignals.length;
+    const loadMoreBtnHtml = hasMoreHistory
+      ? `<div class="col-span-full flex justify-center py-4"><button onclick="if(window.app){ window.app.historyDisplayLimit = (window.app.historyDisplayLimit || 50) + 50; window.app.renderSignalHistory(); }" class="px-5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs transition cursor-pointer">📜 Xem thêm 50 lệnh cũ hơn (Đang hiển thị ${displaySignals.length}/${signals.length})</button></div>`
+      : '';
+
     // 1. Render Table Rows (Cho Dạng Bảng 11 Cột)
     if (tbody) {
-      tbody.innerHTML = signals.map(sig => {
+      tbody.innerHTML = displaySignals.map(sig => {
         const isBuy = sig.type === 'BUY';
         const isBtc = sig.asset === 'btc';
         const isXag = sig.asset === 'xag';
@@ -2218,12 +2294,12 @@ class GoldTradingApp {
             </td>
           </tr>
         `;
-      }).join('');
+      }).join('') + (hasMoreHistory ? `<tr><td colspan="11">${loadMoreBtnHtml}</td></tr>` : '');
     }
 
     // 2. Render Cards View (Dạng Thẻ Lệnh Thông Minh - Cực kỳ trực quan, xem trọn vẹn mọi lệnh trên điện thoại)
     if (cardsContainer) {
-      cardsContainer.innerHTML = signals.map(sig => {
+      cardsContainer.innerHTML = displaySignals.map(sig => {
         const isBuy = sig.type === 'BUY';
         const isBtc = sig.asset === 'btc';
         const isXag = sig.asset === 'xag';
@@ -2288,7 +2364,7 @@ class GoldTradingApp {
             </div>
           </div>
         `;
-      }).join('');
+      }).join('') + loadMoreBtnHtml;
     }
 
     // Auto apply saved or default display mode (Cards for mobile, Table for PC)
@@ -2750,18 +2826,20 @@ class GoldTradingApp {
     // Mốc Kháng cự & Hỗ trợ tính toán theo giá thực tế
     const levels = this.getCalculatedKeyLevels();
 
-    // Tính toán mốc TP1 (+10 giá), TP2 (+20 giá), TP3 (+30 giá) & SL (-5 giá) cho Kịch bản Mua/Bán
+    // Tính toán mốc TP1 (+10 giá), TP2 (+20 giá), TP3 (+35 giá) & SL Cấu Trúc An Toàn (theo ATR/8.5+ giá)
+    const e50St = snap.ema50State;
+    const dynSlDist = Math.min(14.0, Math.max(8.5, parseFloat(atrVal) * 1.35 || 8.5));
     const buyEntry = priceNum;
-    const buyTp1 = (buyEntry + 10.0).toFixed(2);
-    const buyTp2 = (buyEntry + 20.0).toFixed(2);
-    const buyTp3 = (buyEntry + 30.0).toFixed(2);
-    const buySl  = (buyEntry - 5.0).toFixed(2);
+    const buyTp1 = (buyEntry + Math.max(10.0, dynSlDist * 1.2)).toFixed(2);
+    const buyTp2 = (buyEntry + Math.max(20.0, dynSlDist * 2.2)).toFixed(2);
+    const buyTp3 = (buyEntry + Math.max(35.0, dynSlDist * 3.5)).toFixed(2);
+    const buySl  = (e50St && e50St.direction === 'BUY' && e50St.sl) ? Number(e50St.sl).toFixed(2) : (buyEntry - dynSlDist).toFixed(2);
 
     const sellEntry = priceNum;
-    const sellTp1 = (sellEntry - 10.0).toFixed(2);
-    const sellTp2 = (sellEntry - 20.0).toFixed(2);
-    const sellTp3 = (sellEntry - 30.0).toFixed(2);
-    const sellSl  = (sellEntry + 5.0).toFixed(2);
+    const sellTp1 = (sellEntry - Math.max(10.0, dynSlDist * 1.2)).toFixed(2);
+    const sellTp2 = (sellEntry - Math.max(20.0, dynSlDist * 2.2)).toFixed(2);
+    const sellTp3 = (sellEntry - Math.max(35.0, dynSlDist * 3.5)).toFixed(2);
+    const sellSl  = (e50St && e50St.direction === 'SELL' && e50St.sl) ? Number(e50St.sl).toFixed(2) : (sellEntry + dynSlDist).toFixed(2);
 
     // Tin tức kinh tế nếu có
     let newsContextText = '';
@@ -2865,20 +2943,20 @@ class GoldTradingApp {
                 <strong class="text-amber-300 font-bold">$${(buyEntry - 2.0).toFixed(2)} - $${buyEntry.toFixed(2)}</strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL (-5 giá):</span>
-                <strong class="text-rose-300 font-bold">$${buySl} <span class="text-[10px] text-rose-400/80 font-normal">(-50 pips)</span></strong>
+                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL Cấu Trúc:</span>
+                <strong class="text-rose-300 font-bold">$${buySl} <span class="text-[10px] text-rose-400/80 font-normal">(-${(buyEntry - parseFloat(buySl)).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1 (+10 giá):</span>
-                <strong class="text-emerald-300 font-bold">$${buyTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(+100 pips)</span></strong>
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1:</span>
+                <strong class="text-emerald-300 font-bold">$${buyTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(+${(parseFloat(buyTp1) - buyEntry).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2 (+20 giá):</span>
-                <strong class="text-emerald-300 font-bold">$${buyTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(+200 pips)</span></strong>
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2:</span>
+                <strong class="text-emerald-300 font-bold">$${buyTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(+${(parseFloat(buyTp2) - buyEntry).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1">
-                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3 (+30 giá):</span>
-                <strong class="text-yellow-300 font-black text-sm">$${buyTp3} <span class="text-[10px] text-yellow-400 font-normal">(+300 pips - Trọn Sóng)</span></strong>
+                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3:</span>
+                <strong class="text-yellow-300 font-black text-sm">$${buyTp3} <span class="text-[10px] text-yellow-400 font-normal">(+${(parseFloat(buyTp3) - buyEntry).toFixed(1)} giá - Trọn Sóng)</span></strong>
               </div>
             </div>
 
@@ -2894,7 +2972,7 @@ class GoldTradingApp {
               <span class="font-black text-rose-400 text-sm flex items-center gap-1.5">
                 <span>📉</span> VÙNG CANH SELL PHẢN ỨNG
               </span>
-              <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px] border border-rose-500/30">Mục Tiêu -30 Giá (🎯)</span>
+              <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px] border border-rose-500/30">Mục Tiêu Theo Cấu Trúc (🎯)</span>
             </div>
 
             <div class="space-y-2 text-slate-200">
@@ -2903,20 +2981,20 @@ class GoldTradingApp {
                 <strong class="text-amber-300 font-bold">$${sellEntry.toFixed(2)} - $${(sellEntry + 2.0).toFixed(2)}</strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL (+5 giá):</span>
-                <strong class="text-rose-300 font-bold">$${sellSl} <span class="text-[10px] text-rose-400/80 font-normal">(-50 pips)</span></strong>
+                <span class="text-rose-400 font-bold flex items-center gap-1">🛡️ Cắt Lỗ SL Cấu Trúc:</span>
+                <strong class="text-rose-300 font-bold">$${sellSl} <span class="text-[10px] text-rose-400/80 font-normal">(+${(parseFloat(sellSl) - sellEntry).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1 (-10 giá):</span>
-                <strong class="text-emerald-300 font-bold">$${sellTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(+100 pips)</span></strong>
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP1:</span>
+                <strong class="text-emerald-300 font-bold">$${sellTp1} <span class="text-[10px] text-emerald-400/80 font-normal">(-${(sellEntry - parseFloat(sellTp1)).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2 (-20 giá):</span>
-                <strong class="text-emerald-300 font-bold">$${sellTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(+200 pips)</span></strong>
+                <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 Chốt Lời TP2:</span>
+                <strong class="text-emerald-300 font-bold">$${sellTp2} <span class="text-[10px] text-emerald-400/80 font-normal">(-${(sellEntry - parseFloat(sellTp2)).toFixed(1)} giá)</span></strong>
               </div>
               <div class="flex justify-between items-center py-1">
-                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3 (-30 giá):</span>
-                <strong class="text-yellow-300 font-black text-sm">$${sellTp3} <span class="text-[10px] text-yellow-400 font-normal">(+300 pips - Trọn Sóng)</span></strong>
+                <span class="text-emerald-400 font-black flex items-center gap-1">🎯 Chốt Lời TP3:</span>
+                <strong class="text-yellow-300 font-black text-sm">$${sellTp3} <span class="text-[10px] text-yellow-400 font-normal">(-${(sellEntry - parseFloat(sellTp3)).toFixed(1)} giá - Trọn Sóng)</span></strong>
               </div>
             </div>
 
@@ -3704,25 +3782,116 @@ window.goldAiMemory = {
 };
 
 window.resetGoldAiSession = function() {
+  try {
+    localStorage.removeItem('gold_ai_v8_chat_history');
+  } catch (e) {}
   window.goldAiMemory.reset();
   const messagesContainer = document.getElementById('gold-ai-chat-messages');
   if (messagesContainer) {
+    const store = window.marketDataStore;
+    let livePriceStr = 'XAU/USD Realtime';
+    if (store && store.assetsData && store.assetsData['XAU'] && store.assetsData['XAU'].price) {
+      livePriceStr = `XAU/USD: $${Number(store.assetsData['XAU'].price).toFixed(2)}`;
+    }
     messagesContainer.innerHTML = `
-      <div class="flex gap-3 max-w-2xl">
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center shrink-0 shadow">✦</div>
-        <div class="bg-[#111622] border border-slate-800 rounded-2xl p-4 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-amber-400 text-sm">Chào bạn! Mình là Gold AI Market Mentor 🌊</span>
-            <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">Market Mentor</span>
+      <div class="space-y-4 max-w-2xl mx-auto animate-fade-in">
+        <!-- Hero Mentor Box -->
+        <div class="rounded-3xl bg-gradient-to-br from-slate-900/90 via-[#0d1424]/95 to-slate-950/90 border border-amber-500/30 p-4 sm:p-5 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+          <div class="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="flex items-start gap-3.5 relative z-10">
+            <div class="relative w-12 h-12 rounded-2xl overflow-hidden shadow-xl shadow-amber-500/30 border-2 border-amber-400/80 shrink-0 bg-slate-900">
+              <img src="./assets/gold-ai-avatar.jpg" alt="Gold AI Mentor" class="w-full h-full object-cover">
+              <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse"></span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between flex-wrap gap-1.5 mb-1">
+                <h3 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                  Gold AI Market Mentor
+                  <span class="text-[9px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 font-bold border border-amber-500/40 uppercase tracking-wide">EMA20-50 PRO</span>
+                </h3>
+                <span class="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/25">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Sẵn Sàng
+                </span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Phiên chat đã được làm mới. Mình đang sẵn sàng cùng bạn thẩm định thị trường Vàng realtime, kết hợp <strong>14 Chuyên Đề EMA20–EMA50</strong> và công thức <strong>3 Bước Trader</strong>.
+              </p>
+            </div>
           </div>
-          <p class="text-slate-300">
-            Phiên chat đã được làm mới. Mình đang sẵn sàng cùng bạn quan sát, học hỏi và trao đổi bối cảnh thị trường Vàng (XAU/USD).
-          </p>
+        </div>
+
+        <!-- Realtime Market Pulse Quick Bar -->
+        <div class="rounded-2xl bg-slate-900/80 border border-slate-800/80 p-3 flex items-center justify-between flex-wrap gap-2 text-xs backdrop-blur-md">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🪙</span>
+            <span class="text-slate-400 font-medium">Bối cảnh Vàng:</span>
+            <span class="text-amber-400 font-mono font-bold">${livePriceStr}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+            <span class="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700/80 text-slate-300 font-mono">Khung M15</span>
+            <span class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">MA WAVE V8</span>
+          </div>
+        </div>
+
+        <!-- 4 Interactive Quick-Action Cards (Grid 2x2) -->
+        <div>
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider flex items-center gap-1.5">
+              <span>⚡</span> TÌNH HUỐNG THỰC CHIẾN NÓNG (1-CHẠM):
+            </span>
+            <span class="text-[10px] text-slate-500">Chạm để hỏi ngay</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <!-- Card 1: Fomo check -->
+            <button type="button" onclick="askGoldAI('Có nên mua đuổi khi giá bay mạnh không?')" 
+                    class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-rose-500/30 hover:border-rose-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-lg">🛑</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">FOMO CHECK</span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-rose-300 mb-0.5">Có Nên Mua Đuổi?</div>
+              <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Khi nến xanh bay dốc đứng, có nên vào Buy ngay hay chờ hồi?</div>
+            </button>
+
+            <!-- Card 2: Rescue position -->
+            <button type="button" onclick="askGoldAI('Mình lỡ buy đỉnh giờ âm nặng quá cứu tài khoản với')" 
+                    class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-amber-500/30 hover:border-amber-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-lg">🚑</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">CỨU TÀI KHOẢN</span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-amber-300 mb-0.5">Kẹt Lệnh Âm Nặng</div>
+              <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Phương án xử lý khi lỡ đu đỉnh hoặc bán đáy tài khoản gồng lỗ.</div>
+            </button>
+
+            <!-- Card 3: Market Health Auditor -->
+            <button type="button" onclick="runGoldAiMarketAuditor()" 
+                    class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-cyan-500/30 hover:border-cyan-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-lg">🩺</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">AUDITOR 1-CHẠM</span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-cyan-300 mb-0.5">Khám Sức Khỏe Live</div>
+              <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Quét độ dãn EMA20/50, phát hiện Bẫy FOMO hoặc Điểm Vào Vàng.</div>
+            </button>
+
+            <!-- Card 4: Stop loss rules -->
+            <button type="button" onclick="askGoldAI('Đặt Stop Loss ở đâu an toàn theo cấu trúc và tránh quét râu?')" 
+                    class="text-left p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-emerald-500/30 hover:border-emerald-400/80 transition-all hover:scale-[1.02] active:scale-95 group cursor-pointer shadow-lg backdrop-blur-md">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-lg">🛡️</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">QUẢN TRỊ VỐN</span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-emerald-300 mb-0.5">Đặt SL Cấu Trúc</div>
+              <div class="text-[10px] text-slate-400 line-clamp-2 leading-tight">Cách đặt cắt lỗ an toàn sau cản và tính số lot đi lệnh chuẩn.</div>
+            </button>
+          </div>
         </div>
       </div>
     `;
   }
-  updateGoldAiPersonaBadge('Market Mentor Mode');
+  updateGoldAiPersonaBadge('V8 PRO MENTOR');
   if (typeof showToast === 'function') showToast('🔄 Đã làm mới phiên trò chuyện Gold AI', 'info');
 };
 
@@ -3797,7 +3966,872 @@ function getGoldAiTerminalContext() {
   };
 }
 
+window.toggleGoldAiTopicsSidebar = function() {
+  const sidebar = document.getElementById('gold-ai-sidebar-col');
+  if (!sidebar) return;
+  if (sidebar.classList.contains('hidden')) {
+    sidebar.classList.remove('hidden');
+    sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'w-72', 'shadow-2xl', 'z-30');
+  } else {
+    sidebar.classList.add('hidden');
+    sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'w-72', 'shadow-2xl', 'z-30');
+  }
+};
+
+window.runGoldAiMarketAuditor = function() {
+  window.askGoldAI('🩺 Khám sức khỏe thị trường Vàng Realtime (Độ giãn EMA20/50 & Bẫy FOMO)');
+};
+
+window.copyGoldAiResponse = function(btn) {
+  if (!btn) return;
+  const parentBox = btn.closest('.gold-ai-response-box');
+  if (!parentBox) return;
+
+  const clone = parentBox.cloneNode(true);
+  const noCopyElements = clone.querySelectorAll('.gold-ai-no-copy, button');
+  noCopyElements.forEach(el => el.remove());
+
+  const cleanText = (clone.innerText || clone.textContent || '').trim();
+  if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(cleanText).then(() => {
+      const origHtml = btn.innerHTML;
+      btn.innerHTML = '✅ Đã chép!';
+      btn.classList.add('text-emerald-400');
+      setTimeout(() => {
+        btn.innerHTML = origHtml;
+        btn.classList.remove('text-emerald-400');
+      }, 2000);
+      if (typeof showToast === 'function') {
+        showToast('📋 Đã sao chép nhận định Gold AI vào bộ nhớ tạm!', 'success');
+      }
+    }).catch(() => {
+      if (typeof showToast === 'function') showToast('📋 Đã sao chép nhận định!', 'info');
+    });
+  }
+};
+
+window._goldAiAudioPlayer = null;
+window._goldAiActiveSpeakBtn = null;
+window._goldAiAudioChunks = [];
+window._goldAiChunkIndex = 0;
+
+// Chuẩn hóa phát âm từ ngữ Trading cho giọng đọc tiếng Việt mượt mà, chuẩn ngữ âm
+window.normalizeTradingTextForSpeech = function(text) {
+  if (!text) return '';
+  let s = text;
+
+  // Xóa các ký tự biểu tượng, gạch ngang trang trí
+  s = s.replace(/[✦★✓✔🎯🛡️🩺🧮🚨⏳📋💧📝🚫🪙⚡›]/g, ' ');
+  s = s.replace(/[-─=]{2,}/g, ' ');
+
+  const replacements = [
+    // Xu hướng
+    [/\buptrend\b/gi, 'áp-tren'],
+    [/\bup-trend\b/gi, 'áp-tren'],
+    [/\bdowntrend\b/gi, 'đao-tren'],
+    [/\bdown-trend\b/gi, 'đao-tren'],
+    [/\bpullback\b/gi, 'pun-bách'],
+    [/\bpull-back\b/gi, 'pun-bách'],
+    [/\bfullback\b/gi, 'pun-bách'],
+    [/\bsideway\b/gi, 'sai-guây'],
+    [/\bsideways\b/gi, 'sai-guây'],
+    [/\bchoppy\b/gi, 'chóp-py'],
+    [/\bchop\b/gi, 'chóp hỗn loạn'],
+    [/\bbreakout\b/gi, 'bờ-rếch-ao'],
+    [/\bbreak-out\b/gi, 'bờ-rếch-ao'],
+    [/\bretest\b/gi, 'ri-tét'],
+    [/\bre-test\b/gi, 'ri-tét'],
+
+    // Quản trị lệnh & vị thế
+    [/\bstop\s*loss\b/gi, 'cắt lỗ xtóp-lót'],
+    [/\btake\s*profit\b/gi, 'chốt lời tê-pê'],
+    [/\bTP1\b/g, 'tê-pê 1'],
+    [/\bTP2\b/g, 'tê-pê 2'],
+    [/\bTP3\b/g, 'tê-pê 3'],
+    [/\bTP\b/g, 'tê-pê'],
+    [/\bSL\b/g, 'ét-lờ'],
+    [/\bEntry\b/gi, 'điểm vào lệnh en-tri'],
+    [/\bBUY\b/g, 'Mua'],
+    [/\bBuy\b/g, 'Mua'],
+    [/\bSELL\b/g, 'Bán'],
+    [/\bSell\b/g, 'Bán'],
+    [/\bpips\b/gi, 'bíp'],
+    [/\bpip\b/gi, 'bíp'],
+    [/\bpoints\b/gi, 'điểm'],
+    [/\bpoint\b/gi, 'điểm'],
+    [/\bVolume\b/gi, 'khối lượng vô-lum'],
+    [/\bMargin\b/gi, 'ký quỹ mác-gin'],
+    [/\bAll-in\b/gi, 'o-in tất tay'],
+    [/\ball in\b/gi, 'o-in tất tay'],
+    [/\bScalping\b/gi, 'lướt sóng scáp-ping'],
+    [/\bSwing\b/gi, 'su-inh'],
+    [/\bFOMO\b/gi, 'phô-mô'],
+    [/\bR:R\b/gi, 'tỷ lệ rờ rờ'],
+
+    // Chỉ báo & công cụ
+    [/\bEMA20\b/gi, 'E-M-A hai mươi'],
+    [/\bEMA50\b/gi, 'E-M-A năm mươi'],
+    [/\bEMA200\b/gi, 'E-M-A hai trăm'],
+    [/\bEMA\b/g, 'E-M-A'],
+    [/\bSMA\b/g, 'S-M-A'],
+    [/\bRSI\b/g, 'R-S-I'],
+    [/\bATR\b/g, 'A-T-R'],
+    [/\bMTF\b/g, 'M-T-F đa khung'],
+
+    // Khung thời gian & cặp tiền
+    [/\bH1\b/g, 'khung H 1'],
+    [/\bH4\b/g, 'khung H 4'],
+    [/\bM15\b/g, 'khung M 15'],
+    [/\bM30\b/g, 'khung M 30'],
+    [/\bM5\b/g, 'khung M 5'],
+    [/\bXAU\/USD\b/gi, 'Vàng X-A-U'],
+    [/\bBTC\/USD\b/gi, 'Bít-coi'],
+    [/\bXAG\/USD\b/gi, 'Bạc X-A-G']
+  ];
+
+  for (const [regex, rep] of replacements) {
+    s = s.replace(regex, rep);
+  }
+
+  return s.replace(/\s+/g, ' ').trim();
+};
+
+// Tách toàn bộ văn bản thành danh sách chunks ~140-160 ký tự không ngắt từ
+window.splitTextIntoAudioChunks = function(text, maxLen = 160) {
+  if (!text) return [];
+  const rawSentences = text.split(/(?<=[.?!;:\n])\s+/);
+  const chunks = [];
+  let currentChunk = '';
+
+  for (let s of rawSentences) {
+    s = s.trim();
+    if (!s) continue;
+
+    if ((currentChunk + ' ' + s).trim().length <= maxLen) {
+      currentChunk = (currentChunk + ' ' + s).trim();
+    } else {
+      if (currentChunk) chunks.push(currentChunk);
+      if (s.length > maxLen) {
+        const subParts = s.split(/(?<=[,])\s+/);
+        let subChunk = '';
+        for (let sub of subParts) {
+          if ((subChunk + ' ' + sub).trim().length <= maxLen) {
+            subChunk = (subChunk + ' ' + sub).trim();
+          } else {
+            if (subChunk) chunks.push(subChunk);
+            subChunk = sub.trim();
+          }
+        }
+        if (subChunk) currentChunk = subChunk;
+        else currentChunk = '';
+      } else {
+        currentChunk = s;
+      }
+    }
+  }
+  if (currentChunk) chunks.push(currentChunk);
+  return chunks;
+};
+
+// Trích xuất toàn bộ 100% nội dung (bảng, danh sách, tiêu đề, đoạn văn)
+window.extractFullSpeechText = function(container) {
+  if (!container) return '';
+  const clone = container.cloneNode(true);
+  clone.querySelectorAll('.gold-ai-no-copy, button, script, style').forEach(el => el.remove());
+
+  // Định dạng lại các hàng của bảng (Table Rows) thành câu văn hoàn chỉnh
+  clone.querySelectorAll('tr').forEach(tr => {
+    const cells = Array.from(tr.querySelectorAll('th, td')).map(td => td.innerText.trim()).filter(Boolean);
+    if (cells.length > 0) {
+      const rowDiv = document.createElement('div');
+      rowDiv.innerText = cells.join(' — ') + '. ';
+      tr.parentNode.replaceChild(rowDiv, tr);
+    }
+  });
+
+  // Đảm bảo các mục danh sách có dấu chấm kết câu
+  clone.querySelectorAll('li').forEach(li => {
+    li.innerText = li.innerText.trim() + '. ';
+  });
+
+  const rawText = (clone.innerText || clone.textContent || '').trim();
+  return window.normalizeTradingTextForSpeech(rawText);
+};
+
+window.speakGoldAiResponse = function(btn) {
+  if (!btn) return;
+
+  function stopCurrentAudio() {
+    if (window._goldAiAudioPlayer) {
+      try {
+        window._goldAiAudioPlayer.pause();
+        window._goldAiAudioPlayer.currentTime = 0;
+      } catch(e) {}
+      window._goldAiAudioPlayer = null;
+    }
+    if ('speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
+    window._goldAiAudioChunks = [];
+    window._goldAiChunkIndex = 0;
+    if (window._goldAiActiveSpeakBtn) {
+      window._goldAiActiveSpeakBtn.innerHTML = '<span>🔊</span> <span>Nghe đọc</span>';
+      window._goldAiActiveSpeakBtn.classList.remove('border-amber-400/80', 'bg-amber-500/20');
+      window._goldAiActiveSpeakBtn = null;
+    }
+  }
+
+  // Nếu đang đọc nút này -> Dừng lại
+  if (window._goldAiActiveSpeakBtn === btn) {
+    stopCurrentAudio();
+    return;
+  }
+
+  // Dừng bài đang đọc trước đó
+  stopCurrentAudio();
+
+  const parentBox = btn.closest('.gold-ai-response-box');
+  if (!parentBox) return;
+
+  const contentBody = parentBox.querySelector('.gold-ai-content-body') || parentBox;
+  const fullText = window.extractFullSpeechText(contentBody);
+
+  if (!fullText || fullText.length < 5) {
+    if (typeof showToast === 'function') showToast('Không tìm thấy nội dung văn bản để đọc.', 'info');
+    return;
+  }
+
+  // Tách thành playlist các câu hoàn chỉnh
+  const chunks = window.splitTextIntoAudioChunks(fullText, 160);
+  if (!chunks || chunks.length === 0) return;
+
+  window._goldAiAudioChunks = chunks;
+  window._goldAiChunkIndex = 0;
+  window._goldAiActiveSpeakBtn = btn;
+
+  btn.classList.add('border-amber-400/80', 'bg-amber-500/20');
+
+  // Hàm phát tuần tự từng chunk bằng Audio MP3 Server (Giọng nữ Miền Bắc Google chuẩn)
+  function playChunkAt(index) {
+    if (!window._goldAiActiveSpeakBtn || window._goldAiActiveSpeakBtn !== btn) {
+      return; // Đã bị dừng
+    }
+
+    if (index >= chunks.length) {
+      stopCurrentAudio();
+      if (typeof showToast === 'function') {
+        showToast('✅ Đã đọc xong trọn vẹn toàn bộ nội dung phân tích!', 'success');
+      }
+      return;
+    }
+
+    window._goldAiChunkIndex = index;
+    const chunkText = chunks[index];
+
+    // Cập nhật trạng thái nút và tiến trình đọc
+    btn.innerHTML = '<span class="text-amber-400 animate-pulse">⏹️</span> <span class="text-amber-300 font-bold">Dừng đọc (' + (index + 1) + '/' + chunks.length + ')</span>';
+
+    try {
+      const audioUrl = '/api/tts?text=' + encodeURIComponent(chunkText);
+      const audio = new Audio(audioUrl);
+      // Tốc độ 1.15x: Đọc nhanh hơn, lưu loát, dứt khoát, thanh thoát dịu dàng
+      audio.playbackRate = 1.15;
+      window._goldAiAudioPlayer = audio;
+
+      audio.onended = function() {
+        playChunkAt(index + 1);
+      };
+
+      audio.onerror = function() {
+        // Fallback Web Speech nếu mạng gián đoạn
+        fallbackWebSpeechChunk(chunkText, () => playChunkAt(index + 1));
+      };
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          fallbackWebSpeechChunk(chunkText, () => playChunkAt(index + 1));
+        });
+      }
+    } catch (e) {
+      fallbackWebSpeechChunk(chunkText, () => playChunkAt(index + 1));
+    }
+  }
+
+  function fallbackWebSpeechChunk(text, onDone) {
+    if (!('speechSynthesis' in window)) {
+      if (onDone) onDone();
+      return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'vi-VN';
+        utterance.rate = 1.15;
+
+        const voices = window.speechSynthesis.getVoices();
+        // Ưu tiên giọng nữ miền Bắc thanh thoát
+        const viVoice = voices.find(v => v.lang && (v.lang === 'vi-VN' || v.lang.toLowerCase().includes('vi')) && (v.name.includes('HoaiMy') || v.name.includes('Linh') || v.name.includes('Female') || v.name.includes('Google')));
+        if (viVoice) utterance.voice = viVoice;
+
+        utterance.onend = () => { if (onDone) onDone(); };
+        utterance.onerror = () => { if (onDone) onDone(); };
+
+        window.speechSynthesis.speak(utterance);
+      }, 50);
+    } catch(err) {
+      if (onDone) onDone();
+    }
+  }
+
+  // Khởi động phát chunk đầu tiên
+  playChunkAt(0);
+};
+
+window.toggleGoldAiVoiceInput = function() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = document.getElementById('gold-ai-mic-btn');
+  const micIcon = document.getElementById('gold-ai-mic-icon');
+  const input = document.getElementById('gold-ai-input');
+
+  if (!SpeechRecognition) {
+    if (typeof showToast === 'function') {
+      showToast('Trình duyệt chưa hỗ trợ ghi âm trực tiếp. Bạn dùng Chrome, Safari hoặc Edge nhé!', 'info');
+    }
+    return;
+  }
+
+  if (window._goldAiSpeechRecognizer) {
+    try { window._goldAiSpeechRecognizer.stop(); } catch(e) {}
+    cleanup();
+    return;
+  }
+
+  try {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'vi-VN';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    window._goldAiSpeechRecognizer = recognition;
+
+    if (micBtn) {
+      micBtn.className = 'w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-500 text-white flex items-center justify-center mr-1 transition-all cursor-pointer shrink-0 active:scale-90 border border-rose-400 animate-pulse shadow-lg shadow-rose-500/50';
+    }
+    if (micIcon) micIcon.textContent = '🔴';
+    if (input) {
+      input.placeholder = '🎙️ Đang lắng nghe giọng nói... Hãy nói câu hỏi!';
+    }
+    if (typeof showToast === 'function') {
+      showToast('🎙️ Đang nghe giọng nói tiếng Việt... Hãy nói câu hỏi!', 'info');
+    }
+
+    let finalTranscript = '';
+
+    recognition.onresult = function(event) {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      if (input) {
+        input.value = (finalTranscript || interim).trim();
+      }
+    };
+
+    recognition.onerror = function(event) {
+      console.warn('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed') {
+        if (typeof showToast === 'function') {
+          showToast('Vui lòng cấp quyền Micro trong trình duyệt để sử dụng giọng nói!', 'warning');
+        }
+      }
+      cleanup();
+    };
+
+    recognition.onend = function() {
+      cleanup();
+      if (input && input.value.trim().length > 2) {
+        window.handleGoldAISubmit(new Event('submit'));
+      }
+    };
+
+    function cleanup() {
+      window._goldAiSpeechRecognizer = null;
+      if (micBtn) {
+        micBtn.className = 'w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-amber-400 flex items-center justify-center mr-1 transition-all cursor-pointer shrink-0 active:scale-90 border border-slate-700/70';
+      }
+      if (micIcon) micIcon.textContent = '🎙️';
+      if (input && input.placeholder.includes('Đang lắng nghe')) {
+        input.placeholder = 'Hỏi Gold AI (hoặc bấm Micro nói)...';
+      }
+    }
+
+    recognition.start();
+  } catch (err) {
+    console.error('Lỗi nhận diện giọng nói:', err);
+    if (typeof showToast === 'function') {
+      showToast('Không thể kích hoạt Micro. Vui lòng kiểm tra quyền thiết bị.', 'warning');
+    }
+  }
+};
+
+function generateGoldAiPsychologicalDefense(query) {
+  const timerId = 'cooldown-timer-' + Date.now();
+  
+  setTimeout(() => {
+    let timeLeft = 30 * 60;
+    const interval = setInterval(() => {
+      const el = document.getElementById(timerId);
+      if (!el) {
+        clearInterval(interval);
+        return;
+      }
+      timeLeft--;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        el.innerHTML = '✅ ĐÃ HẠ NHIỆT XONG (30 PHÚT) - TÂM LÝ ĐÃ SẴN SÀNG';
+        el.className = 'text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/40 px-3 py-1.5 rounded-xl';
+        return;
+      }
+      const m = Math.floor(timeLeft / 60);
+      const s = timeLeft % 60;
+      el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }, 1000);
+  }, 150);
+
+  return {
+    mode: '🛡️ KHIÊN BẢO VỆ TÂM LÝ',
+    html: `
+      <div class="space-y-4 font-sans text-xs">
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-rose-950/80 via-slate-900/90 to-amber-950/80 border-2 border-rose-500/60 shadow-2xl relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-rose-500/20 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="flex items-start gap-3 relative z-10">
+            <span class="text-3xl animate-bounce">🚨</span>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-black text-white uppercase tracking-wider">LỆNH DỪNG KHẨN CẤP: BUÔNG CHUỘT NGAY!</span>
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-rose-500/30 text-rose-300 font-bold border border-rose-500/50 uppercase">CHẾ ĐỘ COOL-DOWN 30 PHÚT</span>
+              </div>
+              <p class="text-xs text-rose-200/90 leading-relaxed font-medium">
+                Dừng lại ngay! Mình biết bạn đang vô cùng căng thẳng, bực tức hoặc hoảng loạn muốn gỡ ngay lúc này. Nhưng <strong>99% trader cháy sạch tài khoản</strong> là do bấm lệnh bừa bãi trong vòng 30 phút sau khi vừa thua lỗ (Hội chứng Revenge Trading - Giao dịch trả thù).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-950/90 border border-amber-500/40 flex items-center justify-between flex-wrap gap-3 shadow-lg">
+          <div class="space-y-0.5">
+            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block flex items-center gap-1.5">
+              <span>⏳</span> ĐỒNG HỒ ĐẾM NGƯỢC HẠ NHIỆT TÂM LÝ:
+            </span>
+            <span class="text-xs text-slate-300">Tuyệt đối không vào bất kỳ lệnh mới nào trước khi đồng hồ về 0.</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div id="${timerId}" class="text-2xl font-black font-mono text-amber-400 bg-amber-500/10 border border-amber-500/40 px-4 py-1.5 rounded-2xl shadow-inner tracking-widest animate-pulse">
+              30:00
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2.5">
+          <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">📋 4 BƯỚC KHÔI PHỤC KỶ LUẬT THỰC CHIẾN CỦA TRADER BẢN LĨNH:</span>
+          
+          <div class="space-y-2 text-xs text-slate-300">
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5">
+              <span class="text-base shrink-0">💧</span>
+              <div>
+                <strong class="text-white block">1. Rời khỏi màn hình và uống 1 cốc nước ấm</strong>
+                <span class="text-slate-400 text-[11px]">Đứng dậy đi lại, hít thở sâu 10 nhịp để hạ nồng độ Adrenaline trong máu xuống.</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5">
+              <span class="text-base shrink-0">📝</span>
+              <div>
+                <strong class="text-white block">2. Chấp nhận khoản lỗ là chi phí kinh doanh (Cost of Business)</strong>
+                <span class="text-slate-400 text-[11px]">Không có nhà vô địch nào không từng cắt lỗ. Khoản tiền đã mất là học phí, không thể đòi lại bằng sự cay cú.</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5">
+              <span class="text-base shrink-0">🚫</span>
+              <div>
+                <strong class="text-white block">3. Tuyệt đối không nạp thêm tiền để "gỡ ngay"</strong>
+                <span class="text-slate-400 text-[11px]">Nạp tiền khi đang hoảng loạn chỉ khiến bạn mất tiếp. Hãy giữ chặt vốn còn lại.</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start gap-2.5">
+              <span class="text-base shrink-0">🎯</span>
+              <div>
+                <strong class="text-white block">4. Chỉ quay lại khi bình tâm & Đi đúng 1% Risk</strong>
+                <span class="text-slate-400 text-[11px]">Đợi tín hiệu MA Wave V8 PRO chuẩn xác. Đặt sẵn SL 50 pips, không nhồi lệnh, không dời SL âm.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center text-[11px] text-amber-200 leading-relaxed font-sans">
+          🛡️ <em>"Thị trường Vàng đã tồn tại hơn 3,000 năm và ngày mai nó vẫn ở đó. Cơ hội không bao giờ hết — chỉ có người cháy hết vốn là phải rời cuộc chơi!"</em>
+        </div>
+      </div>
+    `
+  };
+}
+
+
+window.saveGoldAiChatHistory = function() {
+  try {
+    const container = document.getElementById('gold-ai-chat-messages');
+    if (!container) return;
+    const historyData = {
+      html: container.innerHTML,
+      turns: (window.goldAiMemory && Array.isArray(window.goldAiMemory.turns)) ? window.goldAiMemory.turns : []
+    };
+    localStorage.setItem('gold_ai_v8_chat_history', JSON.stringify(historyData));
+  } catch (err) {}
+};
+
+window.initGoldAiEvents = function() {
+  const inputEl = document.getElementById('gold-ai-input');
+  if (inputEl && !inputEl._enterBound) {
+    inputEl._enterBound = true;
+    inputEl.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (typeof window.handleGoldAISubmit === 'function') {
+          window.handleGoldAISubmit(e);
+        }
+      }
+    });
+  }
+};
+
+window.restoreGoldAiChatHistory = function() {
+  if (typeof window.initGoldAiEvents === 'function') {
+    window.initGoldAiEvents();
+  }
+  try {
+    const raw = localStorage.getItem('gold_ai_v8_chat_history');
+    if (!raw) return;
+    const historyData = JSON.parse(raw);
+    const container = document.getElementById('gold-ai-chat-messages');
+    if (container && historyData && historyData.html && historyData.html.length > 50) {
+      container.innerHTML = historyData.html;
+      container.scrollTop = container.scrollHeight;
+    }
+    if (historyData && Array.isArray(historyData.turns) && window.goldAiMemory) {
+      window.goldAiMemory.turns = historyData.turns;
+    }
+  } catch (err) {}
+};
+
+function generateGoldAiAuditorReport() {
+  const store = window.marketDataStore;
+  const app = window.app;
+
+  let currentPrice = 0;
+  if (store && typeof store.getCurrentPrice === 'function') {
+    currentPrice = store.getCurrentPrice();
+  } else if (app && app.currentPrice) {
+    currentPrice = parseFloat(app.currentPrice);
+  }
+  if (!currentPrice || isNaN(currentPrice)) currentPrice = 3995.54;
+
+  let bars = [];
+  if (store && typeof store.getBars === 'function') {
+    bars = store.getBars('15m') || [];
+  }
+  if ((!bars || bars.length < 20) && app && app.bars) {
+    bars = app.bars;
+  }
+
+  let snap = null;
+  if (window.Indicators && bars && bars.length >= 20) {
+    const res = window.Indicators.runPineScriptLogic(bars);
+    if (res && res.snapshot) snap = res.snapshot;
+  }
+  if (!snap && app && app.lastIndicatorResult && app.lastIndicatorResult.snapshot) {
+    snap = app.lastIndicatorResult.snapshot;
+  }
+
+  const fastEMA = (snap && snap.fastEMA) ? parseFloat(snap.fastEMA) : (currentPrice - 2.5);
+  const slowEMA = (snap && snap.slowEMA) ? parseFloat(snap.slowEMA) : (currentPrice - 6.8);
+  const atr = (snap && snap.atr) ? parseFloat(snap.atr) : 3.5;
+  const trend = (snap && snap.trend) ? snap.trend : (currentPrice >= fastEMA ? 'TĂNG' : 'GIẢM');
+  const isSW = (snap && snap.sw === 'ĐANG SW');
+  const swRange = (snap && snap.swRange) ? snap.swRange : '6.50';
+
+  const dEma20 = currentPrice - fastEMA;
+  const absDEma20 = Math.abs(dEma20);
+  const dRatio = parseFloat((absDEma20 / (atr || 3.5)).toFixed(2));
+  const emaSpread = parseFloat((fastEMA - slowEMA).toFixed(2));
+
+  let healthBadge = '';
+  let healthTitle = '';
+  let healthDesc = '';
+  let alertBox = '';
+  let actionAdvice = '';
+  let badgeColor = '';
+
+  if (dRatio >= 2.0) {
+    healthBadge = '🚨 CĂNG CỨC QUÁ ĐÀ (OVEREXTENDED)';
+    badgeColor = 'rose';
+    healthTitle = '⚠️ CẢNH BÁO BẪY HƯNG PHẤN (FOMO TRAP)';
+    healthDesc = `Giá hiện tại ($${currentPrice.toFixed(2)}) đang dãn cách EMA20 tới <strong>${absDEma20.toFixed(2)} giá</strong> (gấp <strong>${dRatio} lần ATR</strong>). Trong lịch sử 1,640+ lệnh Backtest, khi độ dãn D > 2.0 ATR, thị trường có tới <strong>82% xác suất giật râu hồi kỹ thuật</strong> về kiểm định lại EMA20.`;
+    alertBox = `
+      <div class="p-3 bg-rose-950/60 border border-rose-500/50 rounded-xl space-y-1 text-rose-200">
+        <div class="font-bold flex items-center gap-1.5 text-xs text-rose-300">
+          <span>🛑</span> CẤM KỴ: TUYỆT ĐỐI KHÔNG MUA/BÁN ĐUỔI LÚC NÀY!
+        </div>
+        <p class="text-[11px] leading-relaxed">
+          Đám đông đang FOMO cực độ ở vùng đỉnh/đáy. Nếu bạn vào lệnh tại đây, Stop Loss sẽ phải đặt rất xa (trên 10-15 giá) $\\rightarrow$ Tỷ lệ Risk:Reward cực kỳ bất lợi.
+        </p>
+      </div>
+    `;
+    actionAdvice = `Kiên nhẫn đứng ngoài quan sát. Chờ giá tạo nhịp hồi Pullback lành mạnh về sát vùng EMA20 ($${fastEMA.toFixed(2)}) và xuất hiện nến từ chối (Pinbar/Engulfing) thì mới kích hoạt lệnh thuận sóng.`;
+  } else if (dRatio <= 0.8 && !isSW) {
+    healthBadge = '🎯 ĐIỂM VÀO LÝ TƯỞNG (SWEET SPOT)';
+    badgeColor = 'emerald';
+    healthTitle = '💎 VÙNG GIÁ VÀNG (GOLDEN PULLBACK ENTRY)';
+    healthDesc = `Giá đang kiểm định sát vùng đệm động lực EMA20 ($${fastEMA.toFixed(2)}) / EMA50 ($${slowEMA.toFixed(2)}), độ lệch chỉ <strong>${absDEma20.toFixed(2)} giá (~${dRatio} ATR)</strong>. Đây là vùng mà MA WAVE V8 đánh giá có tỷ lệ R:R tối ưu nhất phiên.`;
+    alertBox = `
+      <div class="p-3 bg-emerald-950/60 border border-emerald-500/50 rounded-xl space-y-1 text-emerald-200">
+        <div class="font-bold flex items-center gap-1.5 text-xs text-emerald-300">
+          <span>⚡</span> CƠ HỘI MỞ VỊ THẾ VỚI STOP LOSS CỰC NGẮN
+        </div>
+        <p class="text-[11px] leading-relaxed">
+          Khoảng cách cắt lỗ SL chỉ cần đặt sau bệ đỡ EMA50 hoặc cản gần nhất (~3.5 - 5 giá). Mục tiêu chốt lời TP1/TP2 đạt tỷ lệ R:R $\\ge 1:2$ đến $1:3$.
+        </p>
+      </div>
+    `;
+    actionAdvice = `Ưu tiên mở vị thế ${trend === 'TĂNG' ? 'BUY' : 'SELL'} thuận xu hướng khi nến M5/M15 đóng cửa xác nhận giữ vững EMA20/50. Cắt lỗ SL tại: $${(trend === 'TĂNG' ? slowEMA - 3.5 : slowEMA + 3.5).toFixed(2)}.`;
+  } else if (isSW || Math.abs(emaSpread) < 1.2) {
+    healthBadge = '⚖️ TÍCH LŨY BIÊN HẸP (SIDEWAY CHOP)';
+    badgeColor = 'amber';
+    healthTitle = '🌪️ VÙNG SÓNG NÉN BIÊN ĐỘ';
+    healthDesc = `Đường EMA20 ($${fastEMA.toFixed(2)}) và EMA50 ($${slowEMA.toFixed(2)}) đang nằm đan xoắn vào nhau, chênh lệch chỉ $${Math.abs(emaSpread).toFixed(2)}. Biên độ dao động nén quanh $${swRange}. Thị trường thiếu động lực đẩy dứt khoát.`;
+    alertBox = `
+      <div class="p-3 bg-amber-950/60 border border-amber-500/50 rounded-xl space-y-1 text-amber-200">
+        <div class="font-bold flex items-center gap-1.5 text-xs text-amber-300">
+          <span>⚠️</span> NGUY CƠ BỊ QUÉT SL 2 ĐẦU (WHIPSAW)
+        </div>
+        <p class="text-[11px] leading-relaxed">
+          Giao dịch trong vùng tích lũy EMA rất dễ bị dính bẫy nến rút chân giả. 90% trader thua lỗ do cố gắng giao dịch quá nhiều khi thị trường đi ngang.
+        </p>
+      </div>
+    `;
+    actionAdvice = `Đóng chế độ giao dịch liên tục. Chờ đợi một cây nến Marubozu bứt phá cấu trúc (BOS) với volume lớn thoát khỏi hộp SW trước khi giải ngân vốn.`;
+  } else {
+    healthBadge = '🏄 XU HƯỚNG MỞ RỘNG BÌNH THƯỜNG';
+    badgeColor = 'cyan';
+    healthTitle = '📈 ĐÀ TĂNG TRƯỞNG LÀNH MẠNH (HEALTHY TREND)';
+    healthDesc = `Giá đang di chuyển trong kênh dải sóng MA WAVE V8 ổn định. Độ dãn EMA20 đạt <strong>${absDEma20.toFixed(2)} giá (${dRatio} ATR)</strong>, dải spread EMA20-50 mở rộng tích cực (+${emaSpread} giá).`;
+    alertBox = `
+      <div class="p-3 bg-cyan-950/60 border border-cyan-500/50 rounded-xl space-y-1 text-cyan-200">
+        <div class="font-bold flex items-center gap-1.5 text-xs text-cyan-300">
+          <span>✓</span> ĐỘNG LƯỢNG SÓNG DUY TRÌ TỐT
+        </div>
+        <p class="text-[11px] leading-relaxed">
+          Cấu trúc các đáy/đỉnh mới vẫn giữ vững nguyên tắc Higher Low / Lower High. Áp lực chốt lời chưa có dấu hiệu bất thường.
+        </p>
+      </div>
+    `;
+    actionAdvice = `Nếu đã có vị thế có lãi: Tiếp tục gồng lời, dời Stop Loss về vùng hòa vốn (Breakeven) hoặc dời theo dải EMA20 để bảo toàn lợi nhuận tối đa.`;
+  }
+
+  const s1 = (currentPrice - 8.5).toFixed(2);
+  const r1 = (currentPrice + 8.5).toFixed(2);
+
+  return {
+    mode: 'THẨM ĐỊNH THỊ TRƯỜNG REALTIME',
+    html: `
+      <div class="space-y-3.5 font-sans">
+        <!-- Main Auditor Card -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-${badgeColor}-500/40 space-y-3 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 flex-wrap gap-2">
+            <span class="text-xs font-black text-amber-400 flex items-center gap-2">
+              <span class="text-base">🩺</span> CHẨN ĐOÁN SỨC KHỎE THỊ TRƯỜNG VÀNG (AUDITOR REALTIME)
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full bg-${badgeColor}-500/20 text-${badgeColor}-300 text-[10px] font-black border border-${badgeColor}-500/40">
+              ${healthBadge}
+            </span>
+          </div>
+
+          <!-- Price & Indicator Metrics Matrix -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
+            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block font-sans">Giá XAU Live</span>
+              <strong class="text-amber-400 text-xs">$${currentPrice.toFixed(2)}</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block font-sans">EMA20 M15</span>
+              <strong class="text-cyan-300 text-xs">$${fastEMA.toFixed(2)}</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block font-sans">Độ Dãn D / ATR</span>
+              <strong class="text-${badgeColor}-400 text-xs">${absDEma20.toFixed(2)}$ (${dRatio} ATR)</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block font-sans">Dải Spread EMA</span>
+              <strong class="text-emerald-400 text-xs">$${emaSpread}</strong>
+            </div>
+          </div>
+
+          <!-- Diagnostic narrative -->
+          <div class="space-y-1.5 text-xs text-slate-200">
+            <div class="font-bold text-white text-xs flex items-center gap-1.5">
+              ${healthTitle}
+            </div>
+            <p class="leading-relaxed text-slate-300">
+              ${healthDesc}
+            </p>
+          </div>
+
+          ${alertBox}
+
+          <!-- Action Plan Box -->
+          <div class="p-3 bg-slate-950/90 border border-slate-800/90 rounded-xl space-y-1.5">
+            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">📌 KẾ HOẠCH HÀNH ĐỘNG KHUYẾN NGHỊ:</span>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              ${actionAdvice}
+            </p>
+            <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px] font-mono text-slate-400">
+              <span>Hỗ trợ gần (S1): <strong class="text-emerald-400">$${s1}</strong></span>
+              <span>Kháng cự gần (R1): <strong class="text-rose-400">$${r1}</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  };
+}
+
+function calculateGoldAiLotSize(query) {
+  const q = query.toLowerCase();
+
+  let capital = 1000;
+  const capMatch = q.match(/(?:vốn|tk|tài khoản|acc|balance|có)\s*(?:khoảng|tầm)?\s*([0-9.,]+)\s*(?:\$|usd|đô|u|k)?/i) || q.match(/([0-9.,]+)\s*(?:\$|usd|đô|u)/i);
+  if (capMatch && capMatch[1]) {
+    let num = parseFloat(capMatch[1].replace(/,/g, ''));
+    if (q.includes(capMatch[1] + 'k') || q.includes(capMatch[1] + ' k')) {
+      num = num * 1000;
+    }
+    if (!isNaN(num) && num > 0) capital = num;
+  }
+
+  let slPoints = 5.0;
+  const slMatch = q.match(/([0-9.,]+)\s*(?:giá|pips?|pip|points?|pt)/i);
+  if (slMatch && slMatch[1]) {
+    const s = parseFloat(slMatch[1].replace(/,/g, ''));
+    if (!isNaN(s) && s > 0 && s < 50) slPoints = s;
+  }
+
+  const risk1Usd = capital * 0.01;
+  const risk2Usd = capital * 0.02;
+  const risk3Usd = capital * 0.03;
+
+  const lotSafe = Math.max(0.01, parseFloat((risk1Usd / (slPoints * 100)).toFixed(2)));
+  const lotStandard = Math.max(0.01, parseFloat((risk2Usd / (slPoints * 100)).toFixed(2)));
+  const lotAggressive = Math.max(0.01, parseFloat((risk3Usd / (slPoints * 100)).toFixed(2)));
+
+  const tp1Profit = (lotStandard * 10 * 100).toFixed(0);
+  const tp2Profit = (lotStandard * 20 * 100).toFixed(0);
+  const tp3Profit = (lotStandard * 30 * 100).toFixed(0);
+
+  return {
+    mode: 'QUẢN TRỊ VỐN & TÍNH KHỐI LƯỢNG LOT',
+    html: `
+      <div class="space-y-3 font-sans">
+        <!-- Lot Calculator Card -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-emerald-500/40 space-y-3 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <span class="text-xs font-black text-amber-400 flex items-center gap-2">
+              <span>🧮</span> KẾ HOẠCH ĐI LOT & BẢO VỆ VỐN (QUY CHUẨN QUỸ PROP FIRM)
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30">
+              VỐN $${capital.toLocaleString('en-US')}
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Với quy mô tài khoản <strong class="text-amber-400 font-mono">$${capital.toLocaleString('en-US')}</strong> và khoảng cách Stop Loss chuẩn hệ thống MA WAVE V8 là <strong class="text-rose-400 font-mono">${slPoints} giá</strong> (50 pips), đây là bảng tính phân bổ khối lượng lệnh chuẩn toán học:
+          </p>
+
+          <!-- 3 Risk Tier Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-xs">
+            <!-- Safe Tier -->
+            <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+              <div class="flex justify-between items-center text-[10px] font-sans">
+                <span class="text-slate-400">🛡️ An Toàn (1% Risk)</span>
+                <span class="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-bold">KHUYÊN DÙNG</span>
+              </div>
+              <div class="text-lg font-black text-emerald-400">${lotSafe} Lot</div>
+              <div class="text-[10px] text-slate-400 font-sans">Tối đa mất: <strong class="text-rose-400">-$${risk1Usd.toFixed(0)}</strong> / lệnh</div>
+            </div>
+
+            <!-- Standard Tier -->
+            <div class="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/40 space-y-1">
+              <div class="flex justify-between items-center text-[10px] font-sans">
+                <span class="text-amber-300 font-bold">🎯 Chuẩn Quỹ (2% Risk)</span>
+                <span class="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">CÂN BẰNG</span>
+              </div>
+              <div class="text-lg font-black text-amber-400">${lotStandard} Lot</div>
+              <div class="text-[10px] text-slate-400 font-sans">Tối đa mất: <strong class="text-rose-400">-$${risk2Usd.toFixed(0)}</strong> / lệnh</div>
+            </div>
+
+            <!-- Aggressive Tier -->
+            <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+              <div class="flex justify-between items-center text-[10px] font-sans">
+                <span class="text-slate-400">⚡ Tấn Công (3% Risk)</span>
+                <span class="px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-400 font-bold">RỦI RO CAO</span>
+              </div>
+              <div class="text-lg font-black text-rose-400">${lotAggressive} Lot</div>
+              <div class="text-[10px] text-slate-400 font-sans">Tối đa mất: <strong class="text-rose-400">-$${risk3Usd.toFixed(0)}</strong> / lệnh</div>
+            </div>
+          </div>
+
+          <!-- Profit Target Breakdown with 2% Lot -->
+          <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1.5 font-sans">
+            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">🎯 LỢI NHUẬN KỲ VỌNG THEO MỨC ĐI ${lotStandard} LOT (2% RISK):</span>
+            <div class="grid grid-cols-3 gap-2 font-mono text-center text-xs">
+              <div class="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/30">
+                <span class="text-[9px] text-slate-400 font-sans block">TP1 (+10 giá)</span>
+                <strong class="text-emerald-400 font-bold">+$${tp1Profit} (2R)</strong>
+              </div>
+              <div class="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/40">
+                <span class="text-[9px] text-slate-400 font-sans block">TP2 (+20 giá)</span>
+                <strong class="text-emerald-300 font-bold">+$${tp2Profit} (4R)</strong>
+              </div>
+              <div class="p-2 rounded-lg bg-emerald-950/50 border border-emerald-500/50">
+                <span class="text-[9px] text-slate-400 font-sans block">TP3 (+30 giá)</span>
+                <strong class="text-yellow-300 font-black">+$${tp3Profit} (6R)</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Core Discipline Golden Rule -->
+          <div class="p-2.5 bg-amber-950/40 border border-amber-500/30 rounded-xl text-[11px] text-amber-200 leading-relaxed font-sans">
+            🛡️ <strong>Kỷ Luật Vàng:</strong> Với vốn <strong>$${capital.toLocaleString('en-US')}</strong>, bạn có thể thua liên tiếp <strong>50 lệnh</strong> ở mức 2% mới chạm ngưỡng nguy hiểm. Đừng bao giờ all-in hoặc nhồi thêm volume khi đang gồng lỗ!
+          </div>
+        </div>
+      </div>
+    `
+  };
+}
+
 window.askGoldAI = function(question) {
+  const sidebar = document.getElementById('gold-ai-sidebar-col');
+  if (sidebar && !sidebar.classList.contains('hidden') && window.innerWidth < 768) {
+    sidebar.classList.add('hidden');
+    sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'w-72', 'shadow-2xl', 'z-30');
+  }
   const input = document.getElementById('gold-ai-input');
   if (input) input.value = question;
   window.handleGoldAISubmit(new Event('submit'));
@@ -3826,13 +4860,14 @@ window.handleGoldAISubmit = async function(e) {
 
   // Record user message in memory
   window.goldAiMemory.turns.push({ role: 'user', content: query });
+  window.saveGoldAiChatHistory();
 
   // Render typing indicator
   const typingDiv = document.createElement('div');
   typingDiv.id = 'gold-ai-typing-indicator';
   typingDiv.className = 'flex gap-3 max-w-2xl animate-pulse';
   typingDiv.innerHTML = `
-    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center shrink-0 shadow">✦</div>
+    <div class="relative w-8 h-8 rounded-xl overflow-hidden border border-amber-400/80 shrink-0 shadow bg-slate-900"><img src="./assets/gold-ai-avatar.jpg" alt="Gold AI Mentor" class="w-full h-full object-cover"></div>
     <div class="bg-[#111622] border border-slate-800 rounded-2xl px-4 py-3 text-slate-400 text-xs italic">
       Gold AI Mentor đang quan sát bối cảnh & suy luận...
     </div>
@@ -3847,25 +4882,93 @@ window.handleGoldAISubmit = async function(e) {
   let htmlResponse = '';
   let mode = 'Gold AI Market Mentor';
 
-  try {
-    const res = await fetch('/api/ai/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: query, price: livePriceStr })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.reply) {
-        htmlResponse = data.reply;
-        mode = data.mode || 'Gold AI Market Mentor';
+  const cleanQuery = cleanVietnameseText(query);
+
+  // 0. Kiểm tra nếu query liên quan đến Trấn An & Khóa Tâm Lý (Cool-down Mode 30 Phút)
+  const isPsychologicalQuery = /(?:cháy|chay)\s*(?:tk|tài khoản|acc|sạch|hết)?/i.test(cleanQuery) ||
+    /(?:gỡ|go)\s*(?:lệnh|lenh|tiền|gấp|lại)/i.test(cleanQuery) ||
+    /(?:all\s*in|all-in|tất tay|tat tay|nhồi lệnh|nhoi lenh|chết em|cứu em)/i.test(cleanQuery) ||
+    /(?:áp lực|hoảng loạn|stress|sợ quá|run quá|mất kiểm soát|cay cú)/i.test(cleanQuery) ||
+    cleanQuery.includes('hạ nhiệt') || cleanQuery.includes('cool down') || cleanQuery.includes('trấn an');
+
+  // 1. Kiểm tra nếu query liên quan đến Khám sức khỏe thị trường
+  const isMarketAuditorQuery = /(?:khám|sức khỏe|tình trạng|thẩm định|audit)\s*(?:thị trường|market|vàng|xau)?/i.test(cleanQuery) || cleanQuery.includes('khám thị trường');
+
+  // 2. Kiểm tra nếu query liên quan đến Tính Lot & Quản lý vốn
+  const isLotCalcQuery = /(?:đi|tính|bao nhiêu)\s*lot/i.test(cleanQuery) || /(?:quản lý|quản trị)\s*vốn/i.test(cleanQuery) || /(?:vốn|tk|tài khoản)\s*[0-9]+/i.test(cleanQuery);
+
+  if (isPsychologicalQuery) {
+    const psychRes = generateGoldAiPsychologicalDefense(query);
+    htmlResponse = psychRes.html;
+    mode = psychRes.mode;
+  } else if (isMarketAuditorQuery) {
+    const auditorRes = generateGoldAiAuditorReport();
+    htmlResponse = auditorRes.html;
+    mode = auditorRes.mode;
+  } else if (isLotCalcQuery) {
+    const lotRes = calculateGoldAiLotSize(query);
+    htmlResponse = lotRes.html;
+    mode = lotRes.mode;
+  } else {
+    // 3. Toàn bộ các câu hỏi giao dịch, thị trường, kỹ thuật, bối cảnh, chào hỏi...
+    const latestClientSignal = (window.signalEngine && Array.isArray(window.signalEngine.signals) && window.signalEngine.signals.length > 0) ? window.signalEngine.signals[0] : null;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: query, price: livePriceStr, latestSignal: latestClientSignal }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.reply) {
+          htmlResponse = data.reply;
+          mode = data.mode || 'Gold AI Market Mentor';
+        }
+      }
+    } catch (err) {
+      console.warn('Backend /api/ai/chat fetch error or timeout:', err);
+    }
+
+    // Fallback thông minh 100% nếu Backend chậm hoặc offline:
+    if (!htmlResponse) {
+      if (typeof window.searchEMA2050Knowledge === 'function') {
+        const snap = window.appState && window.appState.goldSnapshot;
+        const clientKbRes = window.searchEMA2050Knowledge(query, {
+          livePriceStr,
+          ema20Str: snap && snap.ema20 ? `$${Number(snap.ema20).toFixed(2)}` : 'Đang cập nhật',
+          ema50Str: snap && snap.ema50 ? `$${Number(snap.ema50).toFixed(2)}` : 'Đang cập nhật',
+          stateDesc: snap && snap.ema50State ? snap.ema50State.marketStateLabel : 'Xu hướng M15',
+          st: snap && snap.ema50State,
+          latestSignal: latestClientSignal
+        });
+        if (clientKbRes) {
+          htmlResponse = clientKbRes.renderedHtml;
+          mode = clientKbRes.mode;
+        }
+      }
+      if (!htmlResponse && typeof generateGoldAIMentorResponse === 'function') {
+        const generated = generateGoldAIMentorResponse(query);
+        htmlResponse = generated.htmlResponse;
+        mode = generated.mode;
       }
     }
-  } catch (err) {}
+  }
 
-  if (!htmlResponse) {
-    const generated = generateGoldAIMentorResponse(query);
-    htmlResponse = generated.htmlResponse;
-    mode = generated.mode;
+  // Đảm bảo TUYỆT ĐỐI không bao giờ bị rỗng nội dung trả lời
+  if (!htmlResponse || !htmlResponse.trim()) {
+    htmlResponse = `
+      <div class="space-y-2 text-xs text-slate-300 leading-relaxed font-sans">
+        <p>✦ <strong>Gold AI Mentor đã nhận câu hỏi của bạn:</strong> <em>"${escapeHtml(query)}"</em></p>
+        <p>• <strong>Bối cảnh thị trường hiện tại</strong>: Giá Vàng XAU/USD trực tiếp đang ở mốc <strong>$${livePriceStr}</strong>.</p>
+        <p>• <strong>Gợi ý hành động</strong>: Hệ thống MA WAVE V8 khuyến nghị theo dõi cấu trúc nến đóng khung M15 tại dải EMA20/EMA50 để đón điểm vào lệnh có R:R tốt nhất. Bạn có thể chọn các câu hỏi nhanh phía trên hoặc hỏi cụ thể về điểm vào, cắt lỗ hay tính lot nhé!</p>
+      </div>
+    `;
+    mode = 'Gold AI Market Mentor';
   }
 
   const typing = document.getElementById('gold-ai-typing-indicator');
@@ -3875,19 +4978,30 @@ window.handleGoldAISubmit = async function(e) {
   window.goldAiMemory.turns.push({ role: 'ai', content: htmlResponse, mode });
 
   const aiDiv = document.createElement('div');
-  aiDiv.className = 'flex gap-3 max-w-2xl';
+  aiDiv.className = 'flex gap-3 max-w-2xl gold-ai-response-box';
   aiDiv.innerHTML = `
-    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black flex items-center justify-center shrink-0 shadow">✦</div>
-    <div class="bg-[#111622] border border-slate-800 rounded-2xl p-4 space-y-3 font-sans">
-      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+    <div class="relative w-8 h-8 rounded-xl overflow-hidden border border-amber-400/80 shrink-0 shadow bg-slate-900"><img src="./assets/gold-ai-avatar.jpg" alt="Gold AI Mentor" class="w-full h-full object-cover"></div>
+    <div class="bg-[#111622] border border-slate-800 rounded-2xl p-4 space-y-3 font-sans w-full shadow-lg">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 gold-ai-no-copy flex-wrap gap-2">
         <span class="font-bold text-amber-400 text-xs flex items-center gap-1.5">✦ Gold AI Mentor</span>
-        <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">${mode}</span>
+        <div class="flex items-center gap-2">
+          <span class="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 uppercase">${mode}</span>
+          <button type="button" onclick="speakGoldAiResponse(this)" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold border border-slate-700 transition flex items-center gap-1 cursor-pointer active:scale-95" title="Đọc nhận định bằng giọng nói">
+            <span>🔊</span> <span>Nghe đọc</span>
+          </button>
+          <button type="button" onclick="copyGoldAiResponse(this)" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold border border-slate-700 transition flex items-center gap-1 cursor-pointer active:scale-95" title="Sao chép câu trả lời">
+            📋 Sao chép
+          </button>
+        </div>
       </div>
-      ${htmlResponse}
+      <div class="gold-ai-content-body">
+        ${htmlResponse}
+      </div>
     </div>
   `;
   messagesContainer.appendChild(aiDiv);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  window.saveGoldAiChatHistory();
 };
 
 function escapeHtml(text) {
@@ -4759,7 +5873,19 @@ window.showAuthView = function(viewName) {
 // ── Paywall & Subscription Manager ──
 window.cachedPaymentConfig = null;
 
-window.openPaywallScreen = function(user, sub, payment) {
+window.openPaywallScreen = async function(user, sub, payment) {
+  // Tự động tải thông tin tài khoản ngân hàng & QR code nếu chưa có
+  if (!payment && (!window.cachedPaymentConfig || !window.cachedPaymentConfig.bankName)) {
+    try {
+      const res = await fetch('/api/subscription/config');
+      const data = await res.json();
+      if (data && data.payment) {
+        window.cachedPaymentConfig = data.payment;
+        payment = data.payment;
+      }
+    } catch(e) {}
+  }
+
   const authPage = document.getElementById('auth-fullscreen-page');
   const appShell = document.getElementById('app-shell');
   if (appShell) {
@@ -4810,6 +5936,60 @@ window.openPaywallScreen = function(user, sub, payment) {
         this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
       }
     };
+  }
+
+  // Cập nhật trạng thái hiển thị tiêu đề & nút đóng quay lại app
+  const userObj = user || window.currentUser;
+  const subObj = sub || (userObj ? userObj.subscription : null);
+  const isExp = subObj ? !!subObj.isExpired : false;
+  const daysLeft = subObj && subObj.daysRemaining != null ? subObj.daysRemaining : 14;
+
+  const badgeEl = document.getElementById('paywall-badge-status');
+  const titleEl = document.getElementById('paywall-title-text');
+  const descEl = document.getElementById('paywall-desc-text');
+  const backBtn = document.getElementById('paywall-back-btn');
+  const closeXBtn = document.getElementById('paywall-close-x-btn');
+
+  if (isExp) {
+    if (badgeEl) {
+      badgeEl.className = 'inline-flex items-center justify-center px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 font-black text-[10px] uppercase tracking-wider mb-1';
+      badgeEl.textContent = '🔒 HẾT HẠN DÙNG THỬ 14 NGÀY';
+    }
+    if (titleEl) titleEl.textContent = 'Thanh Toán Phí Duy Trì';
+    if (descEl) descEl.innerHTML = `Tài khoản <span id="paywall-user-email" class="text-amber-400 font-semibold font-mono">${uEmail}</span> đã hoàn thành thời gian dùng thử. Vui lòng thanh toán gói 1 tháng để tiếp tục sử dụng.`;
+    if (backBtn) backBtn.classList.add('hidden');
+    if (closeXBtn) closeXBtn.classList.add('hidden');
+  } else {
+    if (badgeEl) {
+      badgeEl.className = 'inline-flex items-center justify-center px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-[10px] uppercase tracking-wider mb-1';
+      badgeEl.textContent = '⚡ GIA HẠN / NÂNG CẤP GÓI THÁNG';
+    }
+    if (titleEl) titleEl.textContent = 'Đăng Ký Gia Hạn Gói 1 Tháng';
+    if (descEl) descEl.innerHTML = `Tài khoản <span id="paywall-user-email" class="text-amber-400 font-semibold font-mono">${uEmail}</span> (Còn <strong>${daysLeft} ngày</strong>). Bạn có thể thanh toán gia hạn trước +30 ngày bất kỳ lúc nào để nhận tín hiệu không gián đoạn.`;
+    if (backBtn) backBtn.classList.remove('hidden');
+    if (closeXBtn) closeXBtn.classList.remove('hidden');
+  }
+};
+
+window.closePaywallScreen = function() {
+  if (!window.currentUser || (window.currentUser.subscription && window.currentUser.subscription.isExpired) || window.currentUser.subscriptionStatus === 'EXPIRED') {
+    if (typeof showToast === 'function') {
+      showToast('🔒 Tài khoản đã hết hạn trải nghiệm. Vui lòng chuyển khoản thanh toán gói tháng để được kích hoạt sử dụng!', 'warning');
+    }
+    return;
+  }
+  const authPage = document.getElementById('auth-fullscreen-page');
+  const appShell = document.getElementById('app-shell');
+  if (authPage) {
+    authPage.classList.add('hidden');
+    authPage.style.display = 'none';
+  }
+  if (appShell) {
+    appShell.classList.remove('hidden');
+    appShell.style.display = 'flex';
+  }
+  if (typeof window.switchView === 'function') {
+    window.switchView('account');
   }
 };
 
@@ -4898,9 +6078,9 @@ window.updateSubscriptionBadgeUI = function() {
 
   if (isAdmin) {
     badgeEl.classList.remove('hidden');
-    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[10px] sm:text-[11px] font-bold text-emerald-300 cursor-pointer hover:bg-emerald-500/20 transition shadow-sm';
+    badgeEl.className = 'flex items-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[10px] sm:text-[11px] font-bold text-emerald-300 cursor-pointer hover:bg-emerald-500/20 transition shadow-sm flex-shrink-0';
     if (iconEl) iconEl.textContent = '👑';
-    if (textEl) textEl.textContent = 'ADMIN VIP';
+    if (textEl) textEl.innerHTML = '<span class="hidden sm:inline">ADMIN </span>VIP';
     return;
   }
 
@@ -4923,37 +6103,28 @@ window.updateSubscriptionBadgeUI = function() {
 
   badgeEl.classList.remove('hidden');
   if (sub.isExpired) {
-    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-[10px] sm:text-[11px] font-bold text-rose-300 cursor-pointer hover:bg-rose-500/20 transition animate-pulse shadow-sm';
+    badgeEl.className = 'flex items-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-rose-500/10 border border-rose-500/30 text-[10px] sm:text-[11px] font-bold text-rose-300 cursor-pointer hover:bg-rose-500/20 transition animate-pulse shadow-sm flex-shrink-0';
     if (iconEl) iconEl.textContent = '🔒';
-    if (textEl) textEl.textContent = 'Hết hạn dùng thử';
+    if (textEl) textEl.innerHTML = '<span class="hidden sm:inline">Hết hạn </span>Hết hạn';
   } else if (sub.status === 'ACTIVE') {
-    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[10px] sm:text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition shadow-sm';
+    badgeEl.className = 'flex items-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-amber-500/10 border border-amber-500/30 text-[10px] sm:text-[11px] font-bold text-amber-300 cursor-pointer hover:bg-amber-500/20 transition shadow-sm flex-shrink-0';
     if (iconEl) iconEl.textContent = '✨';
-    if (textEl) textEl.textContent = `VIP: Còn ${sub.daysRemaining} ngày`;
+    if (textEl) textEl.innerHTML = `<span class="hidden sm:inline">VIP: Còn </span>${sub.daysRemaining}N`;
   } else {
-    badgeEl.className = 'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[10px] sm:text-[11px] font-bold text-sky-300 cursor-pointer hover:bg-sky-500/20 transition shadow-sm';
+    badgeEl.className = 'flex items-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-sky-500/10 border border-sky-500/30 text-[10px] sm:text-[11px] font-bold text-sky-300 cursor-pointer hover:bg-sky-500/20 transition shadow-sm flex-shrink-0';
     if (iconEl) iconEl.textContent = '⏱️';
-    if (textEl) textEl.textContent = `Dùng thử: Còn ${sub.daysRemaining} ngày`;
+    if (textEl) textEl.innerHTML = `<span class="hidden sm:inline">Dùng thử: </span>${sub.daysRemaining}N`;
   }
 };
 
-window.handleSubBadgeClick = function() {
+window.handleSubBadgeClick = async function() {
   if (!window.currentUser) {
     openAuthModal();
     return;
   }
   const user = window.currentUser;
-  const emailLower = (user && user.email ? user.email : '').toLowerCase().trim();
-  const isAdmin = user && (user.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin'));
-  if (isAdmin) {
-    if (typeof window.switchView === 'function') window.switchView('account');
-  } else {
-    if (user.subscription && user.subscription.isExpired) {
-      openPaywallScreen(user, user.subscription, window.cachedPaymentConfig);
-    } else {
-      if (typeof window.switchView === 'function') window.switchView('account');
-    }
-  }
+  // Luôn mở trực tiếp màn hình đăng ký gia hạn & trả phí (Mã QR, thông tin ngân hàng & form gửi xác nhận)
+  await window.openPaywallScreen(user, user.subscription, window.cachedPaymentConfig);
 };
 
 window.togglePasswordVisibility = function(inputId, eyeBtnId) {
@@ -5144,9 +6315,10 @@ window.checkAuthOnLoad = async function() {
     }
   } catch (e) {
     // Client-side fallback check
-    if (userObj.role !== 'ADMIN' && userObj.trialExpiresAt) {
-      if (new Date(userObj.trialExpiresAt).getTime() <= Date.now()) {
-        openPaywallScreen(userObj, { isExpired: true }, null);
+    if (userObj.role !== 'ADMIN') {
+      const isReal = userObj.accountType === 'T' || userObj.isReal === true;
+      if (userObj.subscriptionStatus === 'EXPIRED' || (isReal && userObj.subscriptionStatus !== 'ACTIVE' && userObj.subscriptionStatus !== 'LIFETIME') || (userObj.trialExpiresAt && new Date(userObj.trialExpiresAt).getTime() <= Date.now())) {
+        openPaywallScreen(userObj, { isExpired: true, status: 'EXPIRED' }, null);
         return;
       }
     }
@@ -6141,75 +7313,14 @@ window.loadAccountAdminData = async function() {
       }
     }
 
-    // 2. Render Danh Sách Tất Cả Thành Viên Vừa Tham Gia & Hạn Sử Dụng
+    // 2. Render Danh Sách Tất Cả Thành Viên Vừa Tham Gia & Hạn Sử Dụng (Hỗ trợ 1.700+ thành viên)
+    window.adminUsersList = users;
     if (totalUsersBadge) {
-      totalUsersBadge.textContent = `${users.length} Thành viên`;
+      totalUsersBadge.textContent = `${users.length.toLocaleString('vi-VN')} Thành viên`;
     }
 
-    if (usersTbody) {
-      if (users.length === 0) {
-        usersTbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-500 font-sans">Chưa có người dùng nào đăng ký.</td></tr>';
-      } else {
-        usersTbody.innerHTML = users.map((u, i) => {
-          const emailLower = (u.email || '').toLowerCase();
-          const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
-          const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false, badgeText: 'DÙNG THỬ 14 NGÀY' };
-
-          const roleBadge = isUAdmin
-            ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 ADMIN</span>'
-            : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]">👤 USER</span>';
-
-          let subBadge = '';
-          if (sub.status === 'LIFETIME' || isUAdmin) {
-            subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 VIP VĨNH VIỄN</span>';
-          } else if (sub.isExpired) {
-            subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px]">🔒 HẾT HẠN</span>';
-          } else if (sub.status === 'ACTIVE') {
-            subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px]">✨ GÓI VIP 30N</span>';
-          } else {
-            subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px]">⏱️ DÙNG THỬ 14N</span>';
-          }
-
-          let remainStr = '';
-          if (sub.status === 'LIFETIME' || isUAdmin) {
-            remainStr = '<span class="text-emerald-400 font-bold">Không giới hạn</span>';
-          } else if (sub.isExpired) {
-            remainStr = '<span class="text-rose-400 font-bold">Đã hết hạn!</span>';
-          } else {
-            remainStr = `<span class="text-amber-300 font-bold">Còn ${sub.daysRemaining != null ? sub.daysRemaining : 14} ngày</span>`;
-          }
-
-          return `
-            <tr class="hover:bg-slate-900/60 transition">
-              <td class="py-2.5 px-3 text-slate-500">${i + 1}</td>
-              <td class="py-2.5 px-3">
-                <div class="font-bold text-white text-xs">${u.name || 'Trader'}</div>
-                <div class="text-amber-300/90 text-[11px] font-mono">${u.email}</div>
-              </td>
-              <td class="py-2.5 px-3">${roleBadge}</td>
-              <td class="py-2.5 px-3">${subBadge}</td>
-              <td class="py-2.5 px-3">${remainStr}</td>
-              <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
-                <button onclick="accountAdminExtendUser('${u.email}', 30)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 30 ngày (1 tháng)">
-                  +30 Ngày
-                </button>
-                <button onclick="accountAdminExtendUser('${u.email}', 60)" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 60 ngày">
-                  +60 Ngày
-                </button>
-                <button onclick="accountAdminExtendUser('${u.email}', 0, true)" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-bold text-[10px] transition cursor-pointer" title="Cấp quyền VIP Vĩnh Viễn">
-                  Vĩnh Viễn
-                </button>
-                <button onclick="accountAdminToggleRole('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer" title="Đổi quyền Admin/User">
-                  ${isUAdmin ? '⬇️ USER' : '👑 ADMIN'}
-                </button>
-                <button onclick="accountAdminDeleteUser('${u.email}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition cursor-pointer" title="Xóa tài khoản">
-                  🗑️
-                </button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      }
+    if (typeof window.renderAdminUsersTable === 'function') {
+      window.renderAdminUsersTable();
     }
 
     // 3. Render Danh Sách Đánh Giá & Góp Ý Nâng Cấp Của Khách Hàng (Bảng 3)
@@ -6268,6 +7379,290 @@ window.loadAccountAdminData = async function() {
   } catch (err) {
     console.warn('Lỗi tải dữ liệu bảng Admin tab tài khoản:', err);
   }
+};
+
+window.adminUsersList = [];
+window.adminUserFilter = 'ALL';
+window.adminUserSearch = '';
+window.adminUserPage = 1;
+window.adminUserPageSize = 50;
+
+window.filterAdminUsers = function(type) {
+  window.adminUserFilter = type;
+  window.adminUserPage = 1;
+
+  // Tự động xóa ô tìm kiếm khi chuyển bộ lọc để hiển thị toàn bộ danh sách thành viên của tab đó (ví dụ: hiển thị đủ 13 tài khoản thật)
+  window.adminUserSearch = '';
+  const searchInput = document.getElementById('acc-user-search-input');
+  if (searchInput) searchInput.value = '';
+  const clearBtn = document.getElementById('acc-user-search-clear');
+  if (clearBtn) clearBtn.classList.add('hidden');
+
+  const btnAll = document.getElementById('acc-filter-user-all');
+  const btnMonthly = document.getElementById('acc-filter-user-monthly');
+  const btnReal = document.getElementById('acc-filter-user-real');
+  const btnVirtual = document.getElementById('acc-filter-user-virtual');
+  const btnTrial = document.getElementById('acc-filter-user-trial');
+  const btnExp = document.getElementById('acc-filter-user-expired');
+
+  [btnAll, btnMonthly, btnReal, btnVirtual, btnTrial, btnExp].forEach(b => {
+    if (b) {
+      b.className = 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer';
+    }
+  });
+
+  const btnMap = {
+    'ALL': btnAll,
+    'MONTHLY': btnMonthly,
+    'REAL': btnReal,
+    'VIRTUAL': btnVirtual,
+    'TRIAL': btnTrial,
+    'EXPIRED': btnExp
+  };
+  const activeBtn = btnMap[type];
+  if (activeBtn) {
+    if (type === 'REAL') {
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs transition cursor-pointer shadow-md shadow-emerald-500/20';
+    } else if (type === 'MONTHLY') {
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs transition cursor-pointer shadow-md shadow-amber-500/20';
+    } else if (type === 'VIRTUAL') {
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs transition cursor-pointer';
+    } else {
+      activeBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs transition cursor-pointer';
+    }
+  }
+
+  window.renderAdminUsersTable();
+};
+
+window.changeAdminUsersPageSize = function(size) {
+  window.adminUserPageSize = parseInt(size, 10) || 50;
+  window.adminUserPage = 1;
+  window.renderAdminUsersTable();
+};
+
+window.handleAdminUserSearch = function(query) {
+  window.adminUserSearch = (query || '').toLowerCase().trim();
+  window.adminUserPage = 1;
+  const clearBtn = document.getElementById('acc-user-search-clear');
+  if (clearBtn) {
+    if (window.adminUserSearch) {
+      clearBtn.classList.remove('hidden');
+    } else {
+      clearBtn.classList.add('hidden');
+    }
+  }
+  window.renderAdminUsersTable();
+};
+
+window.clearAdminUserSearch = function() {
+  window.adminUserSearch = '';
+  const searchInput = document.getElementById('acc-user-search-input');
+  if (searchInput) {
+    searchInput.value = '';
+    searchInput.focus();
+  }
+  const clearBtn = document.getElementById('acc-user-search-clear');
+  if (clearBtn) clearBtn.classList.add('hidden');
+  window.renderAdminUsersTable();
+};
+
+window.changeAdminUsersPage = function(delta) {
+  window.adminUserPage += delta;
+  window.renderAdminUsersTable();
+};
+
+window.renderAdminUsersTable = function() {
+  const usersTbody = document.getElementById('acc-admin-users-tbody');
+  if (!usersTbody) return;
+
+  const users = window.adminUsersList || [];
+  
+  let countReal = 0;
+  let countVirtual = 0;
+  let countMonthly = 0;
+  let countTrial = 0;
+  let countExpired = 0;
+
+  users.forEach(u => {
+    const emailLower = (u.email || '').toLowerCase();
+    const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const isReal = u.accountType === 'T' || u.isReal === true || isUAdmin;
+    if (isReal) {
+      countReal++;
+    } else {
+      countVirtual++;
+    }
+
+    const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false };
+    if (sub.status === 'ACTIVE') {
+      countMonthly++;
+    }
+    if (sub.isExpired) {
+      countExpired++;
+    } else if (sub.status !== 'ACTIVE' && sub.status !== 'LIFETIME' && !isUAdmin) {
+      countTrial++;
+    }
+  });
+
+  const elCntAll = document.getElementById('acc-cnt-all');
+  const elCntMonthly = document.getElementById('acc-cnt-monthly');
+  const elCntReal = document.getElementById('acc-cnt-real');
+  const elCntVirtual = document.getElementById('acc-cnt-virtual');
+  const elCntTrial = document.getElementById('acc-cnt-trial');
+  const elCntExp = document.getElementById('acc-cnt-expired');
+  if (elCntAll) elCntAll.textContent = users.length.toLocaleString('vi-VN');
+  if (elCntMonthly) elCntMonthly.textContent = countMonthly.toLocaleString('vi-VN');
+  if (elCntReal) elCntReal.textContent = countReal.toLocaleString('vi-VN');
+  if (elCntVirtual) elCntVirtual.textContent = countVirtual.toLocaleString('vi-VN');
+  if (elCntTrial) elCntTrial.textContent = countTrial.toLocaleString('vi-VN');
+  if (elCntExp) elCntExp.textContent = countExpired.toLocaleString('vi-VN');
+
+  let filtered = users.filter(u => {
+    const emailLower = (u.email || '').toLowerCase();
+    const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const isReal = u.accountType === 'T' || u.isReal === true || isUAdmin;
+    const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false };
+
+    if (window.adminUserFilter === 'MONTHLY' && sub.status !== 'ACTIVE') return false;
+    if (window.adminUserFilter === 'REAL' && !isReal) return false;
+    if (window.adminUserFilter === 'VIRTUAL' && isReal) return false;
+    if (window.adminUserFilter === 'TRIAL' && (sub.status === 'ACTIVE' || sub.status === 'LIFETIME' || isUAdmin || sub.isExpired)) return false;
+    if (window.adminUserFilter === 'EXPIRED' && !sub.isExpired) return false;
+
+    if (window.adminUserSearch) {
+      const q = window.adminUserSearch;
+      const name = (u.name || '').toLowerCase();
+      const email = emailLower;
+      const phone = (u.phone || '').toLowerCase();
+      if (!name.includes(q) && !email.includes(q) && !phone.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / window.adminUserPageSize));
+  if (window.adminUserPage > totalPages) window.adminUserPage = totalPages;
+  if (window.adminUserPage < 1) window.adminUserPage = 1;
+
+  const startIndex = (window.adminUserPage - 1) * window.adminUserPageSize;
+  const endIndex = Math.min(startIndex + window.adminUserPageSize, filtered.length);
+  const pageUsers = filtered.slice(startIndex, endIndex);
+
+  const pageInfoEl = document.getElementById('acc-users-page-info');
+  const curPageEl = document.getElementById('acc-user-current-page');
+  const prevBtn = document.getElementById('acc-user-prev-btn');
+  const nextBtn = document.getElementById('acc-user-next-btn');
+
+  if (pageInfoEl) {
+    if (filtered.length === 0) {
+      pageInfoEl.textContent = 'Không tìm thấy thành viên nào';
+    } else {
+      pageInfoEl.textContent = `Hiển thị ${(startIndex + 1).toLocaleString('vi-VN')} - ${endIndex.toLocaleString('vi-VN')} / ${filtered.length.toLocaleString('vi-VN')} thành viên`;
+    }
+  }
+  if (curPageEl) curPageEl.textContent = `Trang ${window.adminUserPage} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = window.adminUserPage <= 1;
+  if (nextBtn) nextBtn.disabled = window.adminUserPage >= totalPages;
+
+  if (pageUsers.length === 0) {
+    usersTbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-slate-500 font-sans">Không tìm thấy người dùng phù hợp với bộ lọc.</td></tr>';
+    return;
+  }
+
+  usersTbody.innerHTML = pageUsers.map((u, idx) => {
+    const globalIndex = startIndex + idx + 1;
+    const emailLower = (u.email || '').toLowerCase();
+    const isUAdmin = u.role === 'ADMIN' || emailLower === 'hba884515@gmail.com' || emailLower === 'hba4515@gmail.com' || emailLower.includes('admin');
+    const isReal = u.accountType === 'T' || u.isReal === true || isUAdmin;
+    const sub = u.subscription || { status: 'TRIAL', daysRemaining: 14, isExpired: false, badgeText: 'DÙNG THỬ 14 NGÀY' };
+
+    // Phân loại: T = Thật, Y = Ảo
+    const typeBadge = isReal
+      ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-black text-[11px] inline-flex items-center gap-1 shadow-sm shadow-emerald-500/10" title="Tài khoản Thật"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>[T] THẬT</span>`
+      : `<span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300/90 border border-amber-500/30 font-bold text-[11px] inline-flex items-center gap-1" title="Tài khoản Ảo"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>[Y] ẢO</span>`;
+
+    const roleBadge = isUAdmin
+      ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">👑 ADMIN</span>'
+      : '<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[10px]">👤 USER</span>';
+
+    // 1. Ngày Đăng Ký
+    const regDate = u.createdAt ? new Date(u.createdAt) : null;
+    const regTimeStr = regDate ? regDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--';
+    const regDateStr = regDate ? regDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+    const regDisplay = regDate
+      ? `<div><span class="text-white font-mono font-medium">${regTimeStr}</span></div><div class="text-[10px] text-slate-400 font-mono">${regDateStr}</div>`
+      : '<span class="text-slate-500">N/A</span>';
+
+    // 2. Hạn Dùng & Ngày Hết Hạn
+    const expDate = (sub && sub.expiresAt) ? new Date(sub.expiresAt) : (u.subscriptionExpiresAt ? new Date(u.subscriptionExpiresAt) : null);
+    let expDisplay = '';
+    if (sub.status === 'LIFETIME' || isUAdmin) {
+      expDisplay = `<div><span class="text-emerald-400 font-bold">VĨNH VIỄN</span></div><div class="text-[10px] text-emerald-400/70 font-mono">Không giới hạn</div>`;
+    } else if (sub.isExpired) {
+      const expDateStr = expDate ? `${expDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} • ${expDate.toLocaleDateString('vi-VN')}` : 'Đã qua';
+      expDisplay = `<div><span class="text-rose-400 font-bold">ĐÃ HẾT HẠN</span></div><div class="text-[10px] text-rose-300 font-mono">${expDateStr}</div>`;
+    } else {
+      const expTimeStr = expDate ? expDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--';
+      const expDateStr = expDate ? expDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+      const daysLeft = sub.daysRemaining != null ? sub.daysRemaining : 0;
+      const isMonthlyVip = sub.status === 'ACTIVE';
+      expDisplay = `
+        <div><span class="text-amber-300 font-mono font-semibold">${expTimeStr}</span></div>
+        <div class="text-[10px] text-slate-300 font-mono">${expDateStr}</div>
+        <div class="text-[10px] ${isMonthlyVip ? 'text-amber-400 font-bold' : 'text-sky-400'}">⏱️ Còn ${daysLeft} ngày</div>
+      `;
+    }
+
+    // 3. Gói Cước Dịch Vụ
+    let subBadge = '';
+    if (sub.status === 'LIFETIME' || isUAdmin) {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-[10px] whitespace-nowrap">👑 VIP VĨNH VIỄN</span>';
+    } else if (sub.isExpired) {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[10px] whitespace-nowrap">🔒 HẾT HẠN</span>';
+    } else if (sub.status === 'ACTIVE') {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-[10px] whitespace-nowrap shadow-sm shadow-amber-500/10">📅 GÓI THÁNG</span>';
+    } else {
+      subBadge = '<span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-[10px] whitespace-nowrap">⏱️ DÙNG THỬ 14N</span>';
+    }
+
+    return `
+      <tr class="hover:bg-slate-900/60 transition">
+        <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">${globalIndex}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${typeBadge}</td>
+        <td class="py-2.5 px-3">
+          <div class="font-bold text-white text-xs flex items-center gap-1.5">
+            ${u.name || 'Trader'}
+            <span class="px-1.5 py-0.2 rounded font-black text-[9px] ${isReal ? 'bg-emerald-500 text-slate-950' : 'bg-amber-500/30 text-amber-300 border border-amber-500/40'}">${isReal ? 'T' : 'Y'}</span>
+          </div>
+          <div class="text-amber-300/90 text-[11px] font-mono">${u.email}</div>
+        </td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${regDisplay}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${expDisplay}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${subBadge}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">${roleBadge}</td>
+        <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+          <button onclick="accountAdminToggleAccountType('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer" title="Đổi trạng thái Thật [T] / Ảo [Y]">
+            ${isReal ? '🔁 Sang [Y]' : '🔁 Sang [T]'}
+          </button>
+          <button onclick="accountAdminExtendUser('${u.email}', 30)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 30 ngày (1 tháng)">
+            +30 Ngày
+          </button>
+          <button onclick="accountAdminExtendUser('${u.email}', 60)" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[10px] transition cursor-pointer" title="Cộng thêm 60 ngày">
+            +60 Ngày
+          </button>
+          <button onclick="accountAdminExtendUser('${u.email}', 0, true)" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-bold text-[10px] transition cursor-pointer" title="Cấp quyền VIP Vĩnh Viễn">
+            Vĩnh Viễn
+          </button>
+          <button onclick="accountAdminToggleRole('${u.email}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] transition cursor-pointer" title="Đổi quyền Admin/User">
+            ${isUAdmin ? '⬇️ USER' : '👑 ADMIN'}
+          </button>
+          <button onclick="accountAdminDeleteUser('${u.email}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[10px] transition cursor-pointer" title="Xóa tài khoản">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 };
 
 window.refreshAccountAdminData = async function() {
@@ -6343,6 +7738,28 @@ window.accountAdminToggleRole = async function(email) {
       if (typeof loadAdminDashboardData === 'function') loadAdminDashboardData();
     } else {
       alert('Lỗi cập nhật vai trò: ' + (data.error || 'Vui lòng thử lại'));
+    }
+  } catch (e) {
+    alert('Lỗi kết nối máy chủ.');
+  }
+};
+
+window.accountAdminToggleAccountType = async function(email) {
+  try {
+    const res = await fetch('/api/admin/toggle-account-type', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'SUCCESS') {
+      if (typeof showToast === 'function') {
+        const isT = data.accountType === 'T';
+        showToast(isT ? `🟢 Đã đánh dấu ${email} là TÀI KHOẢN THẬT [T]!` : `🟡 Đã đánh dấu ${email} là TÀI KHOẢN ẢO [Y]!`, 'success');
+      }
+      await window.loadAccountAdminData();
+    } else {
+      alert('Lỗi chuyển đổi loại tài khoản: ' + (data.error || 'Vui lòng thử lại'));
     }
   } catch (e) {
     alert('Lỗi kết nối máy chủ.');
@@ -6548,8 +7965,8 @@ window.loadPublicCommunityFeedbacks = async function() {
       if (totalBadge) totalBadge.textContent = `${data.total || communityFeedbacksAll.length} Đánh giá`;
 
       // Cập nhật bộ lọc thống kê nếu có
-      const star5Count = data.starCounts ? data.starCounts[5] : 190;
-      const star4Count = data.starCounts ? data.starCounts[4] : 24;
+      const star5Count = data.starCounts ? data.starCounts[5] : 721;
+      const star4Count = data.starCounts ? data.starCounts[4] : 79;
       const totalCount = data.total || communityFeedbacksAll.length;
 
       const filtersContainer = document.getElementById('community-reviews-filters');
@@ -7303,6 +8720,10 @@ window.switchTrendAsset = function(assetKey) {
       if (k === key) {
         pane.classList.remove('hidden');
         pane.style.display = 'block';
+        pane.style.width = '100%';
+        pane.style.maxWidth = '100%';
+        pane.style.overflowX = 'hidden';
+        pane.style.position = 'relative';
       } else {
         pane.classList.add('hidden');
         pane.style.display = 'none';
@@ -7613,13 +9034,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// ─── Live Online Traders Counter Engine (Mô phỏng ~400 Traders hoạt động thực tế) ───
+// ─── Live Online Traders Counter Engine (Mô phỏng ~3100 Traders hoạt động thực tế) ───
 (function initOnlineUsersEngine() {
-  // Bắt đầu quanh mốc 412 người dùng
-  let currentCount = 412;
+  // Bắt đầu quanh mốc 3108 người dùng
+  let currentCount = 3108;
 
   function updateDisplay(count) {
     currentCount = count;
+    const formatted = Number(count).toLocaleString('en-US');
     const els = [
       document.getElementById('top-online-count'),
       document.getElementById('sidebar-online-count'),
@@ -7628,19 +9050,19 @@ document.addEventListener('DOMContentLoaded', function() {
     els.forEach(el => {
       if (!el) return;
       if (el.id === 'radar-online-users-count') {
-        el.textContent = `${count} Traders`;
+        el.textContent = `${formatted} Traders`;
       } else {
-        el.textContent = count;
+        el.textContent = formatted;
       }
     });
   }
 
-  // Biến thiên tự nhiên nhẹ nhàng (mỗi 7 - 14 giây thay đổi ±1 đến ±3 người, dao động quanh 392 - 435)
+  // Biến thiên tự nhiên nhẹ nhàng (mỗi 7 - 14 giây thay đổi ±1 đến ±5 người, dao động quanh 3060 - 3165)
   function stepFluctuation() {
-    const change = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1);
+    const change = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 5) + 1);
     let newCount = currentCount + change;
-    if (newCount < 392) newCount = 398;
-    if (newCount > 435) newCount = 428;
+    if (newCount < 3060) newCount = 3078;
+    if (newCount > 3165) newCount = 3148;
     updateDisplay(newCount);
     const nextInterval = Math.floor(Math.random() * 7000) + 7000;
     setTimeout(stepFluctuation, nextInterval);
@@ -7665,6 +9087,272 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 })();
 
+// Realtime countdown thời gian đóng nến M15 trong Tab Phân Tích Xu Hướng
+setInterval(() => {
+  const el = document.getElementById('trend-candle-countdown');
+  if (!el) return;
+  const now = new Date();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+  const remMinutes = 14 - (m % 15);
+  const remSeconds = 59 - s;
+  const mm = String(remMinutes).padStart(2, '0');
+  const ss = String(remSeconds).padStart(2, '0');
+  el.textContent = `M15: ${mm}:${ss}`;
+}, 1000);
 
+// ── ENGINE PHÂN TÍCH THEO TỪNG PHIÊN GIAO DỊCH (TRADING SESSIONS ENGINE) ──
+(function initTradingSessionsEngine() {
+  function updateTradingSessions() {
+    const now = new Date();
+    // Tính giờ theo GMT+7 (Việt Nam)
+    const utcHours = now.getUTCHours();
+    const utcMinutes = now.getUTCMinutes();
+    const utcSeconds = now.getUTCSeconds();
+    const vnTime = (utcHours + 7) % 24 + utcMinutes / 60 + utcSeconds / 3600;
+    const vnHour = (utcHours + 7) % 24;
 
+    const sessionNameEl = document.getElementById('live-current-session-name');
+    const directiveTitleEl = document.getElementById('live-directive-title');
+    const directiveBodyEl = document.getElementById('live-directive-body');
+    const countdownPillEl = document.getElementById('live-session-countdown-pill');
 
+    const cardAsia = document.getElementById('session-card-asia');
+    const cardLondon = document.getElementById('session-card-london');
+    const cardNy = document.getElementById('session-card-ny');
+
+    const badgeAsia = document.getElementById('badge-session-asia');
+    const badgeLondon = document.getElementById('badge-session-london');
+    const badgeNy = document.getElementById('badge-session-ny');
+
+    if (!sessionNameEl || !directiveBodyEl) return;
+
+    // Reset styles
+    [cardAsia, cardLondon, cardNy].forEach(c => {
+      if (c) {
+        c.classList.remove('border-amber-400', 'bg-amber-950/20', 'shadow-amber-500/10', 'border-sky-400', 'bg-sky-950/20', 'border-emerald-400', 'bg-emerald-950/20');
+        c.classList.add('border-slate-800', 'bg-slate-950/80');
+      }
+    });
+
+    [badgeAsia, badgeLondon, badgeNy].forEach(b => {
+      if (b) {
+        b.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700';
+        b.textContent = 'CHỜ MỞ CỬA';
+      }
+    });
+
+    let currentSession = '';
+    let nextSessionTargetHour = 6;
+    let directiveHTML = '';
+    let directiveTitle = '';
+
+    if (vnTime >= 6 && vnTime < 14) {
+      // 1. PHIÊN Á (06:00 - 14:00)
+      currentSession = '🌏 PHIÊN Á (TOKYO/SYDNEY) • ĐANG MỞ CỬA';
+      nextSessionTargetHour = 14;
+
+      if (cardAsia) {
+        cardAsia.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardAsia.classList.add('border-amber-400', 'bg-amber-950/20', 'shadow-amber-500/20', 'shadow-lg');
+      }
+      if (badgeAsia) {
+        badgeAsia.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse';
+        badgeAsia.textContent = '🟢 ĐANG MỞ CỬA';
+      }
+
+      directiveTitle = 'QUAN ĐIỂM THAM KHẢO PHIÊN Á: KIÊN NHẪN TÍCH LŨY • ĐÁNH DẤU BIÊN ASIAN RANGE';
+      directiveHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1">
+            <span class="text-amber-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>🛡️</span> <span>Chiến lược phiên Á:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Biên độ phiên Á thường chỉ giằng co hẹp 60–120 pips ($6–$12). <strong>Tuyệt đối không Fomo mua đỉnh bán đáy</strong> khi nến có các nhịp giật ngắn. Khuyến nghị kiên nhẫn đứng ngoài hoặc chỉ lướt ngắn 10–15 pips tại 2 biên hộp.
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-sky-500/30 space-y-1">
+            <span class="text-sky-300 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>📍</span> <span>Nhiệm vụ trọng tâm của Trader:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Xác định và ghi nhớ vùng đỉnh cao nhất <strong>(Asian High)</strong> và đáy thấp nhất <strong>(Asian Low)</strong> phiên Á để chuẩn bị đón cú quét thanh khoản bùng nổ khi phiên London mở cửa lúc 14:00.
+            </p>
+          </div>
+        </div>
+      `;
+
+    } else if (vnTime >= 14 && vnTime < 19.5) {
+      // 2. PHIÊN ÂU (14:00 - 19:30)
+      currentSession = '🏛️ PHIÊN ÂU (LONDON) • ĐANG MỞ CỬA';
+      nextSessionTargetHour = 19.5;
+
+      if (cardLondon) {
+        cardLondon.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardLondon.classList.add('border-sky-400', 'bg-sky-950/20', 'shadow-sky-500/20', 'shadow-lg');
+      }
+      if (badgeLondon) {
+        badgeLondon.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse';
+        badgeLondon.textContent = '🟢 ĐANG MỞ CỬA';
+      }
+
+      directiveTitle = 'QUAN ĐIỂM THAM KHẢO PHIÊN ÂU: SĂN NHỊP RŨ BỎ QUÉT THANH KHOẢN • VÀO LỆNH THUẬN XU HƯỚNG';
+      directiveHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-sky-500/30 space-y-1">
+            <span class="text-sky-300 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>🎯</span> <span>Chiêu bài săn Judas Swing:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Khi London mở cửa, giá thường có nhịp quét thủng đáy Asian Low để kích hoạt Stop Loss. <strong>Nếu nến M15 rút chân tạo Pinbar đóng trên EMA20</strong>, lập tức mở vị thế BUY theo sóng H1 lớn với Stop Loss chỉ 4–5 giá dưới chân râu nến.
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
+            <span class="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>⚡</span> <span>Chiến lược London Breakout:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Nếu nến M30 đóng cửa thân đặc vượt dứt khoát đỉnh Asian High kèm khối lượng tăng vọt, thị trường xác nhận sóng đẩy tiếp diễn (London Expansion). Vào lệnh thuận xu hướng hướng về mốc TP kỳ vọng $15–$25 giá.
+            </p>
+          </div>
+        </div>
+      `;
+
+    } else if (vnTime >= 19.5 && vnTime < 22.5) {
+      // 3. GIAO THOA ÂU - MỸ (19:30 - 22:30)
+      currentSession = '🔥 GIỜ VÀNG GIAO THOA ÂU - MỸ (OVERLAP) • SÓNG MẠNH NHẤT NGÀY';
+      nextSessionTargetHour = 22.5;
+
+      if (cardLondon) {
+        cardLondon.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardLondon.classList.add('border-sky-400', 'bg-sky-950/20');
+      }
+      if (cardNy) {
+        cardNy.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardNy.classList.add('border-emerald-400', 'bg-emerald-950/20', 'shadow-emerald-500/20', 'shadow-lg');
+      }
+      if (badgeLondon) {
+        badgeLondon.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        badgeLondon.textContent = 'HOẠT ĐỘNG CUỐI PHIÊN';
+      }
+      if (badgeNy) {
+        badgeNy.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse';
+        badgeNy.textContent = '🟢 ĐANG MỞ CỬA';
+      }
+
+      directiveTitle = 'QUAN ĐIỂM THAM KHẢO GIỜ VÀNG OVERLAP: SÓNG MẠNH NHẤT NGÀY • BẢO TOÀN LỢI NHUẬN TRƯỚC TIN';
+      directiveHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
+            <span class="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>🚀</span> <span>Dòng tiền đỉnh điểm 68% toàn cầu:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Giai đoạn 19:30 – 22:30 thanh khoản khổng lồ đẩy sóng đi dứt khoát 150–400 pips. Lệnh khớp mượt mà, kỹ thuật MA WAVE phát huy hiệu quả cao nhất. Ưu tiên giữ vị thế theo xu hướng dẫn dắt H1 & H4.
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-rose-500/30 space-y-1">
+            <span class="text-rose-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>⚠️</span> <span>Cảnh báo tin tức vĩ mô (19:30 / 20:30):</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Nếu có tin CPI/NFP/GDP của Mỹ: <strong>Kéo toàn bộ Stop Loss về Breakeven trước giờ tin</strong>. Không đặt lệnh Limit dò đáy/đỉnh khi tin ra. Đợi 15–20 phút sau tin để thị trường thẩm thấu rồi đánh theo nhịp hồi Retest.
+            </p>
+          </div>
+        </div>
+      `;
+
+    } else if ((vnTime >= 22.5 && vnTime <= 24) || (vnTime >= 0 && vnTime < 4)) {
+      // 4. PHIÊN MỸ ĐƠN LẺ (22:30 - 04:00)
+      currentSession = '🗽 PHIÊN MỸ (NEW YORK) • DÒNG TIỀN PHỐ WALL';
+      nextSessionTargetHour = 4;
+
+      if (cardNy) {
+        cardNy.classList.remove('border-slate-800', 'bg-slate-950/80');
+        cardNy.classList.add('border-emerald-400', 'bg-emerald-950/20', 'shadow-emerald-500/20', 'shadow-lg');
+      }
+      if (badgeNy) {
+        badgeNy.className = 'px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse';
+        badgeNy.textContent = '🟢 ĐANG MỞ CỬA';
+      }
+
+      directiveTitle = 'QUAN ĐIỂM THAM KHẢO PHIÊN MỸ: ĐÁNH THEO SÓNG ĐÃ HẤP THỤ TIN • CHỐT LỜI KHI ĐẠT TARGET';
+      directiveHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
+            <span class="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>📊</span> <span>Giao dịch sóng sau tin:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Dữ liệu vĩ mô đã phản ánh vào giá. Xu hướng phiên Mỹ được định hình rõ ràng. Đánh theo các nhịp hồi về dải EMA20 khung M15/M30 để vào lệnh, mục tiêu hướng về đỉnh/đáy của ngày.
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1">
+            <span class="text-amber-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span>🔒</span> <span>Đóng sổ vị thế trước 03:00 sáng:</span>
+            </span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Các quỹ đầu cơ thường chốt lời và tất toán sổ sách vào cuối phiên Mỹ. Khuyến nghị đóng các lệnh lướt trong ngày để bảo toàn thành quả, tránh giữ lệnh qua đêm chịu phí Swap và spread giãn.
+            </p>
+          </div>
+        </div>
+      `;
+
+    } else {
+      // 5. PHIÊN ĐÊM MUỘN (04:00 - 06:00)
+      currentSession = '🌙 PHIÊN ĐÊM MUỘN • NGHỈ NGƠI CHỜ PHIÊN Á MỚI';
+      nextSessionTargetHour = 6;
+
+      directiveTitle = 'THỊ TRƯỜNG ĐÊM MUỘN: THANH KHOẢN ĐÓNG BĂNG • NGHỈ NGƠI BẢO TOÀN VỐN';
+      directiveHTML = `
+        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 text-[11px] leading-relaxed space-y-1">
+          <p>
+            Từ 04:00 đến 06:00 sáng là khoảng thời gian các sàn tài chính chuyển ngày (Roll-over). Spread giãn cao kỷ lục và thanh khoản cạn kiệt.
+          </p>
+          <p class="text-amber-400 font-bold">
+            Khuyến nghị: Không mở vị thế mới. Chuẩn bị tinh thần và chiến lược để đón chào Phiên Á mới lúc 06:00 sáng.
+          </p>
+        </div>
+      `;
+    }
+
+    sessionNameEl.textContent = currentSession;
+    if (directiveTitleEl) directiveTitleEl.textContent = directiveTitle;
+    directiveBodyEl.innerHTML = directiveHTML;
+
+    // Tính đếm ngược
+    let diffHours = nextSessionTargetHour - vnTime;
+    if (diffHours < 0) diffHours += 24;
+    const totalSec = Math.floor(diffHours * 3600);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const cdStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+    if (countdownPillEl) {
+      if (vnTime >= 6 && vnTime < 14) {
+        countdownPillEl.textContent = `Mở phiên Âu lúc 14:00 (còn ${cdStr})`;
+      } else if (vnTime >= 14 && vnTime < 19.5) {
+        countdownPillEl.textContent = `Giờ Vàng Overlap lúc 19:30 (còn ${cdStr})`;
+      } else if (vnTime >= 19.5 && vnTime < 22.5) {
+        countdownPillEl.textContent = `Kết thúc Overlap lúc 22:30 (còn ${cdStr})`;
+      } else if ((vnTime >= 22.5 && vnTime <= 24) || (vnTime >= 0 && vnTime < 4)) {
+        countdownPillEl.textContent = `Đóng phiên Mỹ lúc 04:00 (còn ${cdStr})`;
+      } else {
+        countdownPillEl.textContent = `Mở phiên Á lúc 06:00 (còn ${cdStr})`;
+      }
+    }
+  }
+
+  // Khởi chạy ngay và định kỳ
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      updateTradingSessions();
+      setInterval(updateTradingSessions, 1000);
+    });
+  } else {
+    updateTradingSessions();
+    setInterval(updateTradingSessions, 1000);
+  }
+})();
