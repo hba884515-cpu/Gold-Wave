@@ -1533,10 +1533,12 @@ class GoldTradingApp {
     priceElem.textContent = `$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     if (curPrice > prevPrice) {
-      priceElem.classList.remove('flash-down');
+      priceElem.classList.remove('flash-up', 'flash-down');
+      void priceElem.offsetWidth;
       priceElem.classList.add('flash-up');
     } else if (curPrice < prevPrice) {
-      priceElem.classList.remove('flash-up');
+      priceElem.classList.remove('flash-up', 'flash-down');
+      void priceElem.offsetWidth;
       priceElem.classList.add('flash-down');
     }
 

@@ -1726,7 +1726,7 @@ function queryTvScanner(path, tickers) {
         'Origin': 'https://www.tradingview.com',
         'Referer': 'https://www.tradingview.com/'
       },
-      timeout: 4500
+      timeout: 2500
     }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
@@ -1747,7 +1747,7 @@ function queryTvScanner(path, tickers) {
 
 async function fetchTradingViewAllPrices() {
   const now = Date.now();
-  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 2500) {
+  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 800) {
     return tvMarketPricesCache;
   }
 

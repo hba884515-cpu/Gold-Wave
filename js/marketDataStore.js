@@ -9,12 +9,12 @@ class MarketDataStore {
     this.symbol = 'XAU/USD';
     this.source = 'TVC:GOLD';
     this.timezone = 'Asia/Ho_Chi_Minh';
-    this.currentPrice = 4097.20;
-    this.prevPrice = 4064.14;
-    this.priceChange = 33.06;
-    this.priceChangePercent = 0.81;
-    this.high = 4146.92;
-    this.low = 4057.83;
+    this.currentPrice = 3868.50;
+    this.prevPrice = 3870.00;
+    this.priceChange = -15.39;
+    this.priceChangePercent = -0.40;
+    this.high = 3901.20;
+    this.low = 3835.80;
     this.currentTimeframe = '15m';
     this.connectionStatus = this.isGoldMarketOpen() ? 'LIVE' : 'CLOSED';
     this.lastUpdate = Date.now();
@@ -27,12 +27,12 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 4097.20,
-        prevPrice: 4064.14,
-        change: 33.06,
-        changePercent: 0.81,
-        high: 4146.92,
-        low: 4057.83,
+        price: 3868.50,
+        prevPrice: 3870.00,
+        change: -15.39,
+        changePercent: -0.40,
+        high: 3901.20,
+        low: 3835.80,
         icon: '🪙',
         tag: 'GOLD'
       },
@@ -40,12 +40,12 @@ class MarketDataStore {
         symbol: 'BTC/USD',
         name: 'Bitcoin (Crypto)',
         source: 'BINANCE:BTCUSDT',
-        price: 77028.00,
-        prevPrice: 78013.63,
-        change: -985.62,
-        changePercent: -1.26,
-        high: 78254.17,
-        low: 76388.88,
+        price: 80415.00,
+        prevPrice: 79850.00,
+        change: 565.00,
+        changePercent: 0.71,
+        high: 81200.00,
+        low: 79150.00,
         icon: '₿',
         tag: 'CRYPTO'
       },
@@ -53,12 +53,12 @@ class MarketDataStore {
         symbol: 'XAG/USD',
         name: 'Bạc Thế Giới',
         source: 'TVC:SILVER',
-        price: 49.05,
-        prevPrice: 52.14,
-        change: -3.09,
-        changePercent: -5.93,
-        high: 51.27,
-        low: 48.95,
+        price: 47.25,
+        prevPrice: 48.10,
+        change: -0.85,
+        changePercent: -1.77,
+        high: 48.50,
+        low: 46.80,
         icon: '🥈',
         tag: 'SILVER'
       }
@@ -286,17 +286,13 @@ class MarketDataStore {
     ];
 
     let todayKeyframes = wednesdayKeyframes;
-    let todayMaxBound = this.high || 4146.92;
-    let todayMinBound = this.low || 4057.83;
+    let todayMaxBound = (this.high && this.high > targetCurrentPrice) ? this.high : (targetCurrentPrice + 25);
+    let todayMinBound = (this.low && this.low > 0 && this.low < targetCurrentPrice) ? this.low : (targetCurrentPrice - 25);
 
     if (dayOfWeek === 1) {
       todayKeyframes = mondayKeyframes;
-      todayMaxBound = 3970.31;
-      todayMinBound = 3891.26;
     } else if (dayOfWeek === 2) {
       todayKeyframes = tuesdayKeyframes;
-      todayMaxBound = 3964.43;
-      todayMinBound = 3895.55;
     }
 
     const getInterpolated = (kfs, prog) => {
@@ -338,7 +334,7 @@ class MarketDataStore {
         const histDuration = Math.max(1, todayMidnightSec - startTimestamp);
         const histProg = Math.min(1, Math.max(0, (time - startTimestamp) / histDuration));
         targetForBar = getInterpolated(histKeyframes, histProg) + noise;
-        targetForBar = Math.min(4035.0, Math.max(3965.0, targetForBar));
+        targetForBar = Math.min(targetCurrentPrice + 35.0, Math.max(targetCurrentPrice - 35.0, targetForBar));
       }
       
       if (i === 0) targetForBar = targetCurrentPrice;
@@ -435,14 +431,6 @@ class MarketDataStore {
           b.high = +(b.high + diff).toFixed(3);
           b.low = +(b.low + diff).toFixed(3);
           b.close = +(b.close + diff).toFixed(3);
-          if (b.time >= todayMidSec) {
-            const maxB = this.high || 3964.43;
-            const minB = this.low || 3895.55;
-            b.high = Math.min(maxB, b.high);
-            b.low = Math.max(minB, b.low);
-            b.open = Math.min(maxB, Math.max(minB, b.open));
-            b.close = Math.min(maxB, Math.max(minB, b.close));
-          }
           this.validateCandle(b);
         });
       }
@@ -499,14 +487,20 @@ class MarketDataStore {
     });
   }
 
-  // Realtime tick poller with connection status management
+  // Realtime tick poller with connection status management & micro-tick pulse
   startRealtimeTicks() {
+    let isFetching = false;
     const fetchLivePrice = async () => {
+      if (isFetching) return;
+      isFetching = true;
       let success = false;
 
       // 1. Backend proxy endpoint for all market assets (Gold, BTC, Silver)
       try {
-        const res = await fetch('/api/market-prices');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2200);
+        const res = await fetch('/api/market-prices', { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (res.ok) {
           const data = await res.json();
           if (data && data.prices) {
@@ -556,7 +550,7 @@ class MarketDataStore {
         }
       } catch (e) {}
 
-      // 2. Direct client fallback for Gold
+      // 2. Direct client fallback for Gold if backend proxy is delayed
       if (!success) {
         try {
           const res2 = await fetch('https://api.gold-api.com/price/XAU');
@@ -564,14 +558,15 @@ class MarketDataStore {
             const data2 = await res2.json();
             if (data2 && data2.price && !isNaN(data2.price) && data2.price > 0) {
               const liveGold = parseFloat(data2.price);
-              const openP = 3946.32;
+              const curXau = this.assetsData['XAU'];
+              const openP = (curXau && curXau.change != null) ? (liveGold - curXau.change) : 3883.89;
               const chg = +(liveGold - openP).toFixed(2);
               const chgPct = +((chg / openP) * 100).toFixed(2);
               this.assetsData['XAU'].price = liveGold;
               this.assetsData['XAU'].change = chg;
               this.assetsData['XAU'].changePercent = chgPct;
               if (this.currentAsset === 'XAU') {
-                this.updateRealtimePrice(liveGold, chg, chgPct, Math.max(this.high, liveGold), Math.min(this.low, liveGold));
+                this.updateRealtimePrice(liveGold, chg, chgPct, Math.max(this.high || liveGold, liveGold), Math.min(this.low || liveGold, liveGold));
               }
               success = true;
             }
@@ -581,15 +576,39 @@ class MarketDataStore {
 
       if (!success) {
         this.failedFetchCount++;
-        if (this.failedFetchCount >= 3) {
+        if (this.failedFetchCount >= 4) {
           this.connectionStatus = 'STALE';
           this.notifyListeners('statusChange', { status: this.connectionStatus });
         }
+      } else {
+        this.failedFetchCount = 0;
       }
+      isFetching = false;
     };
 
     fetchLivePrice();
-    setInterval(fetchLivePrice, 2000);
+    // Tần suất quét live siêu tốc: 800ms
+    setInterval(fetchLivePrice, 800);
+
+    // Micro-tick Engine: Tạo nhịp rung lắc tick giá siêu mượt (500ms) như sàn TradingView / MT5
+    setInterval(() => {
+      if (this.connectionStatus !== 'LIVE' || !this.isGoldMarketOpen()) return;
+      const curData = this.assetsData[this.currentAsset];
+      if (!curData || !curData.price) return;
+
+      const asset = this.currentAsset;
+      const maxJitter = asset === 'BTC' ? 4.0 : (asset === 'XAG' ? 0.015 : 0.06);
+      const randJitter = (Math.random() - 0.49) * maxJitter;
+      const jitteredPrice = +(curData.price + randJitter).toFixed(asset === 'BTC' ? 2 : 2);
+
+      this.updateRealtimePrice(
+        jitteredPrice,
+        curData.change,
+        curData.changePercent,
+        Math.max(this.high, jitteredPrice),
+        Math.min(this.low, jitteredPrice)
+      );
+    }, 500);
   }
 
   setTimeframe(tf) {
