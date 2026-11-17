@@ -4479,6 +4479,7 @@ function startServerSignalEngine() {
               saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
             }
             serverActiveTrades[cfg.key] = null;
+          }
         } else {
           // BẢO VỆ TUYỆT ĐỐI 100%: Mỗi mã chỉ có DUY NHẤT 1 lệnh đang hoạt động, TUYỆT ĐỐI KHÔNG BAO GIỜ PHÁT LỆNH ĐÈ HOẶC VỪA BUY VỪA SELL!
           const isAnyTradeRunning = signalsDB.some(s => s && s.asset === cfg.key && s.status && s.status.includes('ĐANG CHẠY'));
