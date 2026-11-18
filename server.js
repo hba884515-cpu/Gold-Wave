@@ -24,6 +24,8 @@ const SERVER_SIGNALS_FILE = path.join(__dirname, 'server_signals_db.json');
 let serverSignalsDB = loadJSON(SERVER_SIGNALS_FILE, []);
 const SIGNALS_DB_FILE = path.join(__dirname, 'signals_db.json');
 let signalsDB = loadJSON(SIGNALS_DB_FILE, []);
+const SCALP_SIGNALS_DB_FILE = path.join(__dirname, 'scalp_signals_db.json');
+let scalpSignalsDB = loadJSON(SCALP_SIGNALS_DB_FILE, []);
 
 function generateNextSignalId() {
   let maxNum = 2120;
@@ -177,48 +179,16 @@ const protectV8Order = (arr) => {
     o2181.time = '08:30 (18/11/2026 - T4)';
   }
 
-  // 4. Bảo vệ lệnh Scalp mới V8-02187 (SELL 3774.00 -> SL đúng 4 giá = 3778.00, TP duy nhất 7 giá = 3767.00)
-  let o2187 = arr.find(s => s && s.id === 'V8-02187');
-  if (!o2187) {
-    o2187 = {
-      id: 'V8-02187',
-      asset: 'xau',
-      pair: 'XAU/USD',
-      type: 'SELL',
-      time: '15:45 (18/11/2026 - T4)',
-      timestamp: 1794991500,
-      price: 3774.00,
-      entryPrice: 3774.00,
-      sl: 3778.00, // Cắt lỗ 4 giá TRÊN giá Sell 3774.00
-      tp1: 3767.00, // 1 TP duy nhất 7 giá DƯỚI giá Sell 3774.00
-      tp2: 3767.00,
-      tp3: 3767.00,
-      hitTp1: false,
-      hitTp2: false,
-      hitTp3: false,
-      status: 'ĐANG CHẠY (Mục Tiêu 7 Giá)',
-      pnlPips: 0,
-      pnlUsd: 0,
-      score: 92,
-      qualityState: 'CONFIRMED',
-      marketState: 'DOWNTREND',
-      strategyType: 'scalp',
-      strategy: 'MA WAVE V8 SCALP: SELL 7 GIÁ',
-      reason: '[M5/M15 SCALP TRIGGER] Nến M5 đóng cửa dưới dải EMA20/50, xác nhận vào lệnh Scalp lướt sóng nhanh 1 TP duy nhất 7 giá (3774.00 -> 3767.00). SL chuẩn 4 giá (3778.00).',
-      trailedToBreakeven: false,
-      winType: 'RUNNING'
-    };
-    arr.unshift(o2187);
-  } else {
-    o2187.strategyType = 'scalp';
-    o2187.price = 3774.00;
-    o2187.entryPrice = 3774.00;
-    o2187.sl = 3778.00; // Đảm bảo SL luôn là 3778.00
-    o2187.tp1 = 3767.00;
-    o2187.tp2 = 3767.00;
-    o2187.tp3 = 3767.00;
-    o2187.status = 'ĐANG CHẠY (Mục Tiêu 7 Giá)';
-    o2187.trailedToBreakeven = false;
+  // 4. Lệnh Scalp V8-02187: TÁCH BIỆT HOÀN TOÀN KHỎI TAB LỊCH SỬ!
+  // Đảm bảo không bao giờ xuất hiện trong mảng signalsDB hay serverSignalsDB
+  const idx2187 = arr.findIndex(s => s && s.id === 'V8-02187');
+  if (idx2187 >= 0) {
+    arr.splice(idx2187, 1);
+  }
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i] && (arr[i].id === 'V8-02187' || arr[i].strategyType === 'scalp')) {
+      arr.splice(i, 1);
+    }
   }
 
   // 5. Bảo vệ lệnh Swing V8-02186 (SELL 3774.40 -> SL chuẩn Swing 14 giá = 3788.40, TP 50-100 giá)
@@ -237,9 +207,52 @@ const protectV8Order = (arr) => {
   }
 };
 protectV8Order(signalsDB);
-protectV8Order(serverSignalsDB);
 saveJSON(SIGNALS_DB_FILE, signalsDB);
 saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
+
+// Bảo vệ riêng cho scalpSignalsDB (Tab Scalp/Swing)
+let o2187 = scalpSignalsDB.find(s => s && s.id === 'V8-02187');
+if (!o2187) {
+  o2187 = {
+    id: 'V8-02187',
+    asset: 'xau',
+    pair: 'XAU/USD',
+    type: 'SELL',
+    time: '15:45 (18/11/2026 - T4)',
+    timestamp: 1794991500,
+    price: 3774.00,
+    entryPrice: 3774.00,
+    sl: 3778.00,
+    tp1: 3767.00,
+    tp2: 3767.00,
+    tp3: 3767.00,
+    hitTp1: false,
+    hitTp2: false,
+    hitTp3: false,
+    status: 'ĐANG CHẠY (Mục Tiêu 7 Giá)',
+    pnlPips: 0,
+    pnlUsd: 0,
+    score: 92,
+    qualityState: 'CONFIRMED',
+    marketState: 'DOWNTREND',
+    strategyType: 'scalp',
+    strategy: 'MA WAVE V8 SCALP: SELL 7 GIÁ',
+    reason: '[M5/M15 SCALP TRIGGER] Nến M5 đóng cửa dưới dải EMA20/50, xác nhận vào lệnh Scalp lướt sóng nhanh 1 TP duy nhất 7 giá (3774.00 -> 3767.00). SL chuẩn 4 giá (3778.00).',
+    trailedToBreakeven: false,
+    winType: 'RUNNING'
+  };
+  scalpSignalsDB.unshift(o2187);
+} else {
+  o2187.strategyType = 'scalp';
+  o2187.price = 3774.00;
+  o2187.entryPrice = 3774.00;
+  o2187.sl = 3778.00;
+  o2187.tp1 = 3767.00;
+  o2187.tp2 = 3767.00;
+  o2187.tp3 = 3767.00;
+}
+saveJSON(SCALP_SIGNALS_DB_FILE, scalpSignalsDB);
+console.log(`⚡ Hệ thống Scalp đã nạp ${scalpSignalsDB.length} lệnh Scalp riêng biệt. Lệnh mới nhất: ${scalpSignalsDB[0]?.id}`);
 console.log(`📡 Hệ thống tín hiệu đã nạp ${signalsDB.length} lệnh. Lệnh mới nhất: ${signalsDB[0]?.id || 'N/A'} [${signalsDB[0]?.status}] (${signalsDB[0]?.time || ''})`);
 
 function loadJSON(filePath, defaultData) {
@@ -3438,7 +3451,21 @@ const server = http.createServer(async (req, res) => {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-cache, no-store, must-revalidate'
     });
-    res.end(JSON.stringify({ status: 'SUCCESS', count: signalsDB.length, signals: signalsDB }));
+    // Tuyệt đối không để lệnh Scalp xuất hiện trong mảng signals của Tab Lịch Sử
+    const historySignals = signalsDB.filter(s => s && s.strategyType !== 'scalp' && s.id !== 'V8-02187');
+    res.end(JSON.stringify({ 
+      status: 'SUCCESS', 
+      count: historySignals.length, 
+      signals: historySignals,
+      scalpSignals: scalpSignalsDB 
+    }));
+  }
+  else if (urlPath === '/api/scalp-signals' && req.method === 'GET') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate'
+    });
+    res.end(JSON.stringify({ status: 'SUCCESS', count: scalpSignalsDB.length, signals: scalpSignalsDB }));
   }
   else if (urlPath === '/api/signals/server-realtime' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });

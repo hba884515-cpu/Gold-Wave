@@ -139,6 +139,9 @@ class GoldTradingApp {
     this.loadInitialBars();
     this.renderIndicators();
     this.renderSignalHistory();
+    if (typeof window.renderScalpSwingView === 'function') {
+      try { window.renderScalpSwingView(); } catch (e) {}
+    }
     this.renderNewsAndCalendar();
     this.startEventCountdown();
     this.listenToSignalEngine();
@@ -1735,6 +1738,9 @@ class GoldTradingApp {
 
     window.signalEngine.on('onSignalUpdate', () => {
       this.renderSignalHistory();
+      if (typeof window.renderScalpSwingView === 'function') {
+        try { window.renderScalpSwingView(); } catch (e) {}
+      }
     });
 
     window.signalEngine.on('onDashboardUpdate', (snap) => {
@@ -9738,9 +9744,35 @@ window.renderScalpSwingView = function() {
   const swingListEl = document.getElementById('swing-signals-list');
   if (!scalpListEl || !swingListEl) return;
 
-  let allSignals = (window.signalEngine && Array.isArray(window.signalEngine.signals)) ? window.signalEngine.signals : [];
+  // Tự động tải danh sách lệnh Scalp riêng nếu chưa có trong cache client
+  if (!window.scalpSignals || !window.scalpSignals.length) {
+    if (typeof fetch === 'function' && !window._fetchingScalpSignals) {
+      window._fetchingScalpSignals = true;
+      fetch('/api/scalp-signals')
+        .then(r => r.json())
+        .then(data => {
+          window._fetchingScalpSignals = false;
+          if (data && Array.isArray(data.signals) && data.signals.length > 0) {
+            window.scalpSignals = data.signals;
+            window.renderScalpSwingView();
+          }
+        })
+        .catch(() => { window._fetchingScalpSignals = false; });
+    }
+  }
+
+  let allSignals = (window.signalEngine && Array.isArray(window.signalEngine.signals)) ? [...window.signalEngine.signals] : [];
   if (allSignals.length === 0 && window.app && window.app.signals) {
-    allSignals = window.app.signals;
+    allSignals = [...window.app.signals];
+  }
+
+  // Kết hợp các lệnh Scalp riêng biệt (ví dụ V8-02187) lên đầu danh sách
+  if (Array.isArray(window.scalpSignals) && window.scalpSignals.length > 0) {
+    window.scalpSignals.forEach(ss => {
+      if (ss && !allSignals.some(s => s && s.id === ss.id)) {
+        allSignals.unshift(ss);
+      }
+    });
   }
 
   const assetFilter = (window.currentScalpSwingAssetFilter || 'ALL').toUpperCase();
@@ -9754,7 +9786,7 @@ window.renderScalpSwingView = function() {
     const a = (sig.asset || 'xau').toUpperCase();
     if (assetFilter !== 'ALL' && a !== assetFilter) return;
 
-    let isScalp = sig.strategyType === 'scalp';
+    let isScalp = sig.strategyType === 'scalp' || (window.scalpSignals && window.scalpSignals.some(s => s.id === sig.id));
     let isSwing = sig.strategyType === 'swing';
 
     if (!isScalp && !isSwing) {

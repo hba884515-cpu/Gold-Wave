@@ -2063,6 +2063,12 @@ class SignalEngine {
       const res = await fetch('/api/signals', { cache: 'no-store' });
       if (!res.ok) return;
       const data = await res.json();
+      if (data && data.scalpSignals) {
+        window.scalpSignals = Array.isArray(data.scalpSignals) ? data.scalpSignals : [];
+        if (typeof window.renderScalpSwingView === 'function') {
+          try { window.renderScalpSwingView(); } catch(e) {}
+        }
+      }
       if (data && data.status === 'SUCCESS' && Array.isArray(data.signals) && data.signals.length >= 100) {
         const serverCount = data.signals.length;
         const clientCount = Array.isArray(this.signals) ? this.signals.length : 0;
@@ -2074,12 +2080,15 @@ class SignalEngine {
           this.saveHistory();
           this.triggerSignalUpdate();
           this.triggerMetricsUpdate();
-          if (typeof window !== 'undefined' && window.app) {
-            if (typeof window.app.renderSignalHistory === 'function') {
+          if (typeof window !== 'undefined') {
+            if (window.app && typeof window.app.renderSignalHistory === 'function') {
               window.app.renderSignalHistory();
             }
-            if (typeof window.app.updateHeaderMetrics === 'function') {
+            if (window.app && typeof window.app.updateHeaderMetrics === 'function') {
               window.app.updateHeaderMetrics();
+            }
+            if (typeof window.renderScalpSwingView === 'function') {
+              window.renderScalpSwingView();
             }
           }
           return;
@@ -2115,12 +2124,15 @@ class SignalEngine {
           this.saveHistory();
           this.triggerSignalUpdate();
           this.triggerMetricsUpdate();
-          if (typeof window !== 'undefined' && window.app) {
-            if (typeof window.app.renderSignalHistory === 'function') {
+          if (typeof window !== 'undefined') {
+            if (window.app && typeof window.app.renderSignalHistory === 'function') {
               window.app.renderSignalHistory();
             }
-            if (typeof window.app.updateHeaderMetrics === 'function') {
+            if (window.app && typeof window.app.updateHeaderMetrics === 'function') {
               window.app.updateHeaderMetrics();
+            }
+            if (typeof window.renderScalpSwingView === 'function') {
+              window.renderScalpSwingView();
             }
           }
         }
