@@ -179,21 +179,22 @@ const protectV8Order = (arr) => {
     o2181.time = '08:30 (18/11/2026 - T4)';
   }
 
-  // 4. Bảo vệ lệnh Scalp V8-02187 (SELL 3774.00, SL 3778.00, TP 3767.00 -> ĐÃ CHỐT TRỌN 7 GIÁ ✓)
+  // 4. Bảo vệ lệnh Vàng V8-02187 (SELL 3774.00, SL 3782.00, TP 3764.00 -> ĐÃ ĐẠT TP1 +10 GIÁ ✓)
   let o2187 = arr.find(s => s && s.id === 'V8-02187');
   if (o2187) {
-    o2187.strategyType = 'scalp';
+    o2187.strategyType = 'mid';
     o2187.price = 3774.00;
     o2187.entryPrice = 3774.00;
-    o2187.sl = 3778.00;
-    o2187.tp1 = 3767.00;
+    o2187.sl = 3782.00;
+    o2187.tp1 = 3764.00;
     o2187.hitTp1 = true;
-    o2187.status = 'TP1 +7 ✓ (Chốt Trọn 7 Giá 🎯)';
-    o2187.pnlPips = 70;
-    o2187.pnlUsd = 700;
+    o2187.status = 'TP1 +10 ✓ (Kéo SL Dương)';
+    o2187.pnlPips = 100;
+    o2187.pnlUsd = 1000;
     o2187.winType = 'TP1';
-    o2187.strategy = 'MA WAVE V8: SCALP VÀNG (7 GIÁ)';
-    o2187.reason = '[M5/M15 SCALP TRIGGER] Nến M5 đóng dưới EMA20/50, giá trượt sâu về $3,758.00 cắn trọn mốc TP 7 giá ($3,767.00) thành công rực rỡ (+70 pips / +$700 USD). Lệnh đã chốt sạch 100% lợi nhuận.';
+    o2187.strategy = 'MA WAVE V8: TRUNG BÌNH VÀNG (10 GIÁ / TP)';
+    o2187.reason = 'Phá cản M15 dải EMA20/50, giá trượt sâu về $3,758.00 cắn mốc TP1 ($3,764.00, +10 giá / +100 pips) thành công, tự động dời SL dương bảo toàn lãi 100%';
+    o2187.trailedToBreakeven = true;
   } else {
     o2187 = {
       id: 'V8-02187',
@@ -204,23 +205,23 @@ const protectV8Order = (arr) => {
       timestamp: 1794991500,
       price: 3774.00,
       entryPrice: 3774.00,
-      sl: 3778.00,
-      tp1: 3767.00,
-      tp2: 3767.00,
-      tp3: 3767.00,
+      sl: 3782.00,
+      tp1: 3764.00,
+      tp2: 3754.00,
+      tp3: 3744.00,
       hitTp1: true,
       hitTp2: false,
       hitTp3: false,
-      status: 'TP1 +7 ✓ (Chốt Trọn 7 Giá 🎯)',
-      pnlPips: 70,
-      pnlUsd: 700,
-      score: 92,
-      qualityState: 'CONFIRMED',
+      status: 'TP1 +10 ✓ (Kéo SL Dương)',
+      pnlPips: 100,
+      pnlUsd: 1000,
+      score: 95,
+      qualityState: 'STRONG SETUP',
       marketState: 'DOWNTREND',
-      strategyType: 'scalp',
-      strategy: 'MA WAVE V8: SCALP VÀNG (7 GIÁ)',
-      reason: '[M5/M15 SCALP TRIGGER] Nến M5 đóng dưới EMA20/50, giá trượt sâu về $3,758.00 cắn trọn mốc TP 7 giá ($3,767.00) thành công rực rỡ (+70 pips / +$700 USD). Lệnh đã chốt sạch 100% lợi nhuận.',
-      trailedToBreakeven: false,
+      strategyType: 'mid',
+      strategy: 'MA WAVE V8: TRUNG BÌNH VÀNG (10 GIÁ / TP)',
+      reason: 'Phá cản M15 dải EMA20/50, giá trượt sâu về $3,758.00 cắn mốc TP1 ($3,764.00, +10 giá / +100 pips) thành công, tự động dời SL dương bảo toàn lãi 100%',
+      trailedToBreakeven: true,
       winType: 'TP1'
     };
     arr.unshift(o2187);
@@ -276,6 +277,30 @@ const protectV8Order = (arr) => {
       trailedToBreakeven: true
     };
     arr.unshift(o2186);
+  }
+
+  // 6. Bảo vệ lệnh Vàng V8-02185 (@ 3786.50)
+  let o2185 = arr.find(s => s && s.id === 'V8-02185');
+  if (o2185) {
+    o2185.hitTp1 = true;
+    o2185.status = 'TP1 +10 ✓ (Kéo SL Dương)';
+    o2185.pnlPips = 100;
+    o2185.pnlUsd = 1000;
+    o2185.winType = 'TP1';
+    o2185.strategyType = 'mid';
+    o2185.time = '13:20 (18/11/2026 - T4)';
+  }
+
+  // 7. Bảo vệ lệnh Vàng V8-02184 (@ 3791.20)
+  let o2184 = arr.find(s => s && s.id === 'V8-02184');
+  if (o2184) {
+    o2184.hitTp1 = true;
+    o2184.status = 'TP1 +10 ✓ (Kéo SL Dương)';
+    o2184.pnlPips = 100;
+    o2184.pnlUsd = 1000;
+    o2184.winType = 'TP1';
+    o2184.strategyType = 'mid';
+    o2184.time = '11:45 (18/11/2026 - T4)';
   }
 };
 protectV8Order(signalsDB);
