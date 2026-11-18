@@ -6478,8 +6478,7 @@ window.checkAuthOnLoad = async function() {
   } catch (e) {
     // Client-side fallback check
     if (userObj.role !== 'ADMIN') {
-      const isReal = userObj.accountType === 'T' || userObj.isReal === true;
-      if (userObj.subscriptionStatus === 'EXPIRED' || (isReal && userObj.subscriptionStatus !== 'ACTIVE' && userObj.subscriptionStatus !== 'LIFETIME') || (userObj.trialExpiresAt && new Date(userObj.trialExpiresAt).getTime() <= Date.now())) {
+      if (userObj.subscriptionStatus === 'EXPIRED' || (userObj.trialExpiresAt && new Date(userObj.trialExpiresAt).getTime() <= Date.now())) {
         openPaywallScreen(userObj, { isExpired: true, status: 'EXPIRED' }, null);
         return;
       }

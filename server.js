@@ -518,24 +518,9 @@ function getUserSubscriptionInfo(user) {
     }
   }
 
-  // 2. Toàn bộ tài khoản thật [T] không được dùng trải nghiệm miễn phí nữa (Chỉ mở khi nạp gói tháng)
-  const isReal = user.accountType === 'T' || user.isReal === true;
-  if (isReal) {
-    return {
-      status: 'EXPIRED',
-      isAdmin: false,
-      isExpired: true,
-      badgeText: 'HẾT HẠN TRẢI NGHIỆM 🔒',
-      badgeColor: 'rose',
-      daysRemaining: 0,
-      expiresAt: user.subscriptionExpiresAt || user.trialExpiresAt || new Date(now - ONE_DAY_MS).toISOString(),
-      message: 'Chương trình trải nghiệm miễn phí đã kết thúc. Vui lòng thanh toán gói tháng (390.000 VNĐ) để được kích hoạt tiếp tục sử dụng.'
-    };
-  }
-
-  // 3. Tài khoản ảo dùng thử 14 ngày (TRIAL cho tài khoản [Y])
+  // 2. Tài khoản dùng thử 14 ngày (TRIAL)
   const createdMs = user.createdAt ? new Date(user.createdAt).getTime() : now;
-  const trialDays = user.trialDays || paymentConfig.trialDays || 14;
+  const trialDays = user.trialDays !== undefined ? user.trialDays : (paymentConfig.trialDays || 14);
   const trialExpiresAtMs = user.trialExpiresAt ? new Date(user.trialExpiresAt).getTime() : (createdMs + trialDays * ONE_DAY_MS);
   const msRemaining = trialExpiresAtMs - now;
   const daysRemaining = Math.max(0, Math.ceil(msRemaining / ONE_DAY_MS));
@@ -552,6 +537,7 @@ function getUserSubscriptionInfo(user) {
       message: `Bạn đang trong thời gian 14 ngày dùng thử miễn phí. Còn ${daysRemaining} ngày.`
     };
   } else {
+    user.subscriptionStatus = 'EXPIRED';
     return {
       status: 'EXPIRED',
       isAdmin: false,
@@ -560,7 +546,7 @@ function getUserSubscriptionInfo(user) {
       badgeColor: 'rose',
       daysRemaining: 0,
       expiresAt: new Date(trialExpiresAtMs).toISOString(),
-      message: 'Thời gian dùng thử 14 ngày đã kết thúc. Vui lòng thanh toán phí duy trì để tiếp tục truy cập.'
+      message: 'Thời gian dùng thử 14 ngày đã kết thúc. Vui lòng thanh toán phí duy trì gói tháng (390.000 VNĐ) để tiếp tục truy cập.'
     };
   }
 }
@@ -2641,6 +2627,19 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    let subStatus = 'TRIAL';
+    let subExpiresAt = trialExpiresIso;
+
+    if (isAdminAccount) {
+      subStatus = 'LIFETIME';
+      trialDays = 9999;
+      subExpiresAt = null;
+    } else if (isDeviceLocked) {
+      subStatus = 'EXPIRED';
+      trialDays = 0;
+      subExpiresAt = trialExpiresIso;
+    }
+
     const newUser = {
       id: `USR-${Date.now().toString().slice(-4)}`,
       name,
@@ -2654,10 +2653,10 @@ const server = http.createServer(async (req, res) => {
       role: userRole,
       accountType: 'T',
       isReal: true,
-      trialDays: 0,
-      trialExpiresAt: userRole === 'ADMIN' ? null : nowIso,
-      subscriptionStatus: userRole === 'ADMIN' ? 'LIFETIME' : 'EXPIRED',
-      subscriptionExpiresAt: userRole === 'ADMIN' ? null : nowIso,
+      trialDays: trialDays,
+      trialExpiresAt: subExpiresAt,
+      subscriptionStatus: subStatus,
+      subscriptionExpiresAt: subExpiresAt,
       isDeviceLocked: isDeviceLocked,
       createdAt: nowIso
     };
@@ -2821,6 +2820,19 @@ const server = http.createServer(async (req, res) => {
 
     let user = usersDB.find(u => u.email.toLowerCase() === email);
     if (!user) {
+      let subStatus = 'TRIAL';
+      let subExpiresAt = trialExpiresIso;
+
+      if (isAdminAccount) {
+        subStatus = 'LIFETIME';
+        trialDays = 9999;
+        subExpiresAt = null;
+      } else if (isDeviceLocked) {
+        subStatus = 'EXPIRED';
+        trialDays = 0;
+        subExpiresAt = trialExpiresIso;
+      }
+
       user = {
         id: `GGL-${Date.now().toString().slice(-4)}`,
         name,
@@ -2832,10 +2844,10 @@ const server = http.createServer(async (req, res) => {
         role: userRole,
         accountType: 'T',
         isReal: true,
-        trialDays: 0,
-        trialExpiresAt: isAdminAccount ? null : nowIso,
-        subscriptionStatus: isAdminAccount ? 'LIFETIME' : 'EXPIRED',
-        subscriptionExpiresAt: isAdminAccount ? null : nowIso,
+        trialDays: trialDays,
+        trialExpiresAt: subExpiresAt,
+        subscriptionStatus: subStatus,
+        subscriptionExpiresAt: subExpiresAt,
         isDeviceLocked: isDeviceLocked,
         createdAt: nowIso
       };
