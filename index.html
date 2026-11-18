@@ -829,53 +829,56 @@
     <div class="w-full h-px bg-slate-800 mb-1"></div>
 
     <!-- Nav items -->
+    <!-- 1. 📈 BIỂU ĐỒ -->
     <button class="nav-item active" id="nav-chart" onclick="switchView('chart')" title="Biểu Đồ">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       📈 Biểu Đồ
     </button>
 
+    <!-- 2. 🏷️ BẢNG GIÁ -->
     <button class="nav-item" id="nav-ma-wave" onclick="switchView('ma-wave-view')" title="Bảng Giá Thị Trường & Tín Hiệu (Vàng, BTC, Bạc)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
       🏷️ BẢNG GIÁ
     </button>
 
-    <!-- 📈 PHÂN TÍCH XU HƯỚNG TAB (TREND ANALYSIS & AI OVERVIEW) -->
+    <!-- 3. 📈 PHÂN TÍCH XU HƯỚNG -->
     <button class="nav-item" id="nav-trend" onclick="switchView('trend')" title="Phân Tích Xu Hướng">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
       📈 PHÂN TÍCH XU HƯỚNG
     </button>
 
-    <!-- GOLD NEWS INTELLIGENCE CENTER TAB -->
+    <!-- 4. ⚡🌊 SCALP / SWING -->
+    <button class="nav-item text-amber-300 font-bold" id="nav-scalp-swing" onclick="switchView('scalp-swing')" title="Chiến Lược Scalp & Swing (2 Cột Chuyên Biệt)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span>⚡ SCALP/SWING</span>
+    </button>
+
+    <!-- 5. 📊 LỊCH SỬ TÍN HIỆU -->
+    <button class="nav-item" id="nav-history" onclick="switchView('history')" title="Lịch Sử Tín Hiệu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.5"/><polyline points="3 3 3 7 7 7"/></svg>
+      📊 Lịch Sử
+    </button>
+
+    <!-- 6. 🤖 HỆ THỐNG BOT GIAO DỊCH TỰ ĐỘNG TAB -->
+    <button class="nav-item text-emerald-400 font-bold" id="nav-bot-trading" onclick="switchView('bot-trading')" title="Hệ Thống Bot Giao Dịch Tự Động 24/7">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+      <span>🤖 BOT AUTO</span>
+    </button>
+
+    <!-- 7. 📰 TIN TỨC VĨ MÔ -->
     <button class="nav-item" id="nav-news" onclick="switchView('news')" title="Gold News Intelligence">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
       <span>📰 Tin Tức</span>
       <span id="news-sidebar-badge" class="hidden"></span>
     </button>
 
-    <!-- GOLD AI ASSISTANT TAB -->
+    <!-- 8. ✦ GOLD AI ASSISTANT -->
     <button class="nav-item text-amber-400 font-bold" id="nav-gold-ai" onclick="switchView('gold-ai')" title="GOLD AI Assistant">
       <svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12L2.5 7.5"/><path d="M12 12v10"/><circle cx="12" cy="12" r="4" fill="#f59e0b"/></svg>
       ✦ GOLD AI
     </button>
 
-    <!-- 🤖 HỆ THỐNG BOT GIAO DỊCH TỰ ĐỘNG TAB -->
-    <button class="nav-item text-emerald-400 font-bold" id="nav-bot-trading" onclick="switchView('bot-trading')" title="Hệ Thống Bot Giao Dịch Tự Động 24/7">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
-      <span>🤖 BOT AUTO</span>
-    </button>
-
-    <!-- ⚡🌊 SCALP / SWING STRATEGY TAB -->
-    <button class="nav-item text-amber-300 font-bold" id="nav-scalp-swing" onclick="switchView('scalp-swing')" title="Chiến Lược Scalp & Swing (2 Cột Chuyên Biệt)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      <span>⚡ SCALP/SWING</span>
-    </button>
-
-    <button class="nav-item" id="nav-history" onclick="switchView('history')" title="Lịch Sử Tín Hiệu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.5"/><polyline points="3 3 3 7 7 7"/></svg>
-      📊 Lịch Sử
-    </button>
-
-    <!-- 👤 TÀI KHOẢN DUY NHẤT -->
+    <!-- 9. 👤 TÀI KHOẢN DUY NHẤT -->
     <button class="nav-item text-amber-300 font-bold" id="nav-account" onclick="switchView('account')" title="Tài Khoản">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>👤 Tài Khoản</span>
@@ -6692,56 +6695,65 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   });
 </script>
 
-<script src="./js/config.js?v=9.3.27"></script>
-<script src="./js/marketDataStore.js?v=9.3.27"></script>
-<script src="./js/v8Engine.js?v=9.3.27"></script>
-<script src="./js/eventEngine.js?v=9.3.27"></script>
-<script src="./js/soundAlert.js?v=9.3.27"></script>
-<script src="./js/ema50Engine.js?v=9.3.27"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.27"></script>
-<script src="./js/indicators.js?v=9.3.27"></script>
-<script src="./js/signalEngine.js?v=9.3.27"></script>
-<script src="./js/newsData.js?v=9.3.27"></script>
-<script src="./js/newsAdapter.js?v=9.3.27"></script>
-<script src="./js/app.js?v=9.3.27"></script>
+<script src="./js/config.js?v=9.3.29"></script>
+<script src="./js/marketDataStore.js?v=9.3.29"></script>
+<script src="./js/v8Engine.js?v=9.3.29"></script>
+<script src="./js/eventEngine.js?v=9.3.29"></script>
+<script src="./js/soundAlert.js?v=9.3.29"></script>
+<script src="./js/ema50Engine.js?v=9.3.29"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.29"></script>
+<script src="./js/indicators.js?v=9.3.29"></script>
+<script src="./js/signalEngine.js?v=9.3.29"></script>
+<script src="./js/newsData.js?v=9.3.29"></script>
+<script src="./js/newsAdapter.js?v=9.3.29"></script>
+<script src="./js/app.js?v=9.3.29"></script>
 
 
 
 <!-- Mobile Bottom Navigation Bar (Visible on mobile screens <= 768px) -->
 <!-- Mobile Floating Glass Bottom Navigation Dock (Leafora Aesthetic) -->
 <div id="mobile-bottom-nav" class="floating-glass-dock mx-2 mb-2 px-1 py-1 flex justify-around items-center overflow-x-auto no-scrollbar">
-  <button id="mob-nav-ma-wave" onclick="switchView('ma-wave')" class="dock-item-btn active" title="Bảng Giá Thị Trường & Tín Hiệu">
+  <!-- 1. 📈 BIỂU ĐỒ -->
+  <button id="mob-nav-chart" onclick="switchView('chart')" class="dock-item-btn active" title="Biểu Đồ Live">
+    <span class="text-base">📊</span>
+    <span>Biểu Đồ</span>
+  </button>
+  <!-- 2. 🏷️ BẢNG GIÁ -->
+  <button id="mob-nav-ma-wave" onclick="switchView('ma-wave')" class="dock-item-btn" title="Bảng Giá Thị Trường & Tín Hiệu">
     <span class="text-base">🏷️</span>
     <span>Bảng Giá</span>
   </button>
+  <!-- 3. 📈 XU HƯỚNG -->
   <button id="mob-nav-trend" onclick="switchView('trend')" class="dock-item-btn" title="Phân Tích Xu Hướng (Vàng, BTC, Bạc)">
     <span class="text-base">📈</span>
     <span>Xu Hướng</span>
   </button>
-  <button id="mob-nav-chart" onclick="switchView('chart')" class="dock-item-btn" title="Biểu Đồ Live">
-    <span class="text-base">📊</span>
-    <span>Biểu Đồ</span>
-  </button>
+  <!-- 4. ⚡ SCALP / SWING -->
   <button id="mob-nav-scalp-swing" onclick="switchView('scalp-swing')" class="dock-item-btn text-amber-300 font-bold" title="Chiến Lược Scalp & Swing (2 Cột)">
     <span class="text-base">⚡</span>
     <span>Scalp/Swing</span>
   </button>
+  <!-- 5. 📜 LỊCH SỬ -->
   <button id="mob-nav-history" onclick="switchView('history')" class="dock-item-btn" title="Lịch Sử Tín Hiệu (Vuốt xem chi tiết)">
     <span class="text-base">📜</span>
     <span>Lịch Sử</span>
   </button>
-  <button id="mob-nav-gold-ai" onclick="switchView('gold-ai')" class="dock-item-btn text-amber-400 font-bold" title="Gold AI Market Mentor">
-    <span class="text-base">✦</span>
-    <span>Gold AI</span>
-  </button>
+  <!-- 6. 🤖 BOT MT5 -->
   <button id="mob-nav-bot-trading" onclick="switchView('bot-trading')" class="dock-item-btn" title="Hệ Thống Bot MT5">
     <span class="text-base">🤖</span>
     <span>Bot MT5</span>
   </button>
+  <!-- 7. 📰 TIN TỨC -->
   <button id="mob-nav-news" onclick="switchView('news')" class="dock-item-btn" title="Tin Tức Vĩ Mô">
     <span class="text-base">📰</span>
     <span>Tin Tức</span>
   </button>
+  <!-- 8. ✦ GOLD AI -->
+  <button id="mob-nav-gold-ai" onclick="switchView('gold-ai')" class="dock-item-btn text-amber-400 font-bold" title="Gold AI Market Mentor">
+    <span class="text-base">✦</span>
+    <span>Gold AI</span>
+  </button>
+  <!-- 9. 👤 TÀI KHOẢN -->
   <button id="mob-nav-account" onclick="switchView('account')" class="dock-item-btn" title="Tài Khoản Người Dùng">
     <span class="text-base">👤</span>
     <span>Tài Khoản</span>
