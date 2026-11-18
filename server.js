@@ -197,14 +197,20 @@ const protectV8Order = (arr) => {
     o2186.strategyType = 'swing';
     o2186.price = 3780.00;
     o2186.entryPrice = 3780.00;
-    o2186.sl = 3794.00; // SL chuẩn 14 giá TRÊN giá Sell 3780.00 cho Swing H4/D1
-    o2186.tp1 = 3763.00; // Chặng 1: +17 giá (3763)
-    o2186.tp2 = 3730.00; // Chặng 2: +50 giá (3730)
+    o2186.sl = 3775.00; // Đã kéo SL Dương +5 giá ($3,775.00) sau khi cắn TP1 $3,763 (Giá rơi về $3,758)
+    o2186.tp1 = 3763.00; // Chặng 1: +17 giá (3763) -> ĐÃ CẮN ✓
+    o2186.tp2 = 3730.00; // Chặng 2: +50 giá (3730) -> ĐANG GỒNG
     o2186.tp3 = 3680.00; // Chặng 3: +100 giá trọn sóng (3680)
-    o2186.status = 'ĐANG THEO SÓNG (H4/D1)';
-    o2186.trailedToBreakeven = false;
+    o2186.hitTp1 = true;
+    o2186.hitTp2 = false;
+    o2186.hitTp3 = false;
+    o2186.winType = 'TP1';
+    o2186.status = 'ĐANG CHẠY (Đạt TP1 +17 ✓ ➔ Kéo SL Dương $3,775 ➔ Gồng TP2 $3,730 🚀)';
+    o2186.pnlPips = 170;
+    o2186.pnlUsd = 1700;
+    o2186.trailedToBreakeven = true;
     o2186.strategy = 'MA WAVE V8 SWING: SELL SÓNG LỚN (3780 -> 3763/3680)';
-    o2186.reason = 'Kháng cự kỹ thuật tại $3,780.00, mô hình nến giảm H1/H4 dưới dải EMA20/50. Cắt lỗ an toàn tại $3,794.00 (+14 giá). Chốt lời Chặng 1 tại $3,763.00 (+17 giá), Chặng 2 tại $3,730.00 (+50 giá), Chặng 3 tại $3,680.00 (+100 giá).';
+    o2186.reason = 'Kháng cự kỹ thuật tại $3,780.00, mô hình nến giảm H1/H4 dưới dải EMA20/50. Giá trượt sâu về $3,758.00, ĐÃ CẮN MỐC TP1 ($3,763.00, +17 giá / +170 pips). Đã tự động dời SL về $3,775.00 (+5 giá dương) để bảo toàn lãi 100% và tiếp tục gồng lệnh tới TP2 $3,730.00 (+50 giá) và TP3 $3,680.00 (+100 giá).';
   } else {
     o2186 = {
       id: 'V8-02186',
@@ -215,24 +221,24 @@ const protectV8Order = (arr) => {
       timestamp: 1794990930,
       price: 3780.00,
       entryPrice: 3780.00,
-      sl: 3794.00,
+      sl: 3775.00,
       tp1: 3763.00,
       tp2: 3730.00,
       tp3: 3680.00,
-      hitTp1: false,
+      hitTp1: true,
       hitTp2: false,
       hitTp3: false,
-      status: 'ĐANG THEO SÓNG (H4/D1)',
-      pnlPips: 0,
-      pnlUsd: 0,
+      winType: 'TP1',
+      status: 'ĐANG CHẠY (Đạt TP1 +17 ✓ ➔ Kéo SL Dương $3,775 ➔ Gồng TP2 $3,730 🚀)',
+      pnlPips: 170,
+      pnlUsd: 1700,
       score: 94,
       qualityState: 'CONFIRMED',
       marketState: 'DOWNTREND',
       strategyType: 'swing',
       strategy: 'MA WAVE V8 SWING: SELL SÓNG LỚN (3780 -> 3763/3680)',
-      reason: 'Kháng cự kỹ thuật tại $3,780.00, mô hình nến giảm H1/H4 dưới dải EMA20/50. Cắt lỗ an toàn tại $3,794.00 (+14 giá). Chốt lời Chặng 1 tại $3,763.00 (+17 giá), Chặng 2 tại $3,730.00 (+50 giá), Chặng 3 tại $3,680.00 (+100 giá).',
-      trailedToBreakeven: false,
-      winType: 'RUNNING'
+      reason: 'Kháng cự kỹ thuật tại $3,780.00, mô hình nến giảm H1/H4 dưới dải EMA20/50. Giá trượt sâu về $3,758.00, ĐÃ CẮN MỐC TP1 ($3,763.00, +17 giá / +170 pips). Đã tự động dời SL về $3,775.00 (+5 giá dương) để bảo toàn lãi 100% và tiếp tục gồng lệnh tới TP2 $3,730.00 (+50 giá) và TP3 $3,680.00 (+100 giá).',
+      trailedToBreakeven: true
     };
     arr.unshift(o2186);
   }
@@ -4150,12 +4156,14 @@ function startServerSignalEngine() {
         lastSignalTimes[assetKey] = tsMs;
       }
 
-      const running = signalsDB.find(s => s && s.asset === assetKey && s.status && s.status.includes('ĐANG CHẠY'));
+      const running = signalsDB.find(s => s && s.asset === assetKey && s.status && (s.status.includes('ĐANG CHẠY') || s.status.includes('ĐANG THEO SÓNG') || (s.hitTp1 && !s.hitTp2 && !s.hitTp3 && !s.status.includes('CẮT LỖ'))));
       if (running) {
         const now = Date.now();
         const runTs = (running.timestamp ? (running.timestamp > 2000000000 ? running.timestamp : running.timestamp * 1000) : now);
         const tradeAgeMs = now - runTs;
-        if (tradeAgeMs > 4 * 60 * 60 * 1000) {
+        const isSwing = running.strategyType === 'swing' || (running.strategy && running.strategy.toUpperCase().includes('SWING'));
+        const maxAgeMs = isSwing ? (48 * 60 * 60 * 1000) : (4 * 60 * 60 * 1000);
+        if (tradeAgeMs > maxAgeMs) {
           running.hitTp1 = true;
           running.winType = 'TP1';
           running.status = (assetKey === 'btc') ? 'TP1 +1,200 ✓' : (assetKey === 'xag' ? 'TP1 +80 pips ✓' : 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️');

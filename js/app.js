@@ -9637,10 +9637,13 @@ function renderSwingCardHtml(sig) {
     statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ CHẶNG 2: ĐẠT 50 GIÁ (+500 PIPS)</span>';
     const pips = sig.asset === 'xau' ? 500 : (sig.asset === 'btc' ? 3000 : 400);
     pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
-  } else if (sig.winType === 'TP1' || (sig.status && sig.status.includes('TP1'))) {
-    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">✓ CHẶNG 1: +20 GIÁ ➔ ĐÃ KHÓA SL HÒA VỐN</span>';
-    const pips = sig.asset === 'xau' ? 200 : (sig.asset === 'btc' ? 1200 : 160);
-    pnlHtml = `<span class="text-cyan-400 font-mono font-bold">+${pips} pips</span>`;
+  } else if (sig.winType === 'TP1' || (sig.status && sig.status.includes('TP1')) || sig.hitTp1) {
+    const isV82186 = sig.id === 'V8-02186' || (sig.asset === 'xau' && Math.round(Number(sig.entryPrice || sig.price)) === 3780);
+    const tp1Pts = isV82186 ? 17 : (sig.asset === 'xau' ? 20 : (sig.asset === 'btc' ? 1500 : 1.5));
+    const slNotice = isV82186 ? 'ĐÃ KÉO SL DƯƠNG $3,775 🛡️' : 'ĐÃ KHÓA SL HÒA VỐN';
+    statusBadge = `<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ CHẶNG 1: +${tp1Pts} GIÁ ➔ ${slNotice}</span>`;
+    const pips = sig.pnlPips || (isV82186 ? 170 : (sig.asset === 'xau' ? 200 : (sig.asset === 'btc' ? 1200 : 160)));
+    pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
   } else if (sig.winType === 'LOSS' || sig.winType === 'SL' || (sig.status && sig.status.includes('CẮT LỖ'))) {
     statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">CẮT LỖ AN TOÀN (SL)</span>';
     const pips = sig.pnlPips || -120;

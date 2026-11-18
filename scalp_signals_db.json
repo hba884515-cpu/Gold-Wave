@@ -12,19 +12,19 @@
     "tp1": 3767,
     "tp2": 3767,
     "tp3": 3767,
-    "hitTp1": false,
+    "hitTp1": true,
     "hitTp2": false,
     "hitTp3": false,
-    "status": "ĐANG CHẠY (Mục Tiêu 7 Giá)",
-    "pnlPips": 0,
-    "pnlUsd": 0,
+    "status": "TP1 +7 ✓ (Chốt Trọn 7 Giá 🎯)",
+    "pnlPips": 70,
+    "pnlUsd": 700,
     "score": 92,
     "qualityState": "CONFIRMED",
     "marketState": "DOWNTREND",
     "strategyType": "scalp",
     "strategy": "MA WAVE V8 SCALP: SELL 7 GIÁ",
-    "reason": "[M5/M15 SCALP TRIGGER] Nến M5 đóng cửa dưới dải EMA20/50, xác nhận vào lệnh Scalp lướt sóng nhanh 1 TP duy nhất 7 giá (3774.00 -> 3767.00). SL chuẩn 4 giá (3778.00).",
+    "reason": "[M5/M15 SCALP TRIGGER] Giá giảm sâu về ,758.00, cắn mốc Chốt Lời TP 7 giá (,767.00) thành công rực rỡ (+70 pips / + USD). Lệnh đã chốt sạch 100% lợi nhuận.",
     "trailedToBreakeven": false,
-    "winType": "RUNNING"
+    "winType": "TP1"
   }
 ]
