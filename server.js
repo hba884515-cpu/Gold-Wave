@@ -191,19 +191,50 @@ const protectV8Order = (arr) => {
     }
   }
 
-  // 5. Bảo vệ lệnh Swing V8-02186 (SELL 3774.40 -> SL chuẩn Swing 14 giá = 3788.40, TP 50-100 giá)
+  // 5. Bảo vệ lệnh Swing V8-02186 (SELL 3780.00 -> SL chuẩn Swing 14 giá = 3794.00, TP1 3763.00, TP 50-100 giá)
   let o2186 = arr.find(s => s && s.id === 'V8-02186');
   if (o2186) {
     o2186.strategyType = 'swing';
-    o2186.price = 3774.40;
-    o2186.entryPrice = 3774.40;
-    o2186.sl = 3788.40; // SL chuẩn 14 giá TRÊN giá Sell 3774.40 cho Swing H4/D1
-    o2186.tp1 = 3754.40; // Chặng 1: +20 giá
-    o2186.tp2 = 3724.40; // Chặng 2: +50 giá
-    o2186.tp3 = 3674.40; // Chặng 3: +100 giá trọn sóng
+    o2186.price = 3780.00;
+    o2186.entryPrice = 3780.00;
+    o2186.sl = 3794.00; // SL chuẩn 14 giá TRÊN giá Sell 3780.00 cho Swing H4/D1
+    o2186.tp1 = 3763.00; // Chặng 1: +17 giá (3763)
+    o2186.tp2 = 3730.00; // Chặng 2: +50 giá (3730)
+    o2186.tp3 = 3680.00; // Chặng 3: +100 giá trọn sóng (3680)
     o2186.status = 'ĐANG THEO SÓNG (H4/D1)';
     o2186.trailedToBreakeven = false;
-    o2186.strategy = 'MA WAVE V8 SWING: SELL 50 - 100 GIÁ';
+    o2186.strategy = 'MA WAVE V8 SWING: SELL SÓNG LỚN (3780 -> 3763/3680)';
+    o2186.reason = 'Kháng cự kỹ thuật tại $3,780.00, mô hình nến giảm H1/H4 dưới dải EMA20/50. Cắt lỗ an toàn tại $3,794.00 (+14 giá). Chốt lời Chặng 1 tại $3,763.00 (+17 giá), Chặng 2 tại $3,730.00 (+50 giá), Chặng 3 tại $3,680.00 (+100 giá).';
+  } else {
+    o2186 = {
+      id: 'V8-02186',
+      asset: 'xau',
+      pair: 'XAU/USD',
+      type: 'SELL',
+      time: '15:35 (18/11/2026 - T4)',
+      timestamp: 1794990930,
+      price: 3780.00,
+      entryPrice: 3780.00,
+      sl: 3794.00,
+      tp1: 3763.00,
+      tp2: 3730.00,
+      tp3: 3680.00,
+      hitTp1: false,
+      hitTp2: false,
+      hitTp3: false,
+      status: 'ĐANG THEO SÓNG (H4/D1)',
+      pnlPips: 0,
+      pnlUsd: 0,
+      score: 94,
+      qualityState: 'CONFIRMED',
+      marketState: 'DOWNTREND',
+      strategyType: 'swing',
+      strategy: 'MA WAVE V8 SWING: SELL SÓNG LỚN (3780 -> 3763/3680)',
+      reason: 'Kháng cự kỹ thuật tại $3,780.00, mô hình nến giảm H1/H4 dưới dải EMA20/50. Cắt lỗ an toàn tại $3,794.00 (+14 giá). Chốt lời Chặng 1 tại $3,763.00 (+17 giá), Chặng 2 tại $3,730.00 (+50 giá), Chặng 3 tại $3,680.00 (+100 giá).',
+      trailedToBreakeven: false,
+      winType: 'RUNNING'
+    };
+    arr.unshift(o2186);
   }
 };
 protectV8Order(signalsDB);

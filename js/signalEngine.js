@@ -2094,9 +2094,17 @@ class SignalEngine {
           return;
         }
 
-        // Nếu số lượng đã chuẩn 1661, kiểm tra cập nhật trạng thái các lệnh
+        // Nếu số lượng đã trùng khớp hoặc cần cập nhật chi tiết từng lệnh
         let hasChanges = false;
-        const currentSignals = [...this.signals];
+        let currentSignals = [...this.signals];
+        
+        // Đảm bảo không còn lệnh Scalp nào trong this.signals
+        const beforeLen = currentSignals.length;
+        currentSignals = currentSignals.filter(s => s && s.id !== 'V8-02187' && s.strategyType !== 'scalp');
+        if (currentSignals.length !== beforeLen) {
+          hasChanges = true;
+        }
+
         const localMap = new Map();
         currentSignals.forEach(s => {
           if (s && s.id) localMap.set(String(s.id), s);
@@ -2106,16 +2114,23 @@ class SignalEngine {
           if (!sSig || !sSig.id) continue;
           const sId = String(sSig.id);
           const lSig = localMap.get(sId);
-          if (lSig && sSig.status && sSig.status !== lSig.status) {
-            lSig.status = sSig.status;
-            if (sSig.hitTp1 !== undefined) lSig.hitTp1 = sSig.hitTp1;
-            if (sSig.hitTp2 !== undefined) lSig.hitTp2 = sSig.hitTp2;
-            if (sSig.hitTp3 !== undefined) lSig.hitTp3 = sSig.hitTp3;
-            if (sSig.winType !== undefined) lSig.winType = sSig.winType;
-            if (sSig.pnlPips !== undefined) lSig.pnlPips = sSig.pnlPips;
-            if (sSig.pnlUsd !== undefined) lSig.pnlUsd = sSig.pnlUsd;
-            if (sSig.sl !== undefined) lSig.sl = sSig.sl;
-            hasChanges = true;
+          if (lSig) {
+            let sigChanged = false;
+            if (sSig.price !== undefined && sSig.price !== lSig.price) { lSig.price = sSig.price; lSig.entryPrice = sSig.entryPrice || sSig.price; sigChanged = true; }
+            if (sSig.sl !== undefined && sSig.sl !== lSig.sl) { lSig.sl = sSig.sl; sigChanged = true; }
+            if (sSig.tp1 !== undefined && sSig.tp1 !== lSig.tp1) { lSig.tp1 = sSig.tp1; sigChanged = true; }
+            if (sSig.tp2 !== undefined && sSig.tp2 !== lSig.tp2) { lSig.tp2 = sSig.tp2; sigChanged = true; }
+            if (sSig.tp3 !== undefined && sSig.tp3 !== lSig.tp3) { lSig.tp3 = sSig.tp3; sigChanged = true; }
+            if (sSig.status && sSig.status !== lSig.status) { lSig.status = sSig.status; sigChanged = true; }
+            if (sSig.strategy && sSig.strategy !== lSig.strategy) { lSig.strategy = sSig.strategy; sigChanged = true; }
+            if (sSig.strategyType && sSig.strategyType !== lSig.strategyType) { lSig.strategyType = sSig.strategyType; sigChanged = true; }
+            if (sSig.hitTp1 !== undefined && sSig.hitTp1 !== lSig.hitTp1) { lSig.hitTp1 = sSig.hitTp1; sigChanged = true; }
+            if (sSig.hitTp2 !== undefined && sSig.hitTp2 !== lSig.hitTp2) { lSig.hitTp2 = sSig.hitTp2; sigChanged = true; }
+            if (sSig.hitTp3 !== undefined && sSig.hitTp3 !== lSig.hitTp3) { lSig.hitTp3 = sSig.hitTp3; sigChanged = true; }
+            if (sSig.winType !== undefined && sSig.winType !== lSig.winType) { lSig.winType = sSig.winType; sigChanged = true; }
+            if (sSig.pnlPips !== undefined && sSig.pnlPips !== lSig.pnlPips) { lSig.pnlPips = sSig.pnlPips; sigChanged = true; }
+            if (sSig.pnlUsd !== undefined && sSig.pnlUsd !== lSig.pnlUsd) { lSig.pnlUsd = sSig.pnlUsd; sigChanged = true; }
+            if (sigChanged) hasChanges = true;
           }
         }
 

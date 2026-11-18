@@ -9651,7 +9651,7 @@ function renderSwingCardHtml(sig) {
   const entryNum = Number(sig.entryPrice || sig.price);
   const entryStr = entryNum.toFixed(dec);
 
-  // Swing từng chặng đường: Chặng 1 (+20 giá khóa SL), Chặng 2 (+50 giá ăn lớn), Chặng 3 (+100 giá trọn đại sóng)
+  // Swing từng chặng đường: Chặng 1 (+17..20 giá khóa SL), Chặng 2 (+50 giá ăn lớn), Chặng 3 (+100 giá trọn đại sóng)
   let swingSl = sig.sl;
   let swingTp1 = sig.tp1;
   let swingTp2 = sig.tp2;
@@ -9659,20 +9659,22 @@ function renderSwingCardHtml(sig) {
 
   const assetKey = (sig.asset || 'xau').toLowerCase();
   if (assetKey === 'xau') {
-    swingSl = isBuy ? (entryNum - 14.00) : (entryNum + 14.00);
-    swingTp1 = isBuy ? (entryNum + 20.00) : (entryNum - 20.00);
-    swingTp2 = isBuy ? (entryNum + 50.00) : (entryNum - 50.00);
-    swingTp3 = isBuy ? (entryNum + 100.00) : (entryNum - 100.00);
+    if (!swingSl || (isBuy && swingSl >= entryNum) || (!isBuy && swingSl <= entryNum)) {
+      swingSl = isBuy ? (entryNum - 14.00) : (entryNum + 14.00);
+    }
+    if (!swingTp1) swingTp1 = isBuy ? (entryNum + 17.00) : (entryNum - 17.00);
+    if (!swingTp2) swingTp2 = isBuy ? (entryNum + 50.00) : (entryNum - 50.00);
+    if (!swingTp3) swingTp3 = isBuy ? (entryNum + 100.00) : (entryNum - 100.00);
   } else if (assetKey === 'btc') {
-    swingSl = isBuy ? (entryNum - 1200) : (entryNum + 1200);
-    swingTp1 = isBuy ? (entryNum + 1500) : (entryNum - 1500);
-    swingTp2 = isBuy ? (entryNum + 3000) : (entryNum - 3000);
-    swingTp3 = isBuy ? (entryNum + 6000) : (entryNum - 6000);
+    if (!swingSl) swingSl = isBuy ? (entryNum - 1200) : (entryNum + 1200);
+    if (!swingTp1) swingTp1 = isBuy ? (entryNum + 1500) : (entryNum - 1500);
+    if (!swingTp2) swingTp2 = isBuy ? (entryNum + 3000) : (entryNum - 3000);
+    if (!swingTp3) swingTp3 = isBuy ? (entryNum + 6000) : (entryNum - 6000);
   } else if (assetKey === 'xag') {
-    swingSl = isBuy ? (entryNum - 1.00) : (entryNum + 1.00);
-    swingTp1 = isBuy ? (entryNum + 1.50) : (entryNum - 1.50);
-    swingTp2 = isBuy ? (entryNum + 3.00) : (entryNum - 3.00);
-    swingTp3 = isBuy ? (entryNum + 5.00) : (entryNum - 5.00);
+    if (!swingSl) swingSl = isBuy ? (entryNum - 1.00) : (entryNum + 1.00);
+    if (!swingTp1) swingTp1 = isBuy ? (entryNum + 1.50) : (entryNum - 1.50);
+    if (!swingTp2) swingTp2 = isBuy ? (entryNum + 3.00) : (entryNum - 3.00);
+    if (!swingTp3) swingTp3 = isBuy ? (entryNum + 5.00) : (entryNum - 5.00);
   }
 
   const slStr = Number(swingSl).toFixed(dec);
