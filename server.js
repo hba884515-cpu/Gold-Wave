@@ -176,6 +176,46 @@ const protectV8Order = (arr) => {
     o2181.trailedToBreakeven = true;
     o2181.time = '08:30 (18/11/2026 - T4)';
   }
+
+  // 4. Bảo vệ lệnh Scalp mới V8-02187 (1 TP duy nhất 7 giá)
+  let o2187 = arr.find(s => s && s.id === 'V8-02187');
+  if (!o2187) {
+    o2187 = {
+      id: 'V8-02187',
+      asset: 'xau',
+      pair: 'XAU/USD',
+      type: 'SELL',
+      time: '15:45 (18/11/2026 - T4)',
+      timestamp: 1794991500,
+      price: 3774.00,
+      entryPrice: 3774.00,
+      sl: 3778.00,
+      tp1: 3767.00,
+      tp2: 3767.00,
+      tp3: 3767.00,
+      hitTp1: false,
+      hitTp2: false,
+      hitTp3: false,
+      status: 'ĐANG CHẠY (Mục Tiêu 7 Giá)',
+      pnlPips: 0,
+      pnlUsd: 0,
+      score: 92,
+      qualityState: 'CONFIRMED',
+      marketState: 'DOWNTREND',
+      strategyType: 'scalp',
+      strategy: 'MA WAVE V8 SCALP: SELL 7 GIÁ',
+      reason: '[M5/M15 SCALP TRIGGER] Nến M5 đóng cửa dưới dải EMA20/50, xác nhận vào lệnh Scalp lướt sóng nhanh 1 TP duy nhất 7 giá (3774.00 -> 3767.00). SL chặt 4 giá (3778.00).',
+      trailedToBreakeven: false,
+      winType: 'RUNNING'
+    };
+    arr.unshift(o2187);
+  } else {
+    o2187.strategyType = 'scalp';
+    o2187.sl = 3778.00;
+    o2187.tp1 = 3767.00;
+    o2187.tp2 = 3767.00;
+    o2187.tp3 = 3767.00;
+  }
 };
 protectV8Order(signalsDB);
 protectV8Order(serverSignalsDB);

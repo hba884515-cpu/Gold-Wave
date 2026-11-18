@@ -9708,16 +9708,27 @@ window.renderScalpSwingView = function() {
     const a = (sig.asset || 'xau').toUpperCase();
     if (assetFilter !== 'ALL' && a !== assetFilter) return;
 
-    const reason = (sig.reason || '').toUpperCase();
-    const status = (sig.status || '').toUpperCase();
-    const isExplicitSwing = sig.strategyType === 'swing' || reason.includes('H1') || reason.includes('H4') || reason.includes('TRỌN SÓNG') || reason.includes('BÙNG NỔ') || status.includes('TP2') || status.includes('TP3') || sig.winType === 'TP2' || sig.winType === 'TP3';
+    let isScalp = sig.strategyType === 'scalp';
+    let isSwing = sig.strategyType === 'swing';
 
-    let isPipsLarge = false;
-    if (a === 'XAU' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 18) isPipsLarge = true;
-    if (a === 'BTC' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 1800) isPipsLarge = true;
-    if (a === 'XAG' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 1.2) isPipsLarge = true;
+    if (!isScalp && !isSwing) {
+      const reason = (sig.reason || '').toUpperCase();
+      const status = (sig.status || '').toUpperCase();
+      const isExplicitSwing = reason.includes('H1') || reason.includes('H4') || reason.includes('TRỌN SÓNG') || reason.includes('BÙNG NỔ') || status.includes('TP2') || status.includes('TP3') || sig.winType === 'TP2' || sig.winType === 'TP3';
 
-    if (isExplicitSwing || isPipsLarge) {
+      let isPipsLarge = false;
+      if (a === 'XAU' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 18) isPipsLarge = true;
+      if (a === 'BTC' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 1800) isPipsLarge = true;
+      if (a === 'XAG' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 1.2) isPipsLarge = true;
+
+      if (isExplicitSwing || isPipsLarge) {
+        isSwing = true;
+      } else {
+        isScalp = true;
+      }
+    }
+
+    if (isSwing) {
       swingSignals.push(sig);
     } else {
       scalpSignals.push(sig);
