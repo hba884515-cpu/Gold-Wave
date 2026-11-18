@@ -9503,19 +9503,29 @@ function renderScalpCardHtml(sig) {
   let pnlHtml = '<span class="text-slate-400 font-mono">--</span>';
 
   if (sig.winType === 'TP1' || sig.winType === 'TP2' || sig.winType === 'TP3' || (sig.status && sig.status.includes('TP1'))) {
-    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ CHẠM TP1 (LÃI ĐẬM)</span>';
-    const pips = sig.pnlPips || (sig.asset === 'xag' ? 85 : (sig.asset === 'btc' ? 120 : 100));
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ ĐẠT MỤC TIÊU 7 GIÁ</span>';
+    const pips = sig.asset === 'xau' ? 70 : (sig.asset === 'xag' ? 80 : 700);
     pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
   } else if (sig.winType === 'LOSS' || sig.winType === 'SL' || (sig.status && sig.status.includes('CẮT LỖ'))) {
     statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">CẮT LỖ (SL)</span>';
-    const pips = sig.pnlPips || -50;
+    const pips = sig.pnlPips || -40;
     pnlHtml = `<span class="text-rose-400 font-mono font-bold">${pips} pips</span>`;
   }
 
   const dec = sig.asset === 'xag' ? 2 : (sig.asset === 'btc' ? 0 : 2);
-  const entryStr = Number(sig.entryPrice || sig.price).toFixed(dec);
-  const slStr = sig.sl ? Number(sig.sl).toFixed(dec) : '--';
-  const tp1Str = sig.tp1 ? Number(sig.tp1).toFixed(dec) : '--';
+  const entryNum = Number(sig.entryPrice || sig.price);
+  const entryStr = entryNum.toFixed(dec);
+
+  // Scalp chuẩn: 1 Mốc TP duy nhất là 7 giá (Vàng 7 giá, Bạc 0.7$, BTC 700$)
+  let scalpTpPrice = sig.tp1;
+  let scalpSlPrice = sig.sl;
+  if (sig.asset === 'xau' || !sig.asset) {
+    scalpTpPrice = isBuy ? (entryNum + 7.00) : (entryNum - 7.00);
+    scalpSlPrice = isBuy ? (entryNum - 4.00) : (entryNum + 4.00);
+  }
+
+  const slStr = Number(scalpSlPrice).toFixed(dec);
+  const tpStr = Number(scalpTpPrice).toFixed(dec);
 
   return `
     <div class="rounded-2xl bg-gradient-to-br from-slate-900/95 via-slate-950 to-slate-900 border border-amber-500/25 p-3.5 sm:p-4 shadow-lg hover:border-amber-400/50 transition-all space-y-2.5">
@@ -9528,7 +9538,7 @@ function renderScalpCardHtml(sig) {
             ${assetName}
           </span>
           <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold uppercase">
-            ⚡ SCALP M15
+            ⚡ SCALP (1 TP DUY NHẤT)
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -9537,27 +9547,27 @@ function renderScalpCardHtml(sig) {
         </div>
       </div>
 
-      <!-- Price Rows (Entry - SL - TP1) -->
+      <!-- Price Rows (Entry - SL - TP Duy Nhất 7 Giá) -->
       <div class="grid grid-cols-3 gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80 text-xs font-mono">
         <div>
           <div class="text-[9px] text-slate-400 font-sans uppercase">Giá Vào (Entry)</div>
           <div class="text-white font-bold mt-0.5">$${entryStr}</div>
         </div>
         <div>
-          <div class="text-[9px] text-rose-400 font-sans uppercase">Cắt Lỗ (SL)</div>
+          <div class="text-[9px] text-rose-400 font-sans uppercase">Cắt Lỗ (SL 4 Giá)</div>
           <div class="text-rose-300 font-bold mt-0.5">$${slStr}</div>
         </div>
         <div>
-          <div class="text-[9px] text-emerald-400 font-sans uppercase">Chốt Lời (TP1)</div>
-          <div class="text-emerald-300 font-bold mt-0.5">$${tp1Str}</div>
+          <div class="text-[9px] text-emerald-400 font-sans uppercase font-bold">Mục Tiêu TP (+7 Giá)</div>
+          <div class="text-emerald-300 font-black mt-0.5 text-sm">$${tpStr}</div>
         </div>
       </div>
 
       <!-- Action & PnL Bottom Bar -->
       <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60 flex-wrap gap-1">
         <div class="text-[11px] text-slate-300 flex items-center gap-1.5">
-          <span class="text-amber-400 font-bold">🎯 Hành động:</span>
-          <span>Chốt trọn 100% tại TP1 hoặc chốt 70% + kéo SL hòa vốn.</span>
+          <span class="text-amber-400 font-bold">🎯 Chiến thuật:</span>
+          <span>Đánh gọn <strong>1 mốc duy nhất 7 giá</strong> (+70 pips) ➔ Cắn TP là chốt sạch 100%, bỏ túi ngay!</span>
         </div>
         <div class="flex items-center gap-1">
           <span class="text-[10px] text-slate-400">Kết quả:</span>
@@ -9579,29 +9589,44 @@ function renderSwingCardHtml(sig) {
   let pnlHtml = '<span class="text-slate-400 font-mono">--</span>';
 
   if (sig.winType === 'TP3' || (sig.status && sig.status.includes('TP3'))) {
-    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🎯 ĂN TRỌN SÓNG TP3</span>';
-    const pips = sig.pnlPips || 300;
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🎯 CHẶNG 3: TRỌN ĐẠI SÓNG 100 GIÁ</span>';
+    const pips = sig.asset === 'xau' ? 1000 : (sig.asset === 'btc' ? 6000 : 800);
     pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
   } else if (sig.winType === 'TP2' || (sig.status && sig.status.includes('TP2'))) {
-    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ CHẠM TP2 (+TRỌN SÓNG)</span>';
-    const pips = sig.pnlPips || 200;
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ CHẶNG 2: ĐẠT 50 GIÁ (+500 PIPS)</span>';
+    const pips = sig.asset === 'xau' ? 500 : (sig.asset === 'btc' ? 3000 : 400);
     pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
   } else if (sig.winType === 'TP1' || (sig.status && sig.status.includes('TP1'))) {
-    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ TP1 + DỜI SL ENTRY</span>';
-    const pips = sig.pnlPips || 100;
-    pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">✓ CHẶNG 1: +20 GIÁ ➔ ĐÃ KHÓA SL HÒA VỐN</span>';
+    const pips = sig.asset === 'xau' ? 200 : (sig.asset === 'btc' ? 1200 : 160);
+    pnlHtml = `<span class="text-cyan-400 font-mono font-bold">+${pips} pips</span>`;
   } else if (sig.winType === 'LOSS' || sig.winType === 'SL' || (sig.status && sig.status.includes('CẮT LỖ'))) {
-    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">CẮT LỖ (SL)</span>';
-    const pips = sig.pnlPips || -85;
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">CẮT LỖ AN TOÀN (SL)</span>';
+    const pips = sig.pnlPips || -120;
     pnlHtml = `<span class="text-rose-400 font-mono font-bold">${pips} pips</span>`;
   }
 
   const dec = sig.asset === 'xag' ? 2 : (sig.asset === 'btc' ? 0 : 2);
-  const entryStr = Number(sig.entryPrice || sig.price).toFixed(dec);
-  const slStr = sig.sl ? Number(sig.sl).toFixed(dec) : '--';
-  const tp1Str = sig.tp1 ? Number(sig.tp1).toFixed(dec) : '--';
-  const tp2Str = sig.tp2 ? Number(sig.tp2).toFixed(dec) : '--';
-  const tp3Str = sig.tp3 ? Number(sig.tp3).toFixed(dec) : '--';
+  const entryNum = Number(sig.entryPrice || sig.price);
+  const entryStr = entryNum.toFixed(dec);
+
+  // Swing từng chặng đường: Chặng 1 (+20 giá khóa SL), Chặng 2 (+50 giá ăn lớn), Chặng 3 (+100 giá trọn đại sóng)
+  let swingSl = sig.sl;
+  let swingTp1 = sig.tp1;
+  let swingTp2 = sig.tp2;
+  let swingTp3 = sig.tp3;
+
+  if (sig.asset === 'xau' || !sig.asset) {
+    swingSl = isBuy ? (entryNum - 14.00) : (entryNum + 14.00);
+    swingTp1 = isBuy ? (entryNum + 20.00) : (entryNum - 20.00);
+    swingTp2 = isBuy ? (entryNum + 50.00) : (entryNum - 50.00);
+    swingTp3 = isBuy ? (entryNum + 100.00) : (entryNum - 100.00);
+  }
+
+  const slStr = Number(swingSl).toFixed(dec);
+  const tp1Str = Number(swingTp1).toFixed(dec);
+  const tp2Str = Number(swingTp2).toFixed(dec);
+  const tp3Str = Number(swingTp3).toFixed(dec);
 
   return `
     <div class="rounded-2xl bg-gradient-to-br from-[#0a1324]/95 via-slate-950 to-slate-900 border border-cyan-500/25 p-3.5 sm:p-4 shadow-lg hover:border-cyan-400/50 transition-all space-y-2.5">
@@ -9614,7 +9639,7 @@ function renderSwingCardHtml(sig) {
             ${assetName}
           </span>
           <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-bold uppercase">
-            🌊 SWING H1/H4
+            🌊 SWING H4/D1 (50 - 100 GIÁ)
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -9623,7 +9648,7 @@ function renderSwingCardHtml(sig) {
         </div>
       </div>
 
-      <!-- Price Rows (Entry - SL - TP1 - TP2 - TP3) -->
+      <!-- Price Rows: Từng chặng đường 50 - 100 giá -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80 text-xs font-mono">
         <div>
           <div class="text-[9px] text-slate-400 font-sans uppercase">Entry / SL</div>
@@ -9631,27 +9656,27 @@ function renderSwingCardHtml(sig) {
           <div class="text-[10px] text-rose-400">SL: $${slStr}</div>
         </div>
         <div>
-          <div class="text-[9px] text-emerald-400 font-sans uppercase">TP1 (Dời Hòa Vốn)</div>
+          <div class="text-[9px] text-emerald-400 font-sans uppercase font-bold">Chặng 1 (+20 Giá)</div>
           <div class="text-emerald-300 font-bold mt-0.5">$${tp1Str}</div>
-          <div class="text-[9px] text-slate-500 font-sans">Chốt 50%</div>
+          <div class="text-[9px] text-emerald-400 font-sans">Khóa SL Hòa Vốn</div>
         </div>
         <div>
-          <div class="text-[9px] text-cyan-400 font-sans uppercase">TP2 (Sóng Trung)</div>
-          <div class="text-cyan-300 font-bold mt-0.5">$${tp2Str}</div>
-          <div class="text-[9px] text-slate-500 font-sans">Ăn dài</div>
+          <div class="text-[9px] text-cyan-400 font-sans uppercase font-bold">Chặng 2 (+50 Giá)</div>
+          <div class="text-cyan-300 font-black mt-0.5">$${tp2Str}</div>
+          <div class="text-[9px] text-cyan-300 font-sans">Chốt 50% Lãi</div>
         </div>
         <div>
-          <div class="text-[9px] text-yellow-400 font-sans uppercase">TP3 (Trọn Sóng)</div>
-          <div class="text-yellow-300 font-bold mt-0.5">$${tp3Str}</div>
-          <div class="text-[9px] text-slate-500 font-sans">Đỉnh/Đáy H4</div>
+          <div class="text-[9px] text-yellow-400 font-sans uppercase font-bold">Chặng 3 (+100 Giá)</div>
+          <div class="text-yellow-300 font-black mt-0.5 text-sm">$${tp3Str}</div>
+          <div class="text-[9px] text-yellow-400 font-sans">Trọn Đại Sóng</div>
         </div>
       </div>
 
       <!-- Action & PnL Bottom Bar -->
       <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60 flex-wrap gap-1">
         <div class="text-[11px] text-slate-300 flex items-center gap-1.5">
-          <span class="text-cyan-400 font-bold">🎯 Hành động:</span>
-          <span>Chạm TP1 $\\rightarrow$ Chốt 50% + kéo SL về Entry, thả trôi gồng TP2 & TP3!</span>
+          <span class="text-cyan-400 font-bold">🎯 Lộ trình gồng lệnh:</span>
+          <span>Chạm +20 giá $\\rightarrow$ Kéo SL Entry $\\rightarrow$ Chạm +50 giá $\\rightarrow$ Dời SL Dương gồng trọn 100 giá!</span>
         </div>
         <div class="flex items-center gap-1">
           <span class="text-[10px] text-slate-400">Tích lũy:</span>
