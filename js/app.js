@@ -2120,9 +2120,18 @@ class GoldTradingApp {
       try { window.renderScalpSwingView(); } catch (e) {}
     }
     const tbody = document.getElementById('signals-tbody');
-    if (!tbody) return;
-
     let allSignals = window.signalEngine ? (window.signalEngine.signals || []) : [];
+
+    // 0. Tách biệt hoàn toàn: Lệnh Scalp (1 TP duy nhất 7 giá) CHỈ lưu và hiển thị riêng ở Tab Scalp/Swing,
+    // loại bỏ 100% khỏi Tab Lịch Sử để lịch sử đánh chuẩn logic cũ (3 TP) luôn sạch đẹp, không bị loạn!
+    allSignals = allSignals.filter(s => {
+      if (!s) return false;
+      if (s.strategyType === 'scalp') return false;
+      if (s.strategy && s.strategy.toUpperCase().includes('SCALP')) return false;
+      if (s.id === 'V8-02187') return false;
+      return true;
+    });
+
     const filterKey = this.currentHistoryFilter || 'all';
     const assetFilter = (this.currentHistoryAssetFilter || 'ALL').toUpperCase();
 
@@ -9802,7 +9811,7 @@ window.renderScalpSwingView = function() {
   if (swingStatWinrateEl) swingStatWinrateEl.textContent = swingWinrate;
   if (swingStatPipsEl && swingPipsSum > 0) swingStatPipsEl.textContent = `+${swingPipsSum} pips`;
 
-  // 3. Render Scalp Cards
+  // 3. Render Scalp Cards (Lịch sử & lệnh đang chạy của Scalp được lưu trữ đầy đủ tại đây)
   if (scalpSignals.length === 0) {
     scalpListEl.innerHTML = `
       <div class="p-8 text-center text-xs text-slate-400 bg-slate-900/40 rounded-2xl border border-slate-800">
@@ -9810,10 +9819,10 @@ window.renderScalpSwingView = function() {
       </div>
     `;
   } else {
-    scalpListEl.innerHTML = scalpSignals.slice(0, 30).map(s => renderScalpCardHtml(s)).join('');
+    scalpListEl.innerHTML = scalpSignals.slice(0, 50).map(s => renderScalpCardHtml(s)).join('');
   }
 
-  // 4. Render Swing Cards
+  // 4. Render Swing Cards (Lịch sử & lệnh đang chạy của Swing được lưu trữ đầy đủ tại đây)
   if (swingSignals.length === 0) {
     swingListEl.innerHTML = `
       <div class="p-8 text-center text-xs text-slate-400 bg-slate-900/40 rounded-2xl border border-slate-800">
@@ -9821,7 +9830,7 @@ window.renderScalpSwingView = function() {
       </div>
     `;
   } else {
-    swingListEl.innerHTML = swingSignals.slice(0, 30).map(s => renderSwingCardHtml(s)).join('');
+    swingListEl.innerHTML = swingSignals.slice(0, 50).map(s => renderSwingCardHtml(s)).join('');
   }
 };
 
