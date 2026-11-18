@@ -76,6 +76,8 @@ class MarketDataStore {
       '30m': [],
       '35m': [],
       '1h': [],
+      '2h': [],
+      '3h': [],
       '4h': [],
       '1d': []
     };
@@ -403,6 +405,8 @@ class MarketDataStore {
     this.candles['30m'] = this.aggregateCandles(base, 6);   // 6 x 5m = 30m
     this.candles['35m'] = this.aggregateCandles(base, 7);   // 7 x 5m = 35m
     this.candles['1h']  = this.aggregateCandles(base, 12);  // 12 x 5m = 1h
+    this.candles['2h']  = this.aggregateCandles(base, 24);  // 24 x 5m = 2h
+    this.candles['3h']  = this.aggregateCandles(base, 36);  // 36 x 5m = 3h
     this.candles['4h']  = this.aggregateCandles(base, 48);  // 48 x 5m = 4h
     this.candles['1d']  = this.aggregateCandles(base, 288); // 288 x 5m = 1d
   }

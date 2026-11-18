@@ -1215,16 +1215,34 @@
             </div>
           </div>
 
+          <!-- Chế Độ Biểu Đồ: SCALP (5M-1H) vs SWING (2H-1D) -->
+          <div class="flex items-center gap-1 bg-[#0b1a14] border border-[#163629] rounded-xl p-1 shadow-inner">
+            <button id="btn-chart-mode-scalp" onclick="switchChartMode('scalp')" class="px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow">
+              ⚡ Biểu Đồ Scalp
+            </button>
+            <button id="btn-chart-mode-swing" onclick="switchChartMode('swing')" class="px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer text-slate-300 hover:text-white hover:bg-slate-800">
+              🌊 Biểu Đồ Swing
+            </button>
+          </div>
+
           <div class="w-px h-4 bg-slate-700"></div>
 
-          <!-- Timeframe buttons -->
-          <div class="flex items-center gap-0.5 bg-slate-900 rounded p-0.5 border border-slate-800">
-            <button onclick="changeAppInterval('5')"   class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="5">5M</button>
-            <button onclick="changeAppInterval('15')"  class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="15">15M</button>
-            <button onclick="changeAppInterval('30')"  class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="30">30M</button>
-            <button onclick="changeAppInterval('60')"  class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold active-tf" data-interval="60">1H</button>
-            <button onclick="changeAppInterval('240')" class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="240">4H</button>
-            <button onclick="changeAppInterval('D')"   class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="D">1D</button>
+          <!-- Timeframe buttons (Tự động hiển thị theo chế độ Scalp hoặc Swing) -->
+          <div class="flex items-center gap-0.5 bg-slate-900 rounded p-0.5 border border-slate-800" id="chart-timeframe-container">
+            <!-- Scalp Timeframes (M5 - 1H) -->
+            <span id="chart-tf-scalp-group" class="flex items-center gap-0.5">
+              <button onclick="changeAppInterval('5')"   class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="5">5M</button>
+              <button onclick="changeAppInterval('15')"  class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold active-tf" data-interval="15">15M</button>
+              <button onclick="changeAppInterval('30')"  class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="30">30M</button>
+              <button onclick="changeAppInterval('60')"  class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="60">1H</button>
+            </span>
+            <!-- Swing Timeframes (2H - 1D) -->
+            <span id="chart-tf-swing-group" class="hidden items-center gap-0.5">
+              <button onclick="changeAppInterval('120')" class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="120">2H</button>
+              <button onclick="changeAppInterval('180')" class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="180">3H</button>
+              <button onclick="changeAppInterval('240')" class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="240">4H</button>
+              <button onclick="changeAppInterval('D')"   class="tv-tf-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition" data-interval="D">1D</button>
+            </span>
           </div>
 
           <!-- Chart Style Toggle -->
@@ -6726,18 +6744,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   });
 </script>
 
-<script src="./js/config.js?v=9.3.30"></script>
-<script src="./js/marketDataStore.js?v=9.3.30"></script>
-<script src="./js/v8Engine.js?v=9.3.30"></script>
-<script src="./js/eventEngine.js?v=9.3.30"></script>
-<script src="./js/soundAlert.js?v=9.3.30"></script>
-<script src="./js/ema50Engine.js?v=9.3.30"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.30"></script>
-<script src="./js/indicators.js?v=9.3.30"></script>
-<script src="./js/signalEngine.js?v=9.3.30"></script>
-<script src="./js/newsData.js?v=9.3.30"></script>
-<script src="./js/newsAdapter.js?v=9.3.30"></script>
-<script src="./js/app.js?v=9.3.30"></script>
+<script src="./js/config.js?v=9.3.31"></script>
+<script src="./js/marketDataStore.js?v=9.3.31"></script>
+<script src="./js/v8Engine.js?v=9.3.31"></script>
+<script src="./js/eventEngine.js?v=9.3.31"></script>
+<script src="./js/soundAlert.js?v=9.3.31"></script>
+<script src="./js/ema50Engine.js?v=9.3.31"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.31"></script>
+<script src="./js/indicators.js?v=9.3.31"></script>
+<script src="./js/signalEngine.js?v=9.3.31"></script>
+<script src="./js/newsData.js?v=9.3.31"></script>
+<script src="./js/newsAdapter.js?v=9.3.31"></script>
+<script src="./js/app.js?v=9.3.31"></script>
 
 
 

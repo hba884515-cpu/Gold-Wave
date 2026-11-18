@@ -4,6 +4,47 @@
  */
 
 let tvWidgetInstance = null;
+window.currentChartMode = 'scalp'; // 'scalp' (5M-1H) hoặc 'swing' (2H-1D)
+
+// Chuyển đổi chế độ Biểu Đồ Scalp (M5-1H) vs Biểu Đồ Swing (2H-1D)
+window.switchChartMode = function(mode) {
+  window.currentChartMode = mode;
+  const btnScalp = document.getElementById('btn-chart-mode-scalp');
+  const btnSwing = document.getElementById('btn-chart-mode-swing');
+  const tfScalpGroup = document.getElementById('chart-tf-scalp-group');
+  const tfSwingGroup = document.getElementById('chart-tf-swing-group');
+
+  if (mode === 'swing') {
+    if (btnScalp) {
+      btnScalp.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer text-slate-300 hover:text-white hover:bg-slate-800';
+    }
+    if (btnSwing) {
+      btnSwing.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/30';
+    }
+    if (tfScalpGroup) tfScalpGroup.classList.add('hidden');
+    if (tfSwingGroup) {
+      tfSwingGroup.classList.remove('hidden');
+      tfSwingGroup.classList.add('flex');
+    }
+    // Mặc định nạp khung 4H cho Swing
+    window.changeAppInterval('240');
+  } else {
+    // Chế độ Scalp
+    if (btnScalp) {
+      btnScalp.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow';
+    }
+    if (btnSwing) {
+      btnSwing.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer text-slate-300 hover:text-white hover:bg-slate-800';
+    }
+    if (tfSwingGroup) {
+      tfSwingGroup.classList.add('hidden');
+      tfSwingGroup.classList.remove('flex');
+    }
+    if (tfScalpGroup) tfScalpGroup.classList.remove('hidden');
+    // Mặc định nạp khung 15M cho Scalp
+    window.changeAppInterval('15');
+  }
+};
 
 // Chuyển đổi khung thời gian
 window.changeAppInterval = function(interval) {
