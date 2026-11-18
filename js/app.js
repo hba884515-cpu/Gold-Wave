@@ -1348,6 +1348,43 @@ class GoldTradingApp {
     const numBull = (tf5.trend === 'TĂNG' ? 1 : 0) + (tf15.trend === 'TĂNG' ? 1 : 0) + (tf35.trend === 'TĂNG' ? 1 : 0) + (tf1.trend === 'TĂNG' ? 1 : 0);
     const overallState = numBear >= 2 ? 'GIẢM' : numBull >= 2 ? 'TĂNG' : 'WAIT';
 
+    const isSwingMode = (window.currentChartMode === 'swing');
+    const row5m = document.getElementById('tv-row-5m');
+    const row15m = document.getElementById('tv-row-15m');
+    const row35m = document.getElementById('tv-row-35m');
+    const row1h = document.getElementById('tv-row-1h');
+    const row2h = document.getElementById('tv-row-2h');
+    const row4h = document.getElementById('tv-row-4h');
+    const row1d = document.getElementById('tv-row-1d');
+
+    const tbl2h = document.getElementById('tv-tbl-2h');
+    const tbl4h = document.getElementById('tv-tbl-4h');
+    const tbl1d = document.getElementById('tv-tbl-1d');
+
+    const tf2 = calcTFTrend('2h');
+
+    if (isSwingMode) {
+      if (row5m) row5m.classList.add('hidden');
+      if (row15m) row15m.classList.add('hidden');
+      if (row35m) row35m.classList.add('hidden');
+      if (row1h) row1h.classList.remove('hidden');
+      if (row2h) row2h.classList.remove('hidden');
+      if (row4h) row4h.classList.remove('hidden');
+      if (row1d) row1d.classList.remove('hidden');
+    } else {
+      if (row5m) row5m.classList.remove('hidden');
+      if (row15m) row15m.classList.remove('hidden');
+      if (row35m) row35m.classList.remove('hidden');
+      if (row1h) row1h.classList.remove('hidden');
+      if (row2h) row2h.classList.add('hidden');
+      if (row4h) row4h.classList.add('hidden');
+      if (row1d) row1d.classList.add('hidden');
+    }
+
+    if (tbl2h) { tbl2h.textContent = tf2.trend; tbl2h.className = tf2.trend === 'GIẢM' ? 'py-1 px-2 font-bold text-[#f23645]' : 'py-1 px-2 font-bold text-[#089981]'; }
+    if (tbl4h) { tbl4h.textContent = tf4.trend; tbl4h.className = tf4.trend === 'GIẢM' ? 'py-1 px-2 font-bold text-[#f23645]' : 'py-1 px-2 font-bold text-[#089981]'; }
+    if (tbl1d) { tbl1d.textContent = tf1d.trend; tbl1d.className = tf1d.trend === 'GIẢM' ? 'py-1 px-2 font-bold text-[#f23645]' : 'py-1 px-2 font-bold text-[#089981]'; }
+
     if (tblHeadState) {
       tblHeadState.textContent = isSW ? 'ĐANG SW' : (overallState === 'GIẢM' ? 'GIẢM' : overallState === 'TĂNG' ? 'TĂNG' : 'WAIT');
       tblHeadState.className = isSW ? 'py-1 px-2 font-bold text-amber-400 text-right' : overallState === 'TĂNG' ? 'py-1 px-2 font-bold text-[#089981] text-right' : overallState === 'GIẢM' ? 'py-1 px-2 font-bold text-[#f23645] text-right' : 'py-1 px-2 font-bold text-slate-400 text-right';
