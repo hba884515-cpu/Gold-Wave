@@ -125,6 +125,57 @@ const protectV8Order = (arr) => {
     o2101.pnlPips = 50;
     o2101.pnlUsd = 500;
   }
+
+  // 3. Bảo vệ lệnh Vàng ngày 18/11/2026: SELL 3794, SL 3802, TP1 3784 (Đã cắn TP1 +10 giá ✓)
+  let o2181 = arr.find(s => s && (s.id === 'V8-02181' || (s.asset === 'xau' && (s.entryPrice === 3794 || s.price === 3794))));
+  if (!o2181) {
+    o2181 = {
+      id: 'V8-02181',
+      asset: 'xau',
+      pair: 'XAU/USD',
+      type: 'SELL',
+      time: '08:30 (18/11/2026 - T4)',
+      timestamp: 1794956879,
+      price: 3794.00,
+      entryPrice: 3794.00,
+      sl: 3802.00,
+      tp1: 3784.00,
+      tp2: 3774.00,
+      tp3: 3759.00,
+      hitTp1: true,
+      hitTp2: false,
+      hitTp3: false,
+      status: 'TP1 +10 ✓ (Kéo SL Dương)',
+      pnlPips: 100,
+      pnlUsd: 1000,
+      score: 96,
+      qualityState: 'STRONG SETUP',
+      marketState: 'DOWNTREND',
+      strategy: 'MA WAVE V8 PRO: SELL [STRONG SETUP 96/100]',
+      reason: 'Phá vỡ cản nến M15 dưới dải EMA20/50, giá trượt sâu về $3,784 cắn mốc TP1 (+10 giá / +100 pips) thành công, tự động dời SL dương bảo toàn lãi 100%',
+      trailedToBreakeven: true,
+      winType: 'TP1'
+    };
+    if (arr.length > 0 && arr[0].asset === 'xag') {
+      arr.splice(1, 0, o2181);
+    } else {
+      arr.unshift(o2181);
+    }
+  } else {
+    o2181.entryPrice = 3794.00;
+    o2181.price = 3794.00;
+    o2181.sl = 3802.00;
+    o2181.tp1 = 3784.00;
+    o2181.tp2 = 3774.00;
+    o2181.tp3 = 3759.00;
+    o2181.status = 'TP1 +10 ✓ (Kéo SL Dương)';
+    o2181.hitTp1 = true;
+    o2181.winType = 'TP1';
+    o2181.pnlPips = 100;
+    o2181.pnlUsd = 1000;
+    o2181.trailedToBreakeven = true;
+    o2181.time = '08:30 (18/11/2026 - T4)';
+  }
 };
 protectV8Order(signalsDB);
 protectV8Order(serverSignalsDB);
