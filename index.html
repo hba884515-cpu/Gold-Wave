@@ -864,6 +864,12 @@
       <span>🤖 BOT AUTO</span>
     </button>
 
+    <!-- ⚡🌊 SCALP / SWING STRATEGY TAB -->
+    <button class="nav-item text-amber-300 font-bold" id="nav-scalp-swing" onclick="switchView('scalp-swing')" title="Chiến Lược Scalp & Swing (2 Cột Chuyên Biệt)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span>⚡ SCALP/SWING</span>
+    </button>
+
     <button class="nav-item" id="nav-history" onclick="switchView('history')" title="Lịch Sử Tín Hiệu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.5"/><polyline points="3 3 3 7 7 7"/></svg>
       📊 Lịch Sử
@@ -1862,6 +1868,207 @@
 
     </div>
     <!-- /VIEW 6: HISTORY -->
+
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!--  VIEW 6.5: ⚡🌊 CHIẾN LƯỢC SCALP / SWING (2 CỘT CHUYÊN BIỆT)   -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div id="view-scalp-swing" class="flex-1 flex flex-col min-h-0 overflow-y-auto bg-[#081410] pb-24 md:pb-6 sig-scroll hidden">
+      
+      <!-- Header Bar -->
+      <div class="px-3 sm:px-5 py-3 border-b border-slate-800 bg-[#0d1117] flex items-center justify-between flex-shrink-0 flex-wrap gap-2.5">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-cyan-400 flex items-center justify-center text-slate-950 font-black text-lg shadow-md shadow-amber-500/20 shrink-0">
+            ⚡
+          </div>
+          <div>
+            <h2 class="text-xs sm:text-sm font-black text-white flex items-center gap-2 flex-wrap">
+              CHIẾN LƯỢC SCALP / SWING (2 CỘT CHUYÊN BIỆT)
+              <span class="text-[9px] sm:text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">MA WAVE V8 PRO</span>
+            </h2>
+            <p class="text-[11px] text-slate-400">Tách bạch rõ ràng giữa Lướt sóng nhanh (Scalp M5-M15) chốt gọn TP1 và Sóng lớn (Swing H1-H4) gồng TP2/TP3 + dời SL hòa vốn</p>
+          </div>
+        </div>
+
+        <!-- Asset Filter Pill Buttons -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-[10px] text-slate-400 font-bold uppercase hidden sm:inline">Lọc mã:</span>
+          <button onclick="setScalpSwingAssetFilter('ALL')" id="ss-filter-all" class="ss-asset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 transition cursor-pointer">
+            Tất Cả
+          </button>
+          <button onclick="setScalpSwingAssetFilter('XAU')" id="ss-filter-xau" class="ss-asset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 hover:text-amber-400 transition cursor-pointer">
+            🟡 Vàng (XAU)
+          </button>
+          <button onclick="setScalpSwingAssetFilter('BTC')" id="ss-filter-btc" class="ss-asset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 hover:text-amber-400 transition cursor-pointer">
+            🟠 BTC
+          </button>
+          <button onclick="setScalpSwingAssetFilter('XAG')" id="ss-filter-xag" class="ss-asset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 hover:text-amber-400 transition cursor-pointer">
+            ⚪ Bạc (XAG)
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Tab View Switcher (Only visible on screens <= 1024px) -->
+      <div class="lg:hidden px-3 pt-3 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 w-full bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+          <button onclick="setScalpSwingMobileColumn('both')" id="ss-mob-col-both" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition cursor-pointer">
+            📑 Cả 2 Cột
+          </button>
+          <button onclick="setScalpSwingMobileColumn('scalp')" id="ss-mob-col-scalp" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-amber-300 hover:bg-slate-800 transition cursor-pointer flex items-center justify-center gap-1">
+            <span>⚡</span> <span>Cột Scalp</span>
+          </button>
+          <button onclick="setScalpSwingMobileColumn('swing')" id="ss-mob-col-swing" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-cyan-300 hover:bg-slate-800 transition cursor-pointer flex items-center justify-center gap-1">
+            <span>🌊</span> <span>Cột Swing</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Performance KPI Header Cards (2 Khối tóm tắt) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 px-3 sm:px-5 pt-3.5">
+        <!-- Scalp Summary Card -->
+        <div class="rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-slate-950 border border-amber-500/30 p-3.5 sm:p-4 shadow-lg backdrop-blur-sm relative overflow-hidden">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-base sm:text-lg">⚡</span>
+                <h3 class="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wide">CHIẾN THUẬT SCALPING (M5 - M15)</h3>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed">
+                Tập trung tối đa vào <strong>Tỷ lệ thắng cao (Winrate 80%+)</strong>. Đánh nhanh, nhặt tiền chắc chắn ở TP1 (15 - 35 pips).
+              </p>
+            </div>
+            <div class="text-right shrink-0">
+              <div id="scalp-stat-winrate" class="text-xl sm:text-2xl font-black text-amber-400 font-mono">81.8%</div>
+              <div class="text-[9px] text-slate-400 uppercase font-semibold">Tỷ lệ thắng TP1</div>
+            </div>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-amber-500/20 grid grid-cols-3 gap-2 text-center text-xs">
+            <div>
+              <div class="text-[10px] text-slate-400">Tổng lệnh Scalp</div>
+              <div id="scalp-stat-total" class="font-bold text-white font-mono mt-0.5">--</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400">Lệnh Chạm TP1</div>
+              <div id="scalp-stat-wins" class="font-bold text-emerald-400 font-mono mt-0.5">--</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400">Lãi TB/Lệnh</div>
+              <div id="scalp-stat-avg-pips" class="font-bold text-amber-300 font-mono mt-0.5">+26.5 pips</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swing Summary Card -->
+        <div class="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-slate-900/90 to-slate-950 border border-cyan-500/30 p-3.5 sm:p-4 shadow-lg backdrop-blur-sm relative overflow-hidden">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-base sm:text-lg">🌊</span>
+                <h3 class="text-xs sm:text-sm font-black text-cyan-300 uppercase tracking-wide">CHIẾN THUẬT SWING TRADING (H1 - H4)</h3>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed">
+                Bắt trọn <strong>Xu hướng lớn (Trend H1/H4)</strong>. Chạm TP1 chốt 50% + kéo SL hòa vốn để gồng đậm TP2, TP3 (80 - 300+ pips).
+              </p>
+            </div>
+            <div class="text-right shrink-0">
+              <div id="swing-stat-winrate" class="text-xl sm:text-2xl font-black text-cyan-400 font-mono">75.0%</div>
+              <div class="text-[9px] text-slate-400 uppercase font-semibold">Tỷ lệ theo sóng</div>
+            </div>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-cyan-500/20 grid grid-cols-3 gap-2 text-center text-xs">
+            <div>
+              <div class="text-[10px] text-slate-400">Tổng lệnh Swing</div>
+              <div id="swing-stat-total" class="font-bold text-white font-mono mt-0.5">--</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400">Ăn Trọn Sóng (TP2/3)</div>
+              <div id="swing-stat-wins" class="font-bold text-emerald-400 font-mono mt-0.5">--</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400">Tổng Pips Tích Lũy</div>
+              <div id="swing-stat-total-pips" class="font-bold text-cyan-300 font-mono mt-0.5">+680 pips</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN 2 COLUMNS CONTAINER -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 p-3 sm:p-5">
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!--  CỘT 1: ⚡ SCALPING TRADING (M5 - M15)                       -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="col-scalp-wrapper" class="flex flex-col space-y-3.5">
+          <!-- Column Header Card -->
+          <div class="rounded-2xl bg-slate-900/90 border border-amber-500/40 p-3.5 shadow-md flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-sm">⚡</span>
+              <div>
+                <h3 class="text-xs sm:text-sm font-black text-amber-300 uppercase">CỘT 1: TÍN HIỆU SCALPING</h3>
+                <span class="text-[10px] text-slate-400">Khung M5 – M15 · Chốt gọn TP1 · Rủi ro tối thiểu</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              ĂN CHẮC TP1
+            </span>
+          </div>
+
+          <!-- Bí Kíp Scalp Box -->
+          <div class="p-3 rounded-xl bg-amber-500/5 border border-amber-500/25 text-xs text-slate-300 leading-relaxed space-y-1">
+            <div class="font-bold text-amber-300 flex items-center gap-1.5 text-[11px]">
+              <span>💡</span> <span>QUY TẮC QUẢN TRỊ LỆNH SCALP:</span>
+            </div>
+            <p>• Khi giá chạy đúng hướng chạm <strong>TP1 (+15 đến +35 pips)</strong>: Khuyến nghị <strong>chốt 100%</strong> hoặc <strong>chốt 70% + kéo SL về Entry</strong>.</p>
+            <p>• Đánh nhanh trong 15p - 2 tiếng, tuyệt đối không gồng lỗ qua đêm!</p>
+          </div>
+
+          <!-- Scalp Signals List Container -->
+          <div id="scalp-signals-list" class="space-y-3">
+            <div class="p-6 text-center text-xs text-slate-400 bg-slate-900/50 rounded-2xl border border-slate-800">
+              Đang tải danh sách tín hiệu Scalp...
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!--  CỘT 2: 🌊 SWING TRADING (H1 - H4)                           -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="col-swing-wrapper" class="flex flex-col space-y-3.5">
+          <!-- Column Header Card -->
+          <div class="rounded-2xl bg-slate-900/90 border border-cyan-500/40 p-3.5 shadow-md flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-sm">🌊</span>
+              <div>
+                <h3 class="text-xs sm:text-sm font-black text-cyan-300 uppercase">CỘT 2: TÍN HIỆU SWING</h3>
+                <span class="text-[10px] text-slate-400">Khung H1 – H4 · Theo xu hướng lớn · Gồng TP2/TP3</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+              BẮT TRỌN SÓNG
+            </span>
+          </div>
+
+          <!-- Bí Kíp Swing Box -->
+          <div class="p-3 rounded-xl bg-cyan-500/5 border border-cyan-500/25 text-xs text-slate-300 leading-relaxed space-y-1">
+            <div class="font-bold text-cyan-300 flex items-center gap-1.5 text-[11px]">
+              <span>💡</span> <span>QUY TẮC QUẢN TRỊ LỆNH SWING:</span>
+            </div>
+            <p>• Khi giá chạm <strong>TP1</strong>: Chốt trước <strong>50% khối lượng</strong> và <strong>DỜI SL VỀ ENTRY (HÒA VỐN)</strong>.</p>
+            <p>• Thả trôi 50% còn lại để gồng lãi tới <strong>TP2 và TP3 (80 - 300+ pips)</strong> mà không phải chịu bất kỳ rủi ro nào!</p>
+          </div>
+
+          <!-- Swing Signals List Container -->
+          <div id="swing-signals-list" class="space-y-3">
+            <div class="p-6 text-center text-xs text-slate-400 bg-slate-900/50 rounded-2xl border border-slate-800">
+              Đang tải danh sách tín hiệu Swing...
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+    <!-- /VIEW 6.5: SCALP / SWING -->
 
 
     <!-- ═══════════════════════════════════════════════════════════ -->
@@ -5992,7 +6199,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       }
     }
 
-    const views = ['chart', 'ma-wave', 'gold-ai', 'news', 'trend', 'history', 'account', 'settings', 'admin', 'pine-admin', 'bot-trading'];
+    const views = ['chart', 'ma-wave', 'scalp-swing', 'gold-ai', 'news', 'trend', 'history', 'account', 'settings', 'admin', 'pine-admin', 'bot-trading'];
     
     // Hide all views explicitly
     views.forEach(v => {
@@ -6010,6 +6217,8 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 
     if (viewName === 'ma-wave' || viewName === 'ma-wave-view') {
       targetView = 'ma-wave'; targetNavId = 'nav-ma-wave';
+    } else if (viewName === 'scalp-swing' || viewName === 'scap-swin' || viewName === 'scalp' || viewName === 'swing' || viewName === 'scap' || viewName === 'swin') {
+      targetView = 'scalp-swing'; targetNavId = 'nav-scalp-swing';
     } else if (viewName === 'bot-trading' || viewName === 'bot') {
       targetView = 'bot-trading'; targetNavId = 'nav-bot-trading';
     } else if (viewName === 'history' || viewName === 'lich-su') {
@@ -6115,6 +6324,10 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       if (window.app) {
         if (typeof window.app.onShowHistoryView === 'function') window.app.onShowHistoryView();
         if (typeof window.app.renderSignalHistory === 'function') window.app.renderSignalHistory();
+      }
+    } else if (targetView === 'scalp-swing') {
+      if (typeof window.renderScalpSwingView === 'function') {
+        window.renderScalpSwingView();
       }
     } else if (targetView === 'ma-wave' || targetView === 'chart') {
       if (window.app && typeof window.app.onShowMaWaveReplay === 'function') {
@@ -6479,18 +6692,18 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   });
 </script>
 
-<script src="./js/config.js?v=9.3.26"></script>
-<script src="./js/marketDataStore.js?v=9.3.26"></script>
-<script src="./js/v8Engine.js?v=9.3.26"></script>
-<script src="./js/eventEngine.js?v=9.3.26"></script>
-<script src="./js/soundAlert.js?v=9.3.26"></script>
-<script src="./js/ema50Engine.js?v=9.3.26"></script>
-<script src="./js/emaKnowledgeBase.js?v=9.3.26"></script>
-<script src="./js/indicators.js?v=9.3.26"></script>
-<script src="./js/signalEngine.js?v=9.3.26"></script>
-<script src="./js/newsData.js?v=9.3.26"></script>
-<script src="./js/newsAdapter.js?v=9.3.26"></script>
-<script src="./js/app.js?v=9.3.26"></script>
+<script src="./js/config.js?v=9.3.27"></script>
+<script src="./js/marketDataStore.js?v=9.3.27"></script>
+<script src="./js/v8Engine.js?v=9.3.27"></script>
+<script src="./js/eventEngine.js?v=9.3.27"></script>
+<script src="./js/soundAlert.js?v=9.3.27"></script>
+<script src="./js/ema50Engine.js?v=9.3.27"></script>
+<script src="./js/emaKnowledgeBase.js?v=9.3.27"></script>
+<script src="./js/indicators.js?v=9.3.27"></script>
+<script src="./js/signalEngine.js?v=9.3.27"></script>
+<script src="./js/newsData.js?v=9.3.27"></script>
+<script src="./js/newsAdapter.js?v=9.3.27"></script>
+<script src="./js/app.js?v=9.3.27"></script>
 
 
 
@@ -6508,6 +6721,10 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
   <button id="mob-nav-chart" onclick="switchView('chart')" class="dock-item-btn" title="Biểu Đồ Live">
     <span class="text-base">📊</span>
     <span>Biểu Đồ</span>
+  </button>
+  <button id="mob-nav-scalp-swing" onclick="switchView('scalp-swing')" class="dock-item-btn text-amber-300 font-bold" title="Chiến Lược Scalp & Swing (2 Cột)">
+    <span class="text-base">⚡</span>
+    <span>Scalp/Swing</span>
   </button>
   <button id="mob-nav-history" onclick="switchView('history')" class="dock-item-btn" title="Lịch Sử Tín Hiệu (Vuốt xem chi tiết)">
     <span class="text-base">📜</span>

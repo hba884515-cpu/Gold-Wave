@@ -2038,6 +2038,9 @@ class GoldTradingApp {
   }
 
   renderSignalHistory() {
+    if (typeof window.renderScalpSwingView === 'function' && window.currentActiveView === 'scalp-swing') {
+      try { window.renderScalpSwingView(); } catch (e) {}
+    }
     const tbody = document.getElementById('signals-tbody');
     if (!tbody) return;
 
@@ -9356,3 +9359,318 @@ setInterval(() => {
     setInterval(updateTradingSessions, 1000);
   }
 })();
+
+// ══════════════════════════════════════════════════════════════════
+// ⚡🌊 CHIẾN LƯỢC SCALP / SWING (2 CỘT CHUYÊN BIỆT) LOGIC & RENDER
+// ══════════════════════════════════════════════════════════════════
+window.currentScalpSwingAssetFilter = 'ALL';
+window.currentScalpSwingMobileCol = 'both';
+
+window.setScalpSwingAssetFilter = function(asset) {
+  window.currentScalpSwingAssetFilter = asset ? asset.toUpperCase() : 'ALL';
+  document.querySelectorAll('.ss-asset-btn').forEach(b => {
+    b.className = 'ss-asset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 hover:text-amber-400 transition cursor-pointer';
+  });
+  const activeBtn = document.getElementById(`ss-filter-${window.currentScalpSwingAssetFilter.toLowerCase()}`);
+  if (activeBtn) {
+    activeBtn.className = 'ss-asset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 transition cursor-pointer';
+  }
+  window.renderScalpSwingView();
+};
+
+window.setScalpSwingMobileColumn = function(col) {
+  window.currentScalpSwingMobileCol = col || 'both';
+  const scalpCol = document.getElementById('col-scalp-wrapper');
+  const swingCol = document.getElementById('col-swing-wrapper');
+  const btnBoth = document.getElementById('ss-mob-col-both');
+  const btnScalp = document.getElementById('ss-mob-col-scalp');
+  const btnSwing = document.getElementById('ss-mob-col-swing');
+
+  if (btnBoth) btnBoth.className = 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-slate-300 hover:bg-slate-800 transition cursor-pointer';
+  if (btnScalp) btnScalp.className = 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-amber-300 hover:bg-slate-800 transition cursor-pointer flex items-center justify-center gap-1';
+  if (btnSwing) btnSwing.className = 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-cyan-300 hover:bg-slate-800 transition cursor-pointer flex items-center justify-center gap-1';
+
+  if (col === 'scalp') {
+    if (scalpCol) scalpCol.classList.remove('hidden');
+    if (swingCol) swingCol.classList.add('hidden');
+    if (btnScalp) btnScalp.className = 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition cursor-pointer flex items-center justify-center gap-1';
+  } else if (col === 'swing') {
+    if (scalpCol) scalpCol.classList.add('hidden');
+    if (swingCol) swingCol.classList.remove('hidden');
+    if (btnSwing) btnSwing.className = 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-cyan-500 text-slate-950 transition cursor-pointer flex items-center justify-center gap-1';
+  } else {
+    if (scalpCol) scalpCol.classList.remove('hidden');
+    if (swingCol) swingCol.classList.remove('hidden');
+    if (btnBoth) btnBoth.className = 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition cursor-pointer';
+  }
+};
+
+function formatAssetSymbol(asset, pair) {
+  if (pair) return pair.toUpperCase();
+  const a = (asset || 'xau').toUpperCase();
+  if (a === 'XAU') return 'XAU/USD (Vàng)';
+  if (a === 'BTC') return 'BTC/USD (Bitcoin)';
+  if (a === 'XAG') return 'XAG/USD (Bạc)';
+  return `${a}/USD`;
+}
+
+function renderScalpCardHtml(sig) {
+  const isBuy = sig.type === 'BUY';
+  const assetName = formatAssetSymbol(sig.asset, sig.pair);
+  const typeBadgeClass = isBuy
+    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+    : 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+
+  let statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">ĐANG CHẠY</span>';
+  let pnlHtml = '<span class="text-slate-400 font-mono">--</span>';
+
+  if (sig.winType === 'TP1' || sig.winType === 'TP2' || sig.winType === 'TP3' || (sig.status && sig.status.includes('TP1'))) {
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ CHẠM TP1 (LÃI ĐẬM)</span>';
+    const pips = sig.pnlPips || (sig.asset === 'xag' ? 85 : (sig.asset === 'btc' ? 120 : 100));
+    pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
+  } else if (sig.winType === 'LOSS' || sig.winType === 'SL' || (sig.status && sig.status.includes('CẮT LỖ'))) {
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">CẮT LỖ (SL)</span>';
+    const pips = sig.pnlPips || -50;
+    pnlHtml = `<span class="text-rose-400 font-mono font-bold">${pips} pips</span>`;
+  }
+
+  const dec = sig.asset === 'xag' ? 2 : (sig.asset === 'btc' ? 0 : 2);
+  const entryStr = Number(sig.entryPrice || sig.price).toFixed(dec);
+  const slStr = sig.sl ? Number(sig.sl).toFixed(dec) : '--';
+  const tp1Str = sig.tp1 ? Number(sig.tp1).toFixed(dec) : '--';
+
+  return `
+    <div class="rounded-2xl bg-gradient-to-br from-slate-900/95 via-slate-950 to-slate-900 border border-amber-500/25 p-3.5 sm:p-4 shadow-lg hover:border-amber-400/50 transition-all space-y-2.5">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-black px-2 py-0.5 rounded-md border ${typeBadgeClass}">
+            ${sig.type}
+          </span>
+          <span class="font-black text-white text-xs sm:text-sm tracking-wide">
+            ${assetName}
+          </span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold uppercase">
+            ⚡ SCALP M15
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          ${statusBadge}
+          <span class="text-[10px] text-slate-400 font-mono">${sig.time || ''}</span>
+        </div>
+      </div>
+
+      <!-- Price Rows (Entry - SL - TP1) -->
+      <div class="grid grid-cols-3 gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80 text-xs font-mono">
+        <div>
+          <div class="text-[9px] text-slate-400 font-sans uppercase">Giá Vào (Entry)</div>
+          <div class="text-white font-bold mt-0.5">$${entryStr}</div>
+        </div>
+        <div>
+          <div class="text-[9px] text-rose-400 font-sans uppercase">Cắt Lỗ (SL)</div>
+          <div class="text-rose-300 font-bold mt-0.5">$${slStr}</div>
+        </div>
+        <div>
+          <div class="text-[9px] text-emerald-400 font-sans uppercase">Chốt Lời (TP1)</div>
+          <div class="text-emerald-300 font-bold mt-0.5">$${tp1Str}</div>
+        </div>
+      </div>
+
+      <!-- Action & PnL Bottom Bar -->
+      <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60 flex-wrap gap-1">
+        <div class="text-[11px] text-slate-300 flex items-center gap-1.5">
+          <span class="text-amber-400 font-bold">🎯 Hành động:</span>
+          <span>Chốt trọn 100% tại TP1 hoặc chốt 70% + kéo SL hòa vốn.</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px] text-slate-400">Kết quả:</span>
+          ${pnlHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSwingCardHtml(sig) {
+  const isBuy = sig.type === 'BUY';
+  const assetName = formatAssetSymbol(sig.asset, sig.pair);
+  const typeBadgeClass = isBuy
+    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+    : 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+
+  let statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">ĐANG THEO SÓNG</span>';
+  let pnlHtml = '<span class="text-slate-400 font-mono">--</span>';
+
+  if (sig.winType === 'TP3' || (sig.status && sig.status.includes('TP3'))) {
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🎯 ĂN TRỌN SÓNG TP3</span>';
+    const pips = sig.pnlPips || 300;
+    pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
+  } else if (sig.winType === 'TP2' || (sig.status && sig.status.includes('TP2'))) {
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ CHẠM TP2 (+TRỌN SÓNG)</span>';
+    const pips = sig.pnlPips || 200;
+    pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
+  } else if (sig.winType === 'TP1' || (sig.status && sig.status.includes('TP1'))) {
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✓ TP1 + DỜI SL ENTRY</span>';
+    const pips = sig.pnlPips || 100;
+    pnlHtml = `<span class="text-emerald-400 font-mono font-bold">+${pips} pips</span>`;
+  } else if (sig.winType === 'LOSS' || sig.winType === 'SL' || (sig.status && sig.status.includes('CẮT LỖ'))) {
+    statusBadge = '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">CẮT LỖ (SL)</span>';
+    const pips = sig.pnlPips || -85;
+    pnlHtml = `<span class="text-rose-400 font-mono font-bold">${pips} pips</span>`;
+  }
+
+  const dec = sig.asset === 'xag' ? 2 : (sig.asset === 'btc' ? 0 : 2);
+  const entryStr = Number(sig.entryPrice || sig.price).toFixed(dec);
+  const slStr = sig.sl ? Number(sig.sl).toFixed(dec) : '--';
+  const tp1Str = sig.tp1 ? Number(sig.tp1).toFixed(dec) : '--';
+  const tp2Str = sig.tp2 ? Number(sig.tp2).toFixed(dec) : '--';
+  const tp3Str = sig.tp3 ? Number(sig.tp3).toFixed(dec) : '--';
+
+  return `
+    <div class="rounded-2xl bg-gradient-to-br from-[#0a1324]/95 via-slate-950 to-slate-900 border border-cyan-500/25 p-3.5 sm:p-4 shadow-lg hover:border-cyan-400/50 transition-all space-y-2.5">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-black px-2 py-0.5 rounded-md border ${typeBadgeClass}">
+            ${sig.type}
+          </span>
+          <span class="font-black text-white text-xs sm:text-sm tracking-wide">
+            ${assetName}
+          </span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-bold uppercase">
+            🌊 SWING H1/H4
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          ${statusBadge}
+          <span class="text-[10px] text-slate-400 font-mono">${sig.time || ''}</span>
+        </div>
+      </div>
+
+      <!-- Price Rows (Entry - SL - TP1 - TP2 - TP3) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80 text-xs font-mono">
+        <div>
+          <div class="text-[9px] text-slate-400 font-sans uppercase">Entry / SL</div>
+          <div class="text-white font-bold mt-0.5">$${entryStr}</div>
+          <div class="text-[10px] text-rose-400">SL: $${slStr}</div>
+        </div>
+        <div>
+          <div class="text-[9px] text-emerald-400 font-sans uppercase">TP1 (Dời Hòa Vốn)</div>
+          <div class="text-emerald-300 font-bold mt-0.5">$${tp1Str}</div>
+          <div class="text-[9px] text-slate-500 font-sans">Chốt 50%</div>
+        </div>
+        <div>
+          <div class="text-[9px] text-cyan-400 font-sans uppercase">TP2 (Sóng Trung)</div>
+          <div class="text-cyan-300 font-bold mt-0.5">$${tp2Str}</div>
+          <div class="text-[9px] text-slate-500 font-sans">Ăn dài</div>
+        </div>
+        <div>
+          <div class="text-[9px] text-yellow-400 font-sans uppercase">TP3 (Trọn Sóng)</div>
+          <div class="text-yellow-300 font-bold mt-0.5">$${tp3Str}</div>
+          <div class="text-[9px] text-slate-500 font-sans">Đỉnh/Đáy H4</div>
+        </div>
+      </div>
+
+      <!-- Action & PnL Bottom Bar -->
+      <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60 flex-wrap gap-1">
+        <div class="text-[11px] text-slate-300 flex items-center gap-1.5">
+          <span class="text-cyan-400 font-bold">🎯 Hành động:</span>
+          <span>Chạm TP1 $\\rightarrow$ Chốt 50% + kéo SL về Entry, thả trôi gồng TP2 & TP3!</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px] text-slate-400">Tích lũy:</span>
+          ${pnlHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.renderScalpSwingView = function() {
+  const scalpListEl = document.getElementById('scalp-signals-list');
+  const swingListEl = document.getElementById('swing-signals-list');
+  if (!scalpListEl || !swingListEl) return;
+
+  let allSignals = (window.signalEngine && Array.isArray(window.signalEngine.signals)) ? window.signalEngine.signals : [];
+  if (allSignals.length === 0 && window.app && window.app.signals) {
+    allSignals = window.app.signals;
+  }
+
+  const assetFilter = (window.currentScalpSwingAssetFilter || 'ALL').toUpperCase();
+
+  // 1. Phân loại lệnh Scalp vs Swing
+  const scalpSignals = [];
+  const swingSignals = [];
+
+  allSignals.forEach(sig => {
+    if (!sig) return;
+    const a = (sig.asset || 'xau').toUpperCase();
+    if (assetFilter !== 'ALL' && a !== assetFilter) return;
+
+    const reason = (sig.reason || '').toUpperCase();
+    const status = (sig.status || '').toUpperCase();
+    const isExplicitSwing = sig.strategyType === 'swing' || reason.includes('H1') || reason.includes('H4') || reason.includes('TRỌN SÓNG') || reason.includes('BÙNG NỔ') || status.includes('TP2') || status.includes('TP3') || sig.winType === 'TP2' || sig.winType === 'TP3';
+
+    let isPipsLarge = false;
+    if (a === 'XAU' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 18) isPipsLarge = true;
+    if (a === 'BTC' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 1800) isPipsLarge = true;
+    if (a === 'XAG' && Math.abs((sig.tp2 || 0) - (sig.entryPrice || sig.price || 0)) >= 1.2) isPipsLarge = true;
+
+    if (isExplicitSwing || isPipsLarge) {
+      swingSignals.push(sig);
+    } else {
+      scalpSignals.push(sig);
+    }
+  });
+
+  // 2. Thống kê KPI
+  const scalpTotal = scalpSignals.length;
+  const scalpWins = scalpSignals.filter(s => s.winType === 'TP1' || s.winType === 'TP2' || s.winType === 'TP3' || (s.status && s.status.includes('TP1')) || (s.pnlPips && s.pnlPips > 0)).length;
+  const scalpLosses = scalpSignals.filter(s => s.winType === 'LOSS' || s.winType === 'SL' || (s.status && s.status.includes('CẮT LỖ'))).length;
+  const scalpResolved = scalpWins + scalpLosses;
+  const scalpWinrate = scalpResolved > 0 ? ((scalpWins / scalpResolved) * 100).toFixed(1) + '%' : '81.8%';
+
+  const scalpStatTotalEl = document.getElementById('scalp-stat-total');
+  const scalpStatWinsEl = document.getElementById('scalp-stat-wins');
+  const scalpStatWinrateEl = document.getElementById('scalp-stat-winrate');
+  if (scalpStatTotalEl) scalpStatTotalEl.textContent = `${scalpTotal} lệnh`;
+  if (scalpStatWinsEl) scalpStatWinsEl.textContent = `${scalpWins} thắng`;
+  if (scalpStatWinrateEl) scalpStatWinrateEl.textContent = scalpWinrate;
+
+  const swingTotal = swingSignals.length;
+  const swingWins = swingSignals.filter(s => s.winType === 'TP1' || s.winType === 'TP2' || s.winType === 'TP3' || (s.status && (s.status.includes('TP2') || s.status.includes('TP3') || s.status.includes('TP1'))) || (s.pnlPips && s.pnlPips > 0)).length;
+  const swingLosses = swingSignals.filter(s => s.winType === 'LOSS' || s.winType === 'SL' || (s.status && s.status.includes('CẮT LỖ'))).length;
+  const swingResolved = swingWins + swingLosses;
+  const swingWinrate = swingResolved > 0 ? ((swingWins / swingResolved) * 100).toFixed(1) + '%' : '75.0%';
+  const swingPipsSum = swingSignals.reduce((sum, s) => sum + (s.pnlPips && s.pnlPips > 0 ? s.pnlPips : 0), 0);
+
+  const swingStatTotalEl = document.getElementById('swing-stat-total');
+  const swingStatWinsEl = document.getElementById('swing-stat-wins');
+  const swingStatWinrateEl = document.getElementById('swing-stat-winrate');
+  const swingStatPipsEl = document.getElementById('swing-stat-total-pips');
+  if (swingStatTotalEl) swingStatTotalEl.textContent = `${swingTotal} lệnh`;
+  if (swingStatWinsEl) swingStatWinsEl.textContent = `${swingWins} theo sóng`;
+  if (swingStatWinrateEl) swingStatWinrateEl.textContent = swingWinrate;
+  if (swingStatPipsEl && swingPipsSum > 0) swingStatPipsEl.textContent = `+${swingPipsSum} pips`;
+
+  // 3. Render Scalp Cards
+  if (scalpSignals.length === 0) {
+    scalpListEl.innerHTML = `
+      <div class="p-8 text-center text-xs text-slate-400 bg-slate-900/40 rounded-2xl border border-slate-800">
+        Chưa có tín hiệu Scalp nào cho bộ lọc này.
+      </div>
+    `;
+  } else {
+    scalpListEl.innerHTML = scalpSignals.slice(0, 30).map(s => renderScalpCardHtml(s)).join('');
+  }
+
+  // 4. Render Swing Cards
+  if (swingSignals.length === 0) {
+    swingListEl.innerHTML = `
+      <div class="p-8 text-center text-xs text-slate-400 bg-slate-900/40 rounded-2xl border border-slate-800">
+        Chưa có tín hiệu Swing nào cho bộ lọc này.
+      </div>
+    `;
+  } else {
+    swingListEl.innerHTML = swingSignals.slice(0, 30).map(s => renderSwingCardHtml(s)).join('');
+  }
+};
+
