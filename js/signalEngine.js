@@ -2097,13 +2097,6 @@ class SignalEngine {
         // Nếu số lượng đã trùng khớp hoặc cần cập nhật chi tiết từng lệnh
         let hasChanges = false;
         let currentSignals = [...this.signals];
-        
-        // Đảm bảo không còn lệnh Scalp nào trong this.signals
-        const beforeLen = currentSignals.length;
-        currentSignals = currentSignals.filter(s => s && s.id !== 'V8-02187' && s.strategyType !== 'scalp');
-        if (currentSignals.length !== beforeLen) {
-          hasChanges = true;
-        }
 
         const localMap = new Map();
         currentSignals.forEach(s => {

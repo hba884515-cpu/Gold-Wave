@@ -2070,6 +2070,29 @@ class GoldTradingApp {
     setTimeout(() => { if (toast.parentElement) toast.remove(); }, 10000);
   }
 
+  setHistoryStrategyFilter(strat) {
+    this.currentHistoryStrategyFilter = (strat || 'ALL').toUpperCase();
+    ['all', 'scalp', 'mid', 'swing'].forEach(k => {
+      const btn = document.getElementById('hist-strat-' + k);
+      if (btn) {
+        if (k === this.currentHistoryStrategyFilter.toLowerCase()) {
+          if (k === 'scalp') {
+            btn.className = 'hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-md cursor-pointer';
+          } else if (k === 'mid') {
+            btn.className = 'hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md cursor-pointer';
+          } else if (k === 'swing') {
+            btn.className = 'hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-md cursor-pointer';
+          } else {
+            btn.className = 'hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-md cursor-pointer';
+          }
+        } else {
+          btn.className = 'hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-[#0e241c] text-slate-300 border border-[#1a3d30] hover:text-white transition cursor-pointer';
+        }
+      }
+    });
+    this.renderSignalHistory();
+  }
+
   setHistoryAssetFilter(assetKey) {
     this.currentHistoryAssetFilter = (assetKey || 'ALL').toUpperCase();
     ['all', 'xau', 'btc', 'xag'].forEach(k => {
@@ -2122,24 +2145,12 @@ class GoldTradingApp {
   }
 
   renderSignalHistory() {
-    if (typeof window.renderScalpSwingView === 'function' && window.currentActiveView === 'scalp-swing') {
-      try { window.renderScalpSwingView(); } catch (e) {}
-    }
     const tbody = document.getElementById('signals-tbody');
     let allSignals = window.signalEngine ? (window.signalEngine.signals || []) : [];
 
-    // 0. Tách biệt hoàn toàn: Lệnh Scalp (1 TP duy nhất 7 giá) CHỈ lưu và hiển thị riêng ở Tab Scalp/Swing,
-    // loại bỏ 100% khỏi Tab Lịch Sử để lịch sử đánh chuẩn logic cũ (3 TP) luôn sạch đẹp, không bị loạn!
-    allSignals = allSignals.filter(s => {
-      if (!s) return false;
-      if (s.strategyType === 'scalp') return false;
-      if (s.strategy && s.strategy.toUpperCase().includes('SCALP')) return false;
-      if (s.id === 'V8-02187') return false;
-      return true;
-    });
-
     const filterKey = this.currentHistoryFilter || 'all';
     const assetFilter = (this.currentHistoryAssetFilter || 'ALL').toUpperCase();
+    const stratFilter = (this.currentHistoryStrategyFilter || 'ALL').toUpperCase();
 
     // 1. Lọc theo mã tài sản (VÀNG XAU, BITCOIN BTC, BẠC XAG hoặc TẤT CẢ)
     let filteredByAsset = allSignals;
@@ -2150,6 +2161,24 @@ class GoldTradingApp {
         if (s.asset) return s.asset.toLowerCase() === a;
         if (s.pair) return s.pair.toLowerCase().includes(a);
         return a === 'xau'; // mặc định vàng
+      });
+    }
+
+    // 2. Lọc theo Thể Loại Đánh: SCALP (5-7 giá), TRUNG BÌNH (10 giá/chặng), DÀI HẠN (50-100 giá)
+    let filteredByStrat = filteredByAsset;
+    if (stratFilter !== 'ALL') {
+      filteredByStrat = filteredByAsset.filter(s => {
+        if (!s) return false;
+        const st = (s.strategyType || '').toLowerCase();
+        const strName = (s.strategy || '').toUpperCase();
+        if (stratFilter === 'SCALP') {
+          return st === 'scalp' || strName.includes('SCALP');
+        } else if (stratFilter === 'SWING') {
+          return st === 'swing' || strName.includes('SWING') || strName.includes('DÀI HẠN') || strName.includes('SÓNG LỚN');
+        } else if (stratFilter === 'MID') {
+          return st === 'mid' || (!st || st === 'normal') || (!strName.includes('SCALP') && !strName.includes('SWING') && !strName.includes('DÀI HẠN'));
+        }
+        return true;
       });
     }
 
@@ -2191,7 +2220,13 @@ class GoldTradingApp {
       labelText = '90 Ngày Qua (3 Tháng)';
     }
 
-    let signals = filteredByAsset.filter(s => {
+    let signals = filteredByStrat.filter(s => {
+      if (!s) return false;
+      if (filterKey === 'today') {
+        if (s.time && s.time.includes('18/11/2026')) return true;
+        if (s.timestamp && s.timestamp >= cutoffSec) return true;
+        return false;
+      }
       if (!s.timestamp) return true;
       if (cutoffEndSec) return s.timestamp >= cutoffSec && s.timestamp <= cutoffEndSec;
       if (cutoffSec) return s.timestamp >= cutoffSec;
@@ -2356,6 +2391,18 @@ class GoldTradingApp {
         const isBtc = sig.asset === 'btc';
         const isXag = sig.asset === 'xag';
 
+        const isScalp = sig.strategyType === 'scalp' || (sig.strategy && sig.strategy.toUpperCase().includes('SCALP'));
+        const isSwing = sig.strategyType === 'swing' || (sig.strategy && (sig.strategy.toUpperCase().includes('SWING') || sig.strategy.toUpperCase().includes('DÀI HẠN') || sig.strategy.toUpperCase().includes('SÓNG LỚN')));
+
+        let stratBadge = '';
+        if (isScalp) {
+          stratBadge = `<div class="mt-1"><span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">⚡ SCALP (${isBtc ? 'BTC 700$' : (isXag ? 'BẠC 0.7$' : 'VÀNG 7G')})</span></div>`;
+        } else if (isSwing) {
+          stratBadge = `<div class="mt-1"><span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">🚀 DÀI HẠN (50-100G)</span></div>`;
+        } else {
+          stratBadge = `<div class="mt-1"><span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🌊 TRUNG BÌNH (${isBtc ? '1,000$/TP' : (isXag ? '80 PIPS' : '10G/TP')})</span></div>`;
+        }
+
         const assetBadge = isBtc
           ? '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-orange-500/20 text-orange-300 border border-orange-500/40">₿ BTC</span>'
           : isXag
@@ -2372,7 +2419,7 @@ class GoldTradingApp {
         if (sig.id === 'V8-02187') {
           accurateSl = isBuy ? (Number(sig.price) - 4.00) : (Number(sig.price) + 4.00); // 3778.00
         } else if (sig.id === 'V8-02186') {
-          accurateSl = isBuy ? (Number(sig.price) - 14.00) : (Number(sig.price) + 14.00); // 3788.40
+          accurateSl = isBuy ? (Number(sig.price) - 14.00) : (Number(sig.price) + 14.00);
         } else if (isSell && accurateSl && sig.price && accurateSl <= sig.price && (!sig.status || (!sig.status.includes('TP1') && !sig.status.includes('TP2') && !sig.status.includes('TP3')))) {
           accurateSl = sig.strategyType === 'scalp' ? (Number(sig.price) + 4.00) : (Number(sig.price) + 14.00);
         }
@@ -2380,7 +2427,7 @@ class GoldTradingApp {
         return `
           <tr class="border-b border-slate-800/80 hover:bg-slate-800/40 transition-colors text-xs">
             <td class="py-3 px-3 text-slate-400 font-mono">${sig.id}</td>
-            <td class="py-3 px-3">${assetBadge}</td>
+            <td class="py-3 px-3">${assetBadge}${stratBadge}</td>
             <td class="py-3 px-3 text-slate-300 font-mono">${sig.time}</td>
             <td class="py-3 px-3">
               <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
@@ -2414,9 +2461,21 @@ class GoldTradingApp {
         if (sig.id === 'V8-02187') {
           accurateSl = isBuy ? (Number(sig.price) - 4.00) : (Number(sig.price) + 4.00); // 3778.00
         } else if (sig.id === 'V8-02186') {
-          accurateSl = isBuy ? (Number(sig.price) - 14.00) : (Number(sig.price) + 14.00); // 3788.40
+          accurateSl = isBuy ? (Number(sig.price) - 14.00) : (Number(sig.price) + 14.00);
         } else if (isSell && accurateSl && sig.price && accurateSl <= sig.price && (!sig.status || (!sig.status.includes('TP1') && !sig.status.includes('TP2') && !sig.status.includes('TP3')))) {
           accurateSl = sig.strategyType === 'scalp' ? (Number(sig.price) + 4.00) : (Number(sig.price) + 14.00);
+        }
+
+        const isScalp = sig.strategyType === 'scalp' || (sig.strategy && sig.strategy.toUpperCase().includes('SCALP'));
+        const isSwing = sig.strategyType === 'swing' || (sig.strategy && (sig.strategy.toUpperCase().includes('SWING') || sig.strategy.toUpperCase().includes('DÀI HẠN') || sig.strategy.toUpperCase().includes('SÓNG LỚN')));
+
+        let cardStratBadge = '';
+        if (isScalp) {
+          cardStratBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">⚡ SCALP (5-7 GIÁ)</span>`;
+        } else if (isSwing) {
+          cardStratBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">🚀 DÀI HẠN (50-100 GIÁ)</span>`;
+        } else {
+          cardStratBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🌊 TRUNG BÌNH (10 GIÁ/TP)</span>`;
         }
 
         const assetBadge = isBtc
@@ -2433,10 +2492,11 @@ class GoldTradingApp {
         return `
           <div class="bg-gradient-to-b from-[#0e241c] to-[#07130f] border ${isBuy ? 'border-emerald-500/35 hover:border-emerald-400/60' : 'border-rose-500/35 hover:border-rose-400/60'} rounded-2xl p-3.5 space-y-3 shadow-lg relative overflow-hidden transition-all duration-200">
             <!-- Header: Mã tài sản + ID + Giờ + Badge Mua/Bán -->
-            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-              <div class="flex items-center gap-2">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 flex-wrap gap-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 ${assetBadge}
                 <span class="text-[11px] font-mono font-bold text-slate-400">#${sig.id}</span>
+                ${cardStratBadge}
               </div>
               <span class="px-2.5 py-0.5 rounded-lg text-xs font-black ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-sm shadow-rose-500/20'} flex items-center gap-1">
                 <span>${isBuy ? '🟢 BUY ENTRY' : '🔴 SELL ENTRY'}</span>

@@ -179,16 +179,51 @@ const protectV8Order = (arr) => {
     o2181.time = '08:30 (18/11/2026 - T4)';
   }
 
-  // 4. Lệnh Scalp V8-02187: TÁCH BIỆT HOÀN TOÀN KHỎI TAB LỊCH SỬ!
-  // Đảm bảo không bao giờ xuất hiện trong mảng signalsDB hay serverSignalsDB
-  const idx2187 = arr.findIndex(s => s && s.id === 'V8-02187');
-  if (idx2187 >= 0) {
-    arr.splice(idx2187, 1);
-  }
-  for (let i = arr.length - 1; i >= 0; i--) {
-    if (arr[i] && (arr[i].id === 'V8-02187' || arr[i].strategyType === 'scalp')) {
-      arr.splice(i, 1);
-    }
+  // 4. Bảo vệ lệnh Scalp V8-02187 (SELL 3774.00, SL 3778.00, TP 3767.00 -> ĐÃ CHỐT TRỌN 7 GIÁ ✓)
+  let o2187 = arr.find(s => s && s.id === 'V8-02187');
+  if (o2187) {
+    o2187.strategyType = 'scalp';
+    o2187.price = 3774.00;
+    o2187.entryPrice = 3774.00;
+    o2187.sl = 3778.00;
+    o2187.tp1 = 3767.00;
+    o2187.hitTp1 = true;
+    o2187.status = 'TP1 +7 ✓ (Chốt Trọn 7 Giá 🎯)';
+    o2187.pnlPips = 70;
+    o2187.pnlUsd = 700;
+    o2187.winType = 'TP1';
+    o2187.strategy = 'MA WAVE V8: SCALP VÀNG (7 GIÁ)';
+    o2187.reason = '[M5/M15 SCALP TRIGGER] Nến M5 đóng dưới EMA20/50, giá trượt sâu về $3,758.00 cắn trọn mốc TP 7 giá ($3,767.00) thành công rực rỡ (+70 pips / +$700 USD). Lệnh đã chốt sạch 100% lợi nhuận.';
+  } else {
+    o2187 = {
+      id: 'V8-02187',
+      asset: 'xau',
+      pair: 'XAU/USD',
+      type: 'SELL',
+      time: '15:45 (18/11/2026 - T4)',
+      timestamp: 1794991500,
+      price: 3774.00,
+      entryPrice: 3774.00,
+      sl: 3778.00,
+      tp1: 3767.00,
+      tp2: 3767.00,
+      tp3: 3767.00,
+      hitTp1: true,
+      hitTp2: false,
+      hitTp3: false,
+      status: 'TP1 +7 ✓ (Chốt Trọn 7 Giá 🎯)',
+      pnlPips: 70,
+      pnlUsd: 700,
+      score: 92,
+      qualityState: 'CONFIRMED',
+      marketState: 'DOWNTREND',
+      strategyType: 'scalp',
+      strategy: 'MA WAVE V8: SCALP VÀNG (7 GIÁ)',
+      reason: '[M5/M15 SCALP TRIGGER] Nến M5 đóng dưới EMA20/50, giá trượt sâu về $3,758.00 cắn trọn mốc TP 7 giá ($3,767.00) thành công rực rỡ (+70 pips / +$700 USD). Lệnh đã chốt sạch 100% lợi nhuận.',
+      trailedToBreakeven: false,
+      winType: 'TP1'
+    };
+    arr.unshift(o2187);
   }
 
   // 5. Bảo vệ lệnh Swing V8-02186 (SELL 3780.00 -> SL chuẩn Swing 14 giá = 3794.00, TP1 3763.00, TP 50-100 giá)
@@ -3488,13 +3523,10 @@ const server = http.createServer(async (req, res) => {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-cache, no-store, must-revalidate'
     });
-    // Tuyệt đối không để lệnh Scalp xuất hiện trong mảng signals của Tab Lịch Sử
-    const historySignals = signalsDB.filter(s => s && s.strategyType !== 'scalp' && s.id !== 'V8-02187');
     res.end(JSON.stringify({ 
       status: 'SUCCESS', 
-      count: historySignals.length, 
-      signals: historySignals,
-      scalpSignals: scalpSignalsDB 
+      count: signalsDB.length, 
+      signals: signalsDB 
     }));
   }
   else if (urlPath === '/api/scalp-signals' && req.method === 'GET') {

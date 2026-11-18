@@ -878,14 +878,8 @@
       📈 PHÂN TÍCH XU HƯỚNG
     </button>
 
-    <!-- 4. ⚡🌊 SCALP / SWING -->
-    <button class="nav-item text-amber-300 font-bold" id="nav-scalp-swing" onclick="switchView('scalp-swing')" title="Chiến Lược Scalp & Swing (2 Cột Chuyên Biệt)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      <span>⚡ SCALP/SWING</span>
-    </button>
-
-    <!-- 5. 📊 LỊCH SỬ TÍN HIỆU -->
-    <button class="nav-item" id="nav-history" onclick="switchView('history')" title="Lịch Sử Tín Hiệu">
+    <!-- 4. 📊 LỊCH SỬ TÍN HIỆU (Gồm: Scalp, Trung Bình, Dài Hạn) -->
+    <button class="nav-item" id="nav-history" onclick="switchView('history')" title="Lịch Sử Tín Hiệu (Scalp, Trung Bình, Dài Hạn)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.5"/><polyline points="3 3 3 7 7 7"/></svg>
       📊 Lịch Sử
     </button>
@@ -1833,6 +1827,32 @@
               <span>⏰ Giờ phát: <strong class="text-emerald-400 font-bold">06:00 - 24:00 (GMT+7)</strong></span>
               <span class="text-slate-600">•</span>
               <span class="text-amber-300 font-bold">Cộng dồn theo ngày</span>
+            </div>
+          </div>
+
+          <!-- Strategy Mode Filter Bar (SCALP / TRUNG BÌNH / DÀI HẠN) -->
+          <div class="px-3 sm:px-5 py-2 bg-[#091a13] border-b border-[#163629] flex items-center justify-between flex-wrap gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto py-0.5 touch-pan-x">
+              <span class="text-xs font-bold text-cyan-400 mr-1 shrink-0 flex items-center gap-1">🎯 Thể Loại:</span>
+              <button onclick="if(window.app) window.app.setHistoryStrategyFilter('ALL')" id="hist-strat-all" class="hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-md cursor-pointer">
+                🌐 Tất Cả Thể Loại
+              </button>
+              <button onclick="if(window.app) window.app.setHistoryStrategyFilter('scalp')" id="hist-strat-scalp" class="hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-[#0e241c] text-amber-300 border border-amber-500/30 hover:text-white transition cursor-pointer">
+                ⚡ SCALP (5 - 7 Giá)
+              </button>
+              <button onclick="if(window.app) window.app.setHistoryStrategyFilter('mid')" id="hist-strat-mid" class="hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-[#0e241c] text-emerald-300 border border-emerald-500/30 hover:text-white transition cursor-pointer">
+                🌊 TRUNG BÌNH (10 Giá / Chặng)
+              </button>
+              <button onclick="if(window.app) window.app.setHistoryStrategyFilter('swing')" id="hist-strat-swing" class="hist-strat-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-[#0e241c] text-purple-300 border border-purple-500/30 hover:text-white transition cursor-pointer">
+                🚀 DÀI HẠN (50 - 100 Giá)
+              </button>
+            </div>
+            <div class="text-[10px] sm:text-[11px] text-slate-400 font-mono flex items-center gap-2 flex-wrap">
+              <span class="text-amber-400 font-bold">Scalp: 5-7 giá</span>
+              <span class="text-slate-600">•</span>
+              <span class="text-emerald-400 font-bold">Trung bình: 10 giá</span>
+              <span class="text-slate-600">•</span>
+              <span class="text-purple-400 font-bold">Dài hạn: 50-100 giá</span>
             </div>
           </div>
 
@@ -6286,7 +6306,11 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
     if (viewName === 'ma-wave' || viewName === 'ma-wave-view') {
       targetView = 'ma-wave'; targetNavId = 'nav-ma-wave';
     } else if (viewName === 'scalp-swing' || viewName === 'scap-swin' || viewName === 'scalp' || viewName === 'swing' || viewName === 'scap' || viewName === 'swin') {
-      targetView = 'scalp-swing'; targetNavId = 'nav-scalp-swing';
+      targetView = 'history'; targetNavId = 'nav-history';
+      if (window.app && typeof window.app.setHistoryStrategyFilter === 'function') {
+        const strat = (viewName.includes('scalp') || viewName.includes('scap')) ? 'scalp' : 'swing';
+        window.app.setHistoryStrategyFilter(strat);
+      }
     } else if (viewName === 'bot-trading' || viewName === 'bot') {
       targetView = 'bot-trading'; targetNavId = 'nav-bot-trading';
     } else if (viewName === 'history' || viewName === 'lich-su') {
@@ -6768,10 +6792,10 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 <script src="./js/ema50Engine.js?v=9.3.33"></script>
 <script src="./js/emaKnowledgeBase.js?v=9.3.33"></script>
 <script src="./js/indicators.js?v=9.3.33"></script>
-<script src="./js/signalEngine.js?v=9.3.39"></script>
+<script src="./js/signalEngine.js?v=9.3.40"></script>
 <script src="./js/newsData.js?v=9.3.33"></script>
 <script src="./js/newsAdapter.js?v=9.3.33"></script>
-<script src="./js/app.js?v=9.3.39"></script>
+<script src="./js/app.js?v=9.3.40"></script>
 
 
 
@@ -6793,13 +6817,8 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
     <span class="text-base">📈</span>
     <span>Xu Hướng</span>
   </button>
-  <!-- 4. ⚡ SCALP / SWING -->
-  <button id="mob-nav-scalp-swing" onclick="switchView('scalp-swing')" class="dock-item-btn text-amber-300 font-bold" title="Chiến Lược Scalp & Swing (2 Cột)">
-    <span class="text-base">⚡</span>
-    <span>Scalp/Swing</span>
-  </button>
-  <!-- 5. 📜 LỊCH SỬ -->
-  <button id="mob-nav-history" onclick="switchView('history')" class="dock-item-btn" title="Lịch Sử Tín Hiệu (Vuốt xem chi tiết)">
+  <!-- 4. 📜 LỊCH SỬ (Gồm: Scalp, Trung Bình, Dài Hạn) -->
+  <button id="mob-nav-history" onclick="switchView('history')" class="dock-item-btn" title="Lịch Sử Tín Hiệu (Scalp, Trung Bình, Dài Hạn)">
     <span class="text-base">📜</span>
     <span>Lịch Sử</span>
   </button>
