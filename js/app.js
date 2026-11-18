@@ -2352,6 +2352,16 @@ class GoldTradingApp {
         const unit = isBtc ? 'pts' : 'pips';
         const isRunning = sig.status && sig.status.includes('ĐANG CHẠY');
 
+        const isSell = !isBuy;
+        let accurateSl = sig.sl;
+        if (sig.id === 'V8-02187') {
+          accurateSl = isBuy ? (Number(sig.price) - 4.00) : (Number(sig.price) + 4.00); // 3778.00
+        } else if (sig.id === 'V8-02186') {
+          accurateSl = isBuy ? (Number(sig.price) - 14.00) : (Number(sig.price) + 14.00); // 3788.40
+        } else if (isSell && accurateSl && sig.price && accurateSl <= sig.price && (!sig.status || (!sig.status.includes('TP1') && !sig.status.includes('TP2') && !sig.status.includes('TP3')))) {
+          accurateSl = sig.strategyType === 'scalp' ? (Number(sig.price) + 4.00) : (Number(sig.price) + 14.00);
+        }
+
         return `
           <tr class="border-b border-slate-800/80 hover:bg-slate-800/40 transition-colors text-xs">
             <td class="py-3 px-3 text-slate-400 font-mono">${sig.id}</td>
@@ -2363,7 +2373,7 @@ class GoldTradingApp {
               </span>
             </td>
             <td class="py-3 px-3 text-slate-200 font-bold">${fmtP(sig.price, isBtc)}</td>
-            <td class="py-3 px-3 text-rose-400/90">${fmtP(sig.sl, isBtc)}</td>
+            <td class="py-3 px-3 text-rose-400/90 font-bold">${fmtP(accurateSl, isBtc)}</td>
             <td class="py-3 px-3">${formatTpBadge(sig.hitTp1, sig.tp1, isBtc)}</td>
             <td class="py-3 px-3">${formatTpBadge(sig.hitTp2, sig.tp2, isBtc)}</td>
             <td class="py-3 px-3">${formatTpBadge(sig.hitTp3, sig.tp3, isBtc)}</td>
@@ -2384,6 +2394,15 @@ class GoldTradingApp {
         const isBuy = sig.type === 'BUY';
         const isBtc = sig.asset === 'btc';
         const isXag = sig.asset === 'xag';
+        const isSell = !isBuy;
+        let accurateSl = sig.sl;
+        if (sig.id === 'V8-02187') {
+          accurateSl = isBuy ? (Number(sig.price) - 4.00) : (Number(sig.price) + 4.00); // 3778.00
+        } else if (sig.id === 'V8-02186') {
+          accurateSl = isBuy ? (Number(sig.price) - 14.00) : (Number(sig.price) + 14.00); // 3788.40
+        } else if (isSell && accurateSl && sig.price && accurateSl <= sig.price && (!sig.status || (!sig.status.includes('TP1') && !sig.status.includes('TP2') && !sig.status.includes('TP3')))) {
+          accurateSl = sig.strategyType === 'scalp' ? (Number(sig.price) + 4.00) : (Number(sig.price) + 14.00);
+        }
 
         const assetBadge = isBtc
           ? '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-orange-500/20 text-orange-300 border border-orange-500/40">₿ BITCOIN (BTC/USD)</span>'
@@ -2417,7 +2436,7 @@ class GoldTradingApp {
               </div>
               <div class="bg-rose-950/30 p-2 rounded-xl border border-rose-500/30">
                 <span class="text-[9px] text-rose-400 block font-sans uppercase">CẮT LỖ (SL)</span>
-                <span class="font-bold text-rose-300 text-sm mt-0.5 block">${fmtP(sig.sl, isBtc)}</span>
+                <span class="font-bold text-rose-300 text-sm mt-0.5 block">${fmtP(accurateSl, isBtc)}</span>
               </div>
               <div class="bg-emerald-950/30 p-2 rounded-xl border border-emerald-500/30 col-span-2">
                 <span class="text-[9px] text-emerald-400 block font-sans uppercase">CÁC MỐC CHỐT LỜI (TP1 • TP2 • TP3)</span>
@@ -9517,11 +9536,18 @@ function renderScalpCardHtml(sig) {
   const entryStr = entryNum.toFixed(dec);
 
   // Scalp chuẩn: 1 Mốc TP duy nhất là 7 giá (Vàng 7 giá, Bạc 0.7$, BTC 700$)
+  const assetKey = (sig.asset || 'xau').toLowerCase();
   let scalpTpPrice = sig.tp1;
   let scalpSlPrice = sig.sl;
-  if (sig.asset === 'xau' || !sig.asset) {
+  if (assetKey === 'xau') {
     scalpTpPrice = isBuy ? (entryNum + 7.00) : (entryNum - 7.00);
     scalpSlPrice = isBuy ? (entryNum - 4.00) : (entryNum + 4.00);
+  } else if (assetKey === 'btc') {
+    scalpTpPrice = isBuy ? (entryNum + 700) : (entryNum - 700);
+    scalpSlPrice = isBuy ? (entryNum - 400) : (entryNum + 400);
+  } else if (assetKey === 'xag') {
+    scalpTpPrice = isBuy ? (entryNum + 0.70) : (entryNum - 0.70);
+    scalpSlPrice = isBuy ? (entryNum - 0.40) : (entryNum + 0.40);
   }
 
   const slStr = Number(scalpSlPrice).toFixed(dec);
@@ -9616,11 +9642,22 @@ function renderSwingCardHtml(sig) {
   let swingTp2 = sig.tp2;
   let swingTp3 = sig.tp3;
 
-  if (sig.asset === 'xau' || !sig.asset) {
+  const assetKey = (sig.asset || 'xau').toLowerCase();
+  if (assetKey === 'xau') {
     swingSl = isBuy ? (entryNum - 14.00) : (entryNum + 14.00);
     swingTp1 = isBuy ? (entryNum + 20.00) : (entryNum - 20.00);
     swingTp2 = isBuy ? (entryNum + 50.00) : (entryNum - 50.00);
     swingTp3 = isBuy ? (entryNum + 100.00) : (entryNum - 100.00);
+  } else if (assetKey === 'btc') {
+    swingSl = isBuy ? (entryNum - 1200) : (entryNum + 1200);
+    swingTp1 = isBuy ? (entryNum + 1500) : (entryNum - 1500);
+    swingTp2 = isBuy ? (entryNum + 3000) : (entryNum - 3000);
+    swingTp3 = isBuy ? (entryNum + 6000) : (entryNum - 6000);
+  } else if (assetKey === 'xag') {
+    swingSl = isBuy ? (entryNum - 1.00) : (entryNum + 1.00);
+    swingTp1 = isBuy ? (entryNum + 1.50) : (entryNum - 1.50);
+    swingTp2 = isBuy ? (entryNum + 3.00) : (entryNum - 3.00);
+    swingTp3 = isBuy ? (entryNum + 5.00) : (entryNum - 5.00);
   }
 
   const slStr = Number(swingSl).toFixed(dec);
