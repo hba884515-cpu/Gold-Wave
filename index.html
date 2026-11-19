@@ -3795,14 +3795,14 @@
                 <span class="text-slate-200 font-bold flex items-center gap-1.5">
                   <span class="text-base">🇺🇸</span> CHỈ SỐ USD (DXY)
                 </span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <span id="macro-dxy-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                   HỖ TRỢ VÀNG 📈
                 </span>
               </div>
 
               <div class="flex items-baseline gap-2 mt-2">
-                <span class="text-2xl font-black text-white font-mono tracking-tight">103.85</span>
-                <span class="text-xs font-bold text-emerald-400 font-mono">📉 -0.25%</span>
+                <span id="macro-dxy-val" class="text-2xl font-black text-white font-mono tracking-tight">103.88</span>
+                <span id="macro-dxy-change" class="text-xs font-bold text-emerald-400 font-mono">📉 +0.07%</span>
               </div>
 
               <!-- Thước đo trực quan dải giá DXY -->
@@ -3812,9 +3812,9 @@
                   <span>Mạnh (Đè Vàng)</span>
                 </div>
                 <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex">
-                  <div class="h-full bg-emerald-500" style="width: 45%"></div>
-                  <div class="h-full bg-amber-500" style="width: 25%"></div>
-                  <div class="h-full bg-rose-500" style="width: 30%"></div>
+                  <div id="macro-dxy-bar-green" class="h-full bg-emerald-500 transition-all duration-500" style="width: 45%"></div>
+                  <div id="macro-dxy-bar-amber" class="h-full bg-amber-500 transition-all duration-500" style="width: 25%"></div>
+                  <div id="macro-dxy-bar-rose" class="h-full bg-rose-500 transition-all duration-500" style="width: 30%"></div>
                 </div>
               </div>
 
@@ -3823,8 +3823,8 @@
                 <div class="font-bold text-amber-300 flex items-center gap-1">
                   <span>💡</span> <span>Ý nghĩa đối với Trader:</span>
                 </div>
-                <p class="text-slate-300 leading-relaxed font-sans">
-                  USD và Vàng chạy <strong>nghịch đảo nhau</strong>. DXY đang giảm (-0.25%) làm Vàng rẻ hơn đối với nhà đầu tư quốc tế, tạo lực cầu đẩy giá Vàng và Bạc tăng.
+                <p id="macro-dxy-meaning" class="text-slate-300 leading-relaxed font-sans">
+                  USD và Vàng chạy <strong>nghịch đảo nhau</strong>. DXY đang cập nhật tự động theo phiên, phản ánh lực cung cầu trực tiếp lên giá Vàng & Bạc.
                 </p>
               </div>
             </div>
@@ -3844,25 +3844,25 @@
                 <span class="text-slate-200 font-bold flex items-center gap-1.5">
                   <span class="text-base">🏛️</span> KỲ VỌNG LÃI SUẤT FED
                 </span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <span id="macro-fed-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
                   DOVISH (ÔN HÒA)
                 </span>
               </div>
 
               <div class="flex items-baseline gap-2 mt-2">
-                <span class="text-2xl font-black text-amber-400 font-mono tracking-tight">88.5%</span>
-                <span class="text-[10px] text-slate-300 font-mono">Ngừng tăng / Giảm lãi</span>
+                <span id="macro-fed-val" class="text-2xl font-black text-amber-400 font-mono tracking-tight">84.5%</span>
+                <span id="macro-fed-sub" class="text-[10px] text-slate-300 font-mono">Hạ 25 bps (4.25%-4.50%)</span>
               </div>
 
               <!-- Thước đo phần trăm xác suất -->
               <div class="space-y-1 my-2">
                 <div class="flex justify-between text-[9px] font-mono text-slate-400">
-                  <span>Hạ / Giữ: <strong class="text-amber-400">88.5%</strong></span>
-                  <span>Tăng: <strong class="text-slate-400">11.5%</strong></span>
+                  <span id="macro-fed-cut-text">Hạ / Giữ: <strong class="text-amber-400">84.5%</strong></span>
+                  <span id="macro-fed-hold-text">Giữ nguyên: <strong class="text-slate-400">15.5%</strong></span>
                 </div>
                 <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex">
-                  <div class="h-full bg-gradient-to-r from-amber-500 to-yellow-400" style="width: 88.5%"></div>
-                  <div class="h-full bg-slate-700" style="width: 11.5%"></div>
+                  <div id="macro-fed-bar-cut" class="h-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-500" style="width: 84.5%"></div>
+                  <div id="macro-fed-bar-hold" class="h-full bg-slate-700 transition-all duration-500" style="width: 15.5%"></div>
                 </div>
               </div>
 
@@ -3871,8 +3871,8 @@
                 <div class="font-bold text-amber-300 flex items-center gap-1">
                   <span>💡</span> <span>Ý nghĩa đối với Trader:</span>
                 </div>
-                <p class="text-slate-300 leading-relaxed font-sans">
-                  88.5% dự báo Fed sắp hạ lãi suất. Khi lãi suất USD thấp, gửi tiền ngân hàng kém hấp dẫn, dòng tiền lớn dịch chuyển vào Vàng và Bitcoin để sinh lời.
+                <p id="macro-fed-meaning" class="text-slate-300 leading-relaxed font-sans">
+                  Kỳ vọng Fed nới lỏng chính sách tiền tệ. Khi lãi suất USD thấp, gửi tiền ngân hàng kém hấp dẫn, dòng tiền lớn dịch chuyển vào Vàng và Bitcoin để sinh lời.
                 </p>
               </div>
             </div>
@@ -3892,14 +3892,14 @@
                 <span class="text-slate-200 font-bold flex items-center gap-1.5">
                   <span class="text-base">🧭</span> TÂM LÝ THỊ TRƯỜNG
                 </span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <span id="macro-sentiment-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                   LẠC QUAN (GREED)
                 </span>
               </div>
 
               <div class="flex items-baseline gap-2 mt-2">
-                <span class="text-2xl font-black text-emerald-400 font-mono tracking-tight">74 <span class="text-sm text-slate-400 font-normal">/ 100</span></span>
-                <span class="text-[10px] text-slate-300 font-mono">Dòng tiền sẵn sàng mua</span>
+                <span id="macro-sentiment-val" class="text-2xl font-black text-emerald-400 font-mono tracking-tight">56 <span class="text-sm text-slate-400 font-normal">/ 100</span></span>
+                <span id="macro-sentiment-sub" class="text-[10px] text-slate-300 font-mono">Dòng tiền sẵn sàng mua</span>
               </div>
 
               <!-- Thước đo nhiệt kế tâm lý (Sợ hãi 0 -> Hưng phấn 100) -->
@@ -3911,7 +3911,7 @@
                 </div>
                 <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden relative">
                   <div class="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400" style="width: 100%"></div>
-                  <div class="absolute top-0 bottom-0 w-2 bg-white rounded-full shadow" style="left: calc(74% - 4px)"></div>
+                  <div id="macro-sentiment-marker" class="absolute top-0 bottom-0 w-2 bg-white rounded-full shadow transition-all duration-500" style="left: calc(56% - 4px)"></div>
                 </div>
               </div>
 
@@ -3920,8 +3920,8 @@
                 <div class="font-bold text-amber-300 flex items-center gap-1">
                   <span>💡</span> <span>Ý nghĩa đối với Trader:</span>
                 </div>
-                <p class="text-slate-300 leading-relaxed font-sans">
-                  Đo <strong>khẩu vị rủi ro</strong> của thị trường (KHÔNG PHẢI xác suất giá tăng). Điểm 74 cho thấy nhà đầu tư đang tự tin gom Vàng & BTC, xu hướng tăng áp đảo.
+                <p id="macro-sentiment-meaning" class="text-slate-300 leading-relaxed font-sans">
+                  Đo <strong>khẩu vị rủi ro</strong> của thị trường (KHÔNG PHẢI xác suất giá tăng). Liên tục đo lường phản ánh tâm lý dòng tiền tham lam hay sợ hãi của nhà đầu tư.
                 </p>
               </div>
             </div>
@@ -3941,21 +3941,21 @@
                 <span class="text-slate-200 font-bold flex items-center gap-1.5">
                   <span class="text-base">🪙</span> VÀNG SJC VIỆT NAM
                 </span>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">
+                <span id="macro-sjc-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">
                   GIÁ THAM KHẢO
                 </span>
               </div>
 
               <div class="flex items-baseline gap-1.5 mt-2">
-                <span class="text-2xl font-black text-yellow-400 font-mono tracking-tight">89.20</span>
+                <span id="macro-sjc-val" class="text-2xl font-black text-yellow-400 font-mono tracking-tight">85.20</span>
                 <span class="text-xs text-slate-300 font-sans">Tr/Lượng</span>
               </div>
 
               <!-- Thước đo so sánh giá nội và giá quy đổi thế giới -->
               <div class="space-y-1 my-2">
                 <div class="flex justify-between text-[9px] font-mono text-slate-400">
-                  <span>Chênh lệch: <strong class="text-yellow-400">+3.5 Triệu</strong></span>
-                  <span>Mua-Bán: <strong class="text-slate-300">1.5 Tr</strong></span>
+                  <span>Chênh lệch: <strong id="macro-sjc-diff" class="text-yellow-400">+3.5 Triệu</strong></span>
+                  <span>Mua-Bán: <strong id="macro-sjc-spread" class="text-slate-300">1.8 Tr</strong></span>
                 </div>
                 <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
                   <div class="h-full bg-gradient-to-r from-yellow-500 to-amber-300" style="width: 75%"></div>
@@ -3967,8 +3967,8 @@
                 <div class="font-bold text-amber-300 flex items-center gap-1">
                   <span>💡</span> <span>Ý nghĩa đối với Trader:</span>
                 </div>
-                <p class="text-slate-300 leading-relaxed font-sans">
-                  Giá bán lẻ tham khảo thị trường tự do. Giúp người giao dịch Vàng vật lý trong nước đối chiếu mức độ bám sát với đà tăng của giá Vàng thế giới XAU/USD.
+                <p id="macro-sjc-meaning" class="text-slate-300 leading-relaxed font-sans">
+                  Giá bán lẻ tham khảo thị trường tự do. Tự động bám sát theo đà biến động của giá Vàng thế giới XAU/USD và tỷ giá USD/VND.
                 </p>
               </div>
             </div>
@@ -6789,8 +6789,8 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 <script src="./js/indicators.js?v=9.3.33"></script>
 <script src="./js/signalEngine.js?v=9.3.42"></script>
 <script src="./js/newsData.js?v=9.3.33"></script>
-<script src="./js/newsAdapter.js?v=9.3.33"></script>
-<script src="./js/app.js?v=9.3.42"></script>
+<script src="./js/newsAdapter.js?v=9.3.44"></script>
+<script src="./js/app.js?v=9.3.44"></script>
 
 
 

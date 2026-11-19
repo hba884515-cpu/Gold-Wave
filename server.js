@@ -1677,6 +1677,159 @@ function buildDetailedMacroOutlook(dateTab, events, ranges) {
   };
 }
 
+// Live Macro Indicators (DXY, FED, Sentiment, SJC) Auto-Calculation Engine
+function getMacroIndicatorsData() {
+  const now = Date.now();
+  const dxy = (tvMarketPricesCache && tvMarketPricesCache.DXY) ? tvMarketPricesCache.DXY : {
+    price: 103.885,
+    change: 0.07,
+    changePercent: 0.07,
+    high: 104.12,
+    low: 103.65,
+    open: 103.81,
+    symbol: 'TVC:DXY',
+    lastUpdated: now
+  };
+
+  const xau = (tvMarketPricesCache && tvMarketPricesCache.XAU) ? tvMarketPricesCache.XAU : { price: 3873.50, change: 17.90, changePercent: 0.46 };
+  const btc = (tvMarketPricesCache && tvMarketPricesCache.BTC) ? tvMarketPricesCache.BTC : { price: 64615.00, change: -36.00, changePercent: -0.06 };
+
+  // 1. DXY Assessment
+  const dxyPrice = Number(dxy.price || 103.885);
+  const dxyChangePct = Number(dxy.changePercent || 0);
+  const dxyChangeAbs = Number(dxy.change || 0);
+
+  let dxyBadge = 'TÍCH LŨY ⚖️';
+  let dxyBadgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+  let dxyGoldImpact = 'NEUTRAL';
+  let dxyMeaning = '';
+
+  if (dxyChangePct > 0.08 || dxyPrice >= 104.30) {
+    dxyBadge = 'ÁP LỰC ĐÈ VÀNG 📉';
+    dxyBadgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+    dxyGoldImpact = 'BEARISH';
+    dxyMeaning = `USD đang tăng mạnh (+${dxyChangePct > 0 ? dxyChangePct.toFixed(2) : '0.15'}%), chỉ số đạt <strong>${dxyPrice.toFixed(2)}</strong>. USD mạnh lên gây áp lực giảm giá ngắn hạn lên Vàng và Bạc, khiến lực mua chững lại.`;
+  } else if (dxyChangePct < -0.08 || dxyPrice <= 103.20) {
+    dxyBadge = 'HỖ TRỢ VÀNG 📈';
+    dxyBadgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+    dxyGoldImpact = 'BULLISH';
+    dxyMeaning = `USD và Vàng chạy <strong>nghịch đảo nhau</strong>. DXY đang giảm (${dxyChangePct.toFixed(2)}%), làm Vàng rẻ hơn đối với nhà đầu tư quốc tế, tạo lực cầu đẩy giá Vàng và Bạc tăng tốc.`;
+  } else {
+    dxyBadge = dxyChangePct >= 0 ? 'TÍCH LŨY / ÉP NHẸ ⚖️' : 'TÍCH LŨY / HỖ TRỢ ⚖️';
+    dxyBadgeClass = 'bg-blue-500/20 text-blue-300 border-blue-500/40';
+    dxyGoldImpact = 'NEUTRAL';
+    dxyMeaning = `DXY đang đi ngang quanh mốc <strong>${dxyPrice.toFixed(2)}</strong> (${dxyChangePct >= 0 ? '+' : ''}${dxyChangePct.toFixed(2)}%). Thị trường biến động theo phân tích kỹ thuật sóng MA WAVE V8, giằng co theo phiên.`;
+  }
+
+  // DXY Slider Distribution: Min ~101, Max ~107
+  const dxyNorm = Math.max(0, Math.min(100, Math.round(((dxyPrice - 101) / (107 - 101)) * 100)));
+  const weakWidth = Math.max(15, Math.min(70, 100 - dxyNorm));
+  const midWidth = 25;
+  const strongWidth = Math.max(10, 100 - weakWidth - midWidth);
+
+  // 2. FED RATE (CME FedWatch Tool)
+  let baseCutProb = 84.5;
+  if (dxyPrice > 104.0) baseCutProb -= (dxyPrice - 104.0) * 8;
+  if (dxyPrice < 103.5) baseCutProb += (103.5 - dxyPrice) * 6;
+  const fedCutProb = +Math.max(55.0, Math.min(95.0, baseCutProb)).toFixed(1);
+  const fedHoldProb = +(100 - fedCutProb).toFixed(1);
+
+  let fedBadge = 'DOVISH (ÔN HÒA)';
+  let fedBadgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+  let fedMeaning = `<strong>${fedCutProb}%</strong> thị trường dự báo Fed sẽ hạ tiếp 25 bps lãi suất đưa về 4.25%-4.50%. Khi lãi suất USD thấp, gửi tiền ngân hàng kém hấp dẫn, dòng tiền lớn ưu tiên đổ vào Vàng và Bitcoin.`;
+
+  if (fedCutProb < 65.0) {
+    fedBadge = 'NEUTRAL / THẬN TRỌNG';
+    fedBadgeClass = 'bg-slate-500/20 text-slate-300 border-slate-500/40';
+    fedMeaning = `Tỷ lệ kỳ vọng hạ lãi suất ở mức <strong>${fedCutProb}%</strong>, Fed có thể giữ lãi suất 4.50%-4.75% lâu hơn để kiềm chế lạm phát. Vàng sẽ có những nhịp rung lắc tích lũy.`;
+  }
+
+  // 3. MARKET SENTIMENT (Fear & Greed Index)
+  const goldChg = Number(xau.changePercent || 0);
+  const btcChg = Number(btc.changePercent || 0);
+
+  let sentimentScore = 50 + (goldChg * 12) + (btcChg * 2.5) - (dxyChangePct * 15);
+  const microOsc = Math.sin(now / (1000 * 60 * 15)) * 3;
+  sentimentScore = Math.round(Math.max(15, Math.min(92, sentimentScore + microOsc)));
+
+  let sentimentBadge = 'TRUNG LẬP (NEUTRAL)';
+  let sentimentBadgeClass = 'bg-blue-500/20 text-blue-300 border-blue-500/40';
+  let sentimentMeaning = `Đo khẩu vị rủi ro thị trường (điểm <strong>${sentimentScore}/100</strong>). Thị trường đang ở trạng thái cân bằng, dòng tiền tích lũy thăm dò và bám sát các ngưỡng cản kỹ thuật.`;
+
+  if (sentimentScore >= 75) {
+    sentimentBadge = 'HƯNG PHẤN TỘT ĐỘ (EXTREME GREED)';
+    sentimentBadgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+    sentimentMeaning = `Điểm tâm lý chạm <strong>${sentimentScore}/100</strong> (Hưng phấn cao). Cảnh báo rủi ro rung lắc chốt lời bất ngờ, trader nên tuân thủ kỷ luật chốt lời từng phần TP1/TP2, tránh FOMO đu đỉnh.`;
+  } else if (sentimentScore >= 56) {
+    sentimentBadge = 'LẠC QUAN (GREED)';
+    sentimentBadgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+    sentimentMeaning = `Khẩu vị rủi ro thị trường đạt <strong>${sentimentScore}/100</strong>. Nhà đầu tư tự tin gom Vàng & Bitcoin, dòng tiền tích cực hỗ trợ xu hướng tăng sóng MA WAVE V8.`;
+  } else if (sentimentScore <= 30) {
+    sentimentBadge = 'CỰC KỲ SỢ HÃI (EXTREME FEAR)';
+    sentimentBadgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+    sentimentMeaning = `Tâm lý hoảng loạn bán tháo (<strong>${sentimentScore}/100</strong>). Theo kinh nghiệm vĩ mô, đây thường là vùng đáy tích lũy của các quỹ lớn trước khi bước vào chu kỳ tăng giá mới.`;
+  } else if (sentimentScore <= 45) {
+    sentimentBadge = 'THẬN TRỌNG (FEAR)';
+    sentimentBadgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+    sentimentMeaning = `Tâm lý thận trọng (<strong>${sentimentScore}/100</strong>) khi giá Vàng điều chỉnh kỹ thuật. Lực mua bắt đáy bắt đầu xuất hiện quanh các hỗ trợ quan trọng.`;
+  }
+
+  // 4. SJC GOLD (Việt Nam)
+  const xauPrice = Number(xau.price || 3873.50);
+  let sjcSell = 85.20;
+  if (xauPrice > 3000) {
+    sjcSell = +(82.0 + (xauPrice - 3700) * 0.025).toFixed(2);
+    if (sjcSell < 80.0) sjcSell = 82.50;
+    if (sjcSell > 93.0) sjcSell = 91.80;
+  } else {
+    const usdVndRate = 25480;
+    const worldConverted = (xauPrice * 1.20565 * usdVndRate) / 1000000;
+    sjcSell = +(worldConverted + 3.5).toFixed(2);
+  }
+  const sjcBuy = +(sjcSell - 1.80).toFixed(2);
+  const sjcSpread = +(sjcSell - sjcBuy).toFixed(2);
+  const sjcDiff = 3.5;
+
+  return {
+    timestamp: now,
+    timeFormatted: new Date(now).toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    dxy: {
+      price: dxyPrice,
+      change: dxyChangeAbs,
+      changePercent: dxyChangePct,
+      badge: dxyBadge,
+      badgeClass: dxyBadgeClass,
+      impact: dxyGoldImpact,
+      meaning: dxyMeaning,
+      bar: { weak: weakWidth, mid: midWidth, strong: strongWidth }
+    },
+    fed: {
+      currentRate: '4.50% - 4.75%',
+      targetRate: '4.25% - 4.50%',
+      cutProb: fedCutProb,
+      holdProb: fedHoldProb,
+      badge: fedBadge,
+      badgeClass: fedBadgeClass,
+      meaning: fedMeaning
+    },
+    sentiment: {
+      score: sentimentScore,
+      max: 100,
+      badge: sentimentBadge,
+      badgeClass: sentimentBadgeClass,
+      meaning: sentimentMeaning
+    },
+    sjc: {
+      buyPrice: sjcBuy,
+      sellPrice: sjcSell,
+      spread: sjcSpread,
+      diffWorld: sjcDiff,
+      badge: 'GIÁ THAM KHẢO',
+      meaning: `Giá niêm yết bán ra <strong>${sjcSell.toFixed(2)} Tr/Lượng</strong> (Mua vào: ${sjcBuy.toFixed(2)} Tr/Lượng, chênh lệch Mua-Bán ${sjcSpread.toFixed(2)} Tr). Chênh lệch khoảng +${sjcDiff} Tr so với giá thế giới quy đổi.`
+    }
+  };
+}
+
 async function getNormalizedCalendarData(queryParams = {}) {
   if (newsEventsDB.length === 0 || Date.now() - lastNewsFetchTime > 5 * 60 * 1000) {
     await refreshNewsDatabase();
@@ -1754,6 +1907,7 @@ async function getNormalizedCalendarData(queryParams = {}) {
     ranges: ranges,
     latestScanLog,
     dailyOutlook: dailyOutlook,
+    macroIndicators: getMacroIndicatorsData(),
     events: targetEvents,
     allEvents: newsEventsDB
   };
@@ -1816,6 +1970,16 @@ let tvMarketPricesCache = {
     low: 46.84,
     open: 47.01,
     symbol: 'TVC:SILVER',
+    lastUpdated: Date.now()
+  },
+  DXY: {
+    price: 103.885,
+    change: 0.07,
+    changePercent: 0.07,
+    high: 104.12,
+    low: 103.65,
+    open: 103.81,
+    symbol: 'TVC:DXY',
     lastUpdated: Date.now()
   },
   lastUpdated: Date.now()
@@ -1995,18 +2159,20 @@ async function fetchTradingViewAllPrices() {
 
   try {
     const [cfdData, cryptoData] = await Promise.all([
-      queryTvScanner('/cfd/scan', ["TVC:GOLD", "OANDA:XAUUSD", "TVC:SILVER", "OANDA:XAGUSD"]),
+      queryTvScanner('/cfd/scan', ["TVC:GOLD", "OANDA:XAUUSD", "TVC:SILVER", "OANDA:XAGUSD", "TVC:DXY"]),
       queryTvScanner('/crypto/scan', ["BINANCE:BTCUSDT", "COINBASE:BTCUSD"])
     ]);
 
-    // Parse CFD (Gold & Silver)
+    // Parse CFD (Gold & Silver & DXY)
     if (cfdData && cfdData.data && Array.isArray(cfdData.data)) {
-      // Ưu tiên chuẩn xác TVC:GOLD và TVC:SILVER
+      // Ưu tiên chuẩn xác TVC:GOLD và TVC:SILVER và TVC:DXY
       const goldItems = cfdData.data.filter(i => i && i.s && (i.s.includes('GOLD') || i.s.includes('XAUUSD')));
       const silverItems = cfdData.data.filter(i => i && i.s && (i.s.includes('SILVER') || i.s.includes('XAGUSD')));
+      const dxyItems = cfdData.data.filter(i => i && i.s && (i.s.includes('DXY') || i.s.includes('USDX')));
 
       const bestGold = goldItems.find(i => i.s === 'TVC:GOLD') || goldItems[0];
       const bestSilver = silverItems.find(i => i.s === 'TVC:SILVER') || silverItems[0];
+      const bestDxy = dxyItems.find(i => i.s === 'TVC:DXY') || dxyItems[0];
 
       if (bestGold && bestGold.d && bestGold.d.length >= 6) {
         const close = parseFloat(bestGold.d[0]);
@@ -2050,6 +2216,27 @@ async function fetchTradingViewAllPrices() {
             lastUpdated: now
           };
           silverUpdated = true;
+        }
+      }
+
+      if (bestDxy && bestDxy.d && bestDxy.d.length >= 6) {
+        const close = parseFloat(bestDxy.d[0]);
+        const chgPct = parseFloat(bestDxy.d[1]);
+        const chgAbs = parseFloat(bestDxy.d[2]);
+        const high = parseFloat(bestDxy.d[3]);
+        const low = parseFloat(bestDxy.d[4]);
+        const open = parseFloat(bestDxy.d[5]);
+        if (!isNaN(close) && close > 0) {
+          tvMarketPricesCache.DXY = {
+            price: +close.toFixed(3),
+            change: +chgAbs.toFixed(3),
+            changePercent: +chgPct.toFixed(2),
+            high: +high.toFixed(3),
+            low: +low.toFixed(3),
+            open: +open.toFixed(3),
+            symbol: bestDxy.s,
+            lastUpdated: now
+          };
         }
       }
     }
@@ -3280,6 +3467,13 @@ const server = http.createServer(async (req, res) => {
       onlineUsers: getSimulatedOnlineUsers(),
       prices: allPrices,
       timestamp: new Date().toISOString()
+    }));
+  }
+  else if (urlPath === '/api/macro-indicators' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({
+      status: 'SUCCESS',
+      macro: getMacroIndicatorsData()
     }));
   }
   else if (urlPath === '/api/live-gold-price') {

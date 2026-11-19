@@ -167,6 +167,9 @@ const GoldNewsCenter = {
         this.processAIAnalyses();
         this.updateNotifications();
         this.startCountdownTicker();
+        if (data.macroIndicators) {
+          this.updateMacroIndicatorsUI(data.macroIndicators);
+        }
         this.renderUI();
 
         if (isManual) {
@@ -1463,6 +1466,160 @@ const GoldNewsCenter = {
         tag: `auto-news-20m-${Math.floor(now / (20 * 60 * 1000))}`
       });
     }
+  },
+
+  // 8. LIVE MACRO INDICATORS ENGINE (DXY • FED • SENTIMENT • SJC)
+  updateMacroIndicatorsUI(macroData) {
+    if (!macroData) return;
+    this.latestMacroData = macroData;
+
+    // 1. DXY Card
+    if (macroData.dxy) {
+      const dxy = macroData.dxy;
+      const badgeEl = document.getElementById('macro-dxy-badge');
+      const valEl = document.getElementById('macro-dxy-val');
+      const chgEl = document.getElementById('macro-dxy-change');
+      const barWeak = document.getElementById('macro-dxy-bar-green');
+      const barMid = document.getElementById('macro-dxy-bar-amber');
+      const barStrong = document.getElementById('macro-dxy-bar-rose');
+      const meanEl = document.getElementById('macro-dxy-meaning');
+
+      if (badgeEl) {
+        badgeEl.textContent = dxy.badge;
+        badgeEl.className = `px-2 py-0.5 rounded-full text-[9px] font-black border ${dxy.badgeClass || 'bg-amber-500/20 text-amber-300 border-amber-500/40'}`;
+      }
+      if (valEl) {
+        valEl.textContent = dxy.price ? Number(dxy.price).toFixed(2) : '103.88';
+      }
+      if (chgEl) {
+        const isPos = dxy.changePercent >= 0;
+        chgEl.textContent = `${isPos ? '📈 +' : '📉 '}${Number(dxy.changePercent).toFixed(2)}%`;
+        chgEl.className = `text-xs font-bold font-mono ${isPos ? 'text-rose-400' : 'text-emerald-400'}`;
+      }
+      if (barWeak && dxy.bar) barWeak.style.width = `${dxy.bar.weak}%`;
+      if (barMid && dxy.bar) barMid.style.width = `${dxy.bar.mid}%`;
+      if (barStrong && dxy.bar) barStrong.style.width = `${dxy.bar.strong}%`;
+      if (meanEl && dxy.meaning) {
+        meanEl.innerHTML = dxy.meaning;
+      }
+
+      // Sync Knowledge modal
+      if (MacroIndicatorsKnowledge && MacroIndicatorsKnowledge.DXY) {
+        MacroIndicatorsKnowledge.DXY.currentVal = `${dxy.price ? Number(dxy.price).toFixed(2) : '103.88'} (${dxy.changePercent >= 0 ? '+' : ''}${Number(dxy.changePercent).toFixed(2)}%)`;
+      }
+    }
+
+    // 2. FED Card
+    if (macroData.fed) {
+      const fed = macroData.fed;
+      const badgeEl = document.getElementById('macro-fed-badge');
+      const valEl = document.getElementById('macro-fed-val');
+      const subEl = document.getElementById('macro-fed-sub');
+      const cutText = document.getElementById('macro-fed-cut-text');
+      const holdText = document.getElementById('macro-fed-hold-text');
+      const barCut = document.getElementById('macro-fed-bar-cut');
+      const barHold = document.getElementById('macro-fed-bar-hold');
+      const meanEl = document.getElementById('macro-fed-meaning');
+
+      if (badgeEl) {
+        badgeEl.textContent = fed.badge;
+        badgeEl.className = `px-2 py-0.5 rounded-full text-[9px] font-black border ${fed.badgeClass || 'bg-amber-500/20 text-amber-300 border-amber-500/40'}`;
+      }
+      if (valEl) {
+        valEl.textContent = `${fed.cutProb}%`;
+      }
+      if (subEl) {
+        subEl.textContent = `Hạ 25 bps (Hiện tại: ${fed.currentRate})`;
+      }
+      if (cutText) {
+        cutText.innerHTML = `Hạ / Giữ: <strong class="text-amber-400">${fed.cutProb}%</strong>`;
+      }
+      if (holdText) {
+        holdText.innerHTML = `Giữ nguyên: <strong class="text-slate-400">${fed.holdProb}%</strong>`;
+      }
+      if (barCut) barCut.style.width = `${fed.cutProb}%`;
+      if (barHold) barHold.style.width = `${fed.holdProb}%`;
+      if (meanEl && fed.meaning) {
+        meanEl.innerHTML = fed.meaning;
+      }
+
+      if (MacroIndicatorsKnowledge && MacroIndicatorsKnowledge.FED) {
+        MacroIndicatorsKnowledge.FED.currentVal = `${fed.cutProb}% (Kỳ vọng hạ 25 bps • Hiện tại: ${fed.currentRate})`;
+      }
+    }
+
+    // 3. SENTIMENT Card
+    if (macroData.sentiment) {
+      const sen = macroData.sentiment;
+      const badgeEl = document.getElementById('macro-sentiment-badge');
+      const valEl = document.getElementById('macro-sentiment-val');
+      const subEl = document.getElementById('macro-sentiment-sub');
+      const markerEl = document.getElementById('macro-sentiment-marker');
+      const meanEl = document.getElementById('macro-sentiment-meaning');
+
+      if (badgeEl) {
+        badgeEl.textContent = sen.badge;
+        badgeEl.className = `px-2 py-0.5 rounded-full text-[9px] font-black border ${sen.badgeClass || 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'}`;
+      }
+      if (valEl) {
+        valEl.innerHTML = `${sen.score} <span class="text-sm text-slate-400 font-normal">/ 100</span>`;
+      }
+      if (subEl) {
+        subEl.textContent = sen.score >= 55 ? 'Dòng tiền sẵn sàng mua' : (sen.score <= 45 ? 'Tâm lý thận trọng/chờ đáy' : 'Cân bằng tích lũy');
+      }
+      if (markerEl) {
+        markerEl.style.left = `calc(${sen.score}% - 4px)`;
+      }
+      if (meanEl && sen.meaning) {
+        meanEl.innerHTML = sen.meaning;
+      }
+
+      if (MacroIndicatorsKnowledge && MacroIndicatorsKnowledge.SENTIMENT) {
+        MacroIndicatorsKnowledge.SENTIMENT.currentVal = `${sen.score} / 100 — ${sen.badge}`;
+      }
+    }
+
+    // 4. SJC Card
+    if (macroData.sjc) {
+      const sjc = macroData.sjc;
+      const badgeEl = document.getElementById('macro-sjc-badge');
+      const valEl = document.getElementById('macro-sjc-val');
+      const diffEl = document.getElementById('macro-sjc-diff');
+      const spreadEl = document.getElementById('macro-sjc-spread');
+      const meanEl = document.getElementById('macro-sjc-meaning');
+
+      if (badgeEl) {
+        badgeEl.textContent = sjc.badge || 'GIÁ THAM KHẢO';
+      }
+      if (valEl) {
+        valEl.textContent = sjc.sellPrice ? Number(sjc.sellPrice).toFixed(2) : '85.20';
+      }
+      if (diffEl) {
+        diffEl.textContent = `+${sjc.diffWorld || '3.5'} Triệu`;
+      }
+      if (spreadEl) {
+        spreadEl.textContent = `${sjc.spread || '1.8'} Tr`;
+      }
+      if (meanEl && sjc.meaning) {
+        meanEl.innerHTML = sjc.meaning;
+      }
+
+      if (MacroIndicatorsKnowledge && MacroIndicatorsKnowledge.SJC) {
+        MacroIndicatorsKnowledge.SJC.currentVal = `${sjc.sellPrice ? Number(sjc.sellPrice).toFixed(2) : '85.20'} Triệu Đồng / Lượng (Mua: ${sjc.buyPrice ? Number(sjc.buyPrice).toFixed(2) : '83.40'} — Bán: ${sjc.sellPrice ? Number(sjc.sellPrice).toFixed(2) : '85.20'})`;
+      }
+    }
+  },
+
+  async fetchMacroIndicators() {
+    try {
+      const res = await fetch('/api/macro-indicators', { cache: 'no-cache' });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.macro) {
+          this.updateMacroIndicatorsUI(json.macro);
+        }
+      }
+    } catch(e) {}
   }
 };
 
@@ -1615,7 +1772,15 @@ window.closeMacroDetailModal = function() {
 // DOM Initialization
 document.addEventListener('DOMContentLoaded', () => {
   GoldNewsCenter.fetchEvents();
+  GoldNewsCenter.fetchMacroIndicators();
   GoldNewsCenter.start20MinNewsAutoPushEngine();
   // Scheduler: Sync calendar dataset every 3 minutes
   setInterval(() => GoldNewsCenter.fetchEvents(), 3 * 60 * 1000);
+  // Scheduler: Sync live macro indicators (DXY, FED, Sentiment, SJC) every 30 seconds
+  setInterval(() => GoldNewsCenter.fetchMacroIndicators(), 30 * 1000);
 });
+
+// Fallback if script loads after DOMContentLoaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  GoldNewsCenter.fetchMacroIndicators();
+}
