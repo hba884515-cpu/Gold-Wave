@@ -4927,8 +4927,8 @@ function startServerSignalEngine() {
             serverActiveTrades[cfg.key] = null;
           }
         } else {
-          // BẢO VỆ TUYỆT ĐỐI 100%: Mỗi mã chỉ có DUY NHẤT 1 lệnh đang hoạt động, TUYỆT ĐỐI KHÔNG BAO GIỜ PHÁT LỆNH ĐÈ HOẶC VỪA BUY VỪA SELL!
-          const isAnyTradeRunning = signalsDB.some(s => s && s.asset === cfg.key && s.status && s.status.includes('ĐANG CHẠY'));
+          // BẢO VỆ TUYỆT ĐỐI 100%: Mỗi mã chỉ có DUY NHẤT 1 lệnh đang hoạt động trong 24h, TUYỆT ĐỐI KHÔNG BAO GIỜ PHÁT LỆNH ĐÈ HOẶC VỪA BUY VỪA SELL!
+          const isAnyTradeRunning = signalsDB.some(s => s && s.asset === cfg.key && s.status && s.status.includes('ĐANG CHẠY') && (now - (s.timestamp * 1000 || 0) < 24 * 3600 * 1000));
           if (isAnyTradeRunning || serverActiveTrades[cfg.key]) {
             continue; // Đang có lệnh chạy trên tài sản này trong DB, tuyệt đối KHÔNG ĐƯỢC PHÁT THÊM LỆNH!
           }
