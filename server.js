@@ -4225,7 +4225,7 @@ function startServerSignalEngine() {
         lastSignalTimes[assetKey] = tsMs;
       }
 
-      const running = signalsDB.find(s => s && s.asset === assetKey && s.status && (s.status.includes('ĐANG CHẠY') || s.status.includes('ĐANG THEO SÓNG') || (s.hitTp1 && !s.hitTp2 && !s.hitTp3 && !s.status.includes('CẮT LỖ'))));
+      const running = signalsDB.find(s => s && s.asset === assetKey && s.status && (s.status.includes('ĐANG CHẠY') || s.status.includes('ĐANG THEO SÓNG')));
       if (running) {
         const now = Date.now();
         const runTs = (running.timestamp ? (running.timestamp > 2000000000 ? running.timestamp : running.timestamp * 1000) : now);
