@@ -230,7 +230,10 @@ const protectV8Order = (arr) => {
   // 5. Bảo vệ lệnh Swing V8-02186 (SELL 3780.00 -> SL chuẩn Swing 14 giá = 3794.00, TP1 3763.00, TP 50-100 giá)
   let o2186 = arr.find(s => s && s.id === 'V8-02186');
   if (o2186) {
+    o2186.asset = 'xau';
+    o2186.pair = 'XAU/USD';
     o2186.strategyType = 'swing';
+    o2186.time = '15:35 (18/11/2026 - T4)';
     o2186.price = 3780.00;
     o2186.entryPrice = 3780.00;
     o2186.sl = 3775.00; // Đã kéo SL Dương +5 giá ($3,775.00) sau khi cắn TP1 $3,763 (Giá rơi về $3,758)
