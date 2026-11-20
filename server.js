@@ -4716,7 +4716,9 @@ const server = http.createServer(async (req, res) => {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
       '.svg': 'image/svg+xml',
-      '.ico': 'image/x-icon'
+      '.ico': 'image/x-icon',
+      '.mp4': 'video/mp4',
+      '.webm': 'video/webm'
     };
     let relativePath = urlPath === '/' ? '/index.html' : urlPath;
     let safePath = path.normalize(relativePath).replace(/^(\.\.[\/\\])+/, '');

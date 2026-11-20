@@ -5066,6 +5066,8 @@ window.checkPasswordStrength = function(pwd) {
 window.openAuthModal = function() {
   const page = document.getElementById('auth-fullscreen-page');
   if (page) page.classList.remove('hidden');
+  const v = document.getElementById('auth-bg-video');
+  if (v) { v.play().catch(() => {}); }
   showAuthView('login');
 };
 
@@ -5076,6 +5078,8 @@ window.closeAuthModal = function() {
     if (authPage) {
       authPage.classList.add('hidden');
       authPage.style.display = 'none';
+      const v = document.getElementById('auth-bg-video');
+      if (v) { v.pause(); }
     }
     if (appShell) {
       appShell.classList.remove('hidden');

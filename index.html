@@ -441,7 +441,17 @@
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!--  AUTHENTICATION PAGE (FULLSCREEN PREMIUM DARK)               -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div id="auth-fullscreen-page" class="fixed inset-0 z-[100] bg-[#07010a] bg-cover bg-center flex items-center justify-center lg:justify-end p-4 sm:p-8 lg:pr-24 overflow-y-auto font-sans select-none hidden" style="background-image: url('assets/auth-bg-16-9.png?v=3');">
+<div id="auth-fullscreen-page" class="fixed inset-0 z-[100] bg-[#07010a] flex items-center justify-center lg:justify-end p-4 sm:p-8 lg:pr-24 overflow-y-auto font-sans select-none hidden">
+  
+  <!-- BACKGROUND VIDEO / CINEMATIC FALLBACK -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+    <video id="auth-bg-video" autoplay loop muted playsinline poster="assets/auth-bg-16-9.png?v=3" class="w-full h-full object-cover">
+      <source src="assets/auth-bg-video.mp4" type="video/mp4">
+    </video>
+    <!-- Overlay vignette for readability & cinematic contrast -->
+    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/60 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-black/25 to-black/75 pointer-events-none"></div>
+  </div>
   
   <!-- RIGHT SIDE INTERACTIVE GLASSMORPHIC AUTH CARD -->
   <div class="relative z-10 w-full max-w-[440px] my-auto">
