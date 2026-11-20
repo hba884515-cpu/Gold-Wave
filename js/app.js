@@ -4825,6 +4825,22 @@ window.showAuthView = function(viewName) {
 
   const target = document.getElementById(`auth-form-${viewName}`);
   if (target) target.classList.remove('hidden');
+
+  // Cập nhật trạng thái nút chuyển đổi tab ĐĂNG KÝ / ĐĂNG NHẬP
+  const tabReg = document.getElementById('auth-tab-btn-register');
+  const tabLog = document.getElementById('auth-tab-btn-login');
+  if (tabReg && tabLog) {
+    if (viewName === 'register') {
+      tabReg.className = 'flex-1 py-2 text-xs font-black rounded-lg transition bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20 cursor-pointer';
+      tabLog.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-400 hover:text-white cursor-pointer';
+    } else if (viewName === 'login') {
+      tabLog.className = 'flex-1 py-2 text-xs font-black rounded-lg transition bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20 cursor-pointer';
+      tabReg.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-400 hover:text-white cursor-pointer';
+    } else {
+      tabReg.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-500';
+      tabLog.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-500';
+    }
+  }
 };
 
 // ── Paywall & Subscription Manager ──
@@ -4840,6 +4856,7 @@ window.openPaywallScreen = function(user, sub, payment) {
   if (authPage) {
     authPage.classList.remove('hidden');
     authPage.style.display = 'flex';
+    if (typeof window.revealAuthCard === 'function') window.revealAuthCard();
   }
 
   showAuthView('paywall');
@@ -5063,12 +5080,74 @@ window.checkPasswordStrength = function(pwd) {
   }
 };
 
-window.openAuthModal = function() {
+window.revealAuthCardTimeout = null;
+
+window.revealAuthCard = function() {
+  if (window.revealAuthCardTimeout) {
+    clearTimeout(window.revealAuthCardTimeout);
+    window.revealAuthCardTimeout = null;
+  }
+  const wrapper = document.getElementById('auth-card-wrapper');
+  if (wrapper) {
+    wrapper.classList.remove('opacity-0', 'translate-y-10', 'scale-95', 'pointer-events-none');
+    wrapper.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+  }
+  const overlayB = document.getElementById('auth-video-overlay-bottom');
+  if (overlayB) {
+    overlayB.classList.remove('opacity-0');
+    overlayB.classList.add('opacity-100');
+  }
+  const overlayS = document.getElementById('auth-video-overlay-side');
+  if (overlayS) {
+    overlayS.classList.remove('opacity-0');
+    overlayS.classList.add('opacity-100');
+  }
+  const cue = document.getElementById('auth-cinematic-cue');
+  if (cue) {
+    cue.classList.add('opacity-0', 'pointer-events-none');
+  }
+};
+
+window.hideAuthCardInitially = function() {
+  const wrapper = document.getElementById('auth-card-wrapper');
+  if (wrapper) {
+    wrapper.classList.add('opacity-0', 'translate-y-10', 'scale-95', 'pointer-events-none');
+    wrapper.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+  }
+  const overlayB = document.getElementById('auth-video-overlay-bottom');
+  if (overlayB) {
+    overlayB.classList.add('opacity-0');
+    overlayB.classList.remove('opacity-100');
+  }
+  const overlayS = document.getElementById('auth-video-overlay-side');
+  if (overlayS) {
+    overlayS.classList.add('opacity-0');
+    overlayS.classList.remove('opacity-100');
+  }
+  const cue = document.getElementById('auth-cinematic-cue');
+  if (cue) {
+    cue.classList.remove('opacity-0', 'pointer-events-none');
+  }
+};
+
+window.openAuthModal = function(initialView = 'register') {
   const page = document.getElementById('auth-fullscreen-page');
-  if (page) page.classList.remove('hidden');
+  if (page) {
+    page.classList.remove('hidden');
+    page.style.display = 'flex';
+  }
   const v = document.getElementById('auth-bg-video');
-  if (v) { v.play().catch(() => {}); }
-  showAuthView('login');
+  if (v) {
+    v.currentTime = 0;
+    v.play().catch(() => {});
+  }
+  window.hideAuthCardInitially();
+  showAuthView(initialView || 'register');
+  
+  if (window.revealAuthCardTimeout) clearTimeout(window.revealAuthCardTimeout);
+  window.revealAuthCardTimeout = setTimeout(() => {
+    window.revealAuthCard();
+  }, 3200);
 };
 
 window.closeAuthModal = function() {
@@ -5097,6 +5176,18 @@ window.closeAuthModal = function() {
     }
   }
 };
+
+// Đảm bảo video tự phát được ngay trên iPhone Safari & Android khi người dùng chạm màn hình lần đầu
+if (typeof document !== 'undefined') {
+  const tryStartAuthVideo = () => {
+    const v = document.getElementById('auth-bg-video');
+    if (v && v.paused) {
+      v.play().catch(() => {});
+    }
+  };
+  document.addEventListener('touchstart', tryStartAuthVideo, { once: true, passive: true });
+  document.addEventListener('click', tryStartAuthVideo, { once: true, passive: true });
+}
 
 // ── Robust Device Fingerprint Engine (Anti-Trial-Abuse) ──
 window.getOrCreateDeviceId = function() {
@@ -5187,6 +5278,17 @@ window.checkAuthOnLoad = async function() {
     if (authPage) {
       authPage.classList.remove('hidden');
       authPage.style.display = 'flex';
+      const v = document.getElementById('auth-bg-video');
+      if (v) {
+        v.currentTime = 0;
+        v.play().catch(() => {});
+      }
+      window.hideAuthCardInitially();
+      showAuthView('register');
+      if (window.revealAuthCardTimeout) clearTimeout(window.revealAuthCardTimeout);
+      window.revealAuthCardTimeout = setTimeout(() => {
+        window.revealAuthCard();
+      }, 3200);
     }
     if (appShell) {
       appShell.classList.add('hidden');

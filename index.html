@@ -441,21 +441,27 @@
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!--  AUTHENTICATION PAGE (FULLSCREEN PREMIUM DARK)               -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div id="auth-fullscreen-page" class="fixed inset-0 z-[100] bg-[#07010a] flex items-center justify-center lg:justify-end p-4 sm:p-8 lg:pr-24 overflow-y-auto font-sans select-none hidden">
+<div id="auth-fullscreen-page" class="fixed inset-0 z-[100] bg-[#07010a] flex items-center justify-center lg:justify-end p-3 sm:p-6 lg:pr-24 overflow-y-auto font-sans select-none hidden" onclick="window.revealAuthCard && window.revealAuthCard()">
   
   <!-- BACKGROUND VIDEO / CINEMATIC FALLBACK -->
   <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-    <video id="auth-bg-video" autoplay loop muted playsinline poster="assets/auth-bg-16-9.png?v=3" class="w-full h-full object-cover">
+    <video id="auth-bg-video" autoplay loop muted playsinline webkit-playsinline poster="assets/auth-bg-16-9.png?v=3" class="w-full h-full object-cover">
       <source src="assets/auth-bg-video.mp4" type="video/mp4">
     </video>
-    <!-- Overlay vignette for readability & cinematic contrast -->
-    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/60 pointer-events-none"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-black/25 to-black/75 pointer-events-none"></div>
+    <!-- Overlay vignette for readability & cinematic contrast (transitions in when auth card appears) -->
+    <div id="auth-video-overlay-bottom" class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/60 pointer-events-none transition-opacity duration-1000 opacity-0"></div>
+    <div id="auth-video-overlay-side" class="absolute inset-0 bg-gradient-to-r from-transparent via-black/25 to-black/80 pointer-events-none transition-opacity duration-1000 opacity-0"></div>
+  </div>
+
+  <!-- CINEMATIC TAP CUE (shows while video plays, click reveals immediately) -->
+  <div id="auth-cinematic-cue" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 text-[11px] font-bold text-amber-300 tracking-wider uppercase flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-amber-500/30 shadow-lg shadow-amber-500/10 cursor-pointer transition-all duration-500 pointer-events-auto hover:bg-black/80">
+    <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+    <span>Chạm để tiếp tục →</span>
   </div>
   
   <!-- RIGHT SIDE INTERACTIVE GLASSMORPHIC AUTH CARD -->
-  <div class="relative z-10 w-full max-w-[440px] my-auto">
-    <div id="auth-card" class="w-full bg-[#080c14]/95 backdrop-blur-2xl border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-amber-500/10 space-y-5">
+  <div id="auth-card-wrapper" class="relative z-10 w-full max-w-[430px] my-auto transition-all duration-1000 ease-out opacity-0 translate-y-10 scale-95 pointer-events-none" onclick="event.stopPropagation()">
+    <div id="auth-card" class="w-full bg-[#080c14]/92 backdrop-blur-2xl border border-amber-500/30 rounded-3xl p-5 sm:p-7 shadow-2xl shadow-amber-500/15 space-y-4">
       
       <!-- Subtle top champagne gold highlight line -->
       <div class="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-[#f4c95d] to-transparent"></div>
@@ -463,18 +469,28 @@
       <!-- Nút Đóng Quay Lại Ứng Dụng (Dành cho tài khoản đang mở màn hình gia hạn) -->
       <button type="button" id="paywall-close-x-btn" onclick="closePaywallScreen()" class="hidden absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer border border-slate-700 transition z-20" title="Đóng & Quay lại ứng dụng">✕</button>
 
-        <!-- Header / Logo Inside Card -->
-        <div class="text-center space-y-1">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-950/90 border border-amber-500/40 shadow-xl shadow-amber-500/30 mb-1 p-0.5">
-            <img src="assets/gold-wave-logo.png?v=2" alt="Gold Wave Logo" class="w-full h-full rounded-full object-contain">
-          </div>
-          <h1 class="text-xl font-black text-amber-400 tracking-wider uppercase">
-            GOLD WAVE
-          </h1>
-          <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
-            GOLD INTELLIGENCE TERMINAL
-          </span>
+      <!-- Header / Logo Inside Card -->
+      <div class="text-center space-y-1">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-950/90 border border-amber-500/40 shadow-xl shadow-amber-500/30 mb-0.5 p-0.5">
+          <img src="assets/gold-wave-logo.png?v=2" alt="Gold Wave Logo" class="w-full h-full rounded-full object-contain">
         </div>
+        <h1 class="text-xl font-black text-amber-400 tracking-wider uppercase">
+          GOLD WAVE
+        </h1>
+        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
+          GOLD INTELLIGENCE TERMINAL
+        </span>
+      </div>
+
+      <!-- Segmented Tab Switcher (ĐĂNG KÝ / ĐĂNG NHẬP) -->
+      <div class="flex p-1 bg-slate-950/80 rounded-xl border border-slate-800/80">
+        <button type="button" id="auth-tab-btn-register" onclick="showAuthView('register')" class="flex-1 py-2 text-xs font-black rounded-lg transition bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20 cursor-pointer">
+          ĐĂNG KÝ
+        </button>
+        <button type="button" id="auth-tab-btn-login" onclick="showAuthView('login')" class="flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-400 hover:text-white cursor-pointer">
+          ĐĂNG NHẬP
+        </button>
+      </div>
 
         <!-- ── FORM 1: LOGIN ── -->
         <div id="auth-form-login" class="space-y-4">
