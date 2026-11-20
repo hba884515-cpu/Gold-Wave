@@ -92,10 +92,18 @@ class SignalEngine {
     return this.generateInitialPineSignals();
   }
 
-  saveHistory() {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.signals));
-    } catch (e) {}
+  saveHistory(debounce = true) {
+    if (this._saveTimer) clearTimeout(this._saveTimer);
+    const doSave = () => {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.signals));
+      } catch (e) {}
+    };
+    if (debounce) {
+      this._saveTimer = setTimeout(doSave, 1000);
+    } else {
+      doSave();
+    }
   }
 
   clearHistory() {
@@ -1782,14 +1790,16 @@ class SignalEngine {
     const effHigh = (candleHigh && candleHigh > 0) ? Math.max(currentPrice, candleHigh) : currentPrice;
     const effLow = (candleLow && candleLow > 0) ? Math.min(currentPrice, candleLow) : currentPrice;
 
+    const nowSec = Math.floor(Date.now() / 1000);
+
     (this.signals || []).forEach(sig => {
-      // 🛡️ AUTO-HEALING & SỬA LỖI GIÁ: Nếu lệnh bị phán quyết nhầm SL khi giá live thực tế chưa hề chạm tới SL -> Khôi phục ngay về ĐANG CHẠY!
-      if (sig && (!sig.asset || sig.asset.toLowerCase() === a)) {
+      // 🛡️ AUTO-HEALING: Chỉ kiểm tra các lệnh gần nhất trong vòng 24 giờ của đúng mã tài sản
+      if (sig && (!sig.asset || sig.asset.toLowerCase() === a) && (!sig.timestamp || (nowSec - sig.timestamp <= 86400))) {
         const isBuy = sig.type === 'BUY';
         const entryP = sig.entryPrice || sig.price;
         if (sig.status === 'CẮT LỖ AN TOÀN (SL)' || sig.status === 'CLOSED (SL HIT)') {
           if (!isBuy && currentPrice < sig.sl) {
-            // Lệnh SELL: Giá thị trường hiện tại < SL (ví dụ $3,903.65 < $3,907.59) -> Chưa hề chạm SL!
+            // Lệnh SELL: Giá thị trường hiện tại < SL -> Chưa hề chạm SL!
             sig.status = 'ĐANG CHẠY (Chờ TP1)';
             delete sig.winType;
             sig.pnlPips = Math.round((entryP - currentPrice) * 10);

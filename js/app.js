@@ -88,6 +88,7 @@ class GoldTradingApp {
     this.replayMode = 'live';
     this.currentHistoryAssetFilter = 'ALL';
     this.currentHistoryFilter = 'all';
+    this.historyDisplayLimit = 30;
 
     this.init();
   }
@@ -1420,37 +1421,56 @@ class GoldTradingApp {
 
   startSimulatedMarketTicks() {
     if (window.marketDataStore) {
+      this._lastHeavyEvalMs = 0;
       window.marketDataStore.subscribe((event, payload) => {
         if (event === 'tick') {
           this.updatePriceHeader();
+          const nowTickMs = Date.now();
+          const activeView = window.currentActiveView || 'chart';
+          const isChartOrTrendVisible = (activeView === 'chart' || activeView === 'trend' || activeView === 'ma-wave');
+          let barCountChanged = false;
+
           if (this.replayMode === 'live') {
             const tf = this.currentTimeframe || '15m';
             const prevCount = this.bars ? this.bars.length : 0;
             this.bars = window.marketDataStore.getBars(tf);
+            barCountChanged = !!(this.bars && this.bars.length !== prevCount);
             const lastBar = (this.bars && this.bars.length) ? this.bars[this.bars.length - 1] : null;
-            if (this.candleSeries && lastBar) {
-              if (this.bars && this.bars.length !== prevCount) {
+            if (isChartOrTrendVisible && this.candleSeries && lastBar) {
+              if (barCountChanged) {
                 this.candleSeries.setData(this.bars);
               } else {
                 this.candleSeries.update(lastBar);
               }
             }
-            this.renderIndicators();
-            this.updateReplayUI();
           }
-          if (window.v8Engine) {
-            const currentSnap = window.v8Engine.getV8MarketSnap ? window.v8Engine.getV8MarketSnap() : null;
-            if (currentSnap) {
-              this.updateV8DashboardUI(currentSnap);
+
+          // Throttle heavy indicator computations & market evaluation to every 3500ms or on new candle
+          const shouldRunHeavy = barCountChanged || (nowTickMs - (this._lastHeavyEvalMs || 0) >= 3500);
+          if (shouldRunHeavy) {
+            this._lastHeavyEvalMs = nowTickMs;
+            if (this.replayMode === 'live' && isChartOrTrendVisible) {
+              this.renderIndicators();
+              this.updateReplayUI();
+            }
+            if (window.v8Engine && isChartOrTrendVisible) {
+              const currentSnap = window.v8Engine.getV8MarketSnap ? window.v8Engine.getV8MarketSnap() : null;
+              if (currentSnap) {
+                this.updateV8DashboardUI(currentSnap);
+              }
+            }
+            if (window.signalEngine) {
+              const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
+              window.signalEngine.evaluateMarket(this.bars, activeAsset);
             }
           }
-          if (window.signalEngine) {
+
+          if (window.signalEngine && payload && payload.price) {
             const activeAsset = (this.currentAsset || (window.marketDataStore ? window.marketDataStore.currentAsset : 'xau') || 'xau').toLowerCase();
-            window.signalEngine.evaluateMarket(this.bars, activeAsset);
             window.signalEngine.updateOpenOrders(payload.price, activeAsset);
 
-            // Quét tức thời cho cả các tài sản khác (Vàng, Bitcoin, Bạc) theo giá live chuẩn xác
-            if (window.marketDataStore && window.marketDataStore.assetsData) {
+            // Quét cho các tài sản khác nếu đang chạy
+            if (shouldRunHeavy && window.marketDataStore && window.marketDataStore.assetsData) {
               ['XAU', 'BTC', 'XAG'].forEach(symKey => {
                 const sym = symKey.toLowerCase();
                 if (sym !== activeAsset) {
@@ -1944,6 +1964,7 @@ class GoldTradingApp {
   }
 
   setHistoryAssetFilter(assetKey) {
+    this.historyDisplayLimit = 30;
     this.currentHistoryAssetFilter = (assetKey || 'ALL').toUpperCase();
     ['all', 'xau', 'btc', 'xag'].forEach(k => {
       const btn = document.getElementById('hist-asset-' + k);
@@ -1959,6 +1980,7 @@ class GoldTradingApp {
   }
 
   setHistoryFilter(filterKey) {
+    this.historyDisplayLimit = 30;
     this.currentHistoryFilter = filterKey;
     this.currentHistoryDateFilter = null;
     const dateInput = document.getElementById('hist-custom-datepicker');
@@ -1977,6 +1999,7 @@ class GoldTradingApp {
 
   setHistoryDateFilter(dateStr) {
     if (!dateStr) return;
+    this.historyDisplayLimit = 30;
     this.currentHistoryFilter = 'custom_date';
     this.currentHistoryDateFilter = dateStr;
 
@@ -1988,6 +2011,7 @@ class GoldTradingApp {
   }
 
   clearHistoryDateFilter() {
+    this.historyDisplayLimit = 30;
     this.currentHistoryDateFilter = null;
     const dateInput = document.getElementById('hist-custom-datepicker');
     if (dateInput) dateInput.value = '';
@@ -2145,6 +2169,16 @@ class GoldTradingApp {
 
     const cardsContainer = document.getElementById('signals-cards-container');
 
+    const historyView = document.getElementById('view-history');
+    const isHistoryVisible = historyView && !historyView.classList.contains('hidden') && historyView.style.display !== 'none';
+
+    // Nếu Tab Lịch Sử đang ẩn (ví dụ đang ở Biểu đồ), không cần render lại hàng nghìn node DOM để tránh giật lag máy
+    if (!isHistoryVisible) {
+      this._historyPendingDomUpdate = true;
+      return;
+    }
+    this._historyPendingDomUpdate = false;
+
     if (signals.length === 0) {
       if (tbody) {
         tbody.innerHTML = `
@@ -2177,9 +2211,14 @@ class GoldTradingApp {
         : `<span class="text-slate-500 text-[11px]">${valStr}</span>`;
     };
 
+    // Phân trang siêu mượt: Mặc định hiển thị 30 lệnh đầu tiên để máy chạy 60fps mượt mà tuyệt đối
+    const limit = this.historyDisplayLimit || 30;
+    const visibleSignals = signals.slice(0, limit);
+    const hasMore = signals.length > limit;
+
     // 1. Render Table Rows (Cho Dạng Bảng 11 Cột)
     if (tbody) {
-      tbody.innerHTML = signals.map(sig => {
+      let tableHtml = visibleSignals.map(sig => {
         const isBuy = sig.type === 'BUY';
         const isBtc = sig.asset === 'btc';
         const isXag = sig.asset === 'xag';
@@ -2219,11 +2258,29 @@ class GoldTradingApp {
           </tr>
         `;
       }).join('');
+
+      if (hasMore) {
+        tableHtml += `
+          <tr id="hist-table-load-more-row">
+            <td colspan="11" class="py-5 text-center bg-slate-950/40 border-t border-slate-800">
+              <div class="flex items-center justify-center gap-3 flex-wrap">
+                <button type="button" onclick="window.loadMoreHistorySignals(30)" class="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition shadow-sm cursor-pointer flex items-center gap-1.5">
+                  <span>⚡ Tải thêm 30 lệnh tiếp theo (Đang hiển thị ${visibleSignals.length} / ${signals.length})</span>
+                </button>
+                <button type="button" onclick="window.loadAllHistorySignals()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition cursor-pointer">
+                  Hiển thị tất cả (${signals.length} lệnh)
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = tableHtml;
     }
 
     // 2. Render Cards View (Dạng Thẻ Lệnh Thông Minh - Cực kỳ trực quan, xem trọn vẹn mọi lệnh trên điện thoại)
     if (cardsContainer) {
-      cardsContainer.innerHTML = signals.map(sig => {
+      let cardsHtml = visibleSignals.map(sig => {
         const isBuy = sig.type === 'BUY';
         const isBtc = sig.asset === 'btc';
         const isXag = sig.asset === 'xag';
@@ -2289,6 +2346,20 @@ class GoldTradingApp {
           </div>
         `;
       }).join('');
+
+      if (hasMore) {
+        cardsHtml += `
+          <div class="col-span-full flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-4 pb-3">
+            <button type="button" onclick="window.loadMoreHistorySignals(30)" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-300 font-bold text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>⚡ Tải Thêm 30 Lệnh (Đang xem ${visibleSignals.length} / ${signals.length})</span>
+            </button>
+            <button type="button" onclick="window.loadAllHistorySignals()" class="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition cursor-pointer">
+              <span>Hiển thị tất cả (${signals.length} lệnh)</span>
+            </button>
+          </div>
+        `;
+      }
+      cardsContainer.innerHTML = cardsHtml;
     }
 
     // Auto apply saved or default display mode (Cards for mobile, Table for PC)
@@ -5406,6 +5477,8 @@ function updatePushNotificationUI() {
 
 window.handleAuthLoginSubmit = async function(e) {
   if (e) e.preventDefault();
+  if (window._isAuthSubmitting) return;
+
   const email = document.getElementById('login-email')?.value.trim();
   const password = document.getElementById('login-password')?.value.trim();
 
@@ -5414,10 +5487,11 @@ window.handleAuthLoginSubmit = async function(e) {
     return;
   }
 
+  window._isAuthSubmitting = true;
   const btn = document.getElementById('login-submit-btn');
   const btnText = document.getElementById('login-btn-text');
   if (btn) btn.disabled = true;
-  if (btnText) btnText.textContent = 'ĐANG ĐĂNG NHẬP...';
+  if (btnText) btnText.innerHTML = '<span class="inline-block animate-spin mr-1.5">🌀</span> ĐANG ĐĂNG NHẬP...';
 
   try {
     const deviceId = window.getOrCreateDeviceId();
@@ -5430,8 +5504,6 @@ window.handleAuthLoginSubmit = async function(e) {
 
     // 1. Kiểm tra tài khoản đã hết hạn 14 ngày dùng thử hoặc hết hạn VIP
     if (data.status === 'EXPIRED' || data.isExpired === true) {
-      if (btn) btn.disabled = false;
-      if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
       if (typeof showToast === 'function') {
         showToast('🔒 Tài khoản đã hết 14 ngày dùng thử. Vui lòng thanh toán để tiếp tục sử dụng!', 'warning');
       }
@@ -5447,8 +5519,6 @@ window.handleAuthLoginSubmit = async function(e) {
 
     // 2. Kiểm tra sai mật khẩu hoặc lỗi xác thực từ server
     if (!res.ok || data.status !== 'SUCCESS') {
-      if (btn) btn.disabled = false;
-      if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
       if (typeof showToast === 'function') {
         showToast(`❌ ${data.error || 'Email hoặc mật khẩu không chính xác'}`, 'error');
       }
@@ -5458,8 +5528,6 @@ window.handleAuthLoginSubmit = async function(e) {
     // 3. Đăng nhập thành công từ server
     if (data.user) {
       if (data.user.subscription && data.user.subscription.isExpired) {
-        if (btn) btn.disabled = false;
-        if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
         if (typeof openPaywallScreen === 'function') {
           openPaywallScreen(data.user, data.user.subscription, data.payment);
         }
@@ -5482,14 +5550,16 @@ window.handleAuthLoginSubmit = async function(e) {
         createdAt: new Date().toISOString()
       };
     } else {
-      if (btn) btn.disabled = false;
-      if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
       if (typeof showToast === 'function') {
         showToast('⚠️ Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng!', 'warning');
       }
       return;
     }
   } finally {
+    window._isAuthSubmitting = false;
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = 'ĐANG ĐĂNG NHẬP';
+
     if (window.currentUser) {
       localStorage.setItem('goldwave_session', JSON.stringify({ token: 'sim_token', user: window.currentUser }));
       localStorage.setItem('goldwave_user', JSON.stringify(window.currentUser));
@@ -5497,8 +5567,13 @@ window.handleAuthLoginSubmit = async function(e) {
       const authPage = document.getElementById('auth-fullscreen-page');
       const appShell = document.getElementById('app-shell');
       if (authPage) {
-        authPage.classList.add('hidden');
-        authPage.style.display = 'none';
+        authPage.style.transition = 'opacity 0.2s ease-out';
+        authPage.style.opacity = '0';
+        setTimeout(() => {
+          authPage.classList.add('hidden');
+          authPage.style.display = 'none';
+          authPage.style.opacity = '1';
+        }, 200);
       }
       if (appShell) {
         appShell.classList.remove('hidden');
@@ -5511,14 +5586,13 @@ window.handleAuthLoginSubmit = async function(e) {
       }
       if (typeof showToast === 'function') showToast(`🎉 Đăng nhập thành công! Chào mừng ${window.currentUser.name} truy cập Gold Wave`, 'success');
 
-      // Tự động bật Modal Lưu Ý & Cảnh Báo Rủi Ro khi đăng nhập thành công
+      // Tự động bật Modal Lưu Ý & Cảnh Báo Rủi Ro sau khi giao diện chính đã hiển thị ổn định
       if (typeof window.showLoginDisclaimerModal === 'function') {
         setTimeout(() => {
           window.showLoginDisclaimerModal();
-        }, 350);
+        }, 250);
       }
     }
-    if (btn) btn.disabled = false;
     if (btnText) btnText.textContent = 'ĐĂNG NHẬP';
   }
 };
@@ -7592,6 +7666,20 @@ window.applyHistoryDisplayMode = function() {
     } else {
       window.setHistoryDisplayMode('table');
     }
+  }
+};
+
+window.loadMoreHistorySignals = function(step = 30) {
+  if (window.app) {
+    window.app.historyDisplayLimit = (window.app.historyDisplayLimit || 30) + step;
+    window.app.renderSignalHistory();
+  }
+};
+
+window.loadAllHistorySignals = function() {
+  if (window.app) {
+    window.app.historyDisplayLimit = 999999;
+    window.app.renderSignalHistory();
   }
 };
 

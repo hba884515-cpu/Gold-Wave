@@ -399,6 +399,20 @@ class MarketDataStore {
     return aggregated;
   }
 
+  updateLatestBarForAllTimeframes(targetPrice) {
+    if (!this.candles) return;
+    for (const tf in this.candles) {
+      const bars = this.candles[tf];
+      if (bars && bars.length > 0) {
+        const last = bars[bars.length - 1];
+        last.close = targetPrice;
+        if (targetPrice > last.high) last.high = targetPrice;
+        if (targetPrice < last.low) last.low = targetPrice;
+        this.validateCandle(last);
+      }
+    }
+  }
+
   rebuildAllTimeframesFromBase() {
     const base = this.candles['5m'];
     this.candles['15m'] = this.aggregateCandles(base, 3);   // 3 x 5m = 15m
@@ -452,6 +466,7 @@ class MarketDataStore {
 
     // Update live bar on base 5m and re-aggregate, creating a new bar when 5m expires!
     const base5m = this.candles['5m'];
+    let isNewBarCreated = false;
     if (base5m && base5m.length > 0) {
       const nowSec = Math.floor(Date.now() / 1000);
       const current5mBarTime = Math.floor(nowSec / 300) * 300;
@@ -468,6 +483,7 @@ class MarketDataStore {
         this.validateCandle(newBar);
         base5m.push(newBar);
         if (base5m.length > 1500) base5m.shift();
+        isNewBarCreated = true;
       } else {
         lastBar.close = this.currentPrice;
         lastBar.high = Math.max(lastBar.high, this.currentPrice);
@@ -476,7 +492,11 @@ class MarketDataStore {
       }
     }
 
-    this.rebuildAllTimeframesFromBase();
+    if (isNewBarCreated) {
+      this.rebuildAllTimeframesFromBase();
+    } else {
+      this.updateLatestBarForAllTimeframes(targetPrice);
+    }
 
     this.notifyListeners('tick', {
       price: this.currentPrice,
@@ -591,11 +611,15 @@ class MarketDataStore {
     };
 
     fetchLivePrice();
-    // Tần suất quét live siêu tốc: 800ms
-    setInterval(fetchLivePrice, 800);
+    // Tần suất quét live: 1200ms khi active, tự nghỉ khi ẩn tab để chống nóng máy & giật lag
+    setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      fetchLivePrice();
+    }, 1200);
 
     // Micro-tick Engine: Tạo nhịp rung lắc tick giá siêu mượt (500ms) như sàn TradingView / MT5
     setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       if (this.connectionStatus !== 'LIVE' || !this.isGoldMarketOpen()) return;
       const curData = this.assetsData[this.currentAsset];
       if (!curData || !curData.price) return;
@@ -613,6 +637,12 @@ class MarketDataStore {
         Math.min(this.low, jitteredPrice)
       );
     }, 500);
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) fetchLivePrice();
+      });
+    }
   }
 
   setTimeframe(tf) {
