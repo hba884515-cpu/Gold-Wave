@@ -2898,12 +2898,16 @@ async function evaluateAssetMarketState(assetKey) {
       newsGuard,
       useClosedBar: true
     });
-    // Cho phép M5 kích hoạt nếu đạt CONFIRMED (>=75), đồng thuận >=3 khung HTF và không xung đột H1
-    if (analysis5m.ready && analysis5m.shouldEmit && analysis5m.mtf && analysis5m.mtf.alignedCount >= 3 && !analysis5m.mtf.conflict) {
+    // Siết chặt M5 trigger fallback: Chỉ cho phép M5 kích hoạt khi M15 chưa sẵn sàng NẾU:
+    // 1. Điểm số cực cao (Score >= 85 - High Conviction)
+    // 2. Toàn bộ 4 khung (H1, M30, M15, M5) đồng thuận 100% (alignedCount === 4) và không xung đột
+    // 3. Cấu trúc M5 bắt buộc phải là sóng chuẩn HH/HL (BUY) hoặc LH/LL (SELL)
+    const m5StructStrict = analysis5m.structure && (analysis5m.dir === 'BUY' ? analysis5m.structure.label === 'HH/HL' : analysis5m.structure.label === 'LH/LL');
+    if (analysis5m.ready && analysis5m.shouldEmit && analysis5m.score >= 85 && analysis5m.mtf && analysis5m.mtf.alignedCount === 4 && !analysis5m.mtf.conflict && m5StructStrict) {
       analysis = {
         ...analysis5m,
         triggerTimeframe: 'M5',
-        reason: `[M5 TRIGGER] ${analysis5m.reason}`
+        reason: `[M5 SNIPER TRIGGER] ${analysis5m.reason}`
       };
     }
   }

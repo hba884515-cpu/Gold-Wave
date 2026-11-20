@@ -637,6 +637,16 @@
 
     const dRatioOK = rangeReversal ? true : (dRatio >= assetCfg.minD);
 
+    // Kiểm tra cấu trúc sóng: Bắt buộc cấu trúc phải rõ ràng theo xu hướng (Không cho phép MIXED khi bắt điểm trend)
+    const structureValid = dirIsBuy
+      ? (structure.label === 'HH/HL' || structure.bos === 'BOS_BULL')
+      : (structure.label === 'LH/LL' || structure.bos === 'BOS_BEAR');
+
+    // Chặn bắt dao rơi / cản sóng hồi: Khung M5 không được phép đi ngược xu hướng (ví dụ SELL nhưng nến M5 đang bật tăng BULL)
+    const mtfM5Opposing = dirIsBuy
+      ? (best.mtf && best.mtf.tfs && best.mtf.tfs.m5 && best.mtf.tfs.m5.dir === 'BEAR')
+      : (best.mtf && best.mtf.tfs && best.mtf.tfs.m5 && best.mtf.tfs.m5.dir === 'BULL');
+
     const trendEmitOK =
       !isChop &&
       (!isSideway || isBreakoutUp || isBreakoutDown) &&
@@ -647,7 +657,9 @@
       best.breakdown.candleConfirm >= 8 &&
       best.breakdown.emaOrder >= 20 &&
       !invalidationBroken &&
-      liveConfirmsDir;
+      liveConfirmsDir &&
+      structureValid &&
+      !mtfM5Opposing;
 
     const shouldEmit = !newsGuard && (trendEmitOK || !!rangeReversal);
 
