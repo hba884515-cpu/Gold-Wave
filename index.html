@@ -441,30 +441,65 @@
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!--  AUTHENTICATION PAGE (FULLSCREEN PREMIUM DARK)               -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div id="auth-fullscreen-page" class="fixed inset-0 z-[100] bg-[#07010a] flex items-center justify-center lg:justify-end p-3 sm:p-6 lg:pr-24 overflow-y-auto font-sans select-none hidden" onclick="window.revealAuthCard && window.revealAuthCard()">
+<div id="auth-fullscreen-page" class="fixed inset-0 z-[100] bg-[#07010a] flex items-center justify-center p-3 sm:p-6 overflow-y-auto font-sans select-none hidden">
   
   <!-- BACKGROUND VIDEO / CINEMATIC FALLBACK -->
   <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
     <video id="auth-bg-video" autoplay loop muted playsinline webkit-playsinline poster="assets/auth-bg-16-9.png?v=3" class="w-full h-full object-cover">
       <source src="assets/auth-bg-video.mp4?v=2" type="video/mp4">
     </video>
-    <!-- Overlay vignette for readability & cinematic contrast (transitions in when auth card appears) -->
-    <div id="auth-video-overlay-bottom" class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/60 pointer-events-none transition-opacity duration-1000 opacity-0"></div>
-    <div id="auth-video-overlay-side" class="absolute inset-0 bg-gradient-to-r from-transparent via-black/25 to-black/80 pointer-events-none transition-opacity duration-1000 opacity-0"></div>
+    <!-- Overlay vignette for readability & cinematic contrast -->
+    <div id="auth-video-overlay-bottom" class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/70 pointer-events-none transition-opacity duration-700 opacity-60"></div>
+    <div id="auth-video-overlay-side" class="absolute inset-0 bg-radial-vignette pointer-events-none transition-opacity duration-700 opacity-60"></div>
   </div>
 
-  <!-- CINEMATIC TAP CUE (shows while video plays, click reveals immediately) -->
-  <div id="auth-cinematic-cue" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 text-[11px] font-bold text-amber-300 tracking-wider uppercase flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-amber-500/30 shadow-lg shadow-amber-500/10 cursor-pointer transition-all duration-500 pointer-events-auto hover:bg-black/80">
-    <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-    <span>Chạm để tiếp tục →</span>
+  <!-- CENTER TRANSITION GATEWAY (MỤC CHUYỂN TIẾP Ở GIỮA MÀN HÌNH THEO Ý BẠN) -->
+  <div id="auth-intro-gate" class="relative z-20 w-full max-w-[430px] my-auto text-center p-6 sm:p-8 rounded-3xl bg-[#080c14]/92 backdrop-blur-2xl border border-amber-500/40 shadow-2xl shadow-amber-500/20 space-y-5 transition-all duration-500 transform scale-100 opacity-100">
+    
+    <!-- Top champagne gold accent line -->
+    <div class="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#f4c95d] to-transparent"></div>
+
+    <!-- Mini Glowing Logo -->
+    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-950/90 border border-amber-500/50 shadow-xl shadow-amber-500/30 p-1 mb-1">
+      <img src="assets/gold-wave-logo.png?v=2" alt="Gold Wave Logo" class="w-full h-full rounded-full object-contain">
+    </div>
+
+    <div class="space-y-2">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-black text-amber-400 tracking-wider uppercase">
+        ✦ HỆ THỐNG PHÂN TÍCH TÍN HIỆU TÀI CHÍNH
+      </div>
+      <h2 class="text-xl sm:text-2xl font-black text-white leading-snug">
+        Bạn có muốn đăng ký tài khoản để trải nghiệm <span class="text-amber-400">Gold Wave</span> không?
+      </h2>
+      <p class="text-xs text-slate-300 font-medium leading-relaxed px-2">
+        Khám phá tín hiệu Vàng, Bạc, Bitcoin thời gian thực với thuật toán MA Wave V8 Pro.
+      </p>
+    </div>
+
+    <!-- Call to Action Buttons -->
+    <div class="pt-2 space-y-3">
+      <button type="button" onclick="handleAcceptRegistrationIntro()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-xs sm:text-sm tracking-wider uppercase transition shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 cursor-pointer transform hover:scale-[1.02] active:scale-[0.98]">
+        <span>TÔI MUỐN ĐĂNG KÝ TRẢI NGHIỆM</span>
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+
+      <button type="button" onclick="handleDirectLoginIntro()" class="text-xs font-semibold text-slate-400 hover:text-amber-400 transition cursor-pointer underline underline-offset-4 block mx-auto">
+        Đã có tài khoản? Đăng nhập ngay →
+      </button>
+    </div>
   </div>
   
-  <!-- RIGHT SIDE INTERACTIVE GLASSMORPHIC AUTH CARD -->
-  <div id="auth-card-wrapper" class="relative z-10 w-full max-w-[430px] my-auto transition-all duration-1000 ease-out opacity-0 translate-y-10 scale-95 pointer-events-none" onclick="event.stopPropagation()">
-    <div id="auth-card" class="w-full bg-[#080c14]/92 backdrop-blur-2xl border border-amber-500/30 rounded-3xl p-5 sm:p-7 shadow-2xl shadow-amber-500/15 space-y-4">
+  <!-- INTERACTIVE GLASSMORPHIC AUTH CARD WRAPPER (HIỂN THỊ KHI BẤM ĐỒNG Ý ĐĂNG KÝ / ĐĂNG NHẬP) -->
+  <div id="auth-card-wrapper" class="relative z-10 w-full max-w-[430px] my-auto transition-all duration-700 ease-out opacity-0 translate-y-8 scale-95 pointer-events-none hidden" onclick="event.stopPropagation()">
+    <div id="auth-card" class="w-full bg-[#080c14]/94 backdrop-blur-2xl border border-amber-500/30 rounded-3xl p-5 sm:p-7 shadow-2xl shadow-amber-500/15 space-y-4">
       
       <!-- Subtle top champagne gold highlight line -->
       <div class="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-[#f4c95d] to-transparent"></div>
+
+      <!-- Nút Quay lại màn hình Gateway trước đó -->
+      <button type="button" onclick="handleBackToIntroGate()" class="absolute top-4 left-4 text-xs font-semibold text-slate-400 hover:text-amber-400 flex items-center gap-1 transition cursor-pointer z-20" title="Quay lại">
+        ← Quay lại
+      </button>
 
       <!-- Nút Đóng Quay Lại Ứng Dụng (Dành cho tài khoản đang mở màn hình gia hạn) -->
       <button type="button" id="paywall-close-x-btn" onclick="closePaywallScreen()" class="hidden absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer border border-slate-700 transition z-20" title="Đóng & Quay lại ứng dụng">✕</button>

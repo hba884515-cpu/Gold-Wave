@@ -5087,10 +5087,20 @@ window.revealAuthCard = function() {
     clearTimeout(window.revealAuthCardTimeout);
     window.revealAuthCardTimeout = null;
   }
+  const gate = document.getElementById('auth-intro-gate');
+  if (gate) {
+    gate.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+    setTimeout(() => {
+      gate.classList.add('hidden');
+    }, 350);
+  }
   const wrapper = document.getElementById('auth-card-wrapper');
   if (wrapper) {
-    wrapper.classList.remove('opacity-0', 'translate-y-10', 'scale-95', 'pointer-events-none');
-    wrapper.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+    wrapper.classList.remove('hidden');
+    setTimeout(() => {
+      wrapper.classList.remove('opacity-0', 'translate-y-8', 'translate-y-10', 'scale-95', 'pointer-events-none');
+      wrapper.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+    }, 20);
   }
   const overlayB = document.getElementById('auth-video-overlay-bottom');
   if (overlayB) {
@@ -5102,32 +5112,43 @@ window.revealAuthCard = function() {
     overlayS.classList.remove('opacity-0');
     overlayS.classList.add('opacity-100');
   }
-  const cue = document.getElementById('auth-cinematic-cue');
-  if (cue) {
-    cue.classList.add('opacity-0', 'pointer-events-none');
-  }
 };
 
 window.hideAuthCardInitially = function() {
+  if (window.revealAuthCardTimeout) {
+    clearTimeout(window.revealAuthCardTimeout);
+    window.revealAuthCardTimeout = null;
+  }
+  const gate = document.getElementById('auth-intro-gate');
+  if (gate) {
+    gate.classList.remove('hidden');
+    setTimeout(() => {
+      gate.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+      gate.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+    }, 20);
+  }
   const wrapper = document.getElementById('auth-card-wrapper');
   if (wrapper) {
-    wrapper.classList.add('opacity-0', 'translate-y-10', 'scale-95', 'pointer-events-none');
+    wrapper.classList.add('opacity-0', 'translate-y-8', 'scale-95', 'pointer-events-none');
     wrapper.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+    setTimeout(() => {
+      wrapper.classList.add('hidden');
+    }, 350);
   }
-  const overlayB = document.getElementById('auth-video-overlay-bottom');
-  if (overlayB) {
-    overlayB.classList.add('opacity-0');
-    overlayB.classList.remove('opacity-100');
-  }
-  const overlayS = document.getElementById('auth-video-overlay-side');
-  if (overlayS) {
-    overlayS.classList.add('opacity-0');
-    overlayS.classList.remove('opacity-100');
-  }
-  const cue = document.getElementById('auth-cinematic-cue');
-  if (cue) {
-    cue.classList.remove('opacity-0', 'pointer-events-none');
-  }
+};
+
+window.handleAcceptRegistrationIntro = function() {
+  window.revealAuthCard();
+  showAuthView('register');
+};
+
+window.handleDirectLoginIntro = function() {
+  window.revealAuthCard();
+  showAuthView('login');
+};
+
+window.handleBackToIntroGate = function() {
+  window.hideAuthCardInitially();
 };
 
 window.openAuthModal = function(initialView = 'register') {
@@ -5138,16 +5159,9 @@ window.openAuthModal = function(initialView = 'register') {
   }
   const v = document.getElementById('auth-bg-video');
   if (v) {
-    v.currentTime = 0;
     v.play().catch(() => {});
   }
   window.hideAuthCardInitially();
-  showAuthView(initialView || 'register');
-  
-  if (window.revealAuthCardTimeout) clearTimeout(window.revealAuthCardTimeout);
-  window.revealAuthCardTimeout = setTimeout(() => {
-    window.revealAuthCard();
-  }, 3200);
 };
 
 window.closeAuthModal = function() {
@@ -5280,15 +5294,9 @@ window.checkAuthOnLoad = async function() {
       authPage.style.display = 'flex';
       const v = document.getElementById('auth-bg-video');
       if (v) {
-        v.currentTime = 0;
         v.play().catch(() => {});
       }
       window.hideAuthCardInitially();
-      showAuthView('register');
-      if (window.revealAuthCardTimeout) clearTimeout(window.revealAuthCardTimeout);
-      window.revealAuthCardTimeout = setTimeout(() => {
-        window.revealAuthCard();
-      }, 3200);
     }
     if (appShell) {
       appShell.classList.add('hidden');
