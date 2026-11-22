@@ -4899,19 +4899,7 @@ window.closePaywallScreen = function() {
 };
 
 window.openPricingView = function() {
-  const gate = document.getElementById('auth-intro-gate');
-  const card = document.getElementById('auth-card-wrapper');
-  if (gate) {
-    gate.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-    setTimeout(() => gate.classList.add('hidden'), 350);
-  }
-  if (card) {
-    card.classList.remove('hidden');
-    setTimeout(() => {
-      card.classList.remove('opacity-0', 'translate-y-8', 'translate-y-10', 'scale-95', 'pointer-events-none');
-      card.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
-    }, 20);
-  }
+  window.revealAuthCard();
   showAuthView('paywall');
   const badge = document.getElementById('paywall-badge-status');
   const title = document.getElementById('paywall-title-text');
@@ -5192,26 +5180,18 @@ window.revealAuthCard = function() {
     gate.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
     setTimeout(() => {
       gate.classList.add('hidden');
-    }, 350);
+    }, 180);
   }
   const wrapper = document.getElementById('auth-card-wrapper');
   if (wrapper) {
     wrapper.classList.remove('hidden');
-    setTimeout(() => {
-      wrapper.classList.remove('opacity-0', 'translate-y-8', 'translate-y-10', 'scale-95', 'pointer-events-none');
+    requestAnimationFrame(() => {
+      wrapper.classList.remove('opacity-0', 'translate-y-4', 'translate-y-8', 'translate-y-10', 'scale-95', 'pointer-events-none');
       wrapper.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
-    }, 20);
+    });
   }
-  const overlayB = document.getElementById('auth-video-overlay-bottom');
-  if (overlayB) {
-    overlayB.classList.remove('opacity-0');
-    overlayB.classList.add('opacity-100');
-  }
-  const overlayS = document.getElementById('auth-video-overlay-side');
-  if (overlayS) {
-    overlayS.classList.remove('opacity-0');
-    overlayS.classList.add('opacity-100');
-  }
+  const v = document.getElementById('auth-bg-video');
+  if (v) { try { v.pause(); } catch(e) {} }
 };
 
 window.hideAuthCardInitially = function() {
@@ -5219,22 +5199,24 @@ window.hideAuthCardInitially = function() {
     clearTimeout(window.revealAuthCardTimeout);
     window.revealAuthCardTimeout = null;
   }
-  const gate = document.getElementById('auth-intro-gate');
-  if (gate) {
-    gate.classList.remove('hidden');
-    setTimeout(() => {
-      gate.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
-      gate.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
-    }, 20);
-  }
   const wrapper = document.getElementById('auth-card-wrapper');
   if (wrapper) {
-    wrapper.classList.add('opacity-0', 'translate-y-8', 'scale-95', 'pointer-events-none');
+    wrapper.classList.add('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
     wrapper.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
     setTimeout(() => {
       wrapper.classList.add('hidden');
-    }, 350);
+    }, 180);
   }
+  const gate = document.getElementById('auth-intro-gate');
+  if (gate) {
+    gate.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      gate.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+      gate.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+    });
+  }
+  const v = document.getElementById('auth-bg-video');
+  if (v) { try { v.play().catch(() => {}); } catch(e) {} }
 };
 
 window.handleAcceptRegistrationIntro = function() {
