@@ -75,7 +75,7 @@
       padding: 8px 4px;
       cursor: pointer;
       gap: 3px;
-      transition: all 0.15s ease;
+      transition: color 0.1s ease, background 0.1s ease, transform 0.06s ease;
       border: none;
       background: none;
       color: #94a3b8;
@@ -83,8 +83,11 @@
       font-weight: 600;
       letter-spacing: 0.03em;
       text-transform: uppercase;
+      -webkit-tap-highlight-color: transparent;
+      transform: translateZ(0);
     }
     .nav-item:hover { background: rgba(52, 211, 153, 0.12); color: #34d399; }
+    .nav-item:active { transform: scale(0.93) translateZ(0); }
     .nav-item.active { color: #fbbf24; background: rgba(245, 158, 11, 0.15); border-left: 3px solid #f59e0b; }
     .nav-item svg { width: 18px; height: 18px; }
 
@@ -6437,19 +6440,6 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       }
     }
 
-    const views = ['chart', 'ma-wave', 'scalp-swing', 'gold-ai', 'news', 'trend', 'history', 'account', 'settings', 'admin', 'pine-admin', 'bot-trading'];
-    
-    // Hide all views explicitly
-    views.forEach(v => {
-      const el = document.getElementById('view-' + v);
-      if (el) {
-        el.style.display = 'none';
-        el.classList.add('hidden');
-      }
-    });
-
-    document.querySelectorAll('.nav-item, .mob-nav-btn, .dock-item-btn').forEach(btn => btn.classList.remove('active'));
-
     let targetView = 'chart';
     let targetNavId = 'nav-chart';
 
@@ -6479,8 +6469,43 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       targetView = 'pine-admin'; targetNavId = 'nav-pine-admin';
     }
 
-    // Show target view explicitly with display flex
+    // 0. Bấm lại tab đang mở thì bỏ qua để không giật đơ màn hình
+    if (window.currentActiveView === targetView) return;
+
+    // 1. CẬP NHẬT GIAO DIỆN NÚT BẤM NGAY TỨC KHẮC (0MS VISUAL FEEDBACK)
+    const prevNavBtn = document.querySelector('.nav-item.active');
+    if (prevNavBtn) prevNavBtn.classList.remove('active');
+    const prevMobBtn = document.querySelector('.dock-item-btn.active');
+    if (prevMobBtn) prevMobBtn.classList.remove('active');
+
+    const navBtn = document.getElementById(targetNavId);
+    if (navBtn) navBtn.classList.add('active');
+    const activeMobBtn = document.getElementById('mob-nav-' + targetView);
+    if (activeMobBtn) activeMobBtn.classList.add('active');
+
+    // 2. ẨN VIEW CŨ VÀ HIỆN NGAY VIEW MỚI (FAST DOM SWITCH)
+    const prevView = window.currentActiveView;
     window.currentActiveView = targetView;
+
+    if (prevView && prevView !== targetView) {
+      const prevEl = document.getElementById('view-' + prevView);
+      if (prevEl) {
+        prevEl.style.display = 'none';
+        prevEl.classList.add('hidden');
+      }
+    }
+
+    const views = ['chart', 'ma-wave', 'scalp-swing', 'gold-ai', 'news', 'trend', 'history', 'account', 'settings', 'admin', 'pine-admin', 'bot-trading'];
+    views.forEach(v => {
+      if (v !== targetView) {
+        const el = document.getElementById('view-' + v);
+        if (el && el.style.display !== 'none') {
+          el.style.display = 'none';
+          el.classList.add('hidden');
+        }
+      }
+    });
+
     const targetEl = document.getElementById('view-' + targetView);
     if (targetEl) {
       targetEl.style.display = 'flex';
@@ -6488,14 +6513,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       targetEl.classList.remove('hidden');
     }
 
-    // Set active sidebar & mobile nav buttons
-    const navBtn = document.getElementById(targetNavId);
-    if (navBtn) navBtn.classList.add('active');
-
-    const activeMobBtn = document.getElementById('mob-nav-' + targetView);
-    if (activeMobBtn) activeMobBtn.classList.add('active');
-
-    // Reset and close all floating drawers, dropdowns, and overlays across views
+    // Đóng dropdown / sidebars nếu có
     const goldAiSidebar = document.getElementById('gold-ai-sidebar-col');
     if (goldAiSidebar && (targetView !== 'gold-ai' || window.innerWidth <= 768)) {
       goldAiSidebar.classList.add('hidden');
@@ -6509,7 +6527,6 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
     const chartSymbolMenu = document.getElementById('chart-symbol-dropdown-menu');
     if (chartSymbolMenu) chartSymbolMenu.classList.add('hidden');
 
-    // On mobile devices, keep sidebar hidden by default when switching views
     if (window.innerWidth <= 768) {
       const leftSidebar = document.getElementById('sidebar-left');
       if (leftSidebar) {
@@ -6526,84 +6543,59 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       }
     }
 
-    // Trigger tab specific rendering engines
-    if (targetView === 'news') {
+    // 3. TÁCH BIỆT DỮ LIỆU ĐỂ RENDER TRONG REQUESTANIMATIONFRAME (KHÔNG CHẶN KHUNG HÌNH CẢM ỨNG)
+    requestAnimationFrame(() => {
       try {
-        if (window.GoldNewsCenter) {
-          window.GoldNewsCenter.renderUI();
-          window.GoldNewsCenter.fetchEvents();
+        if (targetView === 'news') {
+          if (window.GoldNewsCenter) {
+            window.GoldNewsCenter.renderUI();
+            if (!window.GoldNewsCenter._hasFetched) {
+              window.GoldNewsCenter._hasFetched = true;
+              window.GoldNewsCenter.fetchEvents();
+            }
+          }
+        } else if (targetView === 'trend') {
+          if (typeof window.switchTrendAsset === 'function') {
+            window.switchTrendAsset(window.currentTrendAsset || 'xau');
+          }
+          if (window.app && typeof window.app.updateTrendViewUI === 'function') {
+            window.app.updateTrendViewUI();
+          }
+        } else if (targetView === 'bot-trading') {
+          if (typeof renderBotTradingEngineUI === 'function') {
+            renderBotTradingEngineUI();
+          }
+        } else if (targetView === 'history') {
+          if (window.app && typeof window.app.renderSignalHistory === 'function') {
+            window.app.renderSignalHistory();
+          }
+        } else if (targetView === 'ma-wave' || targetView === 'chart') {
+          if (window.app && typeof window.app.onShowMaWaveReplay === 'function') {
+            window.app.onShowMaWaveReplay();
+          }
+          if (typeof renderRadarSignalCards === 'function') {
+            renderRadarSignalCards();
+          }
+        } else if (targetView === 'pine-admin') {
+          if (typeof loadAdminDashboardData === 'function') {
+            loadAdminDashboardData();
+          }
+        } else if (targetView === 'account') {
+          if (typeof updateUserUI === 'function') updateUserUI();
+          if (typeof window.loadAccountAdminData === 'function' && window.currentUser && window.currentUser.role === 'ADMIN') {
+            window.loadAccountAdminData();
+          }
+        } else if (targetView === 'gold-ai') {
+          if (typeof window.restoreGoldAiChatHistory === 'function') {
+            window.restoreGoldAiChatHistory();
+          }
+          const msgContainer = document.getElementById('gold-ai-chat-messages');
+          if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
         }
       } catch (err) {
-        console.warn('GoldNewsCenter render error:', err);
+        console.warn('Switch view post-render error:', err);
       }
-      setTimeout(() => {
-        try {
-          if (window.GoldNewsCenter) window.GoldNewsCenter.renderUI();
-        } catch (err) {
-          console.warn('GoldNewsCenter render timeout error:', err);
-        }
-      }, 100);
-    } else if (targetView === 'trend') {
-      if (typeof window.switchTrendAsset === 'function') {
-        window.switchTrendAsset(window.currentTrendAsset || 'xau');
-      }
-      if (window.app && typeof window.app.updateTrendViewUI === 'function') {
-        window.app.updateTrendViewUI();
-      }
-      setTimeout(() => {
-        if (typeof window.switchTrendAsset === 'function') {
-          window.switchTrendAsset(window.currentTrendAsset || 'xau');
-        }
-        if (window.app && typeof window.app.updateTrendViewUI === 'function') {
-          window.app.updateTrendViewUI();
-        }
-      }, 100);
-    } else if (targetView === 'bot-trading') {
-      if (typeof renderBotTradingEngineUI === 'function') {
-        renderBotTradingEngineUI();
-      }
-    } else if (targetView === 'history') {
-      if (window.app) {
-        if (typeof window.app.onShowHistoryView === 'function') window.app.onShowHistoryView();
-        if (typeof window.app.renderSignalHistory === 'function') window.app.renderSignalHistory();
-      }
-    } else if (targetView === 'scalp-swing') {
-      if (typeof window.renderScalpSwingView === 'function') {
-        window.renderScalpSwingView();
-      }
-    } else if (targetView === 'ma-wave' || targetView === 'chart') {
-      if (window.app && typeof window.app.onShowMaWaveReplay === 'function') {
-        window.app.onShowMaWaveReplay();
-      }
-      if (typeof renderRadarSignalCards === 'function') {
-        renderRadarSignalCards();
-      }
-    } else if (targetView === 'pine-admin') {
-      if (typeof loadAdminDashboardData === 'function') {
-        loadAdminDashboardData();
-      }
-    } else if (targetView === 'account') {
-      if (typeof updateUserUI === 'function') updateUserUI();
-      if (typeof window.loadAccountAdminData === 'function') window.loadAccountAdminData();
-    } else if (targetView === 'gold-ai') {
-      setTimeout(() => {
-        if (typeof window.restoreGoldAiChatHistory === 'function') {
-          window.restoreGoldAiChatHistory();
-        }
-        const msgContainer = document.getElementById('gold-ai-chat-messages');
-        if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
-        const goldAiPill = document.getElementById('gold-ai-pill-text');
-        const welcomePrice = document.getElementById('gold-ai-welcome-price');
-        if (window.marketDataStore) {
-          const xau = window.marketDataStore.assetsData && window.marketDataStore.assetsData['XAU'];
-          if (xau && xau.price) {
-            const formatted = `XAU/USD: $${Number(xau.price).toFixed(2)}`;
-            if (goldAiPill) goldAiPill.textContent = `${formatted} | 15M | MA WAVE V8 Active`;
-            if (welcomePrice) welcomePrice.textContent = formatted;
-          }
-        }
-      }, 50);
-    }
+    });
   }
 
   function openPineAdminTab() {

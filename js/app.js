@@ -159,16 +159,10 @@ class GoldTradingApp {
     };
 
     requestAnimationFrame(applyReflow);
-    setTimeout(applyReflow, 50);
-    setTimeout(applyReflow, 200);
-
     this.updateReplayUI();
   }
 
   onShowHistoryView() {
-    if (this.bars && this.bars.length > 0) {
-      this.renderIndicators();
-    }
     this.renderSignalHistory();
   }
 
