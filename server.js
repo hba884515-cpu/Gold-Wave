@@ -4345,13 +4345,16 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ status: 'ALREADY_EXISTS', id }));
     }
 
-    // Bảo vệ Single Source of Truth: Chặn client gửi lệnh chồng chéo hoặc chưa qua Cooldown
+    // Bảo vệ Single Source of Truth: Cho phép Re-entry nếu lệnh trước đã bảo toàn rủi ro (đã cán TP1 hoặc dời SL hòa vốn)
     if (!isManualTest) {
-      if (serverActiveTrades[assetKey]) {
+      const active = serverActiveTrades[assetKey];
+      if (active && !active.hitTp1 && !active.trailedToBreakeven) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        return res.end(JSON.stringify({ status: 'SKIPPED_ACTIVE_TRADE', existingId: serverActiveTrades[assetKey].id }));
+        return res.end(JSON.stringify({ status: 'SKIPPED_ACTIVE_TRADE', existingId: active.id }));
       }
-      const cooldownMs = assetKey === 'btc' ? 60 * 60 * 1000 : 45 * 60 * 1000;
+      const cooldownMs = (active && (active.hitTp1 || active.trailedToBreakeven)) 
+        ? 20 * 60 * 1000 
+        : (assetKey === 'btc' ? 45 * 60 * 1000 : 35 * 60 * 1000);
       if (Date.now() - (lastSignalTimes[assetKey] || 0) < cooldownMs) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         return res.end(JSON.stringify({ status: 'SKIPPED_COOLDOWN' }));
@@ -4360,10 +4363,15 @@ const server = http.createServer(async (req, res) => {
 
     // Cấp ID chuẩn duy nhất từ server
     let assignedId = (id && !/^V8-8{2,}/.test(String(id))) ? id : generateNextSignalId();
-    const defaultSlDist = assetKey === 'btc' ? 1400 : (assetKey === 'xag' ? 0.85 : 8.5);
-    const defaultTp1Dist = assetKey === 'btc' ? 1500 : (assetKey === 'xag' ? 1.00 : 10.0);
-    const defaultTp2Dist = assetKey === 'btc' ? 2800 : (assetKey === 'xag' ? 2.00 : 20.0);
-    const defaultTp3Dist = assetKey === 'btc' ? 4500 : (assetKey === 'xag' ? 3.20 : 35.0);
+
+    const nowUtcMs = Date.now();
+    const vnHour = new Date(nowUtcMs + 7 * 3600000).getUTCHours();
+    const isAsianSession = (vnHour >= 6 && vnHour < 14);
+
+    const defaultSlDist = assetKey === 'btc' ? (isAsianSession ? 850 : 1300) : (assetKey === 'xag' ? (isAsianSession ? 0.55 : 0.85) : (isAsianSession ? 5.0 : 7.5));
+    const defaultTp1Dist = assetKey === 'btc' ? (isAsianSession ? 900 : 1400) : (assetKey === 'xag' ? (isAsianSession ? 0.60 : 1.00) : (isAsianSession ? 5.5 : 8.5));
+    const defaultTp2Dist = assetKey === 'btc' ? (isAsianSession ? 1800 : 2800) : (assetKey === 'xag' ? (isAsianSession ? 1.30 : 2.00) : (isAsianSession ? 12.0 : 18.0));
+    const defaultTp3Dist = assetKey === 'btc' ? (isAsianSession ? 3200 : 4500) : (assetKey === 'xag' ? (isAsianSession ? 2.20 : 3.20) : (isAsianSession ? 22.0 : 32.0));
 
     const canonicalSignal = {
       ...body,

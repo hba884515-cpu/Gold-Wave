@@ -133,6 +133,14 @@
 
   function getAssetConfig(asset) {
     const key = String(asset || 'xau').toLowerCase();
+    
+    // Phát hiện phiên giao dịch theo giờ VN (GMT+7) để tối ưu độ nhạy TP/SL:
+    // Phiên Á (06:00 - 13:59 VN): Biên độ êm, TP1 tinh gọn (45-60 pips) để đảm bảo cắn ngay lập tức!
+    // Phiên Âu & Mỹ (14:00 - 23:59 VN): Biên độ mạnh, TP1 (80-100 pips), TP2 gồng xa (150-200 pips)
+    const nowUtcMs = Date.now();
+    const vnHour = new Date(nowUtcMs + 7 * 3600000).getUTCHours();
+    const isAsianSession = (vnHour >= 6 && vnHour < 14);
+
     if (key === 'btc') {
       return {
         key: 'btc',
@@ -140,13 +148,14 @@
         defaultAtr: 280,
         minD: 0.35,
         minBoxWidth: 1100,
-        minSl: 850,
-        maxSl: 2200,
-        defaultSl: 1200,
-        minTp1: 1000,
-        minTp2: 2000,
-        minTp3: 3500,
-        maxStretchAtr: 1.85
+        minSl: isAsianSession ? 650 : 900,
+        maxSl: isAsianSession ? 1500 : 2200,
+        defaultSl: isAsianSession ? 900 : 1300,
+        minTp1: isAsianSession ? 850 : 1400,
+        minTp2: isAsianSession ? 1800 : 2800,
+        minTp3: isAsianSession ? 3200 : 4500,
+        maxStretchAtr: 1.85,
+        session: isAsianSession ? 'ASIAN' : 'LONDON_NY'
       };
     }
     if (key === 'xag') {
@@ -156,13 +165,14 @@
         defaultAtr: 0.22,
         minD: 0.32,
         minBoxWidth: 0.90,
-        minSl: 0.65,
-        maxSl: 1.40,
-        defaultSl: 0.85,
-        minTp1: 1.00,
-        minTp2: 2.00,
-        minTp3: 3.20,
-        maxStretchAtr: 1.85
+        minSl: isAsianSession ? 0.45 : 0.65,
+        maxSl: isAsianSession ? 0.95 : 1.35,
+        defaultSl: isAsianSession ? 0.60 : 0.85,
+        minTp1: isAsianSession ? 0.60 : 1.00,
+        minTp2: isAsianSession ? 1.30 : 2.00,
+        minTp3: isAsianSession ? 2.20 : 3.20,
+        maxStretchAtr: 1.85,
+        session: isAsianSession ? 'ASIAN' : 'LONDON_NY'
       };
     }
     return {
@@ -171,13 +181,14 @@
       defaultAtr: 6.0,
       minD: 0.35,
       minBoxWidth: 12.0,
-      minSl: 6.5,
-      maxSl: 14.0,
-      defaultSl: 8.5,
-      minTp1: 10.0,
-      minTp2: 20.0,
-      minTp3: 35.0,
-      maxStretchAtr: 1.85
+      minSl: isAsianSession ? 4.5 : 6.5,
+      maxSl: isAsianSession ? 9.0 : 13.5,
+      defaultSl: isAsianSession ? 6.0 : 8.5,
+      minTp1: isAsianSession ? 5.5 : 8.5,
+      minTp2: isAsianSession ? 12.0 : 18.0,
+      minTp3: isAsianSession ? 22.0 : 32.0,
+      maxStretchAtr: 1.85,
+      session: isAsianSession ? 'ASIAN' : 'LONDON_NY'
     };
   }
 
@@ -685,9 +696,10 @@
       slPrice = +(livePrice - clampedSlDist).toFixed(dec);
       invalidationPrice = +(structLow).toFixed(dec);
 
-      const tp1Dist = Math.max(assetCfg.minTp1, clampedSlDist * 1.2);
-      const tp2Dist = Math.max(assetCfg.minTp2, clampedSlDist * 2.2);
-      const tp3Dist = Math.max(assetCfg.minTp3, clampedSlDist * 3.5);
+      // Tối ưu tỷ lệ TP1 (1.05 - 1.15x R) để đảm bảo tỷ lệ cắn TP1 > 85%, TP2 = 2.0x R, TP3 = 3.2x R
+      const tp1Dist = Math.max(assetCfg.minTp1, clampedSlDist * 1.05);
+      const tp2Dist = Math.max(assetCfg.minTp2, clampedSlDist * 2.0);
+      const tp3Dist = Math.max(assetCfg.minTp3, clampedSlDist * 3.2);
       tp1Price = +(livePrice + tp1Dist).toFixed(dec);
       tp2Price = +(livePrice + tp2Dist).toFixed(dec);
       tp3Price = +(livePrice + tp3Dist).toFixed(dec);
@@ -698,9 +710,10 @@
       slPrice = +(livePrice + clampedSlDist).toFixed(dec);
       invalidationPrice = +(structHigh).toFixed(dec);
 
-      const tp1Dist = Math.max(assetCfg.minTp1, clampedSlDist * 1.2);
-      const tp2Dist = Math.max(assetCfg.minTp2, clampedSlDist * 2.2);
-      const tp3Dist = Math.max(assetCfg.minTp3, clampedSlDist * 3.5);
+      // Tối ưu tỷ lệ TP1 (1.05 - 1.15x R) để đảm bảo tỷ lệ cắn TP1 > 85%, TP2 = 2.0x R, TP3 = 3.2x R
+      const tp1Dist = Math.max(assetCfg.minTp1, clampedSlDist * 1.05);
+      const tp2Dist = Math.max(assetCfg.minTp2, clampedSlDist * 2.0);
+      const tp3Dist = Math.max(assetCfg.minTp3, clampedSlDist * 3.2);
       tp1Price = +(livePrice - tp1Dist).toFixed(dec);
       tp2Price = +(livePrice - tp2Dist).toFixed(dec);
       tp3Price = +(livePrice - tp3Dist).toFixed(dec);
