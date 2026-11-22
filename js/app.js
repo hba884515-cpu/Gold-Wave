@@ -4880,6 +4880,55 @@ window.openPaywallScreen = function(user, sub, payment) {
   window.selectPaywallPackage('community');
 };
 
+window.closePaywallScreen = function() {
+  if (window.currentUser) {
+    const authPage = document.getElementById('auth-fullscreen-page');
+    const appShell = document.getElementById('app-shell');
+    if (authPage) {
+      authPage.classList.add('hidden');
+      authPage.style.display = 'none';
+    }
+    if (appShell) {
+      appShell.classList.remove('hidden');
+      appShell.style.display = '';
+    }
+  } else {
+    showAuthView('register');
+  }
+};
+
+window.openPricingView = function() {
+  const gate = document.getElementById('auth-intro-gate');
+  const card = document.getElementById('auth-card-wrapper');
+  if (gate) {
+    gate.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+    setTimeout(() => gate.classList.add('hidden'), 350);
+  }
+  if (card) {
+    card.classList.remove('hidden');
+    setTimeout(() => {
+      card.classList.remove('opacity-0', 'translate-y-8', 'translate-y-10', 'scale-95', 'pointer-events-none');
+      card.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+    }, 20);
+  }
+  showAuthView('paywall');
+  const badge = document.getElementById('paywall-badge-status');
+  const title = document.getElementById('paywall-title-text');
+  const desc = document.getElementById('paywall-desc-text');
+  const backBtn = document.getElementById('paywall-back-btn');
+  if (badge) {
+    badge.className = 'inline-flex items-center justify-center px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black text-[10px] uppercase tracking-wider mb-1';
+    badge.textContent = '💎 BẢNG GIÁ & CÁC GÓI SỬ DỤNG THEO THÁNG';
+  }
+  if (title) title.textContent = 'Các Gói Sử Dụng Gold Wave';
+  if (desc) desc.innerHTML = 'Khám phá 2 lựa chọn gói bản quyền 1 tháng với ưu đãi giảm giá tốt nhất cho cộng đồng.';
+  if (backBtn) {
+    backBtn.textContent = '← Quay lại Đăng ký';
+    backBtn.onclick = () => showAuthView('register');
+  }
+  window.selectPaywallPackage('community');
+};
+
 window.currentPaywallPackage = 'community';
 
 window.selectPaywallPackage = function(packageId) {
