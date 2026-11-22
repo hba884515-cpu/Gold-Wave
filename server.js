@@ -3717,7 +3717,7 @@ const server = http.createServer(async (req, res) => {
     if (paymentRequestsDB.length > 200) paymentRequestsDB = paymentRequestsDB.slice(0, 200);
     saveJSON(PAYMENT_REQUESTS_FILE, paymentRequestsDB);
 
-    addNotification('SYSTEM', '💳 XÁC NHẬN CHUYỂN KHOẢN GÓI 1 THÁNG', `Khách hàng: ${name} (SĐT: ${phone || 'N/A'}) - Email: ${email} đã hoàn tất thanh toán.`);
+    addNotification('SYSTEM', `💳 XÁC NHẬN CHUYỂN KHOẢN: ${amount}`, `Khách hàng: ${name} (SĐT: ${phone || 'N/A'}) - Gói: ${amount} - Email: ${email} đã hoàn tất thanh toán.`);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 

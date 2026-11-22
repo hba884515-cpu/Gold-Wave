@@ -4868,44 +4868,76 @@ window.openPaywallScreen = function(user, sub, payment) {
   const cfg = payment || window.cachedPaymentConfig || {};
   window.cachedPaymentConfig = cfg;
 
+  const memoEl = document.getElementById('paywall-memo');
+  const zaloEl = document.getElementById('paywall-support-zalo');
+  const commLinkEl = document.getElementById('paywall-community-link');
+
+  if (memoEl) memoEl.textContent = 'Tùy ý (Tên hoặc SĐT của bạn)';
+  if (zaloEl && cfg.supportZalo) zaloEl.href = cfg.supportZalo;
+  if (commLinkEl && cfg.supportZalo) commLinkEl.href = cfg.supportZalo;
+
+  // Mặc định chọn Gói Ưu Đãi Cộng Đồng 99.999đ
+  window.selectPaywallPackage('community');
+};
+
+window.currentPaywallPackage = 'community';
+
+window.selectPaywallPackage = function(packageId) {
+  window.currentPaywallPackage = packageId;
+  const cfg = window.cachedPaymentConfig || {};
+  const isCommunity = (packageId === 'community');
+
+  const tabComm = document.getElementById('paywall-tab-community');
+  const tabStd = document.getElementById('paywall-tab-standard');
+  const commBox = document.getElementById('paywall-community-join-box');
+  const pkgTitle = document.getElementById('paywall-pkg-title');
+  const pkgSubtitle = document.getElementById('paywall-pkg-subtitle');
+  const feeDisplayEl = document.getElementById('paywall-fee-display');
+  const amountEl = document.getElementById('paywall-amount');
   const bankNameEl = document.getElementById('paywall-bank-name');
   const accNumEl = document.getElementById('paywall-acc-number');
   const accNameEl = document.getElementById('paywall-acc-name');
-  const amountEl = document.getElementById('paywall-amount');
-  const feeDisplayEl = document.getElementById('paywall-fee-display');
-  const memoEl = document.getElementById('paywall-memo');
-  const zaloEl = document.getElementById('paywall-support-zalo');
   const qrImgEl = document.getElementById('paywall-qr-img');
 
-  if (bankNameEl && cfg.bankName) bankNameEl.textContent = cfg.bankName;
-  if (accNumEl && cfg.accountNumber) accNumEl.textContent = cfg.accountNumber;
-  if (accNameEl && cfg.accountName) accNameEl.textContent = cfg.accountName;
-  if (amountEl && cfg.monthlyFee) amountEl.textContent = cfg.monthlyFee;
-  if (feeDisplayEl && cfg.monthlyFee) feeDisplayEl.textContent = cfg.monthlyFee;
-  
-  if (memoEl) memoEl.textContent = 'Tùy ý (Tên hoặc SĐT của bạn)';
-  if (zaloEl && cfg.supportZalo) zaloEl.href = cfg.supportZalo;
+  if (tabComm && tabStd) {
+    if (isCommunity) {
+      tabComm.className = "relative p-2.5 rounded-xl border border-amber-500/80 bg-gradient-to-b from-amber-500/20 to-amber-500/5 text-left transition cursor-pointer shadow-md shadow-amber-500/10";
+      tabStd.className = "relative p-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-left transition cursor-pointer hover:border-slate-700 opacity-70";
+    } else {
+      tabStd.className = "relative p-2.5 rounded-xl border border-amber-500/80 bg-gradient-to-b from-amber-500/20 to-amber-500/5 text-left transition cursor-pointer shadow-md shadow-amber-500/10";
+      tabComm.className = "relative p-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-left transition cursor-pointer hover:border-slate-700 opacity-70";
+    }
+  }
 
-  // Build Bank QR Image
-  if (qrImgEl) {
-    qrImgEl.src = (cfg.qrImage || 'assets/payment-qr.png');
-    qrImgEl.onerror = function() {
-      this.onerror = null;
-      if (cfg.bankId && cfg.accountNumber) {
-        const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
-        const cleanBank = encodeURIComponent(cfg.bankId);
-        const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
-        this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
-      }
-    };
+  if (commBox) {
+    commBox.style.display = isCommunity ? 'flex' : 'none';
+  }
+
+  if (isCommunity) {
+    if (pkgTitle) pkgTitle.textContent = 'Gói Ưu Đãi Cộng Đồng 1 Tháng';
+    if (pkgSubtitle) pkgSubtitle.textContent = 'Tín hiệu MA Wave V8 Pro + Vào Nhóm Cộng Đồng';
+    if (feeDisplayEl) feeDisplayEl.textContent = '99.999 VNĐ';
+    if (amountEl) amountEl.textContent = '99,999 VNĐ';
+    if (bankNameEl) bankNameEl.textContent = 'Techcombank';
+    if (accNumEl) accNumEl.textContent = '8000 4868 68';
+    if (accNameEl) accNameEl.textContent = 'TRAN BA HOANG';
+    if (qrImgEl) qrImgEl.src = 'assets/payment-qr-community.png';
+  } else {
+    if (pkgTitle) pkgTitle.textContent = 'Gói Người Dùng Độc Lập 1 Tháng';
+    if (pkgSubtitle) pkgSubtitle.textContent = 'Tín hiệu MA Wave V8 Pro (Sử dụng riêng tư không vào nhóm)';
+    if (feeDisplayEl) feeDisplayEl.textContent = '390.000 VNĐ';
+    if (amountEl) amountEl.textContent = '390,000 VNĐ';
+    if (bankNameEl) bankNameEl.textContent = cfg.bankName || 'Techcombank';
+    if (accNumEl) accNumEl.textContent = (cfg.packages && cfg.packages.standard && cfg.packages.standard.accountNumber) || '68686866899';
+    if (accNameEl) accNameEl.textContent = (cfg.packages && cfg.packages.standard && cfg.packages.standard.accountName) || 'HOÀNG BÁ';
+    if (qrImgEl) qrImgEl.src = (cfg.packages && cfg.packages.standard && cfg.packages.standard.qrImage) || 'assets/payment-qr.png';
   }
 };
 
 window.copyPaywallInfo = function(type) {
-  const cfg = window.cachedPaymentConfig || {};
   let textToCopy = '';
   if (type === 'accountNumber') {
-    textToCopy = cfg.accountNumber || document.getElementById('paywall-acc-number')?.textContent || '68686866899';
+    textToCopy = document.getElementById('paywall-acc-number')?.textContent.trim() || '8000 4868 68';
   } else if (type === 'memo') {
     textToCopy = document.getElementById('pay-confirm-name')?.value || document.getElementById('pay-confirm-phone')?.value || 'Techcombank';
   }
@@ -4943,15 +4975,18 @@ window.submitPaymentActivationRequest = async function() {
     return;
   }
 
+  const pkgName = window.currentPaywallPackage === 'community' ? 'Gói Cộng Đồng (99.999 VNĐ)' : 'Gói Độc Lập (390.000 VNĐ)';
+  const amountStr = window.currentPaywallPackage === 'community' ? '99.999 VNĐ' : '390.000 VNĐ';
+
   try {
     const res = await fetch('/api/subscription/request-activation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, phone, note: `SĐT: ${phone}` })
+      body: JSON.stringify({ email, name, phone, amount: amountStr, note: `${pkgName} - SĐT: ${phone}` })
     });
     const data = await res.json();
     if (res.ok && data.status === 'SUCCESS') {
-      alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\nAdmin đã nhận được thông tin và sẽ kiểm tra, kích hoạt tài khoản cho bạn trong vòng 1-3 phút!`);
+      alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Gói đăng ký: ${pkgName}\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\nAdmin đã nhận được thông tin và sẽ kiểm tra, kích hoạt tài khoản cho bạn trong vòng 1-3 phút!`);
       const box = document.getElementById('paywall-confirm-form-box');
       if (box) box.classList.add('hidden');
       if (typeof showToast === 'function') {

@@ -760,14 +760,42 @@
 
           <!-- Khung Gói Cước & Mã QR Chuyển Khoản -->
           <div class="p-4 rounded-2xl bg-[#0b0f19] border border-amber-500/40 shadow-xl shadow-amber-500/5 space-y-3.5">
-            <!-- Gói Cước -->
+            <!-- CHỌN GÓI BẢN QUYỀN 1 THÁNG (2 LỰA CHỌN) -->
+            <div class="space-y-1.5">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Chọn gói gia hạn 1 tháng:</span>
+              <div class="grid grid-cols-2 gap-2 p-1 bg-slate-950/90 border border-slate-800 rounded-2xl">
+                <!-- Gói 1: Ưu đãi Cộng Đồng (99.999đ) -->
+                <button type="button" id="paywall-tab-community" onclick="selectPaywallPackage('community')" class="relative p-2.5 rounded-xl border border-amber-500/80 bg-gradient-to-b from-amber-500/20 to-amber-500/5 text-left transition cursor-pointer shadow-md shadow-amber-500/10">
+                  <span class="absolute -top-2 right-2 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 text-[8px] font-black text-white uppercase tracking-wider shadow">
+                    GIẢM 75% 🔥
+                  </span>
+                  <span class="text-[11px] font-black text-white block">Gói Cộng Đồng</span>
+                  <div class="flex items-baseline gap-1 mt-0.5">
+                    <span class="text-sm font-black text-amber-400">99.999đ</span>
+                    <span class="text-[9px] text-slate-400 line-through">390k</span>
+                  </div>
+                  <span class="text-[8px] text-emerald-400 font-bold block mt-0.5">Vào Nhóm Cộng Đồng</span>
+                </button>
+
+                <!-- Gói 2: Người Dùng Độc Lập (390.000đ) -->
+                <button type="button" id="paywall-tab-standard" onclick="selectPaywallPackage('standard')" class="relative p-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-left transition cursor-pointer hover:border-slate-700 opacity-70">
+                  <span class="text-[11px] font-bold text-slate-300 block">Gói Độc Lập</span>
+                  <div class="flex items-baseline gap-1 mt-0.5">
+                    <span class="text-sm font-black text-slate-300">390.000đ</span>
+                  </div>
+                  <span class="text-[8px] text-slate-400 font-medium block mt-0.5">Không cần vào nhóm</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Gói Cước Đang Chọn Display -->
             <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
               <div>
-                <span class="text-xs font-bold text-white block">Gói Truy Cập 1 Tháng</span>
-                <span class="text-[10px] text-emerald-400 font-semibold">Tín hiệu MA Wave V8 Pro + Bot Auto 24/7</span>
+                <span id="paywall-pkg-title" class="text-xs font-bold text-white block">Gói Ưu Đãi Cộng Đồng 1 Tháng</span>
+                <span id="paywall-pkg-subtitle" class="text-[10px] text-emerald-400 font-semibold">Tín hiệu MA Wave V8 Pro + Vào Nhóm Cộng Đồng</span>
               </div>
               <div class="text-right">
-                <span id="paywall-fee-display" class="text-sm font-black text-amber-400">390.000 VNĐ</span>
+                <span id="paywall-fee-display" class="text-sm font-black text-amber-400">99.999 VNĐ</span>
                 <span class="text-[9px] text-slate-400 block font-medium">/ 30 ngày sử dụng</span>
               </div>
             </div>
@@ -811,6 +839,21 @@
                 <span class="text-slate-400 text-[11px]">Nội dung CK:</span>
                 <span id="paywall-memo" class="font-medium text-slate-300 text-[11px]">Tùy ý (Tên hoặc SĐT của bạn)</span>
               </div>
+            </div>
+
+            <!-- Link Tham Gia Nhóm Cộng Đồng (Khi chọn gói 99k) -->
+            <div id="paywall-community-join-box" class="p-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/40 flex items-center justify-between text-xs gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">💬</span>
+                <div>
+                  <span class="text-[11px] font-bold text-amber-300 block">Nhóm Zalo Cộng Đồng Gold Wave</span>
+                  <span class="text-[9px] text-slate-300">Nhận phân tích & giao lưu cùng anh em trader</span>
+                </div>
+              </div>
+              <a id="paywall-community-link" href="https://zalo.me" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-[10px] tracking-wide uppercase transition flex items-center gap-1 shadow shrink-0">
+                <span>VÀO NHÓM</span>
+                <span>→</span>
+              </a>
             </div>
 
             <!-- NÚT GỬI XÁC NHẬN ĐÃ CHUYỂN KHOẢN -->
