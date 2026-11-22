@@ -4872,9 +4872,10 @@ window.openPaywallScreen = function(user, sub, payment) {
   const zaloEl = document.getElementById('paywall-support-zalo');
   const commLinkEl = document.getElementById('paywall-community-link');
 
+  const zaloUrl = cfg.communityLink || cfg.supportZalo || 'https://zalo.me/g/csqvcu122';
   if (memoEl) memoEl.textContent = 'Tùy ý (Tên hoặc SĐT của bạn)';
-  if (zaloEl && cfg.supportZalo) zaloEl.href = cfg.supportZalo;
-  if (commLinkEl && cfg.supportZalo) commLinkEl.href = cfg.supportZalo;
+  if (zaloEl) zaloEl.href = zaloUrl;
+  if (commLinkEl) commLinkEl.href = zaloUrl;
 
   // Mặc định chọn Gói Ưu Đãi Cộng Đồng 99.999đ
   window.selectPaywallPackage('community');
@@ -4998,6 +4999,13 @@ window.copyPaywallInfo = function(type) {
   }
 };
 
+window.toggleZaloGroupQr = function() {
+  const drawer = document.getElementById('paywall-zalo-qr-drawer');
+  if (drawer) {
+    drawer.classList.toggle('hidden');
+  }
+};
+
 window.togglePaymentConfirmForm = function() {
   const box = document.getElementById('paywall-confirm-form-box');
   if (box) {
@@ -5024,8 +5032,9 @@ window.submitPaymentActivationRequest = async function() {
     return;
   }
 
-  const pkgName = window.currentPaywallPackage === 'community' ? 'Gói Cộng Đồng (99.999 VNĐ)' : 'Gói Độc Lập (390.000 VNĐ)';
-  const amountStr = window.currentPaywallPackage === 'community' ? '99.999 VNĐ' : '390.000 VNĐ';
+  const isCommunity = window.currentPaywallPackage === 'community';
+  const pkgName = isCommunity ? 'Gói Ưu Đãi Cộng Đồng (99.999 VNĐ)' : 'Gói Độc Lập (390.000 VNĐ)';
+  const amountStr = isCommunity ? '99.999 VNĐ' : '390.000 VNĐ';
 
   try {
     const res = await fetch('/api/subscription/request-activation', {
@@ -5035,7 +5044,14 @@ window.submitPaymentActivationRequest = async function() {
     });
     const data = await res.json();
     if (res.ok && data.status === 'SUCCESS') {
-      alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Gói đăng ký: ${pkgName}\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\nAdmin đã nhận được thông tin và sẽ kiểm tra, kích hoạt tài khoản cho bạn trong vòng 1-3 phút!`);
+      if (isCommunity) {
+        alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Gói đăng ký: ${pkgName}\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\n👉 BẠN VUI LÒNG BẤM "VÀO NHÓM ZALO" NGAY ĐỂ ADMIN DUYỆT & KÍCH HOẠT NHANH TRONG 1-3 PHÚT:\nhttps://zalo.me/g/csqvcu122`);
+        try {
+          window.open('https://zalo.me/g/csqvcu122', '_blank');
+        } catch(e) {}
+      } else {
+        alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Gói đăng ký: ${pkgName}\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\nAdmin đã nhận được thông tin và sẽ kiểm tra, kích hoạt tài khoản cho bạn trong vòng 1-3 phút!`);
+      }
       const box = document.getElementById('paywall-confirm-form-box');
       if (box) box.classList.add('hidden');
       if (typeof showToast === 'function') {

@@ -18,7 +18,7 @@
       "accountNumber": "8000 4868 68",
       "accountName": "TRAN BA HOANG",
       "qrImage": "assets/payment-qr-community.png",
-      "communityLink": "https://zalo.me"
+      "communityLink": "https://zalo.me/g/csqvcu122"
     },
     "standard": {
       "id": "standard",
@@ -33,7 +33,7 @@
     }
   },
   "transferPrefix": "",
-  "supportZalo": "https://zalo.me",
+  "supportZalo": "https://zalo.me/g/csqvcu122",
   "supportPhone": "0988.xxx.xxx",
   "supportTelegram": "https://t.me",
   "trialDays": 14,
