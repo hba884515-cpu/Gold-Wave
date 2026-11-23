@@ -5061,18 +5061,21 @@ function startServerSignalEngine() {
           if (!trade.bottomPrice || price < trade.bottomPrice) trade.bottomPrice = price;
 
           const isBuy = trade.type === 'BUY';
-          const breakevenThreshold = (cfg.key === 'btc') ? 500 : (cfg.key === 'xag' ? 0.40 : 5.0);
+          const tp1TargetDist = Math.abs((trade.tp1 || (isBuy ? trade.entry + 6.0 : trade.entry - 6.0)) - trade.entry);
+          const earlyBreakevenThreshold = Math.min(
+            tp1TargetDist * 0.45,
+            (cfg.key === 'btc') ? 400 : (cfg.key === 'xag' ? 0.28 : 3.2)
+          );
           const breakevenDelta = (cfg.key === 'btc') ? 50 : (cfg.key === 'xag' ? 0.05 : 0.5);
 
           if (isBuy) {
             const profitDelta = price - trade.entry;
             const isScalp = trade.strategyType === 'scalp' || trade.id === 'V8-02187';
-            const swingBreakeven = (cfg.key === 'btc') ? 1500 : (cfg.key === 'xag' ? 1.0 : 20.0);
 
-            // Tự động kéo SL Hòa vốn: KHÔNG áp dụng cho Scalp (Scalp giữ nguyên SL 4 giá đến khi chạm TP)
-            if (!isScalp && !trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= swingBreakeven) {
+            // Tự động kéo SL Hòa vốn / SL Dương sớm khi lãi đạt ngưỡng (chỉ cần lãi >= 3.2 giá XAU hoặc 45% tới TP1)
+            if (!isScalp && !trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= earlyBreakevenThreshold) {
               trade.trailedToBreakeven = true;
-              trade.sl = Number(trade.entry); // Khóa SL hòa vốn đúng tại giá Entry
+              trade.sl = +(trade.entry + breakevenDelta).toFixed(2); // Khóa SL hòa vốn +0.5 giá Entry
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
                 sig.trailedToBreakeven = true;
@@ -5092,7 +5095,7 @@ function startServerSignalEngine() {
                   client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TRAILED_SL', triggerPrice: price, sl: trade.sl } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🛡️ KHÓA SL HÒA VỐN BẢO TOÀN VỐN: MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã có lãi +20 giá (+200 pips). Đã tự động dời SL về $${trade.sl.toFixed(2)} an toàn tuyệt đối!`);
+              addNotification('SIGNAL', `🛡️ KHÓA SL HÒA VỐN BẢO TOÀN VỐN: MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã có lãi +${profitDelta.toFixed(1)} giá (+${Math.round(profitDelta * 10)} pips). Đã tự động dời SL về $${trade.sl.toFixed(2)} an toàn tuyệt đối!`);
             }
 
             // ĐẠT TP1: CHỈ kích hoạt khi GIÁ LIVE THỰC TẾ chạm mốc TP1 (price >= trade.tp1), tuyệt đối không dùng giá cũ/đỉnh nến cũ
@@ -5268,12 +5271,11 @@ function startServerSignalEngine() {
             // SELL
             const profitDelta = trade.entry - price;
             const isScalp = trade.strategyType === 'scalp' || trade.id === 'V8-02187';
-            const swingBreakeven = (cfg.key === 'btc') ? 1500 : (cfg.key === 'xag' ? 1.0 : 20.0);
 
-            // Tự động kéo SL Hòa vốn: KHÔNG áp dụng cho Scalp (Scalp giữ nguyên SL 4 giá 3778.00 đến khi chạm TP 7 giá)
-            if (!isScalp && !trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= swingBreakeven) {
+            // Tự động kéo SL Hòa vốn / SL Dương sớm khi lãi đạt ngưỡng (chỉ cần lãi >= 3.2 giá XAU hoặc 45% tới TP1)
+            if (!isScalp && !trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= earlyBreakevenThreshold) {
               trade.trailedToBreakeven = true;
-              trade.sl = Number(trade.entry); // Khóa SL hòa vốn đúng tại giá Entry (3774.40)
+              trade.sl = +(trade.entry - breakevenDelta).toFixed(2); // Khóa SL hòa vốn -0.5 giá Entry
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
                 sig.trailedToBreakeven = true;
@@ -5293,7 +5295,7 @@ function startServerSignalEngine() {
                   client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TRAILED_SL', triggerPrice: price, sl: trade.sl } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🛡️ KHÓA SL HÒA VỐN BẢO TOÀN VỐN: BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã có lãi +20 giá (+200 pips). Đã tự động dời SL về $${trade.sl.toFixed(2)} an toàn tuyệt đối!`);
+              addNotification('SIGNAL', `🛡️ KHÓA SL HÒA VỐN BẢO TOÀN VỐN: BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã có lãi +${profitDelta.toFixed(1)} giá (+${Math.round(profitDelta * 10)} pips). Đã tự động dời SL về $${trade.sl.toFixed(2)} an toàn tuyệt đối!`);
             }
 
             // ĐẠT TP1: CHỈ kích hoạt khi GIÁ LIVE THỰC TẾ chạm mốc TP1 (price <= trade.tp1), tuyệt đối không dùng giá cũ/đáy nến cũ
@@ -5490,17 +5492,20 @@ function startServerSignalEngine() {
             serverActiveTrades[cfg.key] = null;
           }
         } else {
-          // BẢO VỆ TUYỆT ĐỐI 100%: Mỗi mã chỉ có DUY NHẤT 1 lệnh đang hoạt động trong 24h, TUYỆT ĐỐI KHÔNG BAO GIỜ PHÁT LỆNH ĐÈ HOẶC VỪA BUY VỪA SELL!
-          const isAnyTradeRunning = signalsDB.some(s => s && s.asset === cfg.key && s.status && s.status.includes('ĐANG CHẠY') && (now - (s.timestamp * 1000 || 0) < 24 * 3600 * 1000));
-          if (isAnyTradeRunning || serverActiveTrades[cfg.key]) {
-            continue; // Đang có lệnh chạy trên tài sản này trong DB, tuyệt đối KHÔNG ĐƯỢC PHÁT THÊM LỆNH!
+          // Cơ chế Re-entry an toàn: Cho phép thêm 1 lệnh Re-entry khi lệnh trước ĐÃ AN TOÀN (đã kéo SL hòa vốn hoặc cắn TP1)
+          const activeTradesForAsset = signalsDB.filter(s => s && s.asset === cfg.key && s.status && s.status.includes('ĐANG CHẠY') && (now - (s.timestamp * 1000 || 0) < 24 * 3600 * 1000));
+          const unhedgedTrade = activeTradesForAsset.find(s => !s.hitTp1 && !s.trailedToBreakeven);
+
+          if (unhedgedTrade || activeTradesForAsset.length >= 2 || (serverActiveTrades[cfg.key] && !serverActiveTrades[cfg.key].trailedToBreakeven && !serverActiveTrades[cfg.key].hitTp1)) {
+            continue; // Đang có lệnh chưa an toàn (chưa khóa SL hòa vốn) hoặc đã đủ 2 lệnh đang chạy, đứng ngoài bảo vệ vốn
           }
 
           // 2. HỆ THỐNG GIAO DỊCH EMA20 – EMA50 TOÀN DIỆN (HYBRID SNIPER v9.2)
           // Luôn cập nhật nến OHLC thực tế mỗi chu kỳ 30s
           await getServerOHLCBars(cfg.key, price);
 
-          const sniperCooldown = (cfg.key === 'btc') ? 60 * 60 * 1000 : 45 * 60 * 1000;
+          // Rút ngắn cooldown khi có lệnh an toàn hoặc trend mạnh: 20 phút (thay vì 45 phút)
+          const sniperCooldown = (activeTradesForAsset.length > 0) ? 20 * 60 * 1000 : ((cfg.key === 'btc') ? 45 * 60 * 1000 : 25 * 60 * 1000);
           const lastTime = lastSignalTimes[cfg.key] || 0;
           if (now - lastTime >= sniperCooldown) {
             const stateRes = await evaluateAssetMarketState(cfg.key);
