@@ -126,3 +126,17 @@ class SoundAlertManager {
 }
 
 window.soundAlerts = new SoundAlertManager();
+
+// Tự động mở khóa AudioContext ngay khi người dùng chạm hoặc click lần đầu trên màn hình
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  const unlockAudio = () => {
+    try {
+      if (window.soundAlerts) {
+        window.soundAlerts.initAudioContext();
+      }
+    } catch(e) {}
+  };
+  ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+    document.addEventListener(evt, unlockAudio, { passive: true, once: true });
+  });
+}
