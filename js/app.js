@@ -97,14 +97,22 @@ class GoldTradingApp {
     this.initCanvasChart();
     this.bindEvents();
     this.loadInitialBars();
-    this.renderIndicators();
-    this.renderSignalHistory();
-    this.renderNewsAndCalendar();
-    this.startEventCountdown();
-    this.listenToSignalEngine();
-    this.startSimulatedMarketTicks();
-    this.start30MinAITrendAutoPushEngine();
-    this.initNotificationCenterSystem();
+
+    // Khung hình 1: Cho phép UI vẽ xong ngay trong 0ms để người dùng tương tác bấm/vuốt không bị chững lại
+    requestAnimationFrame(() => {
+      this.renderIndicators();
+      this.listenToSignalEngine();
+      this.startSimulatedMarketTicks();
+
+      // Khung hình 2 (Deferred): Khởi tạo các tiến trình phụ khi CPU rảnh rỗi, tuyệt đối không giật lag Main UI
+      setTimeout(() => {
+        this.renderSignalHistory();
+        this.renderNewsAndCalendar();
+        this.startEventCountdown();
+        this.start30MinAITrendAutoPushEngine();
+        this.initNotificationCenterSystem();
+      }, 80);
+    });
   }
 
   // Phương thức kích hoạt khi người dùng chuyển sang Tab Biểu Đồ MA WAVE V8 (Mô Phỏng & Signal Replay)
@@ -137,15 +145,14 @@ class GoldTradingApp {
       this.chart.applyOptions({ width: w, height: h });
     }
 
+    // Chỉ load và vẽ lại toàn bộ nến nếu chưa có dữ liệu trong bộ nhớ
     if (!this.bars || this.bars.length === 0) {
       this.loadInitialBars();
+      if (this.candleSeries && this.bars && this.bars.length > 0) {
+        this.candleSeries.setData(this.bars);
+      }
+      this.renderIndicators();
     }
-
-    if (this.candleSeries && this.bars && this.bars.length > 0) {
-      this.candleSeries.setData(this.bars);
-    }
-
-    this.renderIndicators();
 
     const applyReflow = () => {
       const size = measureSize();

@@ -480,3 +480,20 @@ button:active:not(:disabled), [role="button"]:active {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ── Smooth 0ms Tab View Transition ── */
+#view-chart, #view-ma-wave, #view-trend, #view-history, 
+#view-scalp-swing, #view-account, #view-settings, 
+#view-pine-admin, #view-bot-trading, #view-gold-ai, #view-news {
+  animation: tabFadeQuick 0.08s cubic-bezier(0, 0, 0.2, 1) forwards;
+  will-change: opacity;
+}
+
+@keyframes tabFadeQuick {
+  from {
+    opacity: 0.92;
+  }
+  to {
+    opacity: 1;
+  }
+}
