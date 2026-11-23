@@ -444,7 +444,7 @@
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!--  AUTHENTICATION PAGE (FULLSCREEN PREMIUM DARK)               -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div id="auth-fullscreen-page" class="fixed inset-0 z-[100] bg-[#07010a] flex items-center justify-center p-3 sm:p-6 overflow-y-auto font-sans select-none hidden">
+<div id="auth-fullscreen-page" class="fixed inset-0 z-[100] bg-[#07010a] flex items-center justify-center p-3 sm:p-6 overflow-y-auto overflow-x-hidden w-full max-w-full font-sans select-none hidden" style="overscroll-behavior: contain; touch-action: pan-y;">
   
   <!-- BACKGROUND VIDEO / CINEMATIC FALLBACK -->
   <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
@@ -498,8 +498,8 @@
   </div>
   
   <!-- INTERACTIVE GLASSMORPHIC AUTH CARD WRAPPER (HIỂN THỊ KHI BẤM ĐỒNG Ý ĐĂNG KÝ / ĐĂNG NHẬP) -->
-  <div id="auth-card-wrapper" class="relative z-10 w-full max-w-[430px] my-auto transition-all duration-200 ease-out opacity-0 translate-y-4 scale-95 pointer-events-none hidden" onclick="event.stopPropagation()">
-    <div id="auth-card" class="w-full bg-[#080c14] border border-amber-500/30 rounded-3xl p-5 sm:p-7 shadow-2xl shadow-amber-500/15 space-y-4">
+  <div id="auth-card-wrapper" class="relative z-10 w-full max-w-[430px] my-auto transition-all duration-200 ease-out opacity-0 translate-y-4 scale-95 pointer-events-none hidden overflow-hidden box-border" onclick="event.stopPropagation()">
+    <div id="auth-card" class="w-full max-w-full bg-[#080c14] border border-amber-500/30 rounded-3xl p-5 sm:p-7 shadow-2xl shadow-amber-500/15 space-y-4 overflow-hidden box-border">
       
       <!-- Subtle top champagne gold highlight line -->
       <div class="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-[#f4c95d] to-transparent"></div>
@@ -871,30 +871,36 @@
             </div>
 
             <!-- Link Tham Gia Nhóm Cộng Đồng (Khi chọn gói 99k) -->
-            <div id="paywall-community-join-box" class="p-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/40 space-y-2">
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base shrink-0">
-                    💬
-                  </div>
-                  <div>
-                    <span class="text-[11px] font-black text-amber-300 block">Nhóm Zalo: PRIORITIZE ( 1 )</span>
-                    <span class="text-[9px] text-slate-300">Cộng đồng thành viên Gold Wave</span>
-                  </div>
+            <div id="paywall-community-join-box" class="p-3.5 rounded-2xl bg-gradient-to-b from-amber-500/15 via-yellow-500/10 to-amber-500/10 border border-amber-500/40 space-y-2.5 w-full max-w-full overflow-hidden box-border">
+              <!-- Hàng 1: Tiêu đề nhóm & thông tin rõ ràng, cân đối vừa vặn khung -->
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-slate-950 font-black text-lg shrink-0 shadow-md shadow-amber-500/20">
+                  💬
                 </div>
-                <a id="paywall-community-link" href="https://zalo.me/g/csqvcu122" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-[10px] tracking-wide uppercase transition flex items-center gap-1 shadow shrink-0 cursor-pointer">
-                  <span>👉 VÀO NHÓM</span>
-                  <span>→</span>
-                </a>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs font-black text-amber-300 tracking-tight">Nhóm Zalo: PRIORITIZE ( 1 )</span>
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[9px] font-bold text-emerald-300 uppercase shrink-0">Cộng đồng</span>
+                  </div>
+                  <p class="text-[10px] text-slate-300 truncate mt-0.5">Duyệt & kích hoạt tài khoản nhanh qua nhóm</p>
+                </div>
               </div>
 
-              <div class="flex items-center justify-between pt-1.5 border-t border-amber-500/20 text-[10px]">
-                <div class="flex items-center gap-1 text-slate-300">
-                  <span>Link:</span>
-                  <a href="https://zalo.me/g/csqvcu122" target="_blank" rel="noopener" class="font-mono text-amber-300 font-bold hover:underline">zalo.me/g/csqvcu122</a>
+              <!-- Hàng 2: Nút Tham Gia Nhóm nổi bật, chiếm trọn chiều ngang, bấm cực nhạy trên mobile -->
+              <a id="paywall-community-link" href="https://zalo.me/g/csqvcu122" target="_blank" rel="noopener" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 hover:from-amber-300 hover:to-yellow-400 active:scale-[0.99] text-slate-950 font-black text-xs tracking-wider uppercase transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer">
+                <span>👉 THAM GIA NHÓM ZALO NGAY</span>
+                <span class="text-sm font-black">➔</span>
+              </a>
+
+              <!-- Hàng 3: Link dự phòng & Nút xem QR gọn gàng, không tràn mép -->
+              <div class="pt-2 border-t border-amber-500/20 flex items-center justify-between gap-1 text-[10px]">
+                <div class="flex items-center gap-1 min-w-0 flex-1 text-slate-300 overflow-hidden">
+                  <span class="shrink-0 text-slate-400">Link:</span>
+                  <a href="https://zalo.me/g/csqvcu122" target="_blank" rel="noopener" class="font-mono text-amber-300 font-bold hover:underline truncate">zalo.me/g/csqvcu122</a>
+                  <button type="button" onclick="navigator.clipboard && navigator.clipboard.writeText('https://zalo.me/g/csqvcu122'); typeof showToast === 'function' ? showToast('Đã chép link Zalo!', 'success') : alert('Đã chép link Zalo!');" class="shrink-0 text-[10px] text-slate-400 hover:text-amber-300 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 cursor-pointer" title="Sao chép link">📋</button>
                 </div>
-                <button type="button" onclick="toggleZaloGroupQr()" class="text-amber-400 hover:text-white font-bold cursor-pointer flex items-center gap-1">
-                  <span>📱 Quét QR Zalo</span>
+                <button type="button" onclick="toggleZaloGroupQr()" class="shrink-0 text-amber-400 hover:text-white font-bold cursor-pointer flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition">
+                  <span>📱 Xem QR</span>
                 </button>
               </div>
 
@@ -902,7 +908,7 @@
               <div id="paywall-zalo-qr-drawer" class="hidden pt-2 text-center border-t border-amber-500/20">
                 <p class="text-[10px] text-slate-300 mb-1.5">Mở Zalo quét mã QR dưới đây để vào nhóm PRIORITIZE ( 1 ):</p>
                 <div class="inline-block p-2 bg-white rounded-xl shadow-lg border border-amber-500/40">
-                  <img src="assets/zalo-group-qr.png" alt="Zalo Group PRIORITIZE (1)" class="w-40 h-40 object-contain mx-auto rounded-lg">
+                  <img src="assets/zalo-group-qr.png" alt="Zalo Group PRIORITIZE (1)" class="w-36 h-36 object-contain mx-auto rounded-lg">
                 </div>
               </div>
             </div>
@@ -6654,9 +6660,14 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
       touchStartTime = Date.now();
       isSwipeValid = true;
 
-      // Không can thiệp nếu đang thao tác kéo zoom trên biểu đồ Canvas TradingView hoặc khung nhập chữ
+      // Không can thiệp nếu đang ở màn hình đăng ký/paywall, biểu đồ Canvas TradingView, chat AI hoặc khung nhập chữ
+      const authPage = document.getElementById('auth-fullscreen-page');
+      if (authPage && !authPage.classList.contains('hidden')) {
+        isSwipeValid = false;
+        return;
+      }
       const target = e.target;
-      if (target.closest('#chart-canvas-view') || target.closest('iframe') || target.closest('#gold-ai-chat-messages') || target.closest('input, textarea, select')) {
+      if (target.closest('#auth-fullscreen-page') || target.closest('#auth-card-wrapper') || target.closest('#auth-intro-gate') || target.closest('#chart-canvas-view') || target.closest('iframe') || target.closest('#gold-ai-chat-messages') || target.closest('input, textarea, select, button, a')) {
         isSwipeValid = false;
       }
     }, { passive: true });

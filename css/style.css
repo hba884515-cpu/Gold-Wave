@@ -59,6 +59,26 @@ button:active:not(:disabled), [role="button"]:active {
   -webkit-backface-visibility: hidden;
 }
 
+/* Khóa cố định màn hình Auth & Paywall chống rung lắc/trượt ngang trên điện thoại */
+#auth-fullscreen-page {
+  overflow-x: hidden !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#auth-intro-gate,
+#auth-card-wrapper,
+#auth-card,
+#auth-form-paywall,
+#paywall-community-join-box {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
 @media (max-width: 768px) {
   input, select, textarea {
     font-size: 16px !important;

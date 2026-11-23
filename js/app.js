@@ -4949,7 +4949,7 @@ window.selectPaywallPackage = function(packageId) {
   }
 
   if (commBox) {
-    commBox.style.display = isCommunity ? 'flex' : 'none';
+    commBox.style.display = isCommunity ? 'block' : 'none';
   }
 
   if (isCommunity) {
