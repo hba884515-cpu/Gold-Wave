@@ -2116,6 +2116,9 @@ class SignalEngine {
         // BẮT BUỘC ĐỒNG BỘ 100% NẾU SỐ LỆNH CHƯA TRÙNG KHỚP VỚI MÁY CHỦ (VÍ DỤ MÁY KHÁCH 1654, 1645):
         if (clientCount !== serverCount) {
           console.log(`[SignalEngine] Đồng bộ tuyệt đối: Máy khách (${clientCount}) -> Máy chủ (${serverCount})`);
+          const existingIds = new Set((this.signals || []).map(s => s && String(s.id)));
+          const brandNewSignals = data.signals.filter(s => s && s.id && !existingIds.has(String(s.id)));
+
           this.signals = data.signals;
           this.saveHistory();
           this.triggerSignalUpdate();
@@ -2129,6 +2132,33 @@ class SignalEngine {
             }
             if (typeof window.renderScalpSwingView === 'function') {
               window.renderScalpSwingView();
+            }
+          }
+
+          // CẢNH BÁO TỨC THÌ NẾU CÓ TÍN HIỆU MỚI (chống trôi lệnh khi mở lại điện thoại / mạng ngắt kết nối):
+          if (brandNewSignals.length > 0 && clientCount > 0) {
+            const topNew = brandNewSignals[0];
+            const isBuy = topNew.type === 'BUY';
+            const sigTs = topNew.timestamp ? (topNew.timestamp * 1000) : Date.now();
+            const isRecent = (Date.now() - sigTs) < 15 * 60 * 1000;
+            if (isRecent) {
+              try {
+                if (window.soundAlerts) {
+                  if (isBuy) window.soundAlerts.playBuySound(0.9);
+                  else window.soundAlerts.playSellSound(0.9);
+                }
+                if (navigator.vibrate) {
+                  navigator.vibrate([200, 100, 200, 100, 300]);
+                }
+                if (typeof showToast === 'function') {
+                  showToast(`🚨 TÍN HIỆU MỚI: ${topNew.type} ${topNew.pair || 'XAU/USD'} @ $${topNew.price}`, 'info');
+                }
+                if (typeof window.sendNativePushNotification === 'function') {
+                  window.sendNativePushNotification(`🚨 TÍN HIỆU MỚI: ${topNew.type} ${topNew.pair || 'XAU/USD'}`, {
+                    body: `Vào lệnh ${topNew.type} tại $${topNew.price}. TP1: ${topNew.tp1}, SL: ${topNew.sl}`
+                  });
+                }
+              } catch(e) {}
             }
           }
           return;

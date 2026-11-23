@@ -5588,9 +5588,10 @@ function startServerSignalEngine() {
             };
             lastSignalTimes[cfg.key] = now;
 
-            // Broadcast tới toàn bộ người dùng đang online qua SSE
+            // Broadcast tới toàn bộ người dùng đang online qua SSE (chuẩn hóa cả SIGNAL_NEW & NEW_SIGNAL)
             sseClients.forEach(client => {
               try {
+                client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_NEW', signal: newSignal })}\n\n`);
                 client.res.write(`data: ${JSON.stringify({ type: 'NEW_SIGNAL', signal: newSignal })}\n\n`);
               } catch(e) {}
             });

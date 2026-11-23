@@ -1650,14 +1650,37 @@ class GoldTradingApp {
     this.fetchBackendNotifications();
     this.connectNotificationSSE();
 
+    // Polling dự phòng mỗi 15 giây lấy thông báo mới
     setInterval(() => {
       this.fetchBackendNotifications();
     }, 15000);
+
+    // Tự động hồi phục và đồng bộ tức thì khi người dùng mở điện thoại / quay lại màn hình
+    if (!this._notifLifecycleBound) {
+      this._notifLifecycleBound = true;
+      const handleAppResume = () => {
+        if (!document.hidden) {
+          this.fetchBackendNotifications();
+          if (window.signalEngine && typeof window.signalEngine.syncServerSignals === 'function') {
+            window.signalEngine.syncServerSignals();
+          }
+          // Kiểm tra và kết nối lại SSE nếu bị đứt kết nối ngầm khi khóa màn hình
+          if (!this._activeSSE || this._activeSSE.readyState === EventSource.CLOSED) {
+            this.connectNotificationSSE();
+          }
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleAppResume);
+      window.addEventListener('pageshow', handleAppResume);
+      window.addEventListener('focus', handleAppResume);
+      window.addEventListener('online', handleAppResume);
+    }
   }
 
   async fetchBackendNotifications() {
     try {
-      const res = await fetch('/api/notifications/latest');
+      const res = await fetch('/api/notifications/latest', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'SUCCESS' && Array.isArray(data.notifications)) {
@@ -1682,13 +1705,39 @@ class GoldTradingApp {
   connectNotificationSSE() {
     if (!('EventSource' in window)) return;
     try {
+      if (this._activeSSE) {
+        try { this._activeSSE.close(); } catch(e) {}
+        this._activeSSE = null;
+      }
+
       const sse = new EventSource('/api/notifications/stream');
+      this._activeSSE = sse;
+
+      sse.onopen = () => {
+        if (this._sseReconnectTimer) {
+          clearTimeout(this._sseReconnectTimer);
+          this._sseReconnectTimer = null;
+        }
+      };
+
+      sse.onerror = () => {
+        try { sse.close(); } catch(e) {}
+        this._activeSSE = null;
+        if (!this._sseReconnectTimer) {
+          this._sseReconnectTimer = setTimeout(() => {
+            this._sseReconnectTimer = null;
+            this.connectNotificationSSE();
+          }, 3500);
+        }
+      };
+
       sse.onmessage = (event) => {
         try {
+          if (!event.data || event.data === 'heartbeat') return;
           const item = JSON.parse(event.data);
           if (item) {
-            // 1. Tín hiệu MUA / BÁN mới từ máy chủ tập trung (đồng bộ tức thì cả PC & Điện thoại)
-            if (item.type === 'SIGNAL_NEW' && item.signal) {
+            // 1. Tín hiệu MUA / BÁN mới từ máy chủ tập trung (hỗ trợ cả SIGNAL_NEW & NEW_SIGNAL)
+            if ((item.type === 'SIGNAL_NEW' || item.type === 'NEW_SIGNAL') && item.signal) {
               if (window.signalEngine && typeof window.signalEngine.onServerSignalNew === 'function') {
                 window.signalEngine.onServerSignalNew(item.signal);
               }
@@ -1715,27 +1764,33 @@ class GoldTradingApp {
 
               if (isFresh) {
                 const muteMinor = document.getElementById('bot-check-mute-minor')?.checked !== false;
-                const isMinor = item.title.includes('TP1') || item.title.includes('TP2');
+                const isMinor = item.title && (item.title.includes('TP1') || item.title.includes('TP2'));
 
                 if (!isMinor || !muteMinor) {
                   if (window.soundAlerts) {
                     if (item.category === 'SIGNAL') {
-                      if (item.title.includes('BUY')) window.soundAlerts.playBuySound();
-                      else if (item.title.includes('SELL')) window.soundAlerts.playSellSound();
+                      if (item.title && item.title.includes('BUY')) window.soundAlerts.playBuySound();
+                      else if (item.title && item.title.includes('SELL')) window.soundAlerts.playSellSound();
                       else window.soundAlerts.playPingSound();
                     } else {
                       window.soundAlerts.playPingSound();
                     }
                   }
 
-                  window.sendNativePushNotification(item.title, {
-                    body: item.body,
-                    icon: 'assets/logo.png',
-                    tag: item.id
-                  });
+                  if (navigator.vibrate) {
+                    try { navigator.vibrate([200, 100, 200, 100, 300]); } catch(e) {}
+                  }
+
+                  if (typeof window.sendNativePushNotification === 'function') {
+                    window.sendNativePushNotification(item.title, {
+                      body: item.body,
+                      icon: 'assets/logo.png',
+                      tag: item.id
+                    });
+                  }
 
                   if (typeof showToast === 'function') {
-                    showToast(item.title + '\n' + item.body.slice(0, 60), 'info');
+                    showToast(item.title + '\n' + (item.body ? item.body.slice(0, 60) : ''), 'info');
                   }
                 }
               }
