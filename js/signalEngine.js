@@ -1818,35 +1818,10 @@ class SignalEngine {
     const nowSec = Math.floor(Date.now() / 1000);
 
     (this.signals || []).forEach(sig => {
-      // 🛡️ AUTO-HEALING: Chỉ kiểm tra các lệnh gần nhất trong vòng 24 giờ của đúng mã tài sản
-      if (sig && (!sig.asset || sig.asset.toLowerCase() === a) && (!sig.timestamp || (nowSec - sig.timestamp <= 86400))) {
-        const isBuy = sig.type === 'BUY';
-        const entryP = sig.entryPrice || sig.price;
-        if (sig.status === 'CẮT LỖ AN TOÀN (SL)' || sig.status === 'CLOSED (SL HIT)') {
-          if (!isBuy && currentPrice < sig.sl) {
-            // Lệnh SELL: Giá thị trường hiện tại < SL -> Chưa hề chạm SL!
-            sig.status = 'ĐANG CHẠY (Chờ TP1)';
-            delete sig.winType;
-            sig.pnlPips = Math.round((entryP - currentPrice) * 10);
-            sig.pnlUsd = Math.round((entryP - currentPrice) * 100);
-            sig.reason = `Khôi phục vị thế: Giá thị trường $${currentPrice.toFixed(2)} vẫn nằm an toàn dưới mốc SL $${sig.sl.toFixed(2)}, lệnh tiếp tục chạy!`;
-            hasChanges = true;
-          } else if (isBuy && currentPrice > sig.sl) {
-            // Lệnh BUY: Giá thị trường hiện tại > SL -> Chưa hề chạm SL!
-            sig.status = 'ĐANG CHẠY (Chờ TP1)';
-            delete sig.winType;
-            sig.pnlPips = Math.round((currentPrice - entryP) * 10);
-            sig.pnlUsd = Math.round((currentPrice - entryP) * 100);
-            sig.reason = `Khôi phục vị thế: Giá thị trường $${currentPrice.toFixed(2)} vẫn nằm an toàn trên mốc SL $${sig.sl.toFixed(2)}, lệnh tiếp tục chạy!`;
-            hasChanges = true;
-          }
-        }
-      }
-
-      // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản
+      // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản (Lệnh đã chốt SL/TP/Hòa vốn giữ nguyên vĩnh viễn, không bị nhấp nháy)
       if (sig && sig.status && sig.status.includes('ĐANG CHẠY') && (!sig.asset || sig.asset.toLowerCase() === a)) {
-        // Bảo vệ an toàn: Loại trừ giá dị thường
-        if (a === 'xau' && (currentPrice < 3800 || currentPrice > 4300)) return;
+        // Bảo vệ an toàn: Loại trừ giá dị thường (cho phép Vàng 2500 - 5000)
+        if (a === 'xau' && (currentPrice < 2500 || currentPrice > 5000)) return;
 
         const isBuy = sig.type === 'BUY';
         const entryPrice = sig.entryPrice || sig.price;
@@ -1913,8 +1888,8 @@ class SignalEngine {
               window.soundAlerts.playPingSound();
             }
             this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
-          } else if (currentPrice <= sig.sl && currentPrice < entryPrice) {
-            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT KHI GIÁ THỰC SỰ <= SL VÀ < ENTRY):
+          } else if (currentPrice <= sig.sl) {
+            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG:
             if (sig.hitTp1) {
               sig.winType = 'TP1';
               sig.status = 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️';
@@ -2007,8 +1982,8 @@ class SignalEngine {
               window.soundAlerts.playPingSound();
             }
             this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
-          } else if (currentPrice >= sig.sl && currentPrice > entryPrice) {
-            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT KHI GIÁ THỰC SỰ >= SL VÀ > ENTRY):
+          } else if (currentPrice >= sig.sl) {
+            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG:
             if (sig.hitTp1) {
               sig.winType = 'TP1';
               sig.status = 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️';
@@ -2133,6 +2108,9 @@ class SignalEngine {
             if (typeof window.renderScalpSwingView === 'function') {
               window.renderScalpSwingView();
             }
+            if (typeof window.renderRadarSignalCards === 'function') {
+              window.renderRadarSignalCards();
+            }
           }
 
           // CẢNH BÁO TỨC THÌ NẾU CÓ TÍN HIỆU MỚI (chống trôi lệnh khi mở lại điện thoại / mạng ngắt kết nối):
@@ -2211,6 +2189,9 @@ class SignalEngine {
             }
             if (typeof window.renderScalpSwingView === 'function') {
               window.renderScalpSwingView();
+            }
+            if (typeof window.renderRadarSignalCards === 'function') {
+              window.renderRadarSignalCards();
             }
           }
         }
