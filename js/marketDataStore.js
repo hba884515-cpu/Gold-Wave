@@ -9,12 +9,12 @@ class MarketDataStore {
     this.symbol = 'XAU/USD';
     this.source = 'TVC:GOLD';
     this.timezone = 'Asia/Ho_Chi_Minh';
-    this.currentPrice = 3868.50;
-    this.prevPrice = 3870.00;
-    this.priceChange = -15.39;
-    this.priceChangePercent = -0.40;
-    this.high = 3901.20;
-    this.low = 3835.80;
+    this.currentPrice = 3620.00;
+    this.prevPrice = 3622.00;
+    this.priceChange = -2.00;
+    this.priceChangePercent = -0.05;
+    this.high = 3645.00;
+    this.low = 3605.00;
     this.currentTimeframe = '15m';
     this.connectionStatus = this.isGoldMarketOpen() ? 'LIVE' : 'CLOSED';
     this.lastUpdate = Date.now();
@@ -27,12 +27,12 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 3873.50,
-        prevPrice: 3875.00,
-        change: 17.90,
-        changePercent: 0.46,
-        high: 3887.35,
-        low: 3843.70,
+        price: 3620.00,
+        prevPrice: 3622.00,
+        change: -2.00,
+        changePercent: -0.05,
+        high: 3645.00,
+        low: 3605.00,
         icon: '🪙',
         tag: 'GOLD'
       },
@@ -234,7 +234,7 @@ class MarketDataStore {
     const totalSec = now - startTimestamp;
     const count = Math.max(750, Math.floor(totalSec / sec));
 
-    const targetCurrentPrice = (this.currentPrice && this.currentPrice > 3000 && this.currentPrice < 5000) ? this.currentPrice : 3998.70;
+    const targetCurrentPrice = (this.currentPrice && this.currentPrice > 2500 && this.currentPrice < 5000) ? this.currentPrice : 3620.00;
 
     // Previous days Keyframes: Realistic range
     const histKeyframes = [
