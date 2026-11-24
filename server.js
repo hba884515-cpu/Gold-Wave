@@ -2240,8 +2240,8 @@ function getMacroIndicatorsData() {
     lastUpdated: now
   };
 
-  const xau = (tvMarketPricesCache && tvMarketPricesCache.XAU) ? tvMarketPricesCache.XAU : { price: 3873.50, change: 17.90, changePercent: 0.46 };
-  const btc = (tvMarketPricesCache && tvMarketPricesCache.BTC) ? tvMarketPricesCache.BTC : { price: 64615.00, change: -36.00, changePercent: -0.06 };
+  const xau = (tvMarketPricesCache && tvMarketPricesCache.XAU) ? tvMarketPricesCache.XAU : { price: 3633.00, change: 2.50, changePercent: 0.07 };
+  const btc = (tvMarketPricesCache && tvMarketPricesCache.BTC) ? tvMarketPricesCache.BTC : { price: 60380.00, change: -750.00, changePercent: -1.20 };
 
   // 1. DXY Assessment
   const dxyPrice = Number(dxy.price || 103.885);
@@ -2324,7 +2324,7 @@ function getMacroIndicatorsData() {
   }
 
   // 4. SJC GOLD (Việt Nam)
-  const xauPrice = Number(xau.price || 3873.50);
+  const xauPrice = Number(xau.price || 3633.00);
   let sjcSell = 85.20;
   if (xauPrice > 3000) {
     sjcSell = +(82.0 + (xauPrice - 3700) * 0.025).toFixed(2);
@@ -2492,32 +2492,32 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 3873.50,
-    change: 17.90,
-    changePercent: 0.46,
-    high: 3887.35,
-    low: 3843.70,
-    open: 3855.60,
+    price: 3623.00,
+    change: 22.00,
+    changePercent: 0.61,
+    high: 3681.50,
+    low: 3594.40,
+    open: 3601.00,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
   BTC: {
-    price: 64615.00,
-    change: -36.00,
-    changePercent: -0.06,
-    high: 65626.98,
-    low: 63833.47,
-    open: 64651.16,
+    price: 60380.00,
+    change: -750.00,
+    changePercent: -1.20,
+    high: 64500.00,
+    low: 59300.00,
+    open: 61130.00,
     symbol: 'COINBASE:BTCUSD',
     lastUpdated: Date.now()
   },
   XAG: {
-    price: 45.15,
-    change: 0.04,
-    changePercent: 0.09,
-    high: 45.89,
-    low: 44.54,
-    open: 45.11,
+    price: 42.55,
+    change: -0.63,
+    changePercent: -1.46,
+    high: 43.81,
+    low: 42.34,
+    open: 43.18,
     symbol: 'TVC:SILVER',
     lastUpdated: Date.now()
   },
@@ -2565,41 +2565,66 @@ function isGoldMarketOpen() {
 
 function fetchGoldApiPriceDirect() {
   return new Promise((resolve) => {
-    const req = https.get('https://api.gold-api.com/price/XAU', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
+    // 1. Primary: Binance PAXG/USDT (Vàng thật token hóa 1:1, chạy 24/7 siêu tốc, không bị chặn cloud IP)
+    https.get('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
         try {
-          const json = JSON.parse(body);
-          if (json && json.price && !isNaN(json.price) && json.price > 0) {
-            return resolve(parseFloat(json.price));
+          const j = JSON.parse(body);
+          if (j && j.lastPrice && !isNaN(j.lastPrice)) {
+            const price = parseFloat(j.lastPrice);
+            const open = parseFloat(j.openPrice || price);
+            const high = parseFloat(j.highPrice || price);
+            const low = parseFloat(j.lowPrice || price);
+            const chg = +(price - open).toFixed(2);
+            const chgPct = +((chg / open) * 100).toFixed(2);
+            return resolve({ price, change: chg, changePercent: chgPct, high, low, open, symbol: 'BINANCE:PAXGUSDT' });
           }
         } catch (e) {}
-        resolve(null);
+        // 2. Fallback: Yahoo Finance GC=F
+        https.get('https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (yRes) => {
+          let yb = '';
+          yRes.on('data', c => yb += c);
+          yRes.on('end', () => {
+            try {
+              const yj = JSON.parse(yb);
+              const meta = yj.chart.result[0].meta;
+              const p = parseFloat(meta.regularMarketPrice);
+              const open = parseFloat(meta.chartPreviousClose || meta.previousClose || p);
+              const high = parseFloat(meta.regularMarketDayHigh || p);
+              const low = parseFloat(meta.regularMarketDayLow || p);
+              const chg = +(p - open).toFixed(2);
+              const chgPct = +((chg / open) * 100).toFixed(2);
+              return resolve({ price: p, change: chg, changePercent: chgPct, high, low, open, symbol: 'YAHOO:GC=F' });
+            } catch(e) { resolve(null); }
+          });
+        }).on('error', () => resolve(null));
       });
-    });
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-    req.on('error', () => resolve(null));
+    }).on('error', () => resolve(null));
   });
 }
 
 function fetchSilverApiPriceDirect() {
   return new Promise((resolve) => {
-    const req = https.get('https://api.gold-api.com/price/XAG', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
+    // 1. Primary: Yahoo Finance SI=F (Bạc thế giới)
+    https.get('https://query1.finance.yahoo.com/v8/finance/chart/SI=F?interval=1d&range=1d', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
         try {
-          const json = JSON.parse(body);
-          if (json && json.price && !isNaN(json.price) && json.price > 0) {
-            return resolve(parseFloat(json.price));
-          }
-        } catch (e) {}
-        resolve(null);
+          const j = JSON.parse(body);
+          const meta = j.chart.result[0].meta;
+          const p = parseFloat(meta.regularMarketPrice);
+          const open = parseFloat(meta.chartPreviousClose || meta.previousClose || p);
+          const high = parseFloat(meta.regularMarketDayHigh || p);
+          const low = parseFloat(meta.regularMarketDayLow || p);
+          const chg = +(p - open).toFixed(2);
+          const chgPct = +((chg / open) * 100).toFixed(2);
+          return resolve({ price: p, change: chg, changePercent: chgPct, high, low, open, symbol: 'YAHOO:SI=F' });
+        } catch (e) { resolve(null); }
       });
-    });
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-    req.on('error', () => resolve(null));
+    }).on('error', () => resolve(null));
   });
 }
 
@@ -2833,37 +2858,63 @@ async function fetchTradingViewAllPrices() {
 
     const [liveGold, liveSilver, liveBtc] = await Promise.all(fallbackTasks);
 
-    if (liveGold && liveGold > 0) {
-      const openPrice = tvMarketPricesCache.XAU.open || 3855.60;
-      const chgAbs = +(liveGold - openPrice).toFixed(2);
-      const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
-      tvMarketPricesCache.XAU = {
-        price: +liveGold.toFixed(2),
-        change: chgAbs,
-        changePercent: chgPct,
-        high: +Math.max(tvMarketPricesCache.XAU.high || 3887.35, liveGold).toFixed(2),
-        low: +Math.min(tvMarketPricesCache.XAU.low || 3843.70, liveGold).toFixed(2),
-        open: openPrice,
-        symbol: 'TVC:GOLD',
-        lastUpdated: now
-      };
+    if (liveGold) {
+      if (typeof liveGold === 'object' && liveGold.price > 0) {
+        tvMarketPricesCache.XAU = {
+          price: +Number(liveGold.price).toFixed(2),
+          change: +Number(liveGold.change || 0).toFixed(2),
+          changePercent: +Number(liveGold.changePercent || 0).toFixed(2),
+          high: +Number(liveGold.high || liveGold.price).toFixed(2),
+          low: +Number(liveGold.low || liveGold.price).toFixed(2),
+          open: +Number(liveGold.open || liveGold.price).toFixed(2),
+          symbol: liveGold.symbol || 'BINANCE:PAXGUSDT',
+          lastUpdated: now
+        };
+      } else if (typeof liveGold === 'number' && liveGold > 0) {
+        const openPrice = tvMarketPricesCache.XAU.open || liveGold;
+        const chgAbs = +(liveGold - openPrice).toFixed(2);
+        const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
+        tvMarketPricesCache.XAU = {
+          price: +liveGold.toFixed(2),
+          change: chgAbs,
+          changePercent: chgPct,
+          high: +Math.max(tvMarketPricesCache.XAU.high || liveGold, liveGold).toFixed(2),
+          low: +Math.min(tvMarketPricesCache.XAU.low || liveGold, liveGold).toFixed(2),
+          open: openPrice,
+          symbol: 'TVC:GOLD',
+          lastUpdated: now
+        };
+      }
       tvGoldDataCache = tvMarketPricesCache.XAU;
     }
 
-    if (liveSilver && liveSilver > 0) {
-      const openPrice = tvMarketPricesCache.XAG.open || 45.11;
-      const chgAbs = +(liveSilver - openPrice).toFixed(2);
-      const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
-      tvMarketPricesCache.XAG = {
-        price: +liveSilver.toFixed(2),
-        change: chgAbs,
-        changePercent: chgPct,
-        high: +Math.max(tvMarketPricesCache.XAG.high || 45.89, liveSilver).toFixed(2),
-        low: +Math.min(tvMarketPricesCache.XAG.low || 44.54, liveSilver).toFixed(2),
-        open: openPrice,
-        symbol: 'TVC:SILVER',
-        lastUpdated: now
-      };
+    if (liveSilver) {
+      if (typeof liveSilver === 'object' && liveSilver.price > 0) {
+        tvMarketPricesCache.XAG = {
+          price: +Number(liveSilver.price).toFixed(2),
+          change: +Number(liveSilver.change || 0).toFixed(2),
+          changePercent: +Number(liveSilver.changePercent || 0).toFixed(2),
+          high: +Number(liveSilver.high || liveSilver.price).toFixed(2),
+          low: +Number(liveSilver.low || liveSilver.price).toFixed(2),
+          open: +Number(liveSilver.open || liveSilver.price).toFixed(2),
+          symbol: liveSilver.symbol || 'YAHOO:SI=F',
+          lastUpdated: now
+        };
+      } else if (typeof liveSilver === 'number' && liveSilver > 0) {
+        const openPrice = tvMarketPricesCache.XAG.open || liveSilver;
+        const chgAbs = +(liveSilver - openPrice).toFixed(2);
+        const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
+        tvMarketPricesCache.XAG = {
+          price: +liveSilver.toFixed(2),
+          change: chgAbs,
+          changePercent: chgPct,
+          high: +Math.max(tvMarketPricesCache.XAG.high || liveSilver, liveSilver).toFixed(2),
+          low: +Math.min(tvMarketPricesCache.XAG.low || liveSilver, liveSilver).toFixed(2),
+          open: openPrice,
+          symbol: 'TVC:SILVER',
+          lastUpdated: now
+        };
+      }
     }
 
     if (liveBtc && liveBtc.price > 0) {

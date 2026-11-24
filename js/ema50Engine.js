@@ -648,10 +648,10 @@
 
     const dRatioOK = rangeReversal ? true : (dRatio >= assetCfg.minD);
 
-    // Kiểm tra cấu trúc sóng: Bắt buộc cấu trúc phải rõ ràng theo xu hướng (Không cho phép MIXED khi bắt điểm trend)
+    // Kiểm tra cấu trúc sóng: Rõ ràng theo xu hướng hoặc khi điểm số cao (>= 80 CONFIRMED) cho phép tiếp diễn trend
     const structureValid = dirIsBuy
-      ? (structure.label === 'HH/HL' || structure.bos === 'BOS_BULL')
-      : (structure.label === 'LH/LL' || structure.bos === 'BOS_BEAR');
+      ? (structure.label === 'HH/HL' || structure.bos === 'BOS_BULL' || (finalScore >= 80 && structure.label !== 'LH/LL'))
+      : (structure.label === 'LH/LL' || structure.bos === 'BOS_BEAR' || (finalScore >= 80 && structure.label !== 'HH/HL'));
 
     // Chặn bắt dao rơi / cản sóng hồi: Khung M5 không được phép đi ngược xu hướng (ví dụ SELL nhưng nến M5 đang bật tăng BULL)
     const mtfM5Opposing = dirIsBuy
