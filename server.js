@@ -5674,6 +5674,24 @@ setInterval(() => {
   }
 }, 20000);
 
+// 24/7 Keep-Alive Watchdog: Tự động ping external URL mỗi 7 phút để chống Render Free Tier ngủ gật (15 min inactivity spin down)
+const RENDER_EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL || 'https://gold-wave-terminal-kf8k.onrender.com';
+function keepServerAlive() {
+  const pingUrl = `${RENDER_EXTERNAL_URL}/api/health`;
+  try {
+    const client = pingUrl.startsWith('https') ? https : http;
+    client.get(pingUrl, { timeout: 10000 }, (res) => {
+      console.log(`[Keep-Alive Watchdog] Ping ${pingUrl} -> Status: ${res.statusCode} (24/7 Active)`);
+    }).on('error', (err) => {
+      console.warn(`[Keep-Alive Watchdog] Ping warning: ${err.message}`);
+    });
+  } catch(e) {
+    console.warn(`[Keep-Alive Watchdog] Exception: ${e.message}`);
+  }
+}
+setInterval(keepServerAlive, 7 * 60 * 1000); // 7 phút/lần (ngăn Render sleep sau 15 phút)
+setTimeout(keepServerAlive, 15 * 1000); // Lần đầu sau 15s khởi động
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[Gold News & Auth Server] Running on:`);
   console.log(` - Local:   http://localhost:${PORT}`);
