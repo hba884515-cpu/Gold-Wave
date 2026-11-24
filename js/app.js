@@ -2071,7 +2071,7 @@ class GoldTradingApp {
     this.currentHistoryDateFilter = null;
     const dateInput = document.getElementById('hist-custom-datepicker');
     if (dateInput) dateInput.value = '';
-    this.setHistoryFilter('today');
+    this.setHistoryFilter('all');
   }
 
   renderSignalHistory() {
@@ -2081,6 +2081,11 @@ class GoldTradingApp {
     let allSignals = window.signalEngine ? (window.signalEngine.signals || []) : [];
     const filterKey = this.currentHistoryFilter || 'all';
     const assetFilter = (this.currentHistoryAssetFilter || 'ALL').toUpperCase();
+
+    const hintBanner = document.getElementById('hist-filter-hint-banner');
+    if (hintBanner) {
+      hintBanner.style.display = (filterKey === 'today') ? 'flex' : 'none';
+    }
 
     // 1. Lọc theo mã tài sản (VÀNG XAU, BITCOIN BTC, BẠC XAG hoặc TẤT CẢ)
     let filteredByAsset = allSignals;

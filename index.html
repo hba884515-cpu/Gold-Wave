@@ -1862,9 +1862,9 @@
                   class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] sm:text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0">
             📥 Xuất Excel (CSV)
           </button>
-          <button id="reset-history-btn" onclick="if(confirm('Bạn có chắc muốn xóa lịch sử tín hiệu?')){ window.signalEngine.clearHistory(); window.app.renderIndicators(); }"
-                  class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] sm:text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0">
-            🔄 Xóa
+          <button id="sync-history-btn" onclick="if(window.signalEngine) window.signalEngine.syncServerSignals(); if(typeof showToast==='function') showToast('🔄 Đã đồng bộ dữ liệu mới nhất từ máy chủ!', 'info');"
+                  class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] sm:text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0">
+            🔄 Đồng Bộ Máy Chủ
           </button>
           <button onclick="window.soundAlerts.initAudioContext(); window.signalEngine.triggerTestSignal('BUY', window.app.currentPrice);"
                   class="px-2 sm:px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold transition cursor-pointer shrink-0">
@@ -2016,12 +2016,12 @@
               <div class="px-3 sm:px-5 py-2 bg-[#0d1117]/80 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2 shrink-0">
                 <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto py-0.5 touch-pan-x">
                   <span class="text-xs font-bold text-slate-400 mr-1 shrink-0 flex items-center gap-1">📅 Thời Gian:</span>
-                  <button onclick="if(window.app) window.app.setHistoryFilter('today')" id="hist-filter-today" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 cursor-pointer">⚡ Hôm Nay</button>
+                  <button onclick="if(window.app) window.app.setHistoryFilter('all')" id="hist-filter-all" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 cursor-pointer">🌐 Toàn Bộ (1.743+)</button>
+                  <button onclick="if(window.app) window.app.setHistoryFilter('today')" id="hist-filter-today" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">⚡ Hôm Nay</button>
                   <button onclick="if(window.app) window.app.setHistoryFilter('7d')" id="hist-filter-7d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">7 Ngày</button>
                   <button onclick="if(window.app) window.app.setHistoryFilter('30d')" id="hist-filter-30d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">30 Ngày</button>
                   <button onclick="if(window.app) window.app.setHistoryFilter('60d')" id="hist-filter-60d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">60 Ngày</button>
                   <button onclick="if(window.app) window.app.setHistoryFilter('90d')" id="hist-filter-90d" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">90 Ngày</button>
-                  <button onclick="if(window.app) window.app.setHistoryFilter('all')" id="hist-filter-all" class="hist-filter-btn shrink-0 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Toàn Bộ (1.626+)</button>
                   
                   <!-- Date Picker Chọn Ngày Cụ Thể -->
                   <div class="flex items-center gap-1 bg-slate-800/90 border border-slate-700/80 px-2 py-0.5 rounded-lg shrink-0">
@@ -2035,13 +2035,13 @@
           </div>
 
           <!-- Banner Hướng Dẫn Bộ Lọc Khi Đang Xem Hôm Nay -->
-          <div id="hist-filter-hint-banner" class="mx-3 sm:mx-5 mt-2.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between flex-wrap gap-2 text-xs">
+          <div id="hist-filter-hint-banner" style="display: none;" class="mx-3 sm:mx-5 mt-2.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between flex-wrap gap-2 text-xs">
             <div class="flex items-center gap-2 text-amber-300 font-sans">
               <span>💡</span>
-              <span>Lịch sử <strong>1.626+ lệnh</strong> vẫn được lưu trữ đầy đủ. Bạn đang chọn bộ lọc <strong>Hôm Nay</strong> nên danh sách chỉ hiển thị các lệnh của ngày hôm nay. Bấm nút <strong>[Toàn Bộ (1.626+)]</strong> hoặc <strong>[7 Ngày]</strong> để xem toàn bộ lịch sử các ngày trước.</span>
+              <span>Lịch sử <strong>1.743+ lệnh</strong> vẫn được lưu trữ đầy đủ. Bạn đang chọn bộ lọc <strong>Hôm Nay</strong> nên danh sách chỉ hiển thị các lệnh của ngày hôm nay. Bấm nút <strong>[Toàn Bộ (1.743+)]</strong> hoặc <strong>[7 Ngày]</strong> để xem toàn bộ lịch sử các ngày trước.</span>
             </div>
             <button onclick="if(window.app) window.app.setHistoryFilter('all')" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-[11px] shadow hover:bg-amber-400 transition cursor-pointer shrink-0">
-              Xem Toàn Bộ 1.626 Lệnh ➔
+              Xem Toàn Bộ 1.737 Lệnh ➔
             </button>
           </div>
 
@@ -7045,7 +7045,7 @@ alertcondition(breakSWDown, "PHÁ SW XUỐNG", "MA WAVE V8: Giá phá biên SW x
 <script src="./js/signalEngine.js?v=9.3.43"></script>
 <script src="./js/newsData.js?v=9.3.33"></script>
 <script src="./js/newsAdapter.js?v=9.3.44"></script>
-<script src="./js/app.js?v=9.3.46"></script>
+<script src="./js/app.js?v=9.3.50"></script>
 
 
 
