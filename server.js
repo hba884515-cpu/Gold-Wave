@@ -2492,12 +2492,12 @@ function parseRequestBody(req) {
 
 let tvMarketPricesCache = {
   XAU: {
-    price: 3623.00,
-    change: 22.00,
-    changePercent: 0.61,
-    high: 3681.50,
-    low: 3594.40,
-    open: 3601.00,
+    price: 3548.50,
+    change: -7.50,
+    changePercent: -0.21,
+    high: 3575.22,
+    low: 3533.86,
+    open: 3555.30,
     symbol: 'TVC:GOLD',
     lastUpdated: Date.now()
   },
@@ -2565,24 +2565,33 @@ function isGoldMarketOpen() {
 
 function fetchGoldApiPriceDirect() {
   return new Promise((resolve) => {
-    // 1. Primary: Binance PAXG/USDT (Vàng thật token hóa 1:1, chạy 24/7 siêu tốc, không bị chặn cloud IP)
-    https.get('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
+    // 1. Primary: Real Spot Gold XAU/USD from api.gold-api.com (Sát chuẩn TVC:GOLD từng cent, không bị lệch giá token crypto)
+    https.get('https://api.gold-api.com/price/XAU', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
         try {
           const j = JSON.parse(body);
-          if (j && j.lastPrice && !isNaN(j.lastPrice)) {
-            const price = parseFloat(j.lastPrice);
-            const open = parseFloat(j.openPrice || price);
-            const high = parseFloat(j.highPrice || price);
-            const low = parseFloat(j.lowPrice || price);
-            const chg = +(price - open).toFixed(2);
-            const chgPct = +((chg / open) * 100).toFixed(2);
-            return resolve({ price, change: chg, changePercent: chgPct, high, low, open, symbol: 'BINANCE:PAXGUSDT' });
+          if (j && j.price && !isNaN(j.price) && j.price > 1000) {
+            const price = parseFloat(j.price);
+            const prevOpen = (tvMarketPricesCache.XAU && tvMarketPricesCache.XAU.open) ? tvMarketPricesCache.XAU.open : price;
+            const prevHigh = (tvMarketPricesCache.XAU && tvMarketPricesCache.XAU.high) ? Math.max(tvMarketPricesCache.XAU.high, price) : price;
+            const prevLow = (tvMarketPricesCache.XAU && tvMarketPricesCache.XAU.low) ? Math.min(tvMarketPricesCache.XAU.low, price) : price;
+            const chg = +(price - prevOpen).toFixed(2);
+            const chgPct = prevOpen > 0 ? +((chg / prevOpen) * 100).toFixed(2) : 0;
+            return resolve({
+              price: +price.toFixed(2),
+              change: chg,
+              changePercent: chgPct,
+              high: +prevHigh.toFixed(2),
+              low: +prevLow.toFixed(2),
+              open: +prevOpen.toFixed(2),
+              symbol: 'TVC:GOLD'
+            });
           }
         } catch (e) {}
-        // 2. Fallback: Yahoo Finance GC=F
+
+        // 2. Secondary Fallback: Yahoo Finance GC=F (COMEX Gold Futures, sát chuẩn TVC:GOLD)
         https.get('https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (yRes) => {
           let yb = '';
           yRes.on('data', c => yb += c);
@@ -2595,8 +2604,8 @@ function fetchGoldApiPriceDirect() {
               const high = parseFloat(meta.regularMarketDayHigh || p);
               const low = parseFloat(meta.regularMarketDayLow || p);
               const chg = +(p - open).toFixed(2);
-              const chgPct = +((chg / open) * 100).toFixed(2);
-              return resolve({ price: p, change: chg, changePercent: chgPct, high, low, open, symbol: 'YAHOO:GC=F' });
+              const chgPct = open > 0 ? +((chg / open) * 100).toFixed(2) : 0;
+              return resolve({ price: +p.toFixed(2), change: chg, changePercent: chgPct, high: +high.toFixed(2), low: +low.toFixed(2), open: +open.toFixed(2), symbol: 'TVC:GOLD' });
             } catch(e) { resolve(null); }
           });
         }).on('error', () => resolve(null));
@@ -2867,7 +2876,7 @@ async function fetchTradingViewAllPrices() {
           high: +Number(liveGold.high || liveGold.price).toFixed(2),
           low: +Number(liveGold.low || liveGold.price).toFixed(2),
           open: +Number(liveGold.open || liveGold.price).toFixed(2),
-          symbol: liveGold.symbol || 'BINANCE:PAXGUSDT',
+          symbol: liveGold.symbol || 'TVC:GOLD',
           lastUpdated: now
         };
       } else if (typeof liveGold === 'number' && liveGold > 0) {

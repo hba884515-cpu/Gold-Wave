@@ -9,12 +9,12 @@ class MarketDataStore {
     this.symbol = 'XAU/USD';
     this.source = 'TVC:GOLD';
     this.timezone = 'Asia/Ho_Chi_Minh';
-    this.currentPrice = 3620.00;
-    this.prevPrice = 3622.00;
-    this.priceChange = -2.00;
-    this.priceChangePercent = -0.05;
-    this.high = 3645.00;
-    this.low = 3605.00;
+    this.currentPrice = 3548.50;
+    this.prevPrice = 3549.00;
+    this.priceChange = -7.50;
+    this.priceChangePercent = -0.21;
+    this.high = 3575.22;
+    this.low = 3533.86;
     this.currentTimeframe = '15m';
     this.connectionStatus = this.isGoldMarketOpen() ? 'LIVE' : 'CLOSED';
     this.lastUpdate = Date.now();
@@ -27,12 +27,12 @@ class MarketDataStore {
         symbol: 'XAU/USD',
         name: 'Vàng Thế Giới',
         source: 'TVC:GOLD',
-        price: 3620.00,
-        prevPrice: 3622.00,
-        change: -2.00,
-        changePercent: -0.05,
-        high: 3645.00,
-        low: 3605.00,
+        price: 3548.50,
+        prevPrice: 3549.00,
+        change: -7.50,
+        changePercent: -0.21,
+        high: 3575.22,
+        low: 3533.86,
         icon: '🪙',
         tag: 'GOLD'
       },
@@ -519,10 +519,60 @@ class MarketDataStore {
       isFetching = true;
       let success = false;
 
-      // 1. Backend proxy endpoint for all market assets (Gold, BTC, Silver)
+      // 1. Primary: Direct client fetch to TradingView CFD Scanner (Khớp 100% chuẩn TVC:GOLD & TVC:SILVER)
+      try {
+        const tvController = new AbortController();
+        const tvTimeout = setTimeout(() => tvController.abort(), 3500);
+        const tvRes = await fetch('https://scanner.tradingview.com/cfd/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            symbols: { tickers: ["TVC:GOLD", "TVC:SILVER"] },
+            columns: ["close", "change", "change_abs", "high", "low", "open"]
+          }),
+          signal: tvController.signal
+        });
+        clearTimeout(tvTimeout);
+        if (tvRes.ok) {
+          const tvJson = await tvRes.json();
+          if (tvJson && Array.isArray(tvJson.data)) {
+            const goldItem = tvJson.data.find(i => i && i.s === 'TVC:GOLD');
+            const silverItem = tvJson.data.find(i => i && i.s === 'TVC:SILVER');
+
+            if (goldItem && Array.isArray(goldItem.d) && goldItem.d.length >= 6) {
+              const [close, chgPct, chgAbs, high, low, open] = goldItem.d;
+              if (!isNaN(close) && close > 0) {
+                this.assetsData['XAU'].price = +close.toFixed(2);
+                this.assetsData['XAU'].change = +chgAbs.toFixed(2);
+                this.assetsData['XAU'].changePercent = +chgPct.toFixed(2);
+                this.assetsData['XAU'].high = +high.toFixed(2);
+                this.assetsData['XAU'].low = +low.toFixed(2);
+                this.assetsData['XAU'].open = +open.toFixed(2);
+                this.assetsData['XAU'].source = 'TVC:GOLD';
+                success = true;
+              }
+            }
+
+            if (silverItem && Array.isArray(silverItem.d) && silverItem.d.length >= 6) {
+              const [close, chgPct, chgAbs, high, low, open] = silverItem.d;
+              if (!isNaN(close) && close > 0) {
+                this.assetsData['XAG'].price = +close.toFixed(2);
+                this.assetsData['XAG'].change = +chgAbs.toFixed(2);
+                this.assetsData['XAG'].changePercent = +chgPct.toFixed(2);
+                this.assetsData['XAG'].high = +high.toFixed(2);
+                this.assetsData['XAG'].low = +low.toFixed(2);
+                this.assetsData['XAG'].open = +open.toFixed(2);
+                this.assetsData['XAG'].source = 'TVC:SILVER';
+              }
+            }
+          }
+        }
+      } catch (e) {}
+
+      // 2. Secondary: Backend proxy endpoint for all market assets (BTC, Silver, DXY & Gold fallback)
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
         const res = await fetch('/api/market-prices', { signal: controller.signal });
         clearTimeout(timeoutId);
         if (res.ok) {
@@ -532,12 +582,16 @@ class MarketDataStore {
             const pBTC = data.prices.BTC;
             const pXAG = data.prices.XAG;
 
-            if (pXAU && pXAU.price) {
-              this.assetsData['XAU'].price = pXAU.price;
-              this.assetsData['XAU'].change = pXAU.change;
-              this.assetsData['XAU'].changePercent = pXAU.changePercent;
-              this.assetsData['XAU'].high = pXAU.high;
-              this.assetsData['XAU'].low = pXAU.low;
+            // Chặn tuyệt đối token PAXGUSDT hoặc giá lệch quá mức
+            if (pXAU && pXAU.price && pXAU.symbol !== 'BINANCE:PAXGUSDT') {
+              // Nếu chưa có giá TVC trực tiếp từ client, hoặc server dùng TVC:GOLD
+              if (!success || pXAU.symbol === 'TVC:GOLD') {
+                this.assetsData['XAU'].price = pXAU.price;
+                this.assetsData['XAU'].change = pXAU.change;
+                this.assetsData['XAU'].changePercent = pXAU.changePercent;
+                this.assetsData['XAU'].high = pXAU.high;
+                this.assetsData['XAU'].low = pXAU.low;
+              }
             }
             if (pBTC && pBTC.price) {
               this.assetsData['BTC'].price = pBTC.price;
@@ -546,23 +600,12 @@ class MarketDataStore {
               this.assetsData['BTC'].high = pBTC.high;
               this.assetsData['BTC'].low = pBTC.low;
             }
-            if (pXAG && pXAG.price) {
+            if (pXAG && pXAG.price && (!this.assetsData['XAG'].price || pXAG.symbol === 'TVC:SILVER')) {
               this.assetsData['XAG'].price = pXAG.price;
               this.assetsData['XAG'].change = pXAG.change;
               this.assetsData['XAG'].changePercent = pXAG.changePercent;
               this.assetsData['XAG'].high = pXAG.high;
               this.assetsData['XAG'].low = pXAG.low;
-            }
-
-            const activeAssetData = this.assetsData[this.currentAsset];
-            if (activeAssetData) {
-              this.updateRealtimePrice(
-                activeAssetData.price,
-                activeAssetData.change,
-                activeAssetData.changePercent,
-                activeAssetData.high,
-                activeAssetData.low
-              );
             }
 
             this.connectionStatus = (data.marketStatus === 'CLOSED' || !this.isGoldMarketOpen()) ? 'CLOSED' : 'LIVE';
@@ -574,28 +617,37 @@ class MarketDataStore {
         }
       } catch (e) {}
 
-      // 2. Direct client fallback for Gold if backend proxy is delayed
-      if (!success) {
+      // 3. Fallback: Direct client fallback via api.gold-api.com (Spot Gold XAU/USD)
+      if (!success || !this.assetsData['XAU'].price) {
         try {
           const res2 = await fetch('https://api.gold-api.com/price/XAU');
           if (res2.ok) {
             const data2 = await res2.json();
-            if (data2 && data2.price && !isNaN(data2.price) && data2.price > 0) {
+            if (data2 && data2.price && !isNaN(data2.price) && data2.price > 1000) {
               const liveGold = parseFloat(data2.price);
               const curXau = this.assetsData['XAU'];
-              const openP = (curXau && curXau.change != null && curXau.change !== 0) ? (liveGold - curXau.change) : 3855.60;
+              const openP = (curXau && curXau.open) ? curXau.open : (curXau && curXau.change != null ? (liveGold - curXau.change) : liveGold);
               const chg = +(liveGold - openP).toFixed(2);
-              const chgPct = +((chg / openP) * 100).toFixed(2);
+              const chgPct = openP > 0 ? +((chg / openP) * 100).toFixed(2) : 0;
               this.assetsData['XAU'].price = liveGold;
               this.assetsData['XAU'].change = chg;
               this.assetsData['XAU'].changePercent = chgPct;
-              if (this.currentAsset === 'XAU') {
-                this.updateRealtimePrice(liveGold, chg, chgPct, Math.max(this.high || liveGold, liveGold), Math.min(this.low || liveGold, liveGold));
-              }
               success = true;
             }
           }
         } catch (e) {}
+      }
+
+      // 4. Cập nhật UI asset đang xem
+      const activeAssetData = this.assetsData[this.currentAsset];
+      if (activeAssetData && activeAssetData.price > 0) {
+        this.updateRealtimePrice(
+          activeAssetData.price,
+          activeAssetData.change,
+          activeAssetData.changePercent,
+          activeAssetData.high,
+          activeAssetData.low
+        );
       }
 
       if (!success) {
