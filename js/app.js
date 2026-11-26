@@ -2301,9 +2301,14 @@ class GoldTradingApp {
             <td class="py-3 px-3">${assetBadge}</td>
             <td class="py-3 px-3 text-slate-300 font-mono">${sig.time}</td>
             <td class="py-3 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                ${isBuy ? 'BUY ENTRY' : 'SELL ENTRY'}
-              </span>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                  ${isBuy ? 'BUY' : 'SELL'}
+                </span>
+                ${(sig.waveType === 'SCALP' || (sig.strategy && sig.strategy.includes('SCALP')) || (sig.reason && sig.reason.includes('M5')) || sig.timeframe === 'M5') 
+                  ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">🎯 SCALP M5</span>'
+                  : '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">🚀 SÓNG LỚN</span>'}
+              </div>
             </td>
             <td class="py-3 px-3 text-slate-200 font-bold">${fmtP(sig.price, isBtc)}</td>
             <td class="py-3 px-3 text-rose-400/90">${fmtP(sig.sl, isBtc)}</td>
@@ -2361,9 +2366,12 @@ class GoldTradingApp {
           <div class="bg-gradient-to-b from-[#0e241c] to-[#07130f] border ${isBuy ? 'border-emerald-500/35 hover:border-emerald-400/60' : 'border-rose-500/35 hover:border-rose-400/60'} rounded-2xl p-3.5 space-y-3 shadow-lg relative overflow-hidden transition-all duration-200">
             <!-- Header: Mã tài sản + ID + Giờ + Badge Mua/Bán -->
             <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
                 ${assetBadge}
                 <span class="text-[11px] font-mono font-bold text-slate-400">#${sig.id}</span>
+                ${(sig.waveType === 'SCALP' || (sig.strategy && sig.strategy.includes('SCALP')) || (sig.reason && sig.reason.includes('M5')) || sig.timeframe === 'M5') 
+                  ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">🎯 SCALP M5</span>'
+                  : '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">🚀 SÓNG LỚN M15</span>'}
               </div>
               <span class="px-2.5 py-0.5 rounded-lg text-xs font-black ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-sm shadow-rose-500/20'} flex items-center gap-1">
                 <span>${isBuy ? '🟢 BUY ENTRY' : '🔴 SELL ENTRY'}</span>

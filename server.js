@@ -3280,34 +3280,54 @@ async function evaluateAssetMarketState(assetKey) {
     };
   }
 
-  // Đánh giá đa khung theo Mục 10: M15 cấu trúc/vùng hồi + M5 quan sát tín hiệu ngắn hạn
+  // Đánh giá đa khung 2 tầng sóng (Dual-Wave Architecture):
+  // TẦNG 1: SÓNG LỚN (Trend Wave / Macro Swing - Khung M15 / H1)
   const primaryBars = ohlc.bars15m.length >= 56 ? ohlc.bars15m : ohlc.bars5m;
   let analysis = EMA50Engine.analyze(primaryBars, {
     asset: key,
     livePrice,
     mtfContext,
     newsGuard,
-    useClosedBar: true
+    useClosedBar: true,
+    waveType: 'TREND'
   });
 
+  if (analysis && analysis.shouldEmit) {
+    analysis.waveType = 'TREND';
+    analysis.strategyType = 'trend';
+    analysis.triggerTimeframe = 'M15';
+    analysis.reason = `[SÓNG LỚN - TREND WAVE 🚀] ${analysis.reason}`;
+  }
+
+  // TẦNG 2: SÓNG NHỎ (Scalp Wave / Micro Pullback - Khung M5)
+  // Khi Sóng Lớn M15 chưa sẵn sàng, kích hoạt Sóng Nhỏ M5 để nhạy bén bắt nhịp hồi nhanh:
+  // 1. Điểm số M5 đạt chuẩn cao (Score >= 78)
+  // 2. Không xung đột với xu hướng lớn H1/M30 (H1 & M30 đồng thuận, alignedCount >= 3, không xung đột)
+  // 3. Cấu trúc M5 rõ nét (HH/HL hoặc BOS_BULL cho BUY; LH/LL hoặc BOS_BEAR cho SELL; hoặc Score >= 80)
   if (ohlc.bars5m.length >= 56 && (!analysis.shouldEmit) && !newsGuard.active) {
     const analysis5m = EMA50Engine.analyze(ohlc.bars5m, {
       asset: key,
       livePrice,
       mtfContext,
       newsGuard,
-      useClosedBar: true
+      useClosedBar: true,
+      waveType: 'SCALP'
     });
-    // Siết chặt M5 trigger fallback: Chỉ cho phép M5 kích hoạt khi M15 chưa sẵn sàng NẾU:
-    // 1. Điểm số cực cao (Score >= 85 - High Conviction)
-    // 2. Toàn bộ 4 khung (H1, M30, M15, M5) đồng thuận 100% (alignedCount === 4) và không xung đột
-    // 3. Cấu trúc M5 bắt buộc phải là sóng chuẩn HH/HL (BUY) hoặc LH/LL (SELL)
-    const m5StructStrict = analysis5m.structure && (analysis5m.dir === 'BUY' ? analysis5m.structure.label === 'HH/HL' : analysis5m.structure.label === 'LH/LL');
-    if (analysis5m.ready && analysis5m.shouldEmit && analysis5m.score >= 85 && analysis5m.mtf && analysis5m.mtf.alignedCount === 4 && !analysis5m.mtf.conflict && m5StructStrict) {
+    
+    const m5StructValid = analysis5m.structure && (
+      analysis5m.direction === 'BUY'
+        ? (analysis5m.structure.label === 'HH/HL' || analysis5m.structure.bos === 'BOS_BULL' || analysis5m.score >= 80)
+        : (analysis5m.structure.label === 'LH/LL' || analysis5m.structure.bos === 'BOS_BEAR' || analysis5m.score >= 80)
+    );
+    const mtfAlignedOk = analysis5m.mtf && analysis5m.mtf.alignedCount >= 3 && !analysis5m.mtf.conflict;
+
+    if (analysis5m.ready && analysis5m.shouldEmit && analysis5m.score >= 78 && mtfAlignedOk && m5StructValid) {
       analysis = {
         ...analysis5m,
+        waveType: 'SCALP',
+        strategyType: 'scalp',
         triggerTimeframe: 'M5',
-        reason: `[M5 SNIPER TRIGGER] ${analysis5m.reason}`
+        reason: `[SÓNG NHỎ - SCALP M5 🎯] ${analysis5m.reason}`
       };
     }
   }
@@ -5121,35 +5141,39 @@ function startServerSignalEngine() {
           if (!trade.bottomPrice || price < trade.bottomPrice) trade.bottomPrice = price;
 
           const isBuy = trade.type === 'BUY';
+          const isScalp = trade.strategyType === 'scalp' || trade.waveType === 'SCALP';
           const tp1TargetDist = Math.abs((trade.tp1 || (isBuy ? trade.entry + 6.0 : trade.entry - 6.0)) - trade.entry);
-          // Tối ưu ngưỡng dời SL dương: Chỉ dời khi đã đi được ít nhất 6.0 giá XAU (hoặc 70% tới TP1), không dời non ở 3.2 giá!
-          const earlyBreakevenThreshold = Math.min(
-            tp1TargetDist * 0.70,
-            (cfg.key === 'btc') ? 700 : (cfg.key === 'xag' ? 0.45 : 6.0)
-          );
-          // Khóa SL dương an toàn +15 pips (1.5 giá XAU), tạo khoảng thở 4.5 giá cho thị trường dao động
-          const breakevenDelta = (cfg.key === 'btc') ? 150 : (cfg.key === 'xag' ? 0.15 : 1.5);
+
+          // Phân định rõ ngưỡng kéo SL Hòa Vốn / SL Dương giữa 2 loại sóng:
+          // - SÓNG NHỎ (SCALP M5): Đi được 3.2 giá XAU (hoặc 65% tới TP1), dời SL về Entry + 0.8 giá (+8 pips) để bảo toàn thành quả nhanh gọn
+          // - SÓNG LỚN (TREND M15): Cần chạy đủ ít nhất 6.0 giá XAU (70% tới TP1), dời SL về Entry + 1.5 giá (+15 pips) tạo khoảng thở 4.5 giá cho nến retest
+          const earlyBreakevenThreshold = isScalp
+            ? Math.min(tp1TargetDist * 0.65, (cfg.key === 'btc') ? 350 : (cfg.key === 'xag' ? 0.25 : 3.2))
+            : Math.min(tp1TargetDist * 0.70, (cfg.key === 'btc') ? 700 : (cfg.key === 'xag' ? 0.45 : 6.0));
+
+          const breakevenDelta = isScalp
+            ? ((cfg.key === 'btc') ? 80 : (cfg.key === 'xag' ? 0.08 : 0.8))
+            : ((cfg.key === 'btc') ? 150 : (cfg.key === 'xag' ? 0.15 : 1.5));
 
           if (isBuy) {
             const profitDelta = price - trade.entry;
-            const isScalp = trade.strategyType === 'scalp' || trade.id === 'V8-02187';
 
-            // Tự động kéo SL Hòa vốn / SL Dương sớm khi lãi đạt ngưỡng (chỉ cần lãi >= 3.2 giá XAU hoặc 45% tới TP1)
-            if (!isScalp && !trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= earlyBreakevenThreshold) {
+            // Tự động kéo SL Hòa vốn / SL Dương sớm khi lãi đạt ngưỡng
+            if (!trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= earlyBreakevenThreshold) {
               trade.trailedToBreakeven = true;
-              trade.sl = +(trade.entry + breakevenDelta).toFixed(2); // Khóa SL hòa vốn +0.5 giá Entry
+              trade.sl = +(trade.entry + breakevenDelta).toFixed(2);
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
                 sig.trailedToBreakeven = true;
                 sig.sl = trade.sl;
-                sig.status = 'ĐANG CHẠY (Đã khóa SL Hòa Vốn 🛡️)';
+                sig.status = isScalp ? 'ĐANG CHẠY (Khóa SL Dương +8p 🛡️)' : 'ĐANG CHẠY (Đã khóa SL Hòa Vốn 🛡️)';
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
               }
               const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
               if (sSig) {
                 sSig.trailedToBreakeven = true;
                 sSig.sl = trade.sl;
-                sSig.status = 'ĐANG CHẠY (Đã khóa SL Hòa Vốn 🛡️)';
+                sSig.status = isScalp ? 'ĐANG CHẠY (Khóa SL Dương +8p 🛡️)' : 'ĐANG CHẠY (Đã khóa SL Hòa Vốn 🛡️)';
                 saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
               }
               sseClients.forEach(client => {
@@ -5157,38 +5181,45 @@ function startServerSignalEngine() {
                   client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TRAILED_SL', triggerPrice: price, sl: trade.sl } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🛡️ KHÓA SL HÒA VỐN BẢO TOÀN VỐN: MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã có lãi +${profitDelta.toFixed(1)} giá (+${Math.round(profitDelta * 10)} pips). Đã tự động dời SL về $${trade.sl.toFixed(2)} an toàn tuyệt đối!`);
+              addNotification('SIGNAL', `🛡️ KHÓA SL HÒA VỐN BẢO TOÀN VỐN: MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} (${isScalp ? 'Sóng Nhỏ M5' : 'Sóng Lớn M15'}) đã có lãi +${profitDelta.toFixed(1)} giá (+${Math.round(profitDelta * 10)} pips). Đã tự động dời SL về $${trade.sl.toFixed(2)} an toàn tuyệt đối!`);
             }
 
             // ĐẠT TP1: CHỈ kích hoạt khi GIÁ LIVE THỰC TẾ chạm mốc TP1 (price >= trade.tp1), tuyệt đối không dùng giá cũ/đỉnh nến cũ
             if (!trade.hitTp1 && price >= trade.tp1) {
               trade.hitTp1 = true;
-              trade.sl = +(trade.entry + (cfg.key === 'btc' ? 500 : (cfg.key === 'xag' ? 0.40 : 5.0))).toFixed(2); // Khóa cứng lãi 5 giá
+              const lockDelta = isScalp
+                ? (cfg.key === 'btc' ? 250 : (cfg.key === 'xag' ? 0.20 : 2.0))
+                : (cfg.key === 'btc' ? 500 : (cfg.key === 'xag' ? 0.40 : 4.0));
+              trade.sl = +(trade.entry + lockDelta).toFixed(2);
+              const winPips = isScalp ? (cfg.key === 'btc' ? 700 : (cfg.key === 'xag' ? 50 : 50)) : cfg.tp1Pips;
+              const winUsd = isScalp ? (cfg.key === 'btc' ? 700 : (cfg.key === 'xag' ? 2500 : 500)) : cfg.tp1Usd;
+              const tp1Status = isScalp ? 'ĐẠT TP1 SCALP (+50p ✓) ➔ Gồng TP2' : (cfg.key === 'btc' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : (cfg.key === 'xag' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : 'ĐANG CHẠY (Đạt TP1 +10 ✓ ➔ Gồng TP2 🚀)'));
+
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
                 sig.hitTp1 = true;
                 sig.winType = 'TP1';
-                sig.status = (cfg.key === 'btc') ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : (cfg.key === 'xag' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : 'ĐANG CHẠY (Đạt TP1 +10 ✓ ➔ Gồng TP2 🚀)');
+                sig.status = tp1Status;
                 sig.sl = trade.sl;
-                sig.pnlPips = cfg.tp1Pips;
-                sig.pnlUsd = cfg.tp1Usd;
+                sig.pnlPips = winPips;
+                sig.pnlUsd = winUsd;
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
               }
               const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
               if (sSig) {
                 sSig.hitTp1 = true;
-                sSig.status = (cfg.key === 'btc') ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : (cfg.key === 'xag' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : 'ĐANG CHẠY (Đạt TP1 +10 ✓ ➔ Gồng TP2 🚀)');
+                sSig.status = tp1Status;
                 sSig.sl = trade.sl;
-                sSig.pnlPips = cfg.tp1Pips;
-                sSig.pnlUsd = cfg.tp1Usd;
+                sSig.pnlPips = winPips;
+                sSig.pnlUsd = winUsd;
                 saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
               }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1_RIDE', triggerPrice: price, sl: trade.sl, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1_RIDE', triggerPrice: price, sl: trade.sl, pnlPips: winPips, pnlUsd: winUsd } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🎯 ĐẠT TP1 (+10 GIÁ) ➔ KÉO SL DƯƠNG (GỒNG TP2 🚀): MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} đã ĐẠT TP1 tại $${price.toFixed(2)} (+${cfg.tp1Pips} pips)! Hệ thống đã dời SL lên $${trade.sl.toFixed(2)} (+5 giá) để bảo toàn lãi và tiếp tục gồng lệnh tới TP2!`);
+              addNotification('SIGNAL', `🎯 ĐẠT TP1 ➔ KÉO SL DƯƠNG (GỒNG TP2 🚀): MUA ${cfg.pair}`, `✅ Lệnh MUA tại $${trade.entry.toFixed(2)} (${isScalp ? 'Sóng Nhỏ M5' : 'Sóng Lớn M15'}) đã ĐẠT TP1 tại $${price.toFixed(2)} (+${winPips} pips)! Hệ thống đã dời SL lên $${trade.sl.toFixed(2)} để bảo toàn lãi và tiếp tục gồng lệnh tới TP2!`);
             }
             if (trade.hitTp1 && !trade.hitTp2 && price >= trade.tp2) {
               trade.hitTp2 = true;
@@ -5332,24 +5363,33 @@ function startServerSignalEngine() {
           } else {
             // SELL
             const profitDelta = trade.entry - price;
-            const isScalp = trade.strategyType === 'scalp' || trade.id === 'V8-02187';
+            const isScalp = trade.strategyType === 'scalp' || trade.waveType === 'SCALP';
+            const tp1TargetDist = Math.abs(trade.entry - (trade.tp1 || (trade.entry - 6.0)));
 
-            // Tự động kéo SL Hòa vốn / SL Dương sớm khi lãi đạt ngưỡng (chỉ cần lãi >= 3.2 giá XAU hoặc 45% tới TP1)
-            if (!isScalp && !trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= earlyBreakevenThreshold) {
+            const earlyBreakevenThreshold = isScalp
+              ? Math.min(tp1TargetDist * 0.65, (cfg.key === 'btc') ? 350 : (cfg.key === 'xag' ? 0.25 : 3.2))
+              : Math.min(tp1TargetDist * 0.70, (cfg.key === 'btc') ? 700 : (cfg.key === 'xag' ? 0.45 : 6.0));
+
+            const breakevenDelta = isScalp
+              ? ((cfg.key === 'btc') ? 80 : (cfg.key === 'xag' ? 0.08 : 0.8))
+              : ((cfg.key === 'btc') ? 150 : (cfg.key === 'xag' ? 0.15 : 1.5));
+
+            // Tự động kéo SL Hòa vốn / SL Dương sớm khi lãi đạt ngưỡng
+            if (!trade.hitTp1 && !trade.trailedToBreakeven && profitDelta >= earlyBreakevenThreshold) {
               trade.trailedToBreakeven = true;
-              trade.sl = +(trade.entry - breakevenDelta).toFixed(2); // Khóa SL hòa vốn -0.5 giá Entry
+              trade.sl = +(trade.entry - breakevenDelta).toFixed(2);
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
                 sig.trailedToBreakeven = true;
                 sig.sl = trade.sl;
-                sig.status = 'ĐANG CHẠY (Đã khóa SL Hòa Vốn 🛡️)';
+                sig.status = isScalp ? 'ĐANG CHẠY (Khóa SL Dương +8p 🛡️)' : 'ĐANG CHẠY (Đã khóa SL Hòa Vốn 🛡️)';
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
               }
               const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
               if (sSig) {
                 sSig.trailedToBreakeven = true;
                 sSig.sl = trade.sl;
-                sSig.status = 'ĐANG CHẠY (Đã khóa SL Hòa Vốn 🛡️)';
+                sSig.status = isScalp ? 'ĐANG CHẠY (Khóa SL Dương +8p 🛡️)' : 'ĐANG CHẠY (Đã khóa SL Hòa Vốn 🛡️)';
                 saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
               }
               sseClients.forEach(client => {
@@ -5357,38 +5397,45 @@ function startServerSignalEngine() {
                   client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TRAILED_SL', triggerPrice: price, sl: trade.sl } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🛡️ KHÓA SL HÒA VỐN BẢO TOÀN VỐN: BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã có lãi +${profitDelta.toFixed(1)} giá (+${Math.round(profitDelta * 10)} pips). Đã tự động dời SL về $${trade.sl.toFixed(2)} an toàn tuyệt đối!`);
+              addNotification('SIGNAL', `🛡️ KHÓA SL HÒA VỐN BẢO TOÀN VỐN: BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} (${isScalp ? 'Sóng Nhỏ M5' : 'Sóng Lớn M15'}) đã có lãi +${profitDelta.toFixed(1)} giá (+${Math.round(profitDelta * 10)} pips). Đã tự động dời SL về $${trade.sl.toFixed(2)} an toàn tuyệt đối!`);
             }
 
             // ĐẠT TP1: CHỈ kích hoạt khi GIÁ LIVE THỰC TẾ chạm mốc TP1 (price <= trade.tp1), tuyệt đối không dùng giá cũ/đáy nến cũ
             if (!trade.hitTp1 && price <= trade.tp1) {
               trade.hitTp1 = true;
-              trade.sl = +(trade.entry - (cfg.key === 'btc' ? 500 : (cfg.key === 'xag' ? 0.40 : 5.0))).toFixed(2); // Khóa cứng lãi 5 giá
+              const lockDelta = isScalp
+                ? (cfg.key === 'btc' ? 250 : (cfg.key === 'xag' ? 0.20 : 2.0))
+                : (cfg.key === 'btc' ? 500 : (cfg.key === 'xag' ? 0.40 : 4.0));
+              trade.sl = +(trade.entry - lockDelta).toFixed(2);
+              const winPips = isScalp ? (cfg.key === 'btc' ? 700 : (cfg.key === 'xag' ? 50 : 50)) : cfg.tp1Pips;
+              const winUsd = isScalp ? (cfg.key === 'btc' ? 700 : (cfg.key === 'xag' ? 2500 : 500)) : cfg.tp1Usd;
+              const tp1Status = isScalp ? 'ĐẠT TP1 SCALP (+50p ✓) ➔ Gồng TP2' : (cfg.key === 'btc' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : (cfg.key === 'xag' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : 'ĐANG CHẠY (Đạt TP1 +10 ✓ ➔ Gồng TP2 🚀)'));
+
               const sig = signalsDB.find(s => s && s.id === trade.id);
               if (sig) {
                 sig.hitTp1 = true;
                 sig.winType = 'TP1';
-                sig.status = (cfg.key === 'btc') ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : (cfg.key === 'xag' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : 'ĐANG CHẠY (Đạt TP1 +10 ✓ ➔ Gồng TP2 🚀)');
+                sig.status = tp1Status;
                 sig.sl = trade.sl;
-                sig.pnlPips = cfg.tp1Pips;
-                sig.pnlUsd = cfg.tp1Usd;
+                sig.pnlPips = winPips;
+                sig.pnlUsd = winUsd;
                 saveJSON(SIGNALS_DB_FILE, signalsDB);
               }
               const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
               if (sSig) {
                 sSig.hitTp1 = true;
-                sSig.status = (cfg.key === 'btc') ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : (cfg.key === 'xag' ? 'ĐANG CHẠY (Đạt TP1 ✓ ➔ Gồng TP2 🚀)' : 'ĐANG CHẠY (Đạt TP1 +10 ✓ ➔ Gồng TP2 🚀)');
+                sSig.status = tp1Status;
                 sSig.sl = trade.sl;
-                sSig.pnlPips = cfg.tp1Pips;
-                sSig.pnlUsd = cfg.tp1Usd;
+                sSig.pnlPips = winPips;
+                sSig.pnlUsd = winUsd;
                 saveJSON(SERVER_SIGNALS_FILE, serverSignalsDB);
               }
               sseClients.forEach(client => {
                 try {
-                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1_RIDE', triggerPrice: price, sl: trade.sl, pnlPips: cfg.tp1Pips, pnlUsd: cfg.tp1Usd } })}\n\n`);
+                  client.res.write(`data: ${JSON.stringify({ type: 'SIGNAL_STATUS_UPDATE', update: { id: trade.id, statusType: 'TP1_RIDE', triggerPrice: price, sl: trade.sl, pnlPips: winPips, pnlUsd: winUsd } })}\n\n`);
                 } catch(e) {}
               });
-              addNotification('SIGNAL', `🎯 ĐẠT TP1 (+10 GIÁ) ➔ KÉO SL DƯƠNG (GỒNG TP2 🚀): BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} đã ĐẠT TP1 tại $${price.toFixed(2)} (+${cfg.tp1Pips} pips)! Hệ thống đã dời SL xuống $${trade.sl.toFixed(2)} (+5 giá) để bảo toàn lãi và tiếp tục gồng lệnh tới TP2!`);
+              addNotification('SIGNAL', `🎯 ĐẠT TP1 ➔ KÉO SL DƯƠNG (GỒNG TP2 🚀): BÁN ${cfg.pair}`, `✅ Lệnh BÁN tại $${trade.entry.toFixed(2)} (${isScalp ? 'Sóng Nhỏ M5' : 'Sóng Lớn M15'}) đã ĐẠT TP1 tại $${price.toFixed(2)} (+${winPips} pips)! Hệ thống đã dời SL xuống $${trade.sl.toFixed(2)} để bảo toàn lãi và tiếp tục gồng lệnh tới TP2!`);
             }
             if (trade.hitTp1 && !trade.hitTp2 && price <= trade.tp2) {
               trade.hitTp2 = true;
@@ -5608,6 +5655,12 @@ function startServerSignalEngine() {
             const vnDayName = daysOfWeek[vnDate.getUTCDay()];
             const timeStr = `${vnHours}:${vnMinutes} (${vnDay}/${vnMonth}/${vnYear} - ${vnDayName})`;
 
+            const waveType = analysis.waveType || (analysis.triggerTimeframe === 'M5' ? 'SCALP' : 'TREND');
+            const isScalp = waveType === 'SCALP';
+            const stratLabel = isScalp
+              ? `MA WAVE V8 PRO: SCALP M5 [SÓNG NHỎ 🎯 - ${analysis.score}/100]`
+              : `MA WAVE V8 PRO: TREND WAVE [SÓNG LỚN 🚀 - ${analysis.score}/100]`;
+
             const newSignal = {
               id: newId,
               asset: cfg.key,
@@ -5632,7 +5685,10 @@ function startServerSignalEngine() {
               marketState: analysis.marketState,
               dRatio: analysis.dRatio,
               invalidationPrice: analysis.invalidationPrice,
-              strategy: `MA WAVE V8 PRO: ${sigType} [${analysis.signalQualityState} ${analysis.score}/100]`,
+              strategy: stratLabel,
+              strategyType: isScalp ? 'scalp' : 'trend',
+              waveType: waveType,
+              timeframe: isScalp ? 'M5' : 'M15',
               reason: analysis.reason
             };
 
@@ -5654,6 +5710,9 @@ function startServerSignalEngine() {
               hitTp2: false,
               hitTp3: false,
               trailedToBreakeven: false,
+              strategyType: isScalp ? 'scalp' : 'trend',
+              waveType: waveType,
+              timeframe: isScalp ? 'M5' : 'M15',
               peakPrice: entryPrice,
               bottomPrice: entryPrice,
               startTime: now
@@ -5668,8 +5727,9 @@ function startServerSignalEngine() {
               } catch(e) {}
             });
 
-            addNotification('SIGNAL', `🚨 TÍN HIỆU MA WAVE V8 (${analysis.score}/100): ${sigType} ${cfg.pair}`, `🔔 ${analysis.marketStateLabel} | Vào ${sigType} tại $${entryPrice}. TP1: ${tp1}, SL cấu trúc: ${sl}`);
-            console.log(`[Auto Engine] Phát tín hiệu EMA20-50 [${analysis.score}/100 ${analysis.signalQualityState}]: ${newId} [${sigType} ${cfg.pair} @ ${entryPrice}, SL=${sl}]`);
+            const waveTitle = isScalp ? '🎯 TÍN HIỆU SÓNG NHỎ (SCALP M5)' : '🚀 TÍN HIỆU SÓNG LỚN (TREND M15)';
+            addNotification('SIGNAL', `🚨 ${waveTitle} (${analysis.score}/100): ${sigType} ${cfg.pair}`, `🔔 ${analysis.marketStateLabel} | Vào ${sigType} tại $${entryPrice}. TP1: ${tp1}, SL: ${sl}`);
+            console.log(`[Auto Engine] Phát tín hiệu ${waveType} [${analysis.score}/100 ${analysis.signalQualityState}]: ${newId} [${sigType} ${cfg.pair} @ ${entryPrice}, SL=${sl}, TP1=${tp1}]`);
           }
         }
       }

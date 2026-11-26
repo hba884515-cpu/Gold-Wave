@@ -7717,6 +7717,9 @@ window.syncRadarSignalsFromEngine = function() {
         var isRunning = String(sig.status).includes('ĐANG CHẠY');
         var entryP = Number(sig.price || sig.entryPrice || 0);
 
+        var isScalp = sig.waveType === 'SCALP' || (sig.strategy && sig.strategy.includes('SCALP')) || (sig.reason && sig.reason.includes('M5')) || sig.timeframe === 'M5';
+        var tfDisplay = isScalp ? 'M5 (Sóng Nhỏ 🎯)' : 'M15 (Sóng Lớn 🚀)';
+
         return {
           id: sig.id || ('RADAR-' + idx),
           asset: sig.asset,
@@ -7724,7 +7727,7 @@ window.syncRadarSignalsFromEngine = function() {
           name: name,
           icon: icon,
           type: sig.type || 'BUY',
-          timeframe: sig.timeframe || 'M15',
+          timeframe: tfDisplay,
           price: entryP,
           currentPrice: Number(sig.currentPrice || entryP),
           tp1: Number(sig.tp1 || (entryP * 1.003)),

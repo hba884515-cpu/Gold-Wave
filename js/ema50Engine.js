@@ -154,17 +154,36 @@
     };
   }
 
-  function getAssetConfig(asset) {
+  function getAssetConfig(asset, waveType) {
     const key = String(asset || 'xau').toLowerCase();
+    const isScalp = String(waveType || '').toUpperCase() === 'SCALP';
     
     // Phát hiện phiên giao dịch theo giờ VN (GMT+7) để tối ưu độ nhạy TP/SL:
-    // Phiên Á (06:00 - 13:59 VN): Biên độ êm, TP1 tinh gọn (45-60 pips) để đảm bảo cắn ngay lập tức!
-    // Phiên Âu & Mỹ (14:00 - 23:59 VN): Biên độ mạnh, TP1 (80-100 pips), TP2 gồng xa (150-200 pips)
+    // Phiên Á (06:00 - 13:59 VN): Biên độ êm, TP1 tinh gọn để cắn mượt mà
+    // Phiên Âu & Mỹ (14:00 - 23:59 VN): Biên độ mạnh, TP gồng rộng
     const nowUtcMs = Date.now();
     const vnHour = new Date(nowUtcMs + 7 * 3600000).getUTCHours();
     const isAsianSession = (vnHour >= 6 && vnHour < 14);
 
     if (key === 'btc') {
+      if (isScalp) {
+        return {
+          key: 'btc',
+          decimals: 0,
+          defaultAtr: 280,
+          minD: 0.28,
+          minBoxWidth: 600,
+          minSl: 400,
+          maxSl: 800,
+          defaultSl: 550,
+          minTp1: 650,
+          minTp2: 1200,
+          minTp3: 2000,
+          maxStretchAtr: 1.85,
+          session: isAsianSession ? 'ASIAN' : 'LONDON_NY',
+          waveType: 'SCALP'
+        };
+      }
       return {
         key: 'btc',
         decimals: 0,
@@ -178,10 +197,29 @@
         minTp2: isAsianSession ? 1800 : 2800,
         minTp3: isAsianSession ? 3200 : 4500,
         maxStretchAtr: 1.85,
-        session: isAsianSession ? 'ASIAN' : 'LONDON_NY'
+        session: isAsianSession ? 'ASIAN' : 'LONDON_NY',
+        waveType: 'TREND'
       };
     }
     if (key === 'xag') {
+      if (isScalp) {
+        return {
+          key: 'xag',
+          decimals: 2,
+          defaultAtr: 0.22,
+          minD: 0.25,
+          minBoxWidth: 0.50,
+          minSl: 0.30,
+          maxSl: 0.60,
+          defaultSl: 0.40,
+          minTp1: 0.45,
+          minTp2: 0.90,
+          minTp3: 1.50,
+          maxStretchAtr: 1.85,
+          session: isAsianSession ? 'ASIAN' : 'LONDON_NY',
+          waveType: 'SCALP'
+        };
+      }
       return {
         key: 'xag',
         decimals: 2,
@@ -195,7 +233,28 @@
         minTp2: isAsianSession ? 1.30 : 2.00,
         minTp3: isAsianSession ? 2.20 : 3.20,
         maxStretchAtr: 1.85,
-        session: isAsianSession ? 'ASIAN' : 'LONDON_NY'
+        session: isAsianSession ? 'ASIAN' : 'LONDON_NY',
+        waveType: 'TREND'
+      };
+    }
+
+    // XAU (Vàng Spot)
+    if (isScalp) {
+      return {
+        key: 'xau',
+        decimals: 2,
+        defaultAtr: 6.0,
+        minD: 0.28,
+        minBoxWidth: 6.0,
+        minSl: isAsianSession ? 3.0 : 3.8,
+        maxSl: isAsianSession ? 5.0 : 6.0,
+        defaultSl: isAsianSession ? 3.5 : 4.5,
+        minTp1: isAsianSession ? 4.5 : 5.5,
+        minTp2: isAsianSession ? 8.0 : 10.0,
+        minTp3: isAsianSession ? 14.0 : 18.0,
+        maxStretchAtr: 1.85,
+        session: isAsianSession ? 'ASIAN' : 'LONDON_NY',
+        waveType: 'SCALP'
       };
     }
     return {
@@ -204,14 +263,15 @@
       defaultAtr: 6.0,
       minD: 0.35,
       minBoxWidth: 12.0,
-      minSl: isAsianSession ? 4.5 : 6.5,
-      maxSl: isAsianSession ? 9.0 : 13.5,
-      defaultSl: isAsianSession ? 6.0 : 8.5,
-      minTp1: isAsianSession ? 5.5 : 8.5,
-      minTp2: isAsianSession ? 12.0 : 18.0,
-      minTp3: isAsianSession ? 22.0 : 32.0,
+      minSl: isAsianSession ? 5.5 : 7.0,
+      maxSl: isAsianSession ? 10.0 : 13.5,
+      defaultSl: isAsianSession ? 6.5 : 8.5,
+      minTp1: isAsianSession ? 7.5 : 10.0,
+      minTp2: isAsianSession ? 15.0 : 20.0,
+      minTp3: isAsianSession ? 25.0 : 32.0,
       maxStretchAtr: 1.85,
-      session: isAsianSession ? 'ASIAN' : 'LONDON_NY'
+      session: isAsianSession ? 'ASIAN' : 'LONDON_NY',
+      waveType: 'TREND'
     };
   }
 
@@ -287,7 +347,7 @@
    * @param {Object} options - { asset: 'xau'|'btc'|'xag', livePrice, mtfContext, useClosedBar: true }
    */
   function analyze(bars, options = {}) {
-    const assetCfg = getAssetConfig(options.asset);
+    const assetCfg = getAssetConfig(options.asset, options.waveType);
     if (!bars || bars.length < 55) {
       return {
         ready: false,
@@ -807,6 +867,7 @@
       tp1: tp1Price,
       tp2: tp2Price,
       tp3: tp3Price,
+      waveType: assetCfg.waveType,
       invalidationPrice,
       blockReasons,
       reason: reasonText
