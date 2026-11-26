@@ -59,6 +59,29 @@
     return out;
   }
 
+  function calculateRSIArray(bars, period = 14) {
+    const out = new Array(bars.length).fill(50);
+    if (!bars || bars.length < period + 1) return out;
+    let gains = 0, losses = 0;
+    for (let i = 1; i <= period; i++) {
+      const diff = Number(bars[i].close) - Number(bars[i - 1].close);
+      if (diff >= 0) gains += diff;
+      else losses -= diff;
+    }
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+    out[period] = avgLoss === 0 ? 100 : +(100 - (100 / (1 + (avgGain / avgLoss)))).toFixed(1);
+    for (let i = period + 1; i < bars.length; i++) {
+      const diff = Number(bars[i].close) - Number(bars[i - 1].close);
+      const g = diff >= 0 ? diff : 0;
+      const l = diff < 0 ? -diff : 0;
+      avgGain = (avgGain * (period - 1) + g) / period;
+      avgLoss = (avgLoss * (period - 1) + l) / period;
+      out[i] = avgLoss === 0 ? 100 : +(100 - (100 / (1 + (avgGain / avgLoss)))).toFixed(1);
+    }
+    return out;
+  }
+
   function extractSwings(bars, endIdx, pivotLen = 3) {
     const swingHighs = [];
     const swingLows = [];
@@ -289,6 +312,11 @@
     const ema20Arr = calculateEMAArray(bars, 20);
     const ema50Arr = calculateEMAArray(bars, 50);
     const atrArr = calculateATRArray(bars, 14);
+    const rsiArr = calculateRSIArray(bars, 14);
+
+    const rsi = rsiArr[evalIdx] !== null ? rsiArr[evalIdx] : 50;
+    const isRsiOverbought = rsi >= 68; // Quá mua -> Chặn mua đuổi đỉnh cản
+    const isRsiOversold = rsi <= 32;   // Quá bán -> Chặn bán đuổi đáy cản
 
     const ema20 = ema20Arr[evalIdx];
     const prevEma20 = ema20Arr[evalIdx - 1];
@@ -658,11 +686,14 @@
       ? (best.mtf && best.mtf.tfs && best.mtf.tfs.m5 && best.mtf.tfs.m5.dir === 'BEAR')
       : (best.mtf && best.mtf.tfs && best.mtf.tfs.m5 && best.mtf.tfs.m5.dir === 'BULL');
 
+    const rsiFilterOK = dirIsBuy ? !isRsiOverbought : !isRsiOversold;
+
     const trendEmitOK =
       !isChop &&
       (!isSideway || isBreakoutUp || isBreakoutDown) &&
       finalScore >= 75 &&
       !overextended &&
+      rsiFilterOK &&
       dRatioOK &&
       best.crossGuardPassed &&
       best.breakdown.candleConfirm >= 8 &&
@@ -723,6 +754,7 @@
     if (newsGuard) blockReasons.push(`🛡️ Khóa an toàn quanh Tin Đỏ (±15p): ${newsGuard.eventTitle} lúc ${newsGuard.timeStr}`);
     if (isChop) blockReasons.push(`Thị trường nhiễu CHOP (${chopSigns}/5 dấu hiệu, D=${dRatio})`);
     if (isSideway && !isBreakoutUp && !isBreakoutDown && !rangeReversal) blockReasons.push(`Đang Sideway biên [${swBottom.toFixed(dec)}-${swTop.toFixed(dec)}] (Chờ chạm biên rõ hoặc Breakout)`);
+    if (!rsiFilterOK) blockReasons.push(`RSI ${dirIsBuy ? 'Quá mua' : 'Quá bán'} (${rsi}) -> Chặn ${dirIsBuy ? 'mua đuổi đỉnh' : 'bán đuổi đáy cản'}`);
     if (!dRatioOK) blockReasons.push(`Khoảng cách EMA hẹp (D=${dRatio} < ${assetCfg.minD} chuẩn ${assetCfg.key.toUpperCase()})`);
     if (overextended) blockReasons.push(`Giá cách EMA20 quá xa (${stretchATR}x ATR > ${assetCfg.maxStretchAtr}x) -> Chặn đu đỉnh/đáy`);
     if (!best.crossGuardPassed && !rangeReversal) blockReasons.push('Giao cắt EMA20/50 chưa qua kiểm chứng 5 bước');

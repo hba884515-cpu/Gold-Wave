@@ -5122,11 +5122,13 @@ function startServerSignalEngine() {
 
           const isBuy = trade.type === 'BUY';
           const tp1TargetDist = Math.abs((trade.tp1 || (isBuy ? trade.entry + 6.0 : trade.entry - 6.0)) - trade.entry);
+          // Tối ưu ngưỡng dời SL dương: Chỉ dời khi đã đi được ít nhất 6.0 giá XAU (hoặc 70% tới TP1), không dời non ở 3.2 giá!
           const earlyBreakevenThreshold = Math.min(
-            tp1TargetDist * 0.45,
-            (cfg.key === 'btc') ? 400 : (cfg.key === 'xag' ? 0.28 : 3.2)
+            tp1TargetDist * 0.70,
+            (cfg.key === 'btc') ? 700 : (cfg.key === 'xag' ? 0.45 : 6.0)
           );
-          const breakevenDelta = (cfg.key === 'btc') ? 50 : (cfg.key === 'xag' ? 0.05 : 0.5);
+          // Khóa SL dương an toàn +15 pips (1.5 giá XAU), tạo khoảng thở 4.5 giá cho thị trường dao động
+          const breakevenDelta = (cfg.key === 'btc') ? 150 : (cfg.key === 'xag' ? 0.15 : 1.5);
 
           if (isBuy) {
             const profitDelta = price - trade.entry;
@@ -5277,14 +5279,14 @@ function startServerSignalEngine() {
                 addNotification('SIGNAL', `🛡️ CHỐT LÃI TP1 / SL DƯƠNG: MUA ${cfg.pair}`, `🛡️ Lệnh MUA chạm SL dời tại $${price.toFixed(2)}. Khóa chặt an toàn (+${bPips} pips / +$${bUsd} USD)!`);
                 serverActiveTrades[cfg.key] = null;
               } else if (trade.trailedToBreakeven || (sig && sig.trailedToBreakeven)) {
-                const bPips = (cfg.key === 'btc') ? 5 : 5;
-                const bUsd = (cfg.key === 'btc') ? 50 : 50;
+                const bPips = (cfg.key === 'btc') ? 15 : (cfg.key === 'xag' ? 15 : 15);
+                const bUsd = (cfg.key === 'btc') ? 150 : (cfg.key === 'xag' ? 750 : 150);
                 if (sig) {
                   sig.winType = 'BREAKEVEN';
                   sig.status = 'CHỐT HÒA VỐN / SL DƯƠNG 🛡️';
                   sig.pnlPips = bPips;
                   sig.pnlUsd = bUsd;
-                  sig.reason = `Giá chạm mốc SL Dương/Hòa vốn tại $${price.toFixed(2)}, bảo toàn vốn an toàn (+${bPips} pips)`;
+                  sig.reason = `Giá chạm mốc SL Dương tại $${price.toFixed(2)}, bảo toàn lợi nhuận an toàn (+${bPips} pips / +$${bUsd} USD)`;
                   saveJSON(SIGNALS_DB_FILE, signalsDB);
                 }
                 const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
@@ -5477,14 +5479,14 @@ function startServerSignalEngine() {
                 addNotification('SIGNAL', `🛡️ CHỐT LÃI TP1 / SL DƯƠNG: BÁN ${cfg.pair}`, `🛡️ Lệnh BÁN chạm SL dời tại $${price.toFixed(2)}. Khóa chặt an toàn (+${bPips} pips / +$${bUsd} USD)!`);
                 serverActiveTrades[cfg.key] = null;
               } else if (trade.trailedToBreakeven || (sig && sig.trailedToBreakeven)) {
-                const bPips = (cfg.key === 'btc') ? 5 : 5;
-                const bUsd = (cfg.key === 'btc') ? 50 : 50;
+                const bPips = (cfg.key === 'btc') ? 15 : (cfg.key === 'xag' ? 15 : 15);
+                const bUsd = (cfg.key === 'btc') ? 150 : (cfg.key === 'xag' ? 750 : 150);
                 if (sig) {
                   sig.winType = 'BREAKEVEN';
                   sig.status = 'CHỐT HÒA VỐN / SL DƯƠNG 🛡️';
                   sig.pnlPips = bPips;
                   sig.pnlUsd = bUsd;
-                  sig.reason = `Giá chạm mốc SL Dương/Hòa vốn tại $${price.toFixed(2)}, bảo toàn vốn an toàn (+${bPips} pips)`;
+                  sig.reason = `Giá chạm mốc SL Dương tại $${price.toFixed(2)}, bảo toàn lợi nhuận an toàn (+${bPips} pips / +$${bUsd} USD)`;
                   saveJSON(SIGNALS_DB_FILE, signalsDB);
                 }
                 const sSig = serverSignalsDB.find(s => s && s.id === trade.id);
@@ -5552,12 +5554,22 @@ function startServerSignalEngine() {
             serverActiveTrades[cfg.key] = null;
           }
         } else {
-          // Cơ chế Re-entry an toàn: Cho phép thêm 1 lệnh Re-entry khi lệnh trước ĐÃ AN TOÀN (đã kéo SL hòa vốn hoặc cắn TP1)
+          // Cơ chế Re-entry an toàn: CHỈ cho phép thêm 1 lệnh Re-entry khi lệnh trước ĐÃ THỰC SỰ CẮN TP1
           const activeTradesForAsset = signalsDB.filter(s => s && s.asset === cfg.key && s.status && s.status.includes('ĐANG CHẠY') && (now - (s.timestamp * 1000 || 0) < 24 * 3600 * 1000));
-          const unhedgedTrade = activeTradesForAsset.find(s => !s.hitTp1 && !s.trailedToBreakeven);
+          const unhedgedTrade = activeTradesForAsset.find(s => !s.hitTp1);
 
-          if (unhedgedTrade || activeTradesForAsset.length >= 2 || (serverActiveTrades[cfg.key] && !serverActiveTrades[cfg.key].trailedToBreakeven && !serverActiveTrades[cfg.key].hitTp1)) {
-            continue; // Đang có lệnh chưa an toàn (chưa khóa SL hòa vốn) hoặc đã đủ 2 lệnh đang chạy, đứng ngoài bảo vệ vốn
+          if (unhedgedTrade || activeTradesForAsset.length >= 2 || (serverActiveTrades[cfg.key] && !serverActiveTrades[cfg.key].hitTp1)) {
+            continue; // Đang có lệnh chưa đạt TP1 hoặc đã đủ 2 lệnh đang chạy, đứng ngoài bảo vệ vốn
+          }
+
+          // Khóa vùng giá (Zone Lock): Nếu trong vòng 40 phút qua đã có 1 lệnh của tài sản này và khoảng cách giá hiện tại < 3.5 giá XAU (< 350 pts BTC, < 0.30 USD XAG), KHÔNG vào thêm lệnh để tránh bị bẫy Sideway nén biên
+          const recentTradeOfAsset = signalsDB.find(s => s && s.asset === cfg.key && (now - (s.timestamp * 1000 || 0) < 40 * 60 * 1000));
+          if (recentTradeOfAsset && recentTradeOfAsset.price) {
+            const minEntryDist = (cfg.key === 'btc') ? 350 : (cfg.key === 'xag' ? 0.30 : 3.5);
+            const distFromLastEntry = Math.abs(price - recentTradeOfAsset.price);
+            if (distFromLastEntry < minEntryDist) {
+              continue; // Quá gần điểm vào lệnh trước đó (< 3.5 giá trong 40 phút), đứng ngoài tránh bẫy chop sideway
+            }
           }
 
           // 2. HỆ THỐNG GIAO DỊCH EMA20 – EMA50 TOÀN DIỆN (HYBRID SNIPER v9.2)
