@@ -92,10 +92,18 @@ class SignalEngine {
     return this.generateInitialPineSignals();
   }
 
-  saveHistory() {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.signals));
-    } catch (e) {}
+  saveHistory(debounce = true) {
+    if (this._saveTimer) clearTimeout(this._saveTimer);
+    const doSave = () => {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.signals));
+      } catch (e) {}
+    };
+    if (debounce) {
+      this._saveTimer = setTimeout(doSave, 1000);
+    } else {
+      doSave();
+    }
   }
 
   clearHistory() {
@@ -1624,20 +1632,28 @@ class SignalEngine {
       // 1. Quét tự động nến xuất hiện SAU KHI VÀO LỆNH để cập nhật đỉnh TP chuẩn xác
       const openRunningTrade = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
       if (openRunningTrade) {
-        const tradeSec = openRunningTrade.timestamp ? (openRunningTrade.timestamp > 2000000000 ? Math.floor(openRunningTrade.timestamp / 1000) : openRunningTrade.timestamp) : 0;
-        const candlesStrictlyAfter = bars.filter(b => {
-          const barSec = b && b.time ? (b.time > 2000000000 ? Math.floor(b.time / 1000) : b.time) : 0;
-          return barSec > tradeSec;
-        });
-        const highestCandle = candlesStrictlyAfter.length > 0 ? Math.max(...candlesStrictlyAfter.map(b => b.high || b.close)) : lastBar.close;
-        const lowestCandle = candlesStrictlyAfter.length > 0 ? Math.min(...candlesStrictlyAfter.map(b => b.low || b.close)) : lastBar.close;
-        this.updateOpenOrders(lastBar.close, asset, highestCandle, lowestCandle);
+        // CHẶN BẢO VỆ TUYỆT ĐỐI: Không bao giờ quét lệnh khi đang dùng nến mock khởi tạo
+        const hasReal = typeof window === 'undefined' || !window.marketDataStore || !window.marketDataStore.hasRealCandlesLoaded || window.marketDataStore.hasRealCandlesLoaded[(asset || 'xau').toUpperCase()];
+        if (hasReal) {
+          const tradeSec = openRunningTrade.timestamp ? (openRunningTrade.timestamp > 2000000000 ? Math.floor(openRunningTrade.timestamp / 1000) : openRunningTrade.timestamp) : 0;
+          const candlesStrictlyAfter = bars.filter(b => {
+            const barSec = b && b.time ? (b.time > 2000000000 ? Math.floor(b.time / 1000) : b.time) : 0;
+            return barSec > tradeSec;
+          });
+          const highestCandle = candlesStrictlyAfter.length > 0 ? Math.max(...candlesStrictlyAfter.map(b => b.high || b.close)) : lastBar.close;
+          const lowestCandle = candlesStrictlyAfter.length > 0 ? Math.min(...candlesStrictlyAfter.map(b => b.low || b.close)) : lastBar.close;
+          this.updateOpenOrders(lastBar.close, asset, highestCandle, lowestCandle);
+        }
       }
 
-      // 2. HỆ THỐNG EMA20 - EMA50 TOÀN DIỆN (HYBRID SNIPER v9.2): Giãn cách 45 - 60 phút, chỉ vào khi CONFIRMED (>= 75đ)
+      // 2. HỆ THỐNG EMA20 - EMA50 TOÀN DIỆN (HYBRID SNIPER v9.3 PRO):
+      // Giãn cách linh hoạt, cho phép Re-entry nhịp hồi test EMA20 khi xu hướng mạnh (CONFIRMED >= 75)
       const realCandlesReady = typeof window === 'undefined' || !window.marketDataStore || !window.marketDataStore.hasRealCandlesLoaded || window.marketDataStore.hasRealCandlesLoaded[(asset || 'xau').toUpperCase()];
-      const cooldownMs = asset === 'btc' ? 60 * 60 * 1000 : 45 * 60 * 1000;
       const ema50State = snap.ema50State;
+      const isStrongTrend = ema50State && (ema50State.score >= 80 || ema50State.signalQualityState === 'STRONG SETUP');
+      const cooldownMs = isStrongTrend
+        ? (asset === 'btc' ? 25 * 60 * 1000 : 20 * 60 * 1000)
+        : (asset === 'btc' ? 45 * 60 * 1000 : 35 * 60 * 1000);
       const canEmitFromEngine = realCandlesReady && (ema50State && ema50State.ready ? ema50State.shouldEmit : (snap.buySignal || snap.sellSignal));
 
       if (canEmitFromEngine && (nowMs - lastEmittedTime > cooldownMs)) {
@@ -1645,8 +1661,12 @@ class SignalEngine {
           return snap; // Giá đang quá xa EMA20, chặn đu đỉnh/đu đáy!
         }
 
-        const stillRunning = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
-        if (!stillRunning) {
+        // Kiểm tra lệnh đang chạy: Cho phép Re-entry nếu lệnh trước ĐÃ AN TOÀN (đã kéo SL hòa vốn hoặc đã cắn TP1)
+        const openTrades = (this.signals || []).filter(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
+        const unhedgedTrade = openTrades.find(s => !s.hitTp1 && !s.trailedToBreakeven);
+
+        // Chỉ chặn nếu đang có 1 lệnh CHƯA AN TOÀN (chưa kéo SL hòa vốn), hoặc đã đủ 2 lệnh đang gồng
+        if (!unhedgedTrade && openTrades.length < 2) {
           const type = (ema50State && ema50State.direction) ? ema50State.direction : (snap.buySignal ? 'BUY' : 'SELL');
           this.lastEmittedSignals[asset] = nowMs;
           this.emitPineSignal(type, lastBar.close, lastBar, false, asset, ema50State);
@@ -1665,6 +1685,11 @@ class SignalEngine {
     const isBuy = type === 'BUY';
     const entryPrice = currentPrice;
 
+    // Phát hiện phiên giao dịch VN để tối ưu TP1, TP2 theo xung lực phiên
+    const nowUtcMs = Date.now();
+    const vnHour = new Date(nowUtcMs + 7 * 3600000).getUTCHours();
+    const isAsianSession = (vnHour >= 6 && vnHour < 14);
+
     let tp1, tp2, tp3, sl, pairName;
     pairName = asset === 'btc' ? 'BTC/USD' : (asset === 'xag' ? 'XAG/USD' : 'XAU/USD');
 
@@ -1674,20 +1699,32 @@ class SignalEngine {
       tp2 = ema50State.tp2;
       tp3 = ema50State.tp3;
     } else if (asset === 'btc') {
-      tp1 = isBuy ? entryPrice + 1500 : entryPrice - 1500;
-      tp2 = isBuy ? entryPrice + 2800 : entryPrice - 2800;
-      tp3 = isBuy ? entryPrice + 4500 : entryPrice - 4500;
-      sl  = isBuy ? entryPrice - 1400 : entryPrice + 1400;
+      const btcTp1Dist = isAsianSession ? 900 : 1400;
+      const btcTp2Dist = isAsianSession ? 1800 : 2800;
+      const btcTp3Dist = isAsianSession ? 3200 : 4500;
+      const btcSlDist  = isAsianSession ? 850 : 1300;
+      tp1 = isBuy ? entryPrice + btcTp1Dist : entryPrice - btcTp1Dist;
+      tp2 = isBuy ? entryPrice + btcTp2Dist : entryPrice - btcTp2Dist;
+      tp3 = isBuy ? entryPrice + btcTp3Dist : entryPrice - btcTp3Dist;
+      sl  = isBuy ? entryPrice - btcSlDist : entryPrice + btcSlDist;
     } else if (asset === 'xag') {
-      tp1 = +(isBuy ? entryPrice + 1.00 : entryPrice - 1.00).toFixed(2);
-      tp2 = +(isBuy ? entryPrice + 2.00 : entryPrice - 2.00).toFixed(2);
-      tp3 = +(isBuy ? entryPrice + 3.20 : entryPrice - 3.20).toFixed(2);
-      sl  = +(isBuy ? entryPrice - 0.85 : entryPrice + 0.85).toFixed(2);
+      const xagTp1Dist = isAsianSession ? 0.60 : 1.00;
+      const xagTp2Dist = isAsianSession ? 1.30 : 2.00;
+      const xagTp3Dist = isAsianSession ? 2.20 : 3.20;
+      const xagSlDist  = isAsianSession ? 0.55 : 0.85;
+      tp1 = +(isBuy ? entryPrice + xagTp1Dist : entryPrice - xagTp1Dist).toFixed(2);
+      tp2 = +(isBuy ? entryPrice + xagTp2Dist : entryPrice - xagTp2Dist).toFixed(2);
+      tp3 = +(isBuy ? entryPrice + xagTp3Dist : entryPrice - xagTp3Dist).toFixed(2);
+      sl  = +(isBuy ? entryPrice - xagSlDist : entryPrice + xagSlDist).toFixed(2);
     } else {
-      tp1 = +(isBuy ? entryPrice + 10.0 : entryPrice - 10.0).toFixed(2);
-      tp2 = +(isBuy ? entryPrice + 20.0 : entryPrice - 20.0).toFixed(2);
-      tp3 = +(isBuy ? entryPrice + 35.0 : entryPrice - 35.0).toFixed(2);
-      sl  = +(isBuy ? entryPrice - 8.5 : entryPrice + 8.5).toFixed(2);
+      const xauTp1Dist = isAsianSession ? 5.5 : 8.5;
+      const xauTp2Dist = isAsianSession ? 12.0 : 18.0;
+      const xauTp3Dist = isAsianSession ? 22.0 : 32.0;
+      const xauSlDist  = isAsianSession ? 5.0 : 7.5;
+      tp1 = +(isBuy ? entryPrice + xauTp1Dist : entryPrice - xauTp1Dist).toFixed(2);
+      tp2 = +(isBuy ? entryPrice + xauTp2Dist : entryPrice - xauTp2Dist).toFixed(2);
+      tp3 = +(isBuy ? entryPrice + xauTp3Dist : entryPrice - xauTp3Dist).toFixed(2);
+      sl  = +(isBuy ? entryPrice - xauSlDist : entryPrice + xauSlDist).toFixed(2);
     }
 
     let maxNum = 2120;
@@ -1782,45 +1819,34 @@ class SignalEngine {
     const effHigh = (candleHigh && candleHigh > 0) ? Math.max(currentPrice, candleHigh) : currentPrice;
     const effLow = (candleLow && candleLow > 0) ? Math.min(currentPrice, candleLow) : currentPrice;
 
-    (this.signals || []).forEach(sig => {
-      // 🛡️ AUTO-HEALING & SỬA LỖI GIÁ: Nếu lệnh bị phán quyết nhầm SL khi giá live thực tế chưa hề chạm tới SL -> Khôi phục ngay về ĐANG CHẠY!
-      if (sig && (!sig.asset || sig.asset.toLowerCase() === a)) {
-        const isBuy = sig.type === 'BUY';
-        const entryP = sig.entryPrice || sig.price;
-        if (sig.status === 'CẮT LỖ AN TOÀN (SL)' || sig.status === 'CLOSED (SL HIT)') {
-          if (!isBuy && currentPrice < sig.sl) {
-            // Lệnh SELL: Giá thị trường hiện tại < SL (ví dụ $3,903.65 < $3,907.59) -> Chưa hề chạm SL!
-            sig.status = 'ĐANG CHẠY (Chờ TP1)';
-            delete sig.winType;
-            sig.pnlPips = Math.round((entryP - currentPrice) * 10);
-            sig.pnlUsd = Math.round((entryP - currentPrice) * 100);
-            sig.reason = `Khôi phục vị thế: Giá thị trường $${currentPrice.toFixed(2)} vẫn nằm an toàn dưới mốc SL $${sig.sl.toFixed(2)}, lệnh tiếp tục chạy!`;
-            hasChanges = true;
-          } else if (isBuy && currentPrice > sig.sl) {
-            // Lệnh BUY: Giá thị trường hiện tại > SL -> Chưa hề chạm SL!
-            sig.status = 'ĐANG CHẠY (Chờ TP1)';
-            delete sig.winType;
-            sig.pnlPips = Math.round((currentPrice - entryP) * 10);
-            sig.pnlUsd = Math.round((currentPrice - entryP) * 100);
-            sig.reason = `Khôi phục vị thế: Giá thị trường $${currentPrice.toFixed(2)} vẫn nằm an toàn trên mốc SL $${sig.sl.toFixed(2)}, lệnh tiếp tục chạy!`;
-            hasChanges = true;
-          }
-        }
-      }
+    const nowSec = Math.floor(Date.now() / 1000);
 
-      // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản
+    (this.signals || []).forEach(sig => {
+      // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản (Lệnh đã chốt SL/TP/Hòa vốn giữ nguyên vĩnh viễn, không bị nhấp nháy)
       if (sig && sig.status && sig.status.includes('ĐANG CHẠY') && (!sig.asset || sig.asset.toLowerCase() === a)) {
-        // Bảo vệ an toàn: Loại trừ giá dị thường
-        if (a === 'xau' && (currentPrice < 3800 || currentPrice > 4300)) return;
+        // CHẶN BẢO VỆ TUYỆT ĐỐI: Không bao giờ quét lệnh nếu nến thực tế chưa tải xong
+        if (typeof window !== 'undefined' && window.marketDataStore && window.marketDataStore.hasRealCandlesLoaded && !window.marketDataStore.hasRealCandlesLoaded[a.toUpperCase()]) {
+          return;
+        }
+
+        // Bảo vệ an toàn: Loại trừ giá dị thường (XAU 2500-5000, BTC 30000-150000, XAG 25-65)
+        if (a === 'xau' && (currentPrice < 2500 || currentPrice > 5000)) return;
+        if (a === 'btc' && (currentPrice < 30000 || currentPrice > 150000)) return;
+        if (a === 'xag' && (currentPrice < 25 || currentPrice > 65)) return;
 
         const isBuy = sig.type === 'BUY';
         const entryPrice = sig.entryPrice || sig.price;
-        const breakevenThreshold = (a === 'btc') ? 500 : (a === 'xag' ? 0.40 : 5.0);
+        const tp1Dist = Math.abs((sig.tp1 || (isBuy ? entryPrice + 6.0 : entryPrice - 6.0)) - entryPrice);
+        // Ngưỡng kéo SL Hòa Vốn / SL Dương sớm: 45% chặng đường tới TP1 hoặc >= 3.2 giá XAU (Bảo vệ tuyệt đối)
+        const breakevenThreshold = Math.min(
+          tp1Dist * 0.45,
+          (a === 'btc') ? 400 : (a === 'xag' ? 0.28 : 3.2)
+        );
 
         if (isBuy) {
           const profitDelta = currentPrice - entryPrice;
 
-          // 1. Tự động Kéo SL Dương / Hòa vốn khi có lãi >= 5 giá (Bảo toàn vốn và lợi nhuận)
+          // 1. Tự động Kéo SL Dương / Hòa vốn sớm khi có lãi đạt ngưỡng (Bảo toàn vốn và lợi nhuận)
           if (!sig.hitTp1 && !sig.trailedToBreakeven && profitDelta >= breakevenThreshold) {
             sig.trailedToBreakeven = true;
             sig.originalSl = sig.sl;
@@ -1873,8 +1899,8 @@ class SignalEngine {
               window.soundAlerts.playPingSound();
             }
             this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
-          } else if (currentPrice <= sig.sl && currentPrice < entryPrice) {
-            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT KHI GIÁ THỰC SỰ <= SL VÀ < ENTRY):
+          } else if (currentPrice <= sig.sl) {
+            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG:
             if (sig.hitTp1) {
               sig.winType = 'TP1';
               sig.status = 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️';
@@ -1914,7 +1940,7 @@ class SignalEngine {
           // SELL
           const profitDelta = entryPrice - currentPrice;
 
-          // 1. Tự động Kéo SL Dương / Hòa vốn khi có lãi >= 5 giá (Bảo toàn vốn và lợi nhuận)
+          // 1. Tự động Kéo SL Dương / Hòa vốn sớm khi có lãi đạt ngưỡng (Bảo toàn vốn và lợi nhuận)
           if (!sig.hitTp1 && !sig.trailedToBreakeven && profitDelta >= breakevenThreshold) {
             sig.trailedToBreakeven = true;
             sig.originalSl = sig.sl;
@@ -1967,8 +1993,8 @@ class SignalEngine {
               window.soundAlerts.playPingSound();
             }
             this.triggerOrderStatusAlert(sig, 'TP3', currentPrice);
-          } else if (currentPrice >= sig.sl && currentPrice > entryPrice) {
-            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG (CHỈ KÍCH HOẠT KHI GIÁ THỰC SỰ >= SL VÀ > ENTRY):
+          } else if (currentPrice >= sig.sl) {
+            // 🛑 CẮT LỖ HOẶC CHỐT HÒA VỐN / SL DƯƠNG:
             if (sig.hitTp1) {
               sig.winType = 'TP1';
               sig.status = 'CHỐT LÃI TP1 / SL DƯƠNG 🛡️';
@@ -2076,6 +2102,9 @@ class SignalEngine {
         // BẮT BUỘC ĐỒNG BỘ 100% NẾU SỐ LỆNH CHƯA TRÙNG KHỚP VỚI MÁY CHỦ (VÍ DỤ MÁY KHÁCH 1654, 1645):
         if (clientCount !== serverCount) {
           console.log(`[SignalEngine] Đồng bộ tuyệt đối: Máy khách (${clientCount}) -> Máy chủ (${serverCount})`);
+          const existingIds = new Set((this.signals || []).map(s => s && String(s.id)));
+          const brandNewSignals = data.signals.filter(s => s && s.id && !existingIds.has(String(s.id)));
+
           this.signals = data.signals;
           this.saveHistory();
           this.triggerSignalUpdate();
@@ -2089,6 +2118,36 @@ class SignalEngine {
             }
             if (typeof window.renderScalpSwingView === 'function') {
               window.renderScalpSwingView();
+            }
+            if (typeof window.renderRadarSignalCards === 'function') {
+              window.renderRadarSignalCards();
+            }
+          }
+
+          // CẢNH BÁO TỨC THÌ NẾU CÓ TÍN HIỆU MỚI (chống trôi lệnh khi mở lại điện thoại / mạng ngắt kết nối):
+          if (brandNewSignals.length > 0 && clientCount > 0) {
+            const topNew = brandNewSignals[0];
+            const isBuy = topNew.type === 'BUY';
+            const sigTs = topNew.timestamp ? (topNew.timestamp * 1000) : Date.now();
+            const isRecent = (Date.now() - sigTs) < 15 * 60 * 1000;
+            if (isRecent) {
+              try {
+                if (window.soundAlerts) {
+                  if (isBuy) window.soundAlerts.playBuySound(0.9);
+                  else window.soundAlerts.playSellSound(0.9);
+                }
+                if (navigator.vibrate) {
+                  navigator.vibrate([200, 100, 200, 100, 300]);
+                }
+                if (typeof showToast === 'function') {
+                  showToast(`🚨 TÍN HIỆU MỚI: ${topNew.type} ${topNew.pair || 'XAU/USD'} @ $${topNew.price}`, 'info');
+                }
+                if (typeof window.sendNativePushNotification === 'function') {
+                  window.sendNativePushNotification(`🚨 TÍN HIỆU MỚI: ${topNew.type} ${topNew.pair || 'XAU/USD'}`, {
+                    body: `Vào lệnh ${topNew.type} tại $${topNew.price}. TP1: ${topNew.tp1}, SL: ${topNew.sl}`
+                  });
+                }
+              } catch(e) {}
             }
           }
           return;
@@ -2141,6 +2200,9 @@ class SignalEngine {
             }
             if (typeof window.renderScalpSwingView === 'function') {
               window.renderScalpSwingView();
+            }
+            if (typeof window.renderRadarSignalCards === 'function') {
+              window.renderRadarSignalCards();
             }
           }
         }

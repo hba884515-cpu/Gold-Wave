@@ -53,12 +53,12 @@ class MarketDataStore {
         symbol: 'XAG/USD',
         name: 'Bạc Thế Giới',
         source: 'TVC:SILVER',
-        price: 47.49,
-        prevPrice: 47.20,
-        change: 0.51,
-        changePercent: 1.09,
-        high: 48.01,
-        low: 46.84,
+        price: 43.60,
+        prevPrice: 43.45,
+        change: 0.15,
+        changePercent: 0.35,
+        high: 43.85,
+        low: 43.20,
         icon: '🥈',
         tag: 'SILVER'
       }
@@ -109,7 +109,7 @@ class MarketDataStore {
 
     this.hasRealCandlesLoaded = { XAU: false, BTC: false, XAG: false };
     this.initAssetCandles('BTC', 65015.00, 63800.00, 65650.00, 120.0);
-    this.initAssetCandles('XAG', 47.42, 46.80, 48.50, 0.15);
+    this.initAssetCandles('XAG', 43.60, 43.20, 43.85, 0.05);
 
     this.hydrateRealCandlesFromServer();
     setInterval(() => this.hydrateRealCandlesFromServer(), 180000);

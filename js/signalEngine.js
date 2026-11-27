@@ -1632,14 +1632,18 @@ class SignalEngine {
       // 1. Quét tự động nến xuất hiện SAU KHI VÀO LỆNH để cập nhật đỉnh TP chuẩn xác
       const openRunningTrade = (this.signals || []).find(s => s && s.asset === asset && s.status && s.status.includes('ĐANG CHẠY'));
       if (openRunningTrade) {
-        const tradeSec = openRunningTrade.timestamp ? (openRunningTrade.timestamp > 2000000000 ? Math.floor(openRunningTrade.timestamp / 1000) : openRunningTrade.timestamp) : 0;
-        const candlesStrictlyAfter = bars.filter(b => {
-          const barSec = b && b.time ? (b.time > 2000000000 ? Math.floor(b.time / 1000) : b.time) : 0;
-          return barSec > tradeSec;
-        });
-        const highestCandle = candlesStrictlyAfter.length > 0 ? Math.max(...candlesStrictlyAfter.map(b => b.high || b.close)) : lastBar.close;
-        const lowestCandle = candlesStrictlyAfter.length > 0 ? Math.min(...candlesStrictlyAfter.map(b => b.low || b.close)) : lastBar.close;
-        this.updateOpenOrders(lastBar.close, asset, highestCandle, lowestCandle);
+        // CHẶN BẢO VỆ TUYỆT ĐỐI: Không bao giờ quét lệnh khi đang dùng nến mock khởi tạo
+        const hasReal = typeof window === 'undefined' || !window.marketDataStore || !window.marketDataStore.hasRealCandlesLoaded || window.marketDataStore.hasRealCandlesLoaded[(asset || 'xau').toUpperCase()];
+        if (hasReal) {
+          const tradeSec = openRunningTrade.timestamp ? (openRunningTrade.timestamp > 2000000000 ? Math.floor(openRunningTrade.timestamp / 1000) : openRunningTrade.timestamp) : 0;
+          const candlesStrictlyAfter = bars.filter(b => {
+            const barSec = b && b.time ? (b.time > 2000000000 ? Math.floor(b.time / 1000) : b.time) : 0;
+            return barSec > tradeSec;
+          });
+          const highestCandle = candlesStrictlyAfter.length > 0 ? Math.max(...candlesStrictlyAfter.map(b => b.high || b.close)) : lastBar.close;
+          const lowestCandle = candlesStrictlyAfter.length > 0 ? Math.min(...candlesStrictlyAfter.map(b => b.low || b.close)) : lastBar.close;
+          this.updateOpenOrders(lastBar.close, asset, highestCandle, lowestCandle);
+        }
       }
 
       // 2. HỆ THỐNG EMA20 - EMA50 TOÀN DIỆN (HYBRID SNIPER v9.3 PRO):
@@ -1820,8 +1824,15 @@ class SignalEngine {
     (this.signals || []).forEach(sig => {
       // Chỉ tự động cập nhật các lệnh đang ở trạng thái 'ĐANG CHẠY' của đúng mã tài sản (Lệnh đã chốt SL/TP/Hòa vốn giữ nguyên vĩnh viễn, không bị nhấp nháy)
       if (sig && sig.status && sig.status.includes('ĐANG CHẠY') && (!sig.asset || sig.asset.toLowerCase() === a)) {
-        // Bảo vệ an toàn: Loại trừ giá dị thường (cho phép Vàng 2500 - 5000)
+        // CHẶN BẢO VỆ TUYỆT ĐỐI: Không bao giờ quét lệnh nếu nến thực tế chưa tải xong
+        if (typeof window !== 'undefined' && window.marketDataStore && window.marketDataStore.hasRealCandlesLoaded && !window.marketDataStore.hasRealCandlesLoaded[a.toUpperCase()]) {
+          return;
+        }
+
+        // Bảo vệ an toàn: Loại trừ giá dị thường (XAU 2500-5000, BTC 30000-150000, XAG 25-65)
         if (a === 'xau' && (currentPrice < 2500 || currentPrice > 5000)) return;
+        if (a === 'btc' && (currentPrice < 30000 || currentPrice > 150000)) return;
+        if (a === 'xag' && (currentPrice < 25 || currentPrice > 65)) return;
 
         const isBuy = sig.type === 'BUY';
         const entryPrice = sig.entryPrice || sig.price;

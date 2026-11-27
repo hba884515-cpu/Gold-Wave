@@ -4525,24 +4525,44 @@ const server = http.createServer(async (req, res) => {
     const pairName = pair || 'XAU/USD';
     const trigP = Number(triggerPrice || 4044.50).toFixed(2);
 
-    // Chặn cảnh báo ảo: Đối với XAU/USD, giá live thực tế phải thực sự chạm ngưỡng TP mới cho phép cập nhật
-    const liveGold = tvMarketPricesCache?.XAU?.price || 4044.50;
+    // Chặn cảnh báo ảo: Đối với MỌI TÀI SẢN (XAU, BTC, XAG), giá live thực tế của server phải thực sự chạm ngưỡng TP/SL mới cho phép cập nhật
     if (id) {
       const checkSig = signalsDB.find(s => s && s.id === id);
-      if (checkSig && (checkSig.asset || 'xau').toLowerCase() === 'xau') {
-        const isBuy = checkSig.type === 'BUY';
-        if (isBuy) {
-          if ((isTp1Ride || statusType === 'TP1') && liveGold < checkSig.tp1) {
-            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-            return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ($${liveGold}) chưa đạt mốc TP1 ($${checkSig.tp1})` }));
-          }
-          if (statusType === 'TP2' && liveGold < checkSig.tp2) {
-            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-            return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ($${liveGold}) chưa đạt mốc TP2 ($${checkSig.tp2})` }));
-          }
-          if (statusType === 'TP3' && liveGold < checkSig.tp3) {
-            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-            return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ($${liveGold}) chưa đạt mốc TP3 ($${checkSig.tp3})` }));
+      if (checkSig) {
+        const ak = (checkSig.asset || (pairName.includes('BTC') ? 'btc' : (pairName.includes('XAG') ? 'xag' : 'xau'))).toLowerCase();
+        const symKey = ak === 'btc' ? 'BTC' : (ak === 'xag' ? 'XAG' : 'XAU');
+        const livePriceObj = tvMarketPricesCache?.[symKey];
+        const livePrice = livePriceObj?.price ? Number(livePriceObj.price) : 0;
+
+        if (livePrice > 0) {
+          const isBuy = checkSig.type === 'BUY';
+          if (isBuy) {
+            if ((isTp1Ride || statusType === 'TP1') && livePrice < checkSig.tp1) {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ${symKey} ($${livePrice}) chưa đạt mốc TP1 ($${checkSig.tp1})` }));
+            }
+            if (statusType === 'TP2' && livePrice < checkSig.tp2) {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ${symKey} ($${livePrice}) chưa đạt mốc TP2 ($${checkSig.tp2})` }));
+            }
+            if (statusType === 'TP3' && livePrice < checkSig.tp3) {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ${symKey} ($${livePrice}) chưa đạt mốc TP3 ($${checkSig.tp3})` }));
+            }
+          } else {
+            // SELL
+            if ((isTp1Ride || statusType === 'TP1') && livePrice > checkSig.tp1) {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ${symKey} ($${livePrice}) chưa đạt mốc TP1 ($${checkSig.tp1})` }));
+            }
+            if (statusType === 'TP2' && livePrice > checkSig.tp2) {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ${symKey} ($${livePrice}) chưa đạt mốc TP2 ($${checkSig.tp2})` }));
+            }
+            if (statusType === 'TP3' && livePrice > checkSig.tp3) {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              return res.end(JSON.stringify({ status: 'REJECTED', reason: `Giá live ${symKey} ($${livePrice}) chưa đạt mốc TP3 ($${checkSig.tp3})` }));
+            }
           }
         }
       }
@@ -5127,7 +5147,15 @@ function startServerSignalEngine() {
         // Bảo vệ an toàn: Kiểm tra giá hợp lý, loại bỏ hoàn toàn giá bất thường hoặc cache cũ
         if (cfg.key === 'xau' && (price < 3500 || price > 4500)) continue;
         if (cfg.key === 'btc' && (price < 40000 || price > 120000)) continue;
-        if (cfg.key === 'xag' && (price < 25 || price > 80)) continue;
+        if (cfg.key === 'xag' && (price < 25 || price > 65)) continue;
+
+        // Anti-Price-Spike Filter: Nếu giá XAG đột ngột nhảy lệch quá 1.5 giá (>3.5%) so với giá gần nhất trong 5 phút, bỏ qua tick nhiễu
+        if (cfg.key === 'xag' && serverPriceHistory[cfg.key] && serverPriceHistory[cfg.key].length > 0) {
+          const lastValidP = serverPriceHistory[cfg.key][serverPriceHistory[cfg.key].length - 1].price;
+          if (Math.abs(price - lastValidP) > 1.5) {
+            continue; // Bỏ qua giá đột biến bất thường
+          }
+        }
 
         if (!serverPriceHistory[cfg.key]) serverPriceHistory[cfg.key] = [];
         serverPriceHistory[cfg.key].push({ price, high, low, time: now });
