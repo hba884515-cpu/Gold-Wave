@@ -511,6 +511,40 @@ class MarketDataStore {
     });
   }
 
+  // Nhận trực tiếp luồng stream giá Live từ Server qua kết nối SSE không độ trễ (<50ms)
+  onServerPriceStream(prices) {
+    if (!prices || typeof prices !== 'object') return;
+    let hasUpdate = false;
+    ['XAU', 'BTC', 'XAG', 'DXY'].forEach(asset => {
+      const p = prices[asset];
+      if (p && p.price > 0) {
+        if (!this.assetsData[asset]) this.assetsData[asset] = {};
+        this.assetsData[asset].price = p.price;
+        if (p.change != null) this.assetsData[asset].change = p.change;
+        if (p.changePercent != null) this.assetsData[asset].changePercent = p.changePercent;
+        if (p.high != null) this.assetsData[asset].high = p.high;
+        if (p.low != null) this.assetsData[asset].low = p.low;
+        if (p.symbol) this.assetsData[asset].source = p.symbol;
+        hasUpdate = true;
+      }
+    });
+
+    if (hasUpdate) {
+      this.connectionStatus = 'LIVE';
+      this.failedFetchCount = 0;
+      const curData = this.assetsData[this.currentAsset];
+      if (curData && curData.price > 0) {
+        this.updateRealtimePrice(
+          curData.price,
+          curData.change,
+          curData.changePercent,
+          curData.high,
+          curData.low
+        );
+      }
+    }
+  }
+
   // Realtime tick poller with connection status management & micro-tick pulse
   startRealtimeTicks() {
     let isFetching = false;
@@ -519,60 +553,10 @@ class MarketDataStore {
       isFetching = true;
       let success = false;
 
-      // 1. Primary: Direct client fetch to TradingView CFD Scanner (Khớp 100% chuẩn TVC:GOLD & TVC:SILVER)
-      try {
-        const tvController = new AbortController();
-        const tvTimeout = setTimeout(() => tvController.abort(), 3500);
-        const tvRes = await fetch('https://scanner.tradingview.com/cfd/scan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            symbols: { tickers: ["TVC:GOLD", "TVC:SILVER"] },
-            columns: ["close", "change", "change_abs", "high", "low", "open"]
-          }),
-          signal: tvController.signal
-        });
-        clearTimeout(tvTimeout);
-        if (tvRes.ok) {
-          const tvJson = await tvRes.json();
-          if (tvJson && Array.isArray(tvJson.data)) {
-            const goldItem = tvJson.data.find(i => i && i.s === 'TVC:GOLD');
-            const silverItem = tvJson.data.find(i => i && i.s === 'TVC:SILVER');
-
-            if (goldItem && Array.isArray(goldItem.d) && goldItem.d.length >= 6) {
-              const [close, chgPct, chgAbs, high, low, open] = goldItem.d;
-              if (!isNaN(close) && close > 0) {
-                this.assetsData['XAU'].price = +close.toFixed(2);
-                this.assetsData['XAU'].change = +chgAbs.toFixed(2);
-                this.assetsData['XAU'].changePercent = +chgPct.toFixed(2);
-                this.assetsData['XAU'].high = +high.toFixed(2);
-                this.assetsData['XAU'].low = +low.toFixed(2);
-                this.assetsData['XAU'].open = +open.toFixed(2);
-                this.assetsData['XAU'].source = 'TVC:GOLD';
-                success = true;
-              }
-            }
-
-            if (silverItem && Array.isArray(silverItem.d) && silverItem.d.length >= 6) {
-              const [close, chgPct, chgAbs, high, low, open] = silverItem.d;
-              if (!isNaN(close) && close > 0) {
-                this.assetsData['XAG'].price = +close.toFixed(2);
-                this.assetsData['XAG'].change = +chgAbs.toFixed(2);
-                this.assetsData['XAG'].changePercent = +chgPct.toFixed(2);
-                this.assetsData['XAG'].high = +high.toFixed(2);
-                this.assetsData['XAG'].low = +low.toFixed(2);
-                this.assetsData['XAG'].open = +open.toFixed(2);
-                this.assetsData['XAG'].source = 'TVC:SILVER';
-              }
-            }
-          }
-        }
-      } catch (e) {}
-
-      // 2. Secondary: Backend proxy endpoint for all market assets (BTC, Silver, DXY & Gold fallback)
+      // 1. Gọi trực tiếp endpoint máy chủ (/api/market-prices) nhận giá TradingView đã cache siêu mới (<700ms)
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
         const res = await fetch('/api/market-prices', { signal: controller.signal });
         clearTimeout(timeoutId);
         if (res.ok) {
@@ -582,16 +566,12 @@ class MarketDataStore {
             const pBTC = data.prices.BTC;
             const pXAG = data.prices.XAG;
 
-            // Chặn tuyệt đối token PAXGUSDT hoặc giá lệch quá mức
             if (pXAU && pXAU.price && pXAU.symbol !== 'BINANCE:PAXGUSDT') {
-              // Nếu chưa có giá TVC trực tiếp từ client, hoặc server dùng TVC:GOLD
-              if (!success || pXAU.symbol === 'TVC:GOLD') {
-                this.assetsData['XAU'].price = pXAU.price;
-                this.assetsData['XAU'].change = pXAU.change;
-                this.assetsData['XAU'].changePercent = pXAU.changePercent;
-                this.assetsData['XAU'].high = pXAU.high;
-                this.assetsData['XAU'].low = pXAU.low;
-              }
+              this.assetsData['XAU'].price = pXAU.price;
+              this.assetsData['XAU'].change = pXAU.change;
+              this.assetsData['XAU'].changePercent = pXAU.changePercent;
+              this.assetsData['XAU'].high = pXAU.high;
+              this.assetsData['XAU'].low = pXAU.low;
             }
             if (pBTC && pBTC.price) {
               this.assetsData['BTC'].price = pBTC.price;
@@ -600,7 +580,7 @@ class MarketDataStore {
               this.assetsData['BTC'].high = pBTC.high;
               this.assetsData['BTC'].low = pBTC.low;
             }
-            if (pXAG && pXAG.price && (!this.assetsData['XAG'].price || pXAG.symbol === 'TVC:SILVER')) {
+            if (pXAG && pXAG.price) {
               this.assetsData['XAG'].price = pXAG.price;
               this.assetsData['XAG'].change = pXAG.change;
               this.assetsData['XAG'].changePercent = pXAG.changePercent;
@@ -617,7 +597,7 @@ class MarketDataStore {
         }
       } catch (e) {}
 
-      // 3. Fallback: Direct client fallback via api.gold-api.com (Spot Gold XAU/USD)
+      // 2. Fallback dự phòng: Nếu máy chủ tạm thời không phản hồi, gọi Gold-API trực tiếp
       if (!success || !this.assetsData['XAU'].price) {
         try {
           const res2 = await fetch('https://api.gold-api.com/price/XAU');
@@ -638,7 +618,7 @@ class MarketDataStore {
         } catch (e) {}
       }
 
-      // 4. Cập nhật UI asset đang xem
+      // 3. Cập nhật UI asset đang xem
       const activeAssetData = this.assetsData[this.currentAsset];
       if (activeAssetData && activeAssetData.price > 0) {
         this.updateRealtimePrice(
@@ -663,11 +643,11 @@ class MarketDataStore {
     };
 
     fetchLivePrice();
-    // Tần suất quét live: 1200ms khi active, tự nghỉ khi ẩn tab để chống nóng máy & giật lag
+    // Tần suất quét live fallback: 800ms khi active, kết hợp với luồng SSE Stream liên tục không độ trễ
     setInterval(() => {
       if (typeof document !== 'undefined' && document.hidden) return;
       fetchLivePrice();
-    }, 1200);
+    }, 800);
 
     // Micro-tick Engine: Tạo nhịp rung lắc tick giá siêu mượt (500ms) như sàn TradingView / MT5
     setInterval(() => {

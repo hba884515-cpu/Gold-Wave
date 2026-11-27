@@ -2711,7 +2711,7 @@ function queryTvScanner(path, tickers) {
         'Origin': 'https://www.tradingview.com',
         'Referer': 'https://www.tradingview.com/'
       },
-      timeout: 5000
+      timeout: 3000
     }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
@@ -3007,7 +3007,7 @@ function queryTvMtfScanner(apiPath, tickers) {
         'Origin': 'https://www.tradingview.com',
         'Referer': 'https://www.tradingview.com/'
       },
-      timeout: 5000
+      timeout: 3000
     }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
@@ -3024,7 +3024,7 @@ function queryTvMtfScanner(apiPath, tickers) {
 
 async function fetchTradingViewMTF() {
   const now = Date.now();
-  if (serverMtfCache.lastFetch > 0 && now - serverMtfCache.lastFetch < 15000) {
+  if (serverMtfCache.lastFetch > 0 && now - serverMtfCache.lastFetch < 5000) {
     return serverMtfCache;
   }
   try {
@@ -3310,7 +3310,7 @@ async function evaluateAssetMarketState(assetKey) {
       livePrice,
       mtfContext,
       newsGuard,
-      useClosedBar: true,
+      useClosedBar: false, // Bắt nhịp sóng nhỏ realtime trong nến, không chờ trễ 5 phút
       waveType: 'SCALP'
     });
     
@@ -5766,11 +5766,36 @@ function startServerSignalEngine() {
     }
   };
 
-  setTimeout(evaluateServerSignal, 5000);
-  setInterval(evaluateServerSignal, 30000);
+  setTimeout(evaluateServerSignal, 2000);
+  setInterval(evaluateServerSignal, 3500); // Quét nhạy bén mỗi 3.5 giây (thay vì 30 giây!)
 }
 
 startServerSignalEngine();
+
+// Zero-Latency SSE Realtime Price Engine: Tự động phát giá Live TradingView mỗi 800ms xuống toàn bộ Client
+let lastBroadcastPrices = { XAU: 0, BTC: 0, XAG: 0 };
+async function tickLivePriceBroadcaster() {
+  try {
+    const prices = await fetchTradingViewAllPrices();
+    if (prices && prices.XAU && prices.XAU.price) {
+      const pXau = prices.XAU.price;
+      const pBtc = prices.BTC?.price || 0;
+      const pXag = prices.XAG?.price || 0;
+
+      // Chỉ broadcast khi giá có biến động thực sự để tiết kiệm băng thông và tối ưu hiệu năng
+      if (pXau !== lastBroadcastPrices.XAU || Math.abs(pBtc - lastBroadcastPrices.BTC) >= 1.0 || Math.abs(pXag - lastBroadcastPrices.XAG) >= 0.01) {
+        lastBroadcastPrices = { XAU: pXau, BTC: pBtc, XAG: pXag };
+        if (Array.isArray(sseClients) && sseClients.length > 0) {
+          const payload = `data: ${JSON.stringify({ type: 'PRICE_UPDATE', prices })}\n\n`;
+          sseClients.forEach(c => {
+            try { c.res.write(payload); } catch(e) {}
+          });
+        }
+      }
+    }
+  } catch(e) {}
+}
+setInterval(tickLivePriceBroadcaster, 800); // 800ms realtime tick stream
 
 // SSE Heartbeat mỗi 20s để chống Cloudflare 524 Timeout
 setInterval(() => {

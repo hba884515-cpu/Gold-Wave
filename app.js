@@ -97,14 +97,22 @@ class GoldTradingApp {
     this.initCanvasChart();
     this.bindEvents();
     this.loadInitialBars();
-    this.renderIndicators();
-    this.renderSignalHistory();
-    this.renderNewsAndCalendar();
-    this.startEventCountdown();
-    this.listenToSignalEngine();
-    this.startSimulatedMarketTicks();
-    this.start30MinAITrendAutoPushEngine();
-    this.initNotificationCenterSystem();
+
+    // Khung hình 1: Cho phép UI vẽ xong ngay trong 0ms để người dùng tương tác bấm/vuốt không bị chững lại
+    requestAnimationFrame(() => {
+      this.renderIndicators();
+      this.listenToSignalEngine();
+      this.startSimulatedMarketTicks();
+
+      // Khung hình 2 (Deferred): Khởi tạo các tiến trình phụ khi CPU rảnh rỗi, tuyệt đối không giật lag Main UI
+      setTimeout(() => {
+        this.renderSignalHistory();
+        this.renderNewsAndCalendar();
+        this.startEventCountdown();
+        this.start30MinAITrendAutoPushEngine();
+        this.initNotificationCenterSystem();
+      }, 80);
+    });
   }
 
   // Phương thức kích hoạt khi người dùng chuyển sang Tab Biểu Đồ MA WAVE V8 (Mô Phỏng & Signal Replay)
@@ -137,15 +145,14 @@ class GoldTradingApp {
       this.chart.applyOptions({ width: w, height: h });
     }
 
+    // Chỉ load và vẽ lại toàn bộ nến nếu chưa có dữ liệu trong bộ nhớ
     if (!this.bars || this.bars.length === 0) {
       this.loadInitialBars();
+      if (this.candleSeries && this.bars && this.bars.length > 0) {
+        this.candleSeries.setData(this.bars);
+      }
+      this.renderIndicators();
     }
-
-    if (this.candleSeries && this.bars && this.bars.length > 0) {
-      this.candleSeries.setData(this.bars);
-    }
-
-    this.renderIndicators();
 
     const applyReflow = () => {
       const size = measureSize();
@@ -159,16 +166,10 @@ class GoldTradingApp {
     };
 
     requestAnimationFrame(applyReflow);
-    setTimeout(applyReflow, 50);
-    setTimeout(applyReflow, 200);
-
     this.updateReplayUI();
   }
 
   onShowHistoryView() {
-    if (this.bars && this.bars.length > 0) {
-      this.renderIndicators();
-    }
     this.renderSignalHistory();
   }
 
@@ -1649,14 +1650,37 @@ class GoldTradingApp {
     this.fetchBackendNotifications();
     this.connectNotificationSSE();
 
+    // Polling dự phòng mỗi 15 giây lấy thông báo mới
     setInterval(() => {
       this.fetchBackendNotifications();
     }, 15000);
+
+    // Tự động hồi phục và đồng bộ tức thì khi người dùng mở điện thoại / quay lại màn hình
+    if (!this._notifLifecycleBound) {
+      this._notifLifecycleBound = true;
+      const handleAppResume = () => {
+        if (!document.hidden) {
+          this.fetchBackendNotifications();
+          if (window.signalEngine && typeof window.signalEngine.syncServerSignals === 'function') {
+            window.signalEngine.syncServerSignals();
+          }
+          // Kiểm tra và kết nối lại SSE nếu bị đứt kết nối ngầm khi khóa màn hình
+          if (!this._activeSSE || this._activeSSE.readyState === EventSource.CLOSED) {
+            this.connectNotificationSSE();
+          }
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleAppResume);
+      window.addEventListener('pageshow', handleAppResume);
+      window.addEventListener('focus', handleAppResume);
+      window.addEventListener('online', handleAppResume);
+    }
   }
 
   async fetchBackendNotifications() {
     try {
-      const res = await fetch('/api/notifications/latest');
+      const res = await fetch('/api/notifications/latest', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'SUCCESS' && Array.isArray(data.notifications)) {
@@ -1681,13 +1705,39 @@ class GoldTradingApp {
   connectNotificationSSE() {
     if (!('EventSource' in window)) return;
     try {
+      if (this._activeSSE) {
+        try { this._activeSSE.close(); } catch(e) {}
+        this._activeSSE = null;
+      }
+
       const sse = new EventSource('/api/notifications/stream');
+      this._activeSSE = sse;
+
+      sse.onopen = () => {
+        if (this._sseReconnectTimer) {
+          clearTimeout(this._sseReconnectTimer);
+          this._sseReconnectTimer = null;
+        }
+      };
+
+      sse.onerror = () => {
+        try { sse.close(); } catch(e) {}
+        this._activeSSE = null;
+        if (!this._sseReconnectTimer) {
+          this._sseReconnectTimer = setTimeout(() => {
+            this._sseReconnectTimer = null;
+            this.connectNotificationSSE();
+          }, 3500);
+        }
+      };
+
       sse.onmessage = (event) => {
         try {
+          if (!event.data || event.data === 'heartbeat') return;
           const item = JSON.parse(event.data);
           if (item) {
-            // 1. Tín hiệu MUA / BÁN mới từ máy chủ tập trung (đồng bộ tức thì cả PC & Điện thoại)
-            if (item.type === 'SIGNAL_NEW' && item.signal) {
+            // 1. Tín hiệu MUA / BÁN mới từ máy chủ tập trung (hỗ trợ cả SIGNAL_NEW & NEW_SIGNAL)
+            if ((item.type === 'SIGNAL_NEW' || item.type === 'NEW_SIGNAL') && item.signal) {
               if (window.signalEngine && typeof window.signalEngine.onServerSignalNew === 'function') {
                 window.signalEngine.onServerSignalNew(item.signal);
               }
@@ -1697,6 +1747,13 @@ class GoldTradingApp {
             if (item.type === 'SIGNAL_STATUS_UPDATE' && item.update) {
               if (window.signalEngine && typeof window.signalEngine.onServerSignalStatusUpdate === 'function') {
                 window.signalEngine.onServerSignalStatusUpdate(item.update);
+              }
+              return;
+            }
+            // 3. Cập nhật Giá Live Realtime không độ trễ (Zero-Latency SSE Price Stream)
+            if (item.type === 'PRICE_UPDATE' && item.prices) {
+              if (window.marketDataStore && typeof window.marketDataStore.onServerPriceStream === 'function') {
+                window.marketDataStore.onServerPriceStream(item.prices);
               }
               return;
             }
@@ -1714,27 +1771,33 @@ class GoldTradingApp {
 
               if (isFresh) {
                 const muteMinor = document.getElementById('bot-check-mute-minor')?.checked !== false;
-                const isMinor = item.title.includes('TP1') || item.title.includes('TP2');
+                const isMinor = item.title && (item.title.includes('TP1') || item.title.includes('TP2'));
 
                 if (!isMinor || !muteMinor) {
                   if (window.soundAlerts) {
                     if (item.category === 'SIGNAL') {
-                      if (item.title.includes('BUY')) window.soundAlerts.playBuySound();
-                      else if (item.title.includes('SELL')) window.soundAlerts.playSellSound();
+                      if (item.title && item.title.includes('BUY')) window.soundAlerts.playBuySound();
+                      else if (item.title && item.title.includes('SELL')) window.soundAlerts.playSellSound();
                       else window.soundAlerts.playPingSound();
                     } else {
                       window.soundAlerts.playPingSound();
                     }
                   }
 
-                  window.sendNativePushNotification(item.title, {
-                    body: item.body,
-                    icon: 'assets/logo.png',
-                    tag: item.id
-                  });
+                  if (navigator.vibrate) {
+                    try { navigator.vibrate([200, 100, 200, 100, 300]); } catch(e) {}
+                  }
+
+                  if (typeof window.sendNativePushNotification === 'function') {
+                    window.sendNativePushNotification(item.title, {
+                      body: item.body,
+                      icon: 'assets/logo.png',
+                      tag: item.id
+                    });
+                  }
 
                   if (typeof showToast === 'function') {
-                    showToast(item.title + '\n' + item.body.slice(0, 60), 'info');
+                    showToast(item.title + '\n' + (item.body ? item.body.slice(0, 60) : ''), 'info');
                   }
                 }
               }
@@ -2145,27 +2208,46 @@ class GoldTradingApp {
     }
     if (kpiBuySell) kpiBuySell.textContent = `${buyCount} Buy / ${sellCount} Sell`;
     if (kpiWin) kpiWin.textContent = winCount;
-    if (kpiTpBreakdown) kpiTpBreakdown.textContent = `TP1: ${tp1Wins} | TP2: ${tp2Wins} | TP3: ${tp3Wins}`;
     if (kpiLoss) kpiLoss.textContent = lossCount;
     if (kpiWinRate) kpiWinRate.textContent = `${winRate}%`;
 
+    // Tính tổng lợi nhuận quy đổi theo GIÁ:
+    // - Với Vàng (XAU): 10 pips = 1.0 giá (ví dụ: +515 pips = +51.5 giá)
+    // - Với Bạc (XAG): 100 pips = 1.0 giá (ví dụ: +80 pips = +0.8 giá)
+    // - Với Bitcoin (BTC): 1 pt = 1 giá ($ USD)
+    let totalGia = 0;
+    signals.forEach(s => {
+      const p = Number(s.pnlPips || 0);
+      if (s.asset === 'btc') {
+        totalGia += p;
+      } else if (s.asset === 'xag') {
+        totalGia += (p / 100);
+      } else {
+        totalGia += (p / 10);
+      }
+    });
+
+    const isOnlyBtc = assetFilter === 'BTC';
+    const sign = totalGia > 0 ? '+' : '';
+    const formattedGia = isOnlyBtc 
+      ? Math.round(totalGia).toLocaleString('en-US') 
+      : (Math.abs(totalGia) >= 100 ? totalGia.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : totalGia.toFixed(1));
+    const unitLabel = isOnlyBtc ? 'pts' : 'giá';
+
     if (kpiNetPips) {
-      const pnlPoints = (totalPips / 10).toFixed(1);
-      const sign = totalPips > 0 ? '+' : '';
-      const unitLabel = (assetFilter === 'BTC') ? 'pts' : 'pips';
-      kpiNetPips.textContent = `${sign}${totalPips.toLocaleString('en-US')} ${unitLabel}`;
-      kpiNetPips.className = `text-sm font-black ${totalPips >= 0 ? 'text-yellow-300' : 'text-rose-400'}`;
+      kpiNetPips.textContent = `${sign}${formattedGia} ${unitLabel}`;
+      kpiNetPips.className = `text-sm font-black ${totalGia >= 0 ? 'text-yellow-300' : 'text-rose-400'}`;
     }
     if (kpiNetUsd) {
-      const sign = totalUsd > 0 ? '+' : '';
-      kpiNetUsd.textContent = `${sign}$${totalUsd.toLocaleString('en-US')} USD`;
+      const signUsd = totalUsd > 0 ? '+' : '';
+      kpiNetUsd.textContent = `${signUsd}$${totalUsd.toLocaleString('en-US')} USD`;
       kpiNetUsd.className = `text-xs font-bold ${totalUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
     }
 
     // Cập nhật mini badge và số lượng lệnh
     const kpiMiniBadge = document.getElementById('kpi-mini-badge');
     if (kpiMiniBadge) {
-      kpiMiniBadge.textContent = `Win: ${winRate}% • ${totalPips > 0 ? '+' : ''}${totalPips.toLocaleString('en-US')} pips ($${(totalUsd || 0).toLocaleString('en-US')} USD)`;
+      kpiMiniBadge.textContent = `Win: ${winRate}% • ${sign}${formattedGia} ${unitLabel} ($${(totalUsd || 0).toLocaleString('en-US')} USD)`;
     }
     const orderCountBadge = document.getElementById('hist-order-count-badge');
     if (orderCountBadge) {
@@ -2236,7 +2318,10 @@ class GoldTradingApp {
 
         const pnlColor = sig.pnlPips > 0 ? 'text-emerald-400' : sig.pnlPips < 0 ? 'text-rose-400' : 'text-slate-400';
         const pnlSign = sig.pnlPips > 0 ? '+' : '';
-        const unit = isBtc ? 'pts' : 'pips';
+        const giaPnl = isBtc 
+          ? sig.pnlPips 
+          : (isXag ? +(sig.pnlPips / 100).toFixed(2) : +(sig.pnlPips / 10).toFixed(1));
+        const unit = isBtc ? 'pts' : 'giá';
         const isRunning = sig.status && sig.status.includes('ĐANG CHẠY');
 
         return `
@@ -2245,9 +2330,14 @@ class GoldTradingApp {
             <td class="py-3 px-3">${assetBadge}</td>
             <td class="py-3 px-3 text-slate-300 font-mono">${sig.time}</td>
             <td class="py-3 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                ${isBuy ? 'BUY ENTRY' : 'SELL ENTRY'}
-              </span>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                  ${isBuy ? 'BUY' : 'SELL'}
+                </span>
+                ${(sig.waveType === 'SCALP' || (sig.strategy && sig.strategy.includes('SCALP')) || (sig.reason && sig.reason.includes('M5')) || sig.timeframe === 'M5') 
+                  ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">🎯 SCALP M5</span>'
+                  : '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">🚀 SÓNG LỚN</span>'}
+              </div>
             </td>
             <td class="py-3 px-3 text-slate-200 font-bold">${fmtP(sig.price, isBtc)}</td>
             <td class="py-3 px-3 text-rose-400/90">${fmtP(sig.sl, isBtc)}</td>
@@ -2255,7 +2345,7 @@ class GoldTradingApp {
             <td class="py-3 px-3">${formatTpBadge(sig.hitTp2, sig.tp2, isBtc)}</td>
             <td class="py-3 px-3">${formatTpBadge(sig.hitTp3, sig.tp3, isBtc)}</td>
             <td class="py-3 px-3 font-bold ${pnlColor}">
-              ${isRunning ? '--' : `${pnlSign}${sig.pnlPips} ${unit} ($${(sig.pnlUsd || 0).toLocaleString('en-US')})`}
+              ${isRunning ? '--' : `${pnlSign}${giaPnl} ${unit} ($${(sig.pnlUsd || 0).toLocaleString('en-US')})`}
             </td>
             <td class="py-3 px-3 font-sans">
               <span class="text-[11px] font-semibold text-slate-200">${sig.status}</span>
@@ -2298,16 +2388,22 @@ class GoldTradingApp {
 
         const pnlColor = sig.pnlPips > 0 ? 'text-emerald-400' : sig.pnlPips < 0 ? 'text-rose-400' : 'text-slate-400';
         const pnlSign = sig.pnlPips > 0 ? '+' : '';
-        const unit = isBtc ? 'pts' : 'pips';
+        const giaPnl = isBtc 
+          ? sig.pnlPips 
+          : (isXag ? +(sig.pnlPips / 100).toFixed(2) : +(sig.pnlPips / 10).toFixed(1));
+        const unit = isBtc ? 'pts' : 'giá';
         const isRunning = sig.status && sig.status.includes('ĐANG CHẠY');
 
         return `
           <div class="bg-gradient-to-b from-[#0e241c] to-[#07130f] border ${isBuy ? 'border-emerald-500/35 hover:border-emerald-400/60' : 'border-rose-500/35 hover:border-rose-400/60'} rounded-2xl p-3.5 space-y-3 shadow-lg relative overflow-hidden transition-all duration-200">
             <!-- Header: Mã tài sản + ID + Giờ + Badge Mua/Bán -->
             <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
                 ${assetBadge}
                 <span class="text-[11px] font-mono font-bold text-slate-400">#${sig.id}</span>
+                ${(sig.waveType === 'SCALP' || (sig.strategy && sig.strategy.includes('SCALP')) || (sig.reason && sig.reason.includes('M5')) || sig.timeframe === 'M5') 
+                  ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">🎯 SCALP M5</span>'
+                  : '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">🚀 SÓNG LỚN M15</span>'}
               </div>
               <span class="px-2.5 py-0.5 rounded-lg text-xs font-black ${isBuy ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-sm shadow-rose-500/20'} flex items-center gap-1">
                 <span>${isBuy ? '🟢 BUY ENTRY' : '🔴 SELL ENTRY'}</span>
@@ -2341,7 +2437,7 @@ class GoldTradingApp {
               </div>
               <div class="flex items-center gap-2">
                 <span class="font-mono font-black ${pnlColor}">
-                  ${isRunning ? '⏳ Đang chạy' : `${pnlSign}${sig.pnlPips} ${unit} ($${(sig.pnlUsd || 0).toLocaleString('en-US')})`}
+                  ${isRunning ? '⏳ Đang chạy' : `${pnlSign}${giaPnl} ${unit} ($${(sig.pnlUsd || 0).toLocaleString('en-US')})`}
                 </span>
                 <span class="text-[11px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
                   ${sig.status}
@@ -4830,6 +4926,22 @@ window.showAuthView = function(viewName) {
 
   const target = document.getElementById(`auth-form-${viewName}`);
   if (target) target.classList.remove('hidden');
+
+  // Cập nhật trạng thái nút chuyển đổi tab ĐĂNG KÝ / ĐĂNG NHẬP
+  const tabReg = document.getElementById('auth-tab-btn-register');
+  const tabLog = document.getElementById('auth-tab-btn-login');
+  if (tabReg && tabLog) {
+    if (viewName === 'register') {
+      tabReg.className = 'flex-1 py-2 text-xs font-black rounded-lg transition bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20 cursor-pointer';
+      tabLog.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-400 hover:text-white cursor-pointer';
+    } else if (viewName === 'login') {
+      tabLog.className = 'flex-1 py-2 text-xs font-black rounded-lg transition bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20 cursor-pointer';
+      tabReg.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-400 hover:text-white cursor-pointer';
+    } else {
+      tabReg.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-500';
+      tabLog.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition text-slate-500';
+    }
+  }
 };
 
 // ── Paywall & Subscription Manager ──
@@ -4845,6 +4957,7 @@ window.openPaywallScreen = function(user, sub, payment) {
   if (authPage) {
     authPage.classList.remove('hidden');
     authPage.style.display = 'flex';
+    if (typeof window.revealAuthCard === 'function') window.revealAuthCard();
   }
 
   showAuthView('paywall');
@@ -4856,44 +4969,114 @@ window.openPaywallScreen = function(user, sub, payment) {
   const cfg = payment || window.cachedPaymentConfig || {};
   window.cachedPaymentConfig = cfg;
 
+  const memoEl = document.getElementById('paywall-memo');
+  const zaloEl = document.getElementById('paywall-support-zalo');
+  const commLinkEl = document.getElementById('paywall-community-link');
+
+  const zaloUrl = cfg.communityLink || cfg.supportZalo || 'https://zalo.me/g/csqvcu122';
+  if (memoEl) memoEl.textContent = 'Tùy ý (Tên hoặc SĐT của bạn)';
+  if (zaloEl) zaloEl.href = zaloUrl;
+  if (commLinkEl) commLinkEl.href = zaloUrl;
+
+  // Mặc định chọn Gói Ưu Đãi Cộng Đồng 99.999đ
+  window.selectPaywallPackage('community');
+};
+
+window.closePaywallScreen = function() {
+  if (window.currentUser) {
+    const authPage = document.getElementById('auth-fullscreen-page');
+    const appShell = document.getElementById('app-shell');
+    if (authPage) {
+      authPage.classList.add('hidden');
+      authPage.style.display = 'none';
+    }
+    if (appShell) {
+      appShell.classList.remove('hidden');
+      appShell.style.display = '';
+    }
+  } else {
+    showAuthView('register');
+  }
+};
+
+window.openPricingView = function() {
+  window.revealAuthCard();
+  showAuthView('paywall');
+  const badge = document.getElementById('paywall-badge-status');
+  const title = document.getElementById('paywall-title-text');
+  const desc = document.getElementById('paywall-desc-text');
+  const backBtn = document.getElementById('paywall-back-btn');
+  if (badge) {
+    badge.className = 'inline-flex items-center justify-center px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black text-[10px] uppercase tracking-wider mb-1';
+    badge.textContent = '💎 BẢNG GIÁ & CÁC GÓI SỬ DỤNG THEO THÁNG';
+  }
+  if (title) title.textContent = 'Các Gói Sử Dụng Gold Wave';
+  if (desc) desc.innerHTML = 'Khám phá 2 lựa chọn gói bản quyền 1 tháng với ưu đãi giảm giá tốt nhất cho cộng đồng.';
+  if (backBtn) {
+    backBtn.textContent = '← Quay lại Đăng ký';
+    backBtn.onclick = () => showAuthView('register');
+  }
+  window.selectPaywallPackage('community');
+};
+
+window.currentPaywallPackage = 'community';
+
+window.selectPaywallPackage = function(packageId) {
+  window.currentPaywallPackage = packageId;
+  const cfg = window.cachedPaymentConfig || {};
+  const isCommunity = (packageId === 'community');
+
+  const tabComm = document.getElementById('paywall-tab-community');
+  const tabStd = document.getElementById('paywall-tab-standard');
+  const commBox = document.getElementById('paywall-community-join-box');
+  const pkgTitle = document.getElementById('paywall-pkg-title');
+  const pkgSubtitle = document.getElementById('paywall-pkg-subtitle');
+  const feeDisplayEl = document.getElementById('paywall-fee-display');
+  const amountEl = document.getElementById('paywall-amount');
   const bankNameEl = document.getElementById('paywall-bank-name');
   const accNumEl = document.getElementById('paywall-acc-number');
   const accNameEl = document.getElementById('paywall-acc-name');
-  const amountEl = document.getElementById('paywall-amount');
-  const feeDisplayEl = document.getElementById('paywall-fee-display');
-  const memoEl = document.getElementById('paywall-memo');
-  const zaloEl = document.getElementById('paywall-support-zalo');
   const qrImgEl = document.getElementById('paywall-qr-img');
 
-  if (bankNameEl && cfg.bankName) bankNameEl.textContent = cfg.bankName;
-  if (accNumEl && cfg.accountNumber) accNumEl.textContent = cfg.accountNumber;
-  if (accNameEl && cfg.accountName) accNameEl.textContent = cfg.accountName;
-  if (amountEl && cfg.monthlyFee) amountEl.textContent = cfg.monthlyFee;
-  if (feeDisplayEl && cfg.monthlyFee) feeDisplayEl.textContent = cfg.monthlyFee;
-  
-  if (memoEl) memoEl.textContent = 'Tùy ý (Tên hoặc SĐT của bạn)';
-  if (zaloEl && cfg.supportZalo) zaloEl.href = cfg.supportZalo;
+  if (tabComm && tabStd) {
+    if (isCommunity) {
+      tabComm.className = "relative p-2.5 rounded-xl border border-amber-500/80 bg-gradient-to-b from-amber-500/20 to-amber-500/5 text-left transition cursor-pointer shadow-md shadow-amber-500/10";
+      tabStd.className = "relative p-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-left transition cursor-pointer hover:border-slate-700 opacity-70";
+    } else {
+      tabStd.className = "relative p-2.5 rounded-xl border border-amber-500/80 bg-gradient-to-b from-amber-500/20 to-amber-500/5 text-left transition cursor-pointer shadow-md shadow-amber-500/10";
+      tabComm.className = "relative p-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-left transition cursor-pointer hover:border-slate-700 opacity-70";
+    }
+  }
 
-  // Build Bank QR Image
-  if (qrImgEl) {
-    qrImgEl.src = (cfg.qrImage || 'assets/payment-qr.png');
-    qrImgEl.onerror = function() {
-      this.onerror = null;
-      if (cfg.bankId && cfg.accountNumber) {
-        const cleanAcc = encodeURIComponent(cfg.accountNumber.replace(/\s+/g, ''));
-        const cleanBank = encodeURIComponent(cfg.bankId);
-        const cleanName = encodeURIComponent(cfg.accountName || 'HOANG BA');
-        this.src = `https://img.vietqr.io/image/${cleanBank}-${cleanAcc}-compact2.png?accountName=${cleanName}`;
-      }
-    };
+  if (commBox) {
+    commBox.style.display = isCommunity ? 'block' : 'none';
+  }
+
+  if (isCommunity) {
+    if (pkgTitle) pkgTitle.textContent = 'Gói Ưu Đãi Cộng Đồng 1 Tháng';
+    if (pkgSubtitle) pkgSubtitle.textContent = 'Tín hiệu MA Wave V8 Pro + Vào Nhóm Cộng Đồng';
+    if (feeDisplayEl) feeDisplayEl.textContent = '99.999 VNĐ';
+    if (amountEl) amountEl.textContent = '99,999 VNĐ';
+    if (bankNameEl) bankNameEl.textContent = 'Techcombank';
+    if (accNumEl) accNumEl.textContent = '8000 4868 68';
+    if (accNameEl) accNameEl.textContent = 'TRAN BA HOANG';
+    if (qrImgEl) qrImgEl.src = 'assets/payment-qr-community.png';
+  } else {
+    if (pkgTitle) pkgTitle.textContent = 'Gói Người Dùng Độc Lập 1 Tháng';
+    if (pkgSubtitle) pkgSubtitle.textContent = 'Tín hiệu MA Wave V8 Pro (Sử dụng riêng tư không vào nhóm)';
+    if (feeDisplayEl) feeDisplayEl.textContent = '390.000 VNĐ';
+    if (amountEl) amountEl.textContent = '390,000 VNĐ';
+    if (bankNameEl) bankNameEl.textContent = cfg.bankName || 'Techcombank';
+    if (accNumEl) accNumEl.textContent = (cfg.packages && cfg.packages.standard && cfg.packages.standard.accountNumber) || '68686866899';
+    if (accNameEl) accNameEl.textContent = (cfg.packages && cfg.packages.standard && cfg.packages.standard.accountName) || 'HOÀNG BÁ';
+    if (qrImgEl) qrImgEl.src = (cfg.packages && cfg.packages.standard && cfg.packages.standard.qrImage) || 'assets/payment-qr.png';
   }
 };
 
 window.copyPaywallInfo = function(type) {
-  const cfg = window.cachedPaymentConfig || {};
   let textToCopy = '';
   if (type === 'accountNumber') {
-    textToCopy = cfg.accountNumber || document.getElementById('paywall-acc-number')?.textContent || '68686866899';
+    textToCopy = document.getElementById('paywall-acc-number')?.textContent.trim() || '8000 4868 68';
   } else if (type === 'memo') {
     textToCopy = document.getElementById('pay-confirm-name')?.value || document.getElementById('pay-confirm-phone')?.value || 'Techcombank';
   }
@@ -4902,6 +5085,13 @@ window.copyPaywallInfo = function(type) {
     if (typeof showToast === 'function') showToast(`📋 Đã sao chép: "${textToCopy}"`, 'success');
   } else {
     alert(`Đã sao chép: ${textToCopy}`);
+  }
+};
+
+window.toggleZaloGroupQr = function() {
+  const drawer = document.getElementById('paywall-zalo-qr-drawer');
+  if (drawer) {
+    drawer.classList.toggle('hidden');
   }
 };
 
@@ -4931,15 +5121,26 @@ window.submitPaymentActivationRequest = async function() {
     return;
   }
 
+  const isCommunity = window.currentPaywallPackage === 'community';
+  const pkgName = isCommunity ? 'Gói Ưu Đãi Cộng Đồng (99.999 VNĐ)' : 'Gói Độc Lập (390.000 VNĐ)';
+  const amountStr = isCommunity ? '99.999 VNĐ' : '390.000 VNĐ';
+
   try {
     const res = await fetch('/api/subscription/request-activation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, phone, note: `SĐT: ${phone}` })
+      body: JSON.stringify({ email, name, phone, amount: amountStr, note: `${pkgName} - SĐT: ${phone}` })
     });
     const data = await res.json();
     if (res.ok && data.status === 'SUCCESS') {
-      alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\nAdmin đã nhận được thông tin và sẽ kiểm tra, kích hoạt tài khoản cho bạn trong vòng 1-3 phút!`);
+      if (isCommunity) {
+        alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Gói đăng ký: ${pkgName}\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\n👉 BẠN VUI LÒNG BẤM "VÀO NHÓM ZALO" NGAY ĐỂ ADMIN DUYỆT & KÍCH HOẠT NHANH TRONG 1-3 PHÚT:\nhttps://zalo.me/g/csqvcu122`);
+        try {
+          window.open('https://zalo.me/g/csqvcu122', '_blank');
+        } catch(e) {}
+      } else {
+        alert(`🎉 YÊU CẦU ĐÃ GỬI THÀNH CÔNG!\n\nThông tin xác nhận:\n- Gói đăng ký: ${pkgName}\n- Họ và tên: ${name}\n- Số điện thoại / Zalo: ${phone}\n- Email: ${email}\n\nAdmin đã nhận được thông tin và sẽ kiểm tra, kích hoạt tài khoản cho bạn trong vòng 1-3 phút!`);
+      }
       const box = document.getElementById('paywall-confirm-form-box');
       if (box) box.classList.add('hidden');
       if (typeof showToast === 'function') {
@@ -5068,10 +5269,82 @@ window.checkPasswordStrength = function(pwd) {
   }
 };
 
-window.openAuthModal = function() {
-  const page = document.getElementById('auth-fullscreen-page');
-  if (page) page.classList.remove('hidden');
+window.revealAuthCardTimeout = null;
+
+window.revealAuthCard = function() {
+  if (window.revealAuthCardTimeout) {
+    clearTimeout(window.revealAuthCardTimeout);
+    window.revealAuthCardTimeout = null;
+  }
+  const gate = document.getElementById('auth-intro-gate');
+  if (gate) {
+    gate.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+    setTimeout(() => {
+      gate.classList.add('hidden');
+    }, 180);
+  }
+  const wrapper = document.getElementById('auth-card-wrapper');
+  if (wrapper) {
+    wrapper.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      wrapper.classList.remove('opacity-0', 'translate-y-4', 'translate-y-8', 'translate-y-10', 'scale-95', 'pointer-events-none');
+      wrapper.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+    });
+  }
+  const v = document.getElementById('auth-bg-video');
+  if (v) { try { v.pause(); } catch(e) {} }
+};
+
+window.hideAuthCardInitially = function() {
+  if (window.revealAuthCardTimeout) {
+    clearTimeout(window.revealAuthCardTimeout);
+    window.revealAuthCardTimeout = null;
+  }
+  const wrapper = document.getElementById('auth-card-wrapper');
+  if (wrapper) {
+    wrapper.classList.add('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
+    wrapper.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+    setTimeout(() => {
+      wrapper.classList.add('hidden');
+    }, 180);
+  }
+  const gate = document.getElementById('auth-intro-gate');
+  if (gate) {
+    gate.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      gate.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+      gate.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+    });
+  }
+  const v = document.getElementById('auth-bg-video');
+  if (v) { try { v.play().catch(() => {}); } catch(e) {} }
+};
+
+window.handleAcceptRegistrationIntro = function() {
+  window.revealAuthCard();
+  showAuthView('register');
+};
+
+window.handleDirectLoginIntro = function() {
+  window.revealAuthCard();
   showAuthView('login');
+};
+
+window.handleBackToIntroGate = function() {
+  window.hideAuthCardInitially();
+};
+
+window.openAuthModal = function(initialView = 'register') {
+  const page = document.getElementById('auth-fullscreen-page');
+  if (page) {
+    page.classList.remove('hidden');
+    page.style.display = 'flex';
+  }
+  const v = document.getElementById('auth-bg-video');
+  if (v) {
+    v.play().catch(() => {});
+  }
+  window.hideAuthCardInitially();
 };
 
 window.closeAuthModal = function() {
@@ -5081,6 +5354,8 @@ window.closeAuthModal = function() {
     if (authPage) {
       authPage.classList.add('hidden');
       authPage.style.display = 'none';
+      const v = document.getElementById('auth-bg-video');
+      if (v) { v.pause(); }
     }
     if (appShell) {
       appShell.classList.remove('hidden');
@@ -5098,6 +5373,18 @@ window.closeAuthModal = function() {
     }
   }
 };
+
+// Đảm bảo video tự phát được ngay trên iPhone Safari & Android khi người dùng chạm màn hình lần đầu
+if (typeof document !== 'undefined') {
+  const tryStartAuthVideo = () => {
+    const v = document.getElementById('auth-bg-video');
+    if (v && v.paused) {
+      v.play().catch(() => {});
+    }
+  };
+  document.addEventListener('touchstart', tryStartAuthVideo, { once: true, passive: true });
+  document.addEventListener('click', tryStartAuthVideo, { once: true, passive: true });
+}
 
 // ── Robust Device Fingerprint Engine (Anti-Trial-Abuse) ──
 window.getOrCreateDeviceId = function() {
@@ -5188,6 +5475,11 @@ window.checkAuthOnLoad = async function() {
     if (authPage) {
       authPage.classList.remove('hidden');
       authPage.style.display = 'flex';
+      const v = document.getElementById('auth-bg-video');
+      if (v) {
+        v.play().catch(() => {});
+      }
+      window.hideAuthCardInitially();
     }
     if (appShell) {
       appShell.classList.add('hidden');

@@ -1750,6 +1750,13 @@ class GoldTradingApp {
               }
               return;
             }
+            // 3. Cập nhật Giá Live Realtime không độ trễ (Zero-Latency SSE Price Stream)
+            if (item.type === 'PRICE_UPDATE' && item.prices) {
+              if (window.marketDataStore && typeof window.marketDataStore.onServerPriceStream === 'function') {
+                window.marketDataStore.onServerPriceStream(item.prices);
+              }
+              return;
+            }
           }
 
           if (item && item.id) {
