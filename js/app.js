@@ -2201,27 +2201,46 @@ class GoldTradingApp {
     }
     if (kpiBuySell) kpiBuySell.textContent = `${buyCount} Buy / ${sellCount} Sell`;
     if (kpiWin) kpiWin.textContent = winCount;
-    if (kpiTpBreakdown) kpiTpBreakdown.textContent = `TP1: ${tp1Wins} | TP2: ${tp2Wins} | TP3: ${tp3Wins}`;
     if (kpiLoss) kpiLoss.textContent = lossCount;
     if (kpiWinRate) kpiWinRate.textContent = `${winRate}%`;
 
+    // Tính tổng lợi nhuận quy đổi theo GIÁ:
+    // - Với Vàng (XAU): 10 pips = 1.0 giá (ví dụ: +515 pips = +51.5 giá)
+    // - Với Bạc (XAG): 100 pips = 1.0 giá (ví dụ: +80 pips = +0.8 giá)
+    // - Với Bitcoin (BTC): 1 pt = 1 giá ($ USD)
+    let totalGia = 0;
+    signals.forEach(s => {
+      const p = Number(s.pnlPips || 0);
+      if (s.asset === 'btc') {
+        totalGia += p;
+      } else if (s.asset === 'xag') {
+        totalGia += (p / 100);
+      } else {
+        totalGia += (p / 10);
+      }
+    });
+
+    const isOnlyBtc = assetFilter === 'BTC';
+    const sign = totalGia > 0 ? '+' : '';
+    const formattedGia = isOnlyBtc 
+      ? Math.round(totalGia).toLocaleString('en-US') 
+      : (Math.abs(totalGia) >= 100 ? totalGia.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : totalGia.toFixed(1));
+    const unitLabel = isOnlyBtc ? 'pts' : 'giá';
+
     if (kpiNetPips) {
-      const pnlPoints = (totalPips / 10).toFixed(1);
-      const sign = totalPips > 0 ? '+' : '';
-      const unitLabel = (assetFilter === 'BTC') ? 'pts' : 'pips';
-      kpiNetPips.textContent = `${sign}${totalPips.toLocaleString('en-US')} ${unitLabel}`;
-      kpiNetPips.className = `text-sm font-black ${totalPips >= 0 ? 'text-yellow-300' : 'text-rose-400'}`;
+      kpiNetPips.textContent = `${sign}${formattedGia} ${unitLabel}`;
+      kpiNetPips.className = `text-sm font-black ${totalGia >= 0 ? 'text-yellow-300' : 'text-rose-400'}`;
     }
     if (kpiNetUsd) {
-      const sign = totalUsd > 0 ? '+' : '';
-      kpiNetUsd.textContent = `${sign}$${totalUsd.toLocaleString('en-US')} USD`;
+      const signUsd = totalUsd > 0 ? '+' : '';
+      kpiNetUsd.textContent = `${signUsd}$${totalUsd.toLocaleString('en-US')} USD`;
       kpiNetUsd.className = `text-xs font-bold ${totalUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
     }
 
     // Cập nhật mini badge và số lượng lệnh
     const kpiMiniBadge = document.getElementById('kpi-mini-badge');
     if (kpiMiniBadge) {
-      kpiMiniBadge.textContent = `Win: ${winRate}% • ${totalPips > 0 ? '+' : ''}${totalPips.toLocaleString('en-US')} pips ($${(totalUsd || 0).toLocaleString('en-US')} USD)`;
+      kpiMiniBadge.textContent = `Win: ${winRate}% • ${sign}${formattedGia} ${unitLabel} ($${(totalUsd || 0).toLocaleString('en-US')} USD)`;
     }
     const orderCountBadge = document.getElementById('hist-order-count-badge');
     if (orderCountBadge) {
@@ -2292,7 +2311,10 @@ class GoldTradingApp {
 
         const pnlColor = sig.pnlPips > 0 ? 'text-emerald-400' : sig.pnlPips < 0 ? 'text-rose-400' : 'text-slate-400';
         const pnlSign = sig.pnlPips > 0 ? '+' : '';
-        const unit = isBtc ? 'pts' : 'pips';
+        const giaPnl = isBtc 
+          ? sig.pnlPips 
+          : (isXag ? +(sig.pnlPips / 100).toFixed(2) : +(sig.pnlPips / 10).toFixed(1));
+        const unit = isBtc ? 'pts' : 'giá';
         const isRunning = sig.status && sig.status.includes('ĐANG CHẠY');
 
         return `
@@ -2316,7 +2338,7 @@ class GoldTradingApp {
             <td class="py-3 px-3">${formatTpBadge(sig.hitTp2, sig.tp2, isBtc)}</td>
             <td class="py-3 px-3">${formatTpBadge(sig.hitTp3, sig.tp3, isBtc)}</td>
             <td class="py-3 px-3 font-bold ${pnlColor}">
-              ${isRunning ? '--' : `${pnlSign}${sig.pnlPips} ${unit} ($${(sig.pnlUsd || 0).toLocaleString('en-US')})`}
+              ${isRunning ? '--' : `${pnlSign}${giaPnl} ${unit} ($${(sig.pnlUsd || 0).toLocaleString('en-US')})`}
             </td>
             <td class="py-3 px-3 font-sans">
               <span class="text-[11px] font-semibold text-slate-200">${sig.status}</span>
@@ -2359,7 +2381,10 @@ class GoldTradingApp {
 
         const pnlColor = sig.pnlPips > 0 ? 'text-emerald-400' : sig.pnlPips < 0 ? 'text-rose-400' : 'text-slate-400';
         const pnlSign = sig.pnlPips > 0 ? '+' : '';
-        const unit = isBtc ? 'pts' : 'pips';
+        const giaPnl = isBtc 
+          ? sig.pnlPips 
+          : (isXag ? +(sig.pnlPips / 100).toFixed(2) : +(sig.pnlPips / 10).toFixed(1));
+        const unit = isBtc ? 'pts' : 'giá';
         const isRunning = sig.status && sig.status.includes('ĐANG CHẠY');
 
         return `
@@ -2405,7 +2430,7 @@ class GoldTradingApp {
               </div>
               <div class="flex items-center gap-2">
                 <span class="font-mono font-black ${pnlColor}">
-                  ${isRunning ? '⏳ Đang chạy' : `${pnlSign}${sig.pnlPips} ${unit} ($${(sig.pnlUsd || 0).toLocaleString('en-US')})`}
+                  ${isRunning ? '⏳ Đang chạy' : `${pnlSign}${giaPnl} ${unit} ($${(sig.pnlUsd || 0).toLocaleString('en-US')})`}
                 </span>
                 <span class="text-[11px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
                   ${sig.status}
