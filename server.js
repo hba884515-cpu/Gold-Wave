@@ -2616,22 +2616,32 @@ function fetchGoldApiPriceDirect() {
 
 function fetchSilverApiPriceDirect() {
   return new Promise((resolve) => {
-    // 1. Primary: Yahoo Finance SI=F (Bạc thế giới)
-    https.get('https://query1.finance.yahoo.com/v8/finance/chart/SI=F?interval=1d&range=1d', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 4000 }, (res) => {
+    // 1. Primary: Real Spot Silver XAG/USD from api.gold-api.com (Sát chuẩn TVC:SILVER từng cent, không lệch Futures)
+    https.get('https://api.gold-api.com/price/XAG', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 3000 }, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
         try {
           const j = JSON.parse(body);
-          const meta = j.chart.result[0].meta;
-          const p = parseFloat(meta.regularMarketPrice);
-          const open = parseFloat(meta.chartPreviousClose || meta.previousClose || p);
-          const high = parseFloat(meta.regularMarketDayHigh || p);
-          const low = parseFloat(meta.regularMarketDayLow || p);
-          const chg = +(p - open).toFixed(2);
-          const chgPct = +((chg / open) * 100).toFixed(2);
-          return resolve({ price: p, change: chg, changePercent: chgPct, high, low, open, symbol: 'YAHOO:SI=F' });
-        } catch (e) { resolve(null); }
+          if (j && j.price && !isNaN(j.price) && j.price > 10) {
+            const price = parseFloat(j.price);
+            const prevOpen = (tvMarketPricesCache.XAG && tvMarketPricesCache.XAG.open) ? tvMarketPricesCache.XAG.open : price;
+            const prevHigh = (tvMarketPricesCache.XAG && tvMarketPricesCache.XAG.high) ? Math.max(tvMarketPricesCache.XAG.high, price) : price;
+            const prevLow = (tvMarketPricesCache.XAG && tvMarketPricesCache.XAG.low) ? Math.min(tvMarketPricesCache.XAG.low, price) : price;
+            const chg = +(price - prevOpen).toFixed(2);
+            const chgPct = prevOpen > 0 ? +((chg / prevOpen) * 100).toFixed(2) : 0;
+            return resolve({
+              price: +price.toFixed(2),
+              change: chg,
+              changePercent: chgPct,
+              high: +prevHigh.toFixed(2),
+              low: +prevLow.toFixed(2),
+              open: +prevOpen.toFixed(2),
+              symbol: 'TVC:SILVER'
+            });
+          }
+        } catch (e) {}
+        resolve(null);
       });
     }).on('error', () => resolve(null));
   });
@@ -2732,23 +2742,28 @@ function queryTvScanner(path, tickers) {
 
 async function fetchTradingViewAllPrices() {
   const now = Date.now();
-  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 800) {
+  if (tvMarketPricesCache.lastUpdated > 0 && now - tvMarketPricesCache.lastUpdated < 300) {
     return tvMarketPricesCache;
   }
 
-  let goldUpdated = false;
-  let silverUpdated = false;
-  let btcUpdated = false;
-
   try {
-    const [cfdData, cryptoData] = await Promise.all([
-      queryTvScanner('/cfd/scan', ["TVC:GOLD", "OANDA:XAUUSD", "TVC:SILVER", "OANDA:XAGUSD", "TVC:DXY"]),
-      queryTvScanner('/crypto/scan', ["BINANCE:BTCUSDT", "COINBASE:BTCUSD"])
+    // Zero-Latency Multi-Source Parallel Fetch:
+    // Chạy song song Spot Realtime Direct (GoldAPI, SilverAPI, Coinbase) VÀ TradingView Scanner
+    // Đảm bảo giá Spot là REALTIME từng giây (0 latency), không bao giờ bị CloudFront CDN cache 10-15s!
+    const [liveGoldDirect, liveSilverDirect, liveBtcDirect, tvData] = await Promise.all([
+      fetchGoldApiPriceDirect().catch(() => null),
+      fetchSilverApiPriceDirect().catch(() => null),
+      fetchBtcPriceDirect().catch(() => null),
+      Promise.all([
+        queryTvScanner('/cfd/scan', ["TVC:GOLD", "OANDA:XAUUSD", "TVC:SILVER", "OANDA:XAGUSD", "TVC:DXY"]),
+        queryTvScanner('/crypto/scan', ["BINANCE:BTCUSDT", "COINBASE:BTCUSD"])
+      ]).catch(() => [null, null])
     ]);
 
-    // Parse CFD (Gold & Silver & DXY)
+    const [cfdData, cryptoData] = tvData || [null, null];
+
+    // 1. Phân tích CFD Scanner (lấy baseline open, high, low, DXY)
     if (cfdData && cfdData.data && Array.isArray(cfdData.data)) {
-      // Ưu tiên chuẩn xác TVC:GOLD và TVC:SILVER và TVC:DXY
       const goldItems = cfdData.data.filter(i => i && i.s && (i.s.includes('GOLD') || i.s.includes('XAUUSD')));
       const silverItems = cfdData.data.filter(i => i && i.s && (i.s.includes('SILVER') || i.s.includes('XAGUSD')));
       const dxyItems = cfdData.data.filter(i => i && i.s && (i.s.includes('DXY') || i.s.includes('USDX')));
@@ -2776,7 +2791,6 @@ async function fetchTradingViewAllPrices() {
             lastUpdated: now
           };
           tvGoldDataCache = tvMarketPricesCache.XAU;
-          goldUpdated = true;
         }
       }
 
@@ -2798,7 +2812,6 @@ async function fetchTradingViewAllPrices() {
             symbol: bestSilver.s,
             lastUpdated: now
           };
-          silverUpdated = true;
         }
       }
 
@@ -2824,7 +2837,7 @@ async function fetchTradingViewAllPrices() {
       }
     }
 
-    // Parse Crypto (BTC)
+    // 2. Phân tích Crypto Scanner
     if (cryptoData && cryptoData.data && Array.isArray(cryptoData.data)) {
       cryptoData.data.forEach(item => {
         if (!item || !item.s || !item.d || item.d.length < 6) return;
@@ -2847,94 +2860,65 @@ async function fetchTradingViewAllPrices() {
             symbol: item.s,
             lastUpdated: now
           };
-          btcUpdated = true;
         }
       });
     }
-  } catch(e) {}
 
-  // Multi-source Fallbacks: If TradingView scanner is blocked on cloud/datacenter IP
-  try {
-    const fallbackTasks = [];
-    if (!goldUpdated) fallbackTasks.push(fetchGoldApiPriceDirect());
-    else fallbackTasks.push(Promise.resolve(null));
-
-    if (!silverUpdated) fallbackTasks.push(fetchSilverApiPriceDirect());
-    else fallbackTasks.push(Promise.resolve(null));
-
-    if (!btcUpdated) fallbackTasks.push(fetchBtcPriceDirect());
-    else fallbackTasks.push(Promise.resolve(null));
-
-    const [liveGold, liveSilver, liveBtc] = await Promise.all(fallbackTasks);
-
-    if (liveGold) {
-      if (typeof liveGold === 'object' && liveGold.price > 0) {
-        tvMarketPricesCache.XAU = {
-          price: +Number(liveGold.price).toFixed(2),
-          change: +Number(liveGold.change || 0).toFixed(2),
-          changePercent: +Number(liveGold.changePercent || 0).toFixed(2),
-          high: +Number(liveGold.high || liveGold.price).toFixed(2),
-          low: +Number(liveGold.low || liveGold.price).toFixed(2),
-          open: +Number(liveGold.open || liveGold.price).toFixed(2),
-          symbol: liveGold.symbol || 'TVC:GOLD',
-          lastUpdated: now
-        };
-      } else if (typeof liveGold === 'number' && liveGold > 0) {
-        const openPrice = tvMarketPricesCache.XAU.open || liveGold;
-        const chgAbs = +(liveGold - openPrice).toFixed(2);
-        const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
-        tvMarketPricesCache.XAU = {
-          price: +liveGold.toFixed(2),
-          change: chgAbs,
-          changePercent: chgPct,
-          high: +Math.max(tvMarketPricesCache.XAU.high || liveGold, liveGold).toFixed(2),
-          low: +Math.min(tvMarketPricesCache.XAU.low || liveGold, liveGold).toFixed(2),
-          open: openPrice,
-          symbol: 'TVC:GOLD',
-          lastUpdated: now
-        };
-      }
+    // 3. ZERO-LATENCY OVERRIDE: Ưu tiên giá Spot Direct tươi mới nhất (không bị CloudFront CDN cache 10-15s)
+    if (liveGoldDirect && liveGoldDirect.price > 0) {
+      const gPrice = typeof liveGoldDirect === 'object' ? liveGoldDirect.price : liveGoldDirect;
+      const prevOpen = (tvMarketPricesCache.XAU && tvMarketPricesCache.XAU.open) || (typeof liveGoldDirect === 'object' && liveGoldDirect.open) || gPrice;
+      const prevHigh = Math.max((tvMarketPricesCache.XAU && tvMarketPricesCache.XAU.high) || gPrice, gPrice);
+      const prevLow = Math.min((tvMarketPricesCache.XAU && tvMarketPricesCache.XAU.low) || gPrice, gPrice);
+      const chg = +(gPrice - prevOpen).toFixed(2);
+      const chgPct = prevOpen > 0 ? +((chg / prevOpen) * 100).toFixed(2) : 0;
+      tvMarketPricesCache.XAU = {
+        price: +Number(gPrice).toFixed(2),
+        change: chg,
+        changePercent: chgPct,
+        high: +Number(prevHigh).toFixed(2),
+        low: +Number(prevLow).toFixed(2),
+        open: +Number(prevOpen).toFixed(2),
+        symbol: (typeof liveGoldDirect === 'object' && liveGoldDirect.symbol) || 'TVC:GOLD',
+        lastUpdated: now
+      };
       tvGoldDataCache = tvMarketPricesCache.XAU;
     }
 
-    if (liveSilver) {
-      if (typeof liveSilver === 'object' && liveSilver.price > 0) {
-        tvMarketPricesCache.XAG = {
-          price: +Number(liveSilver.price).toFixed(2),
-          change: +Number(liveSilver.change || 0).toFixed(2),
-          changePercent: +Number(liveSilver.changePercent || 0).toFixed(2),
-          high: +Number(liveSilver.high || liveSilver.price).toFixed(2),
-          low: +Number(liveSilver.low || liveSilver.price).toFixed(2),
-          open: +Number(liveSilver.open || liveSilver.price).toFixed(2),
-          symbol: liveSilver.symbol || 'YAHOO:SI=F',
-          lastUpdated: now
-        };
-      } else if (typeof liveSilver === 'number' && liveSilver > 0) {
-        const openPrice = tvMarketPricesCache.XAG.open || liveSilver;
-        const chgAbs = +(liveSilver - openPrice).toFixed(2);
-        const chgPct = +((chgAbs / openPrice) * 100).toFixed(2);
-        tvMarketPricesCache.XAG = {
-          price: +liveSilver.toFixed(2),
-          change: chgAbs,
-          changePercent: chgPct,
-          high: +Math.max(tvMarketPricesCache.XAG.high || liveSilver, liveSilver).toFixed(2),
-          low: +Math.min(tvMarketPricesCache.XAG.low || liveSilver, liveSilver).toFixed(2),
-          open: openPrice,
-          symbol: 'TVC:SILVER',
-          lastUpdated: now
-        };
-      }
+    if (liveSilverDirect && liveSilverDirect.price > 0) {
+      const sPrice = typeof liveSilverDirect === 'object' ? liveSilverDirect.price : liveSilverDirect;
+      const prevOpen = (tvMarketPricesCache.XAG && tvMarketPricesCache.XAG.open) || (typeof liveSilverDirect === 'object' && liveSilverDirect.open) || sPrice;
+      const prevHigh = Math.max((tvMarketPricesCache.XAG && tvMarketPricesCache.XAG.high) || sPrice, sPrice);
+      const prevLow = Math.min((tvMarketPricesCache.XAG && tvMarketPricesCache.XAG.low) || sPrice, sPrice);
+      const chg = +(sPrice - prevOpen).toFixed(2);
+      const chgPct = prevOpen > 0 ? +((chg / prevOpen) * 100).toFixed(2) : 0;
+      tvMarketPricesCache.XAG = {
+        price: +Number(sPrice).toFixed(2),
+        change: chg,
+        changePercent: chgPct,
+        high: +Number(prevHigh).toFixed(2),
+        low: +Number(prevLow).toFixed(2),
+        open: +Number(prevOpen).toFixed(2),
+        symbol: (typeof liveSilverDirect === 'object' && liveSilverDirect.symbol) || 'TVC:SILVER',
+        lastUpdated: now
+      };
     }
 
-    if (liveBtc && liveBtc.price > 0) {
+    if (liveBtcDirect && liveBtcDirect.price > 0) {
+      const bPrice = typeof liveBtcDirect === 'object' ? liveBtcDirect.price : liveBtcDirect;
+      const prevOpen = (tvMarketPricesCache.BTC && tvMarketPricesCache.BTC.open) || (typeof liveBtcDirect === 'object' && liveBtcDirect.open) || bPrice;
+      const prevHigh = Math.max((tvMarketPricesCache.BTC && tvMarketPricesCache.BTC.high) || bPrice, bPrice);
+      const prevLow = Math.min((tvMarketPricesCache.BTC && tvMarketPricesCache.BTC.low) || bPrice, bPrice);
+      const chg = +(bPrice - prevOpen).toFixed(2);
+      const chgPct = prevOpen > 0 ? +((chg / prevOpen) * 100).toFixed(2) : 0;
       tvMarketPricesCache.BTC = {
-        price: +liveBtc.price.toFixed(2),
-        change: +liveBtc.change.toFixed(2),
-        changePercent: +liveBtc.changePercent.toFixed(2),
-        high: +liveBtc.high.toFixed(2),
-        low: +liveBtc.low.toFixed(2),
-        open: +liveBtc.open.toFixed(2),
-        symbol: 'BINANCE:BTCUSDT',
+        price: +Number(bPrice).toFixed(2),
+        change: chg,
+        changePercent: chgPct,
+        high: +Number(prevHigh).toFixed(2),
+        low: +Number(prevLow).toFixed(2),
+        open: +Number(prevOpen).toFixed(2),
+        symbol: (typeof liveBtcDirect === 'object' && liveBtcDirect.symbol) || 'BINANCE:BTCUSDT',
         lastUpdated: now
       };
     }
@@ -4836,10 +4820,11 @@ const server = http.createServer(async (req, res) => {
     // Siêu tốc: Phục vụ từ RAM cache nếu đã nạp
     if (global._staticMemCache && global._staticMemCache.has(filePath)) {
       const cached = global._staticMemCache.get(filePath);
-      const isHtml = path.extname(filePath).toLowerCase() === '.html';
+      const ext = path.extname(filePath).toLowerCase();
+      const noCache = ext === '.html' || ext === '.js' || ext === '.json';
       res.writeHead(200, {
         'Content-Type': cached.contentType,
-        'Cache-Control': isHtml ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300',
+        'Cache-Control': noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=86400',
         'Content-Length': cached.buffer.length
       });
       return res.end(cached.buffer);
@@ -4852,16 +4837,16 @@ const server = http.createServer(async (req, res) => {
       }
       const ext = path.extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-      const isHtml = ext === '.html';
+      const noCache = ext === '.html' || ext === '.js' || ext === '.json';
 
       if (!global._staticMemCache) global._staticMemCache = new Map();
-      if (!isHtml && data.length < 5 * 1024 * 1024) {
+      if (!noCache && data.length < 5 * 1024 * 1024) {
         global._staticMemCache.set(filePath, { contentType, buffer: data });
       }
 
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': isHtml ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300',
+        'Cache-Control': noCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=86400',
         'Content-Length': data.length
       });
       res.end(data);
@@ -5782,8 +5767,8 @@ async function tickLivePriceBroadcaster() {
       const pBtc = prices.BTC?.price || 0;
       const pXag = prices.XAG?.price || 0;
 
-      // Chỉ broadcast khi giá có biến động thực sự để tiết kiệm băng thông và tối ưu hiệu năng
-      if (pXau !== lastBroadcastPrices.XAU || Math.abs(pBtc - lastBroadcastPrices.BTC) >= 1.0 || Math.abs(pXag - lastBroadcastPrices.XAG) >= 0.01) {
+      // Chỉ broadcast khi giá có biến động thực sự (từng cent) để đảm bảo realtime zero-latency
+      if (Math.abs(pXau - lastBroadcastPrices.XAU) >= 0.01 || Math.abs(pBtc - lastBroadcastPrices.BTC) >= 0.1 || Math.abs(pXag - lastBroadcastPrices.XAG) >= 0.005) {
         lastBroadcastPrices = { XAU: pXau, BTC: pBtc, XAG: pXag };
         if (Array.isArray(sseClients) && sseClients.length > 0) {
           const payload = `data: ${JSON.stringify({ type: 'PRICE_UPDATE', prices })}\n\n`;
@@ -5795,7 +5780,7 @@ async function tickLivePriceBroadcaster() {
     }
   } catch(e) {}
 }
-setInterval(tickLivePriceBroadcaster, 800); // 800ms realtime tick stream
+setInterval(tickLivePriceBroadcaster, 500); // 500ms realtime tick stream
 
 // SSE Heartbeat mỗi 20s để chống Cloudflare 524 Timeout
 setInterval(() => {
